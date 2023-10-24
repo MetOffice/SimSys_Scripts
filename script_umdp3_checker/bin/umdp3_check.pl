@@ -376,6 +376,7 @@ else {
     my $cs_env = $ENV{CYLC_SUITE_SHARE_DIR};
 
     $cs_env = `readlink -f $cs_env`;
+    chomp $cs_env;
 
     my @script_source = `find $cs_env/imported_github_scripts -type f -not -ipath "*/.git/*" -exec readlink -f {} \\; 2>&1`;
     $returncode = $?;
