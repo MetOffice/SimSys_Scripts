@@ -700,7 +700,13 @@ sub trunk_files_parse {
 
             $additions{$modified_file} = &share( [] );
 
-            my $file_url = "$branch/$modified_file";
+            my $file_url;
+
+            if ($suite_mode) {
+               $file_url = $line;
+            } else {
+               $file_url = "$branch/$modified_file";
+            }
 
             my @file_lines = cat_file($file_url);
 
