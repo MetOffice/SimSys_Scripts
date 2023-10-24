@@ -364,6 +364,8 @@ else {
     my $ss_env = $ENV{SCRIPT_SOURCE};
     my $extracts_path = join(" $ss_env/", @extracts);
 
+    print "Using extracted source from path(s) : $extracts_path\n";
+
     my @exract_source = `find $extracts_path -type f -exec readlink -f {} \; 2>&1`;
     $returncode = $?;
 
@@ -385,7 +387,13 @@ else {
 
     # convert the realtive paths to be relative to the extract location
 
-    $repository_working_path = $exract_source[0];
+    if ( $#exract_source >= 0 ) {
+      $repository_working_path = $exract_source[0];
+    } else {
+      $repository_working_path = "[ ]";
+    }
+
+
     $repository_working_path =~ s{/um/.*$}{}sxm; 
     $repository_working_path = "(" . $cs_env . "|" . $repository_working_path . ")";
     $repository_relative_path = "";
