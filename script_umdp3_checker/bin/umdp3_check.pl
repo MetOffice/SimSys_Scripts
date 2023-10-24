@@ -33,7 +33,7 @@ use UMDP3CriticPolicy;
 use UMDP3DispatchTables;
 
 # Declare version - this is the last UM version this script was updated for:
-our $VERSION = '13.2.0';
+our $VERSION = '13.4.0';
 
 # Declare variables
 my $fcm  = '/etc/profile'; # File to source to access 'fcm' commands
@@ -359,7 +359,7 @@ else {
     # If we are in suite mode, we need to generate the ls from the extracted 
     # sources, not from FCM.
 
-    my @extracts = ("", "um", "shumlib", "casim", "jules", "meta", "socrates", "ukca");
+    my @extracts = ("", "um", "shumlib", "meta", "ukca");
 
     my $ss_env = $ENV{SCRIPT_SOURCE};
     my $extracts_path = join(" $ss_env/", @extracts);
@@ -375,7 +375,9 @@ else {
 
     my $cs_env = $ENV{CYLC_SUITE_SHARE_DIR};
 
-    my @script_source = `find $cs_env/imported_github_scripts -type f -exec readlink -f {} \\; 2>&1`;
+    $cs_env = `readlink -f $cs_env`;
+
+    my @script_source = `find $cs_env/imported_github_scripts -type f -not -ipath "*/.git/*" -exec readlink -f {} \\; 2>&1`;
     $returncode = $?;
 
     unless ($returncode == 0 ) {
