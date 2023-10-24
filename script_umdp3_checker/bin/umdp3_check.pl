@@ -359,14 +359,14 @@ else {
     # If we are in suite mode, we need to generate the ls from the extracted 
     # sources, not from FCM.
 
-    my @extracts = ("um", "shumlib", "casim", "jules", "meta", "socrates", "ukca");
+    my @extracts = ("", "um", "shumlib", "casim", "jules", "meta", "socrates", "ukca");
 
     my $ss_env = $ENV{SCRIPT_SOURCE};
     my $extracts_path = join(" $ss_env/", @extracts);
 
     print "Using extracted source from path(s) : $extracts_path\n";
 
-    my @exract_source = `find $extracts_path -type f -exec readlink -f {} \; 2>&1`;
+    my @exract_source = `find $extracts_path -type f -exec readlink -f {} \\; 2>&1`;
     $returncode = $?;
 
     unless ($returncode == 0 ) {
@@ -375,7 +375,7 @@ else {
 
     my $cs_env = $ENV{CYLC_SUITE_SHARE_DIR};
 
-    my @script_source = `find $cs_env/imported_github_scripts -type f -exec readlink -f {} \; 2>&1`;
+    my @script_source = `find $cs_env/imported_github_scripts -type f -exec readlink -f {} \\; 2>&1`;
     $returncode = $?;
 
     unless ($returncode == 0 ) {
@@ -392,7 +392,6 @@ else {
     } else {
       $repository_working_path = "[ ]";
     }
-
 
     $repository_working_path =~ s{/um/.*$}{}sxm; 
     $repository_working_path = "(" . $cs_env . "|" . $repository_working_path . ")";
