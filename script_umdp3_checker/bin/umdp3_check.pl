@@ -327,11 +327,51 @@ if ($trunkmode==0) {
   my @branchls;
   my $returncode;
 
-  @branchls = `. $fcm; fcm ls -R $branch 2>&1`;
-  $returncode = $?;
+  if ($suite_mode) {
 
-  unless ($returncode == 0 ) {
-    die "Error running ' fcm ls -R $branch':\n@branchls\n";
+    # If we are in suite mode, we need to generate the ls from the extracted 
+    # sources, not from FCM.
+
+    my @extracts = ("um", "shumlib", "casim", "jules", "meta", "socrates", "ukca");
+
+    my $ss_env = $ENV{SCRIPT_SOURCE};
+    my $extracts_path = join(" $ss_env/", @extracts);
+
+    my @exract_source = `find $extracts_path -type f -exec readlink -f {} \; 2>&1`;
+    $returncode = $?;
+
+    unless ($returncode == 0 ) {
+      die "Error running 'find $extracts_path':\n@exract_source\n";
+    }
+
+    my $cs_env = $ENV{CYLC_SUITE_SHARE_DIR};
+
+    my @script_source = `find $cs_env/imported_github_scripts -type f -exec readlink -f {} \; 2>&1`;
+    $returncode = $?;
+
+    unless ($returncode == 0 ) {
+      die "Error running 'find $cs_env/imported_github_scripts':\n@script_source\n";
+    }
+
+    push(@branchls, @exract_source);
+    push(@branchls, @script_source);
+
+    # convert the realtive paths to be relative to the extract location
+
+    $repository_working_path = $exract_source[0];
+    $repository_working_path =~ s{/um/.*$}{}sxm; 
+    $repository_working_path = "(" . $cs_env . "|" . $repository_working_path . ")";
+    $repository_relative_path = "";
+
+  } else {
+
+    @branchls = `. $fcm; fcm ls -R $branch 2>&1`;
+    $returncode = $?;
+
+    unless ($returncode == 0 ) {
+      die "Error running ' fcm ls -R $branch':\n@branchls\n";
+    }
+
   }
 
   # check there are some files availible to test!
