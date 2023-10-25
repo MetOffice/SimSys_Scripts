@@ -354,62 +354,68 @@ else {
     my @branchls;
     my $returncode;
 
-  if ($suite_mode) {
+    if ($suite_mode) {
 
-    # If we are in suite mode, we need to generate the ls from the extracted 
-    # sources, not from FCM.
+        # If we are in suite mode, we need to generate the ls from the extracted
+        # sources, not from FCM.
 
-    my @extracts = ("", "um", "shumlib", "meta", "ukca");
+        my @extracts = ( "", "um", "shumlib", "meta", "ukca" );
 
-    my $ss_env = $ENV{SCRIPT_SOURCE};
-    my $extracts_path = join(" $ss_env/", @extracts);
+        my $ss_env = $ENV{SCRIPT_SOURCE};
+        my $extracts_path = join( " $ss_env/", @extracts );
 
-    print "Using extracted source from path(s) : $extracts_path\n";
+        print "Using extracted source from path(s) : $extracts_path\n";
 
-    my @exract_source = `find $extracts_path -type f -exec readlink -f {} \\; 2>&1`;
-    $returncode = $?;
+        my @exract_source =
+          `find $extracts_path -type f -exec readlink -f {} \\; 2>&1`;
+        $returncode = $?;
 
-    unless ($returncode == 0 ) {
-      die "Error running 'find $extracts_path':\n@exract_source\n";
+        unless ( $returncode == 0 ) {
+            die "Error running 'find $extracts_path':\n@exract_source\n";
+        }
+
+        my $cs_env = $ENV{CYLC_SUITE_SHARE_DIR};
+
+        $cs_env = `readlink -f $cs_env`;
+        chomp $cs_env;
+
+        my @script_source =
+`find $cs_env/imported_github_scripts -type f -not -ipath "*/.git/*" -exec readlink -f {} \\; 2>&1`;
+        $returncode = $?;
+
+        unless ( $returncode == 0 ) {
+            die
+"Error running 'find $cs_env/imported_github_scripts':\n@script_source\n";
+        }
+
+        push( @branchls, @exract_source );
+        push( @branchls, @script_source );
+
+        # convert the realtive paths to be relative to the extract location
+
+        if ( $#exract_source >= 0 ) {
+            $repository_working_path = $exract_source[0];
+        }
+        else {
+            $repository_working_path = "[ ]";
+        }
+
+        $repository_working_path =~ s{/um/.*$}{}sxm;
+        $repository_working_path =
+          "(" . $cs_env . "|" . $repository_working_path . ")";
+        $repository_relative_path = "";
+
     }
+    else {
 
-    my $cs_env = $ENV{CYLC_SUITE_SHARE_DIR};
+        @branchls   = `. $fcm; fcm ls -R $branch 2>&1`;
+        $returncode = $?;
 
-    $cs_env = `readlink -f $cs_env`;
-    chomp $cs_env;
+        unless ( $returncode == 0 ) {
+            die "Error running ' fcm ls -R $branch':\n@branchls\n";
+        }
 
-    my @script_source = `find $cs_env/imported_github_scripts -type f -not -ipath "*/.git/*" -exec readlink -f {} \\; 2>&1`;
-    $returncode = $?;
-
-    unless ($returncode == 0 ) {
-      die "Error running 'find $cs_env/imported_github_scripts':\n@script_source\n";
     }
-
-    push(@branchls, @exract_source);
-    push(@branchls, @script_source);
-
-    # convert the realtive paths to be relative to the extract location
-
-    if ( $#exract_source >= 0 ) {
-      $repository_working_path = $exract_source[0];
-    } else {
-      $repository_working_path = "[ ]";
-    }
-
-    $repository_working_path =~ s{/um/.*$}{}sxm; 
-    $repository_working_path = "(" . $cs_env . "|" . $repository_working_path . ")";
-    $repository_relative_path = "";
-
-  } else {
-
-    @branchls = `. $fcm; fcm ls -R $branch 2>&1`;
-    $returncode = $?;
-
-    unless ($returncode == 0 ) {
-      die "Error running ' fcm ls -R $branch':\n@branchls\n";
-    }
-
-  }
 
     # check there are some files availible to test!
     unless ( $#branchls >= 0 ) {
@@ -706,9 +712,10 @@ sub trunk_files_parse {
             my $file_url;
 
             if ($suite_mode) {
-               $file_url = $line;
-            } else {
-               $file_url = "$branch/$modified_file";
+                $file_url = $line;
+            }
+            else {
+                $file_url = "$branch/$modified_file";
             }
 
             my @file_lines = cat_file($file_url);
