@@ -370,7 +370,7 @@ else {
           `find $extracts_path -type f -exec readlink -f {} \\; 2>&1`;
         $returncode = $?;
 
-        unless ( $returncode == 0 ) {
+        if ( $returncode != 0 ) {
             die "Error running 'find $extracts_path':\n@exract_source\n";
         }
 
@@ -383,7 +383,7 @@ else {
 `find $cs_env/imported_github_scripts -type f -not -ipath "*/.git/*" -exec readlink -f {} \\; 2>&1`;
         $returncode = $?;
 
-        unless ( $returncode == 0 ) {
+        if ( $returncode != 0 ) {
             die
 "Error running 'find $cs_env/imported_github_scripts':\n@script_source\n";
         }
