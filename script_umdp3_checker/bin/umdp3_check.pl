@@ -33,7 +33,7 @@ use UMDP3CriticPolicy;
 use UMDP3DispatchTables;
 
 # Declare version - this is the last UM version this script was updated for:
-our $VERSION = '13.2.0';
+our $VERSION = '13.4.0';
 
 # Declare variables
 my $fcm  = '/etc/profile'; # File to source to access 'fcm' commands
@@ -354,11 +354,67 @@ else {
     my @branchls;
     my $returncode;
 
-    @branchls   = `. $fcm; fcm ls -R $branch 2>&1`;
-    $returncode = $?;
+    if ($suite_mode) {
 
-    unless ( $returncode == 0 ) {
-        die "Error running ' fcm ls -R $branch':\n@branchls\n";
+        # If we are in suite mode, we need to generate the ls from the extracted
+        # sources, not from FCM.
+
+        my @extracts = ( "", "um", "shumlib", "meta", "ukca" );
+
+        my $ss_env = $ENV{SCRIPT_SOURCE};
+        my $extracts_path = join( " $ss_env/", @extracts );
+
+        print "Using extracted source from path(s) : $extracts_path\n";
+
+        my @exract_source =
+          `find $extracts_path -type f -exec readlink -f {} \\; 2>&1`;
+        $returncode = $?;
+
+        if ( $returncode != 0 ) {
+            die "Error running 'find $extracts_path':\n@exract_source\n";
+        }
+
+        my $cs_env = $ENV{CYLC_SUITE_SHARE_DIR};
+
+        $cs_env = `readlink -f $cs_env`;
+        chomp $cs_env;
+
+        my @script_source =
+`find $cs_env/imported_github_scripts -type f -not -ipath "*/.git/*" -exec readlink -f {} \\; 2>&1`;
+        $returncode = $?;
+
+        if ( $returncode != 0 ) {
+            die
+"Error running 'find $cs_env/imported_github_scripts':\n@script_source\n";
+        }
+
+        push( @branchls, @exract_source );
+        push( @branchls, @script_source );
+
+        # convert the realtive paths to be relative to the extract location
+
+        if ( $#exract_source >= 0 ) {
+            $repository_working_path = $exract_source[0];
+        }
+        else {
+            $repository_working_path = "[ ]";
+        }
+
+        $repository_working_path =~ s{/um/.*$}{}sxm;
+        $repository_working_path =
+          "(" . $cs_env . "|" . $repository_working_path . ")";
+        $repository_relative_path = "";
+
+    }
+    else {
+
+        @branchls   = `. $fcm; fcm ls -R $branch 2>&1`;
+        $returncode = $?;
+
+        unless ( $returncode == 0 ) {
+            die "Error running ' fcm ls -R $branch':\n@branchls\n";
+        }
+
     }
 
     # check there are some files availible to test!
@@ -653,7 +709,14 @@ sub trunk_files_parse {
 
             $additions{$modified_file} = &share( [] );
 
-            my $file_url = "$branch/$modified_file";
+            my $file_url;
+
+            if ($suite_mode) {
+                $file_url = $line;
+            }
+            else {
+                $file_url = "$branch/$modified_file";
+            }
 
             my @file_lines = cat_file($file_url);
 
