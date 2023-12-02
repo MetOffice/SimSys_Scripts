@@ -33,7 +33,7 @@ use UMDP3CriticPolicy;
 use UMDP3DispatchTables;
 
 # Declare version - this is the last UM version this script was updated for:
-our $VERSION = '13.4.0';
+our $VERSION = '13.5.0';
 
 # Declare variables
 my $fcm  = '/etc/profile'; # File to source to access 'fcm' commands
@@ -57,7 +57,7 @@ my @exit_threads : shared;
 my $branch = shift // '.';
 
 # Cope with UTF-style working copy syntax just in case
-$branch =~ s/wc://;
+$branch =~ s/wc://sxm;
 
 # Read text file of whitelisted include files
 my $whitelist_includes_file = shift;
@@ -130,7 +130,7 @@ start_branch_checking:
 $binfocode = $?;
 
 unless ( $binfocode == 0 ) {
-    if ( grep( /svn info --xml/, @binfo ) ) {
+    if ( grep( /svn[ ]info[ ]--xml/sxm, @binfo ) ) {
         if ($suite_mode) {
             for ( my $i = 1 ; $i <= $max_snooze ; $i++ ) {
                 print
@@ -149,13 +149,13 @@ unless ( $binfocode == 0 ) {
     }
 }
 
-if (   grep( /URL: svn:\/\/fcm\d+\/(\w|\.)+_svn\/\w+\/trunk/, @binfo )
-    or grep( /URL:.*\/svn\/\w+\/main\/trunk/, @binfo )
-    or grep( /URL:..*_svn\/main\/trunk/,      @binfo )
-    or grep( /URL: file:\/\/.*\/trunk/,       @binfo ) )
+if (   grep( /URL:[ ]svn:\/\/fcm\d+\/(\w|\.)+_svn\/\w+\/trunk/sxm, @binfo )
+    or grep( /URL:.*\/svn\/\w+\/main\/trunk/sxm, @binfo )
+    or grep( /URL:..*_svn\/main\/trunk/sxm,      @binfo )
+    or grep( /URL:[ ]file:\/\/.*\/trunk/sxm,     @binfo ) )
 {
     print "Detected trunk: checking full source tree\n";
-    $branch =~ s/@.*$//;
+    $branch =~ s/@.*$//sxm;
     $trunkmode = 1;
     if ( $ENV{UMDP_CHECKER_TRUNK_ERROR} ) {
         $error_trunk = $ENV{UMDP_CHECKER_TRUNK_ERROR};
@@ -187,10 +187,10 @@ if (   grep( /URL: svn:\/\/fcm\d+\/(\w|\.)+_svn\/\w+\/trunk/, @binfo )
 }
 
 foreach my $line (@binfo) {
-    if ( $line =~ /Branch Parent:.*\/trunk@.*/ ) {
+    if ( $line =~ m{Branch[ ]Parent:.*/trunk@.*}sxm ) {
         last;
     }
-    elsif ( $line =~ /Branch Parent:\s*(.*)/ ) {
+    elsif ( $line =~ m/Branch[ ]Parent:\s*(.*)/sxm ) {
         print "This branch is a branch-of-branch - testing parent ($1)\n";
         $branch = $1;
         goto start_branch_checking;
@@ -214,29 +214,30 @@ my $repository_working_path;
 my $repository_relative_path;
 
 foreach my $line (@binfo) {
-    if ( $line =~ /^URL:\s*(.*)/ ) {
+    if ( $line =~ /^URL:\s*(.*)/sxm ) {
         $repository_branch_path = $1;
         last;
     }
 }
 
 foreach my $line (@info) {
-    if ( $line =~ /^URL:\s*(.*)/ ) {
+    if ( $line =~ /^URL:\s*(.*)/sxm ) {
         $repository_working_path = $1;
         last;
     }
 }
 
 $repository_relative_path = $repository_working_path;
-$repository_relative_path =~ s/$repository_branch_path//;
+$repository_relative_path =~ s/$repository_branch_path//sxm;
+$repository_relative_path =~ s/\n//sxm;
 
 # replace relative branch paths with absolute paths
-if ( grep( /Working Copy Root Path:/, @info ) ) {
+if ( grep( /Working[ ]Copy[ ]Root[ ]Path:/sxm, @info ) ) {
     $branch = abs_path($branch);
 }
 
 # trim trailing "/"
-$branch =~ s/\/$//;
+$branch =~ s{/$}{}sxm;
 
 print "Testing branch $branch\n";
 
@@ -272,32 +273,33 @@ if ( $trunkmode == 0 ) {
     foreach my $line (@summary) {
 
         # Reset captures to undefined with a trivial successful match.
-        "a" =~ /a/;
+        "a" =~ /a/sxm;
 
         # Add hash entries for added or modified files:
         # These are files which are newly added; or which add or remove lines.
-        $line =~ /^(A|M+)\s*(?<filename>\S+)$/;
+        $line =~ /^(A|M+)\s*(?<filename>\S+)$/sxm;
         my $modified_file = $+{filename};
         if ($modified_file) {
 
             #normalise the path
-            $modified_file =~ s/$repository_working_path\///;
-            $modified_file =~ s/.*trunk$repository_relative_path\///;
+            $modified_file =~ s/$repository_working_path\///sxm;
+            $modified_file =~ s/.*trunk$repository_relative_path\///sxm;
 
-            $additions{$modified_file} = &share( [] );
+            my @share_arr = [];
+            $additions{$modified_file} = share(@share_arr);
         }
 
         # Reset captures to undefined with a trivial successful match.
-        "a" =~ /a/;
+        "a" =~ /a/sxm;
 
         # Add has entries for deleted files
-        $line =~ /^D\s*(?<filename>\S+)$/;
+        $line =~ /^D\s*(?<filename>\S+)$/sxm;
         my $deleted_file = $+{filename};
         if ($deleted_file) {
 
             #normalise the path
-            $deleted_file =~ s/$repository_working_path\///;
-            $deleted_file =~ s/.*trunk$repository_relative_path\///;
+            $deleted_file =~ s/$repository_working_path\///sxm;
+            $deleted_file =~ s/.*trunk$repository_relative_path\///sxm;
             $deletions{$deleted_file} = [];
         }
     }
@@ -308,14 +310,14 @@ if ( $trunkmode == 0 ) {
     # %additions =  ( 'filename' => [ 'added line 1', 'added line 2'] )
     foreach my $line (@diff) {
 
-        if ( $line =~ /^\+\+\+/ ) {
+        if ( $line =~ /^\+\+\+/sxm ) {
 
             # Find if the filename is in our additions hash,
             # and set the subsequent lines to be stored if it is.
-            $line =~ /^\+\+\+\s+(?<filename>\S+)/;
+            $line =~ /^\+\+\+\s+(?<filename>\S+)/sxm;
             $filename = $+{filename};
             unless ( ( $branch eq "." ) || ( $filename eq $branch ) ) {
-                $filename =~ s/.*$branch\///;
+                $filename =~ s/.*$branch\///sxm;
             }
             $store_line = exists( $additions{$filename} );
 
@@ -326,7 +328,11 @@ if ( $trunkmode == 0 ) {
                 # something has gone wrong.
                 if ( !exists( $deletions{$filename} ) ) {
                     if (
-                        !( grep( /^Property changes on: $filename$/, @diff ) ) )
+                        !(
+                            grep( /^Property[ ]changes[ ]on:[ ]$filename$/sxm,
+                                @diff )
+                        )
+                      )
                     {
                         print "Something has failed parsing line '$line'\n";
                         die
@@ -336,11 +342,11 @@ if ( $trunkmode == 0 ) {
             }
 
         }
-        elsif ( $line =~ /^\+/ ) {
+        elsif ( $line =~ /^\+/sxm ) {
             if ($store_line) {
 
                 # Add the diff to %additions hash
-                $line =~ s/^\+//;
+                $line =~ s/^\+//sxm;
                 push @{ $additions{$filename} }, $line;
             }
         }
@@ -562,7 +568,8 @@ if ( $#add_keys >= 0 ) {
 
         # Initialise a shared memory space to store the output from each thread.
         # This is shared so the main thread will be able to retrieve the output.
-        $output_threads[$i] = &share( [] );
+        my @share_arr = [];
+        $output_threads[$i] = share(@share_arr);
 
         $add_keys_threads[$i] = [];
 
@@ -695,19 +702,20 @@ sub trunk_files_parse {
     foreach my $line ( @{ $branchls_threads[ $_[0] ] } ) {
 
         #strip newline character
-        $line =~ s/\R$//;
+        $line =~ s/\R$//sxm;
 
         # ignore non-source files
-        if ( $line !~ /\/$/ ) {
+        if ( $line !~ /\/$/sxm ) {
 
             # Add hash entries for added or modified files:
             my $modified_file = $line;
 
             #normalise the path
-            $modified_file =~ s/$repository_working_path\///;
-            $modified_file =~ s/.*trunk$repository_relative_path\///;
+            $modified_file =~ s/$repository_working_path\///sxm;
+            $modified_file =~ s/.*trunk$repository_relative_path\///sxm;
 
-            $additions{$modified_file} = &share( [] );
+            my @share_arr = [];
+            $additions{$modified_file} = share(@share_arr);
 
             my $file_url;
 
@@ -744,18 +752,18 @@ sub run_checks {
 
      # If it's an include file, fail unless it's on the include whitelist
      # (e.g. its a C header or a Fortran include for reducing code duplication).
-        if ( $modified_file =~ /\.h$/ ) {
+        if ( $modified_file =~ /\.h$/sxm ) {
 
             if ( exists( $includes_hash{$modified_file} ) ) {
                 my @components = split( "/", $modified_file );
-                if (    $components[0] =~ /src/
-                    and $components[-2] =~ /include/
-                    and not $components[1] =~ /include/ )
+                if (    $components[0] =~ /src/sxm
+                    and $components[-2] =~ /include/sxm
+                    and not $components[1] =~ /include/sxm )
                 {
                     $is_fortran_include_file = 1;
                 }
-                elsif ( $components[0] =~ /src/
-                    and $components[1] =~ /include/ )
+                elsif ( $components[0] =~ /src/sxm
+                    and $components[1] =~ /include/sxm )
                 {
                     $is_c_file = 1;
                 }
@@ -771,13 +779,13 @@ sub run_checks {
             }
         }
 
-        if ( $modified_file =~ /\.c$/ ) {
+        if ( $modified_file =~ /\.c$/sxm ) {
             $is_c_file = 1;
         }
 
         # if it's Fortran or C apply all the tests
-        if (   $modified_file =~ /\.F90$/
-            or $modified_file =~ /\.f90$/
+        if (   $modified_file =~ /\.F90$/sxm
+            or $modified_file =~ /\.f90$/sxm
             or $is_c_file
             or $is_fortran_include_file )
         {
@@ -838,8 +846,8 @@ sub run_checks {
                 my $file_url;
                 my $url_revision;
                 my $short_branch = $branch;
-                if ( $short_branch =~ /@/ ) {
-                    $short_branch =~ s/(@.*)//;
+                if ( $short_branch =~ /@/sxm ) {
+                    $short_branch =~ s/(@.*)//sxm;
                     $url_revision = $1;
                 }
 
@@ -908,8 +916,8 @@ sub run_checks {
                 my $file_url;
                 my $url_revision;
                 my $short_branch = $branch;
-                if ( $short_branch =~ /@/ ) {
-                    $short_branch =~ s/(@.*)//;
+                if ( $short_branch =~ /@/sxm ) {
+                    $short_branch =~ s/(@.*)//sxm;
                     $url_revision = $1;
                 }
 
@@ -929,8 +937,8 @@ sub run_checks {
             my $mimetype = mimetype($io_array);
 
             # if we can't detect a mime type, try some tricks to aid detection
-            if ( $mimetype =~ /text\/plain/ ) {
-                my @mime_file_lines = grep !/^\s*\#/, @file_lines;
+            if ( $mimetype =~ /text\/plain/sxm ) {
+                my @mime_file_lines = grep !/^\s*\#/sxm, @file_lines;
                 $io_array = new IO::ScalarArray \@mime_file_lines;
                 $mimetype = mimetype($io_array);
             }
@@ -967,17 +975,19 @@ sub run_checks {
             my $is_perl   = 0;
             my $is_shell  = 0;
 
-            if ( $mimetype =~ /text\/x-python/ or $modified_file =~ /\.py$/ ) {
+            if (   $mimetype =~ /text\/x-python/sxm
+                or $modified_file =~ /\.py$/sxm )
+            {
                 $is_python = 1;
             }
 
-            if ( $mimetype =~ /application\/x-shellscript/ ) {
+            if ( $mimetype =~ /application\/x-shellscript/sxm ) {
                 $is_shell = 1;
             }
 
-            if (   $mimetype =~ /application\/x-perl/
-                or $modified_file =~ /\.pl$/
-                or $modified_file =~ /\.pm$/ )
+            if (   $mimetype =~ /application\/x-perl/sxm
+                or $modified_file =~ /\.pl$/sxm
+                or $modified_file =~ /\.pm$/sxm )
             {
                 $is_perl = 1;
             }
@@ -992,8 +1002,8 @@ sub run_checks {
                 if ( !$shellcheck ) {
                     $failed++;
                     my $shellcheck_fails = $out . $err;
-                    $shellcheck_fails =~ s/\n?\n/\n  /g;
-                    $shellcheck_fails =~ s/stdin:/line /g;
+                    $shellcheck_fails =~ s{\n?\n}{\n  }sxmg;
+                    $shellcheck_fails =~ s/stdin:/line /sxmg;
                     push @failed_tests, $shellcheck_fails;
                 }
             }
@@ -1020,8 +1030,8 @@ sub run_checks {
                 if ( !$shellcheck ) {
                     $failed++;
                     my $shellcheck_fails = $out . $err;
-                    $shellcheck_fails =~ s/\n?\n/\n  /g;
-                    $shellcheck_fails =~ s/  In - /  /g;
+                    $shellcheck_fails =~ s{\n?\n}{\n  }sxmg;
+                    $shellcheck_fails =~ s/[ ][ ]In[ ]-[ ]/  /sxmg;
                     push @failed_tests, $shellcheck_fails;
                 }
             }
@@ -1038,7 +1048,7 @@ sub run_checks {
             $exit_threads[ $_[0] ] += $failed;
             if ($log_cylc) {
                 my $filename = $modified_file;
-                $filename =~ s/\//+/g;
+                $filename =~ s/\//+/sxmg;
                 if ( index( $filename, "." ) != -1 ) {
                     $filename .= "_";
                 }
@@ -1069,7 +1079,7 @@ sub cat_file {
     my $error = 0;
 
   # If the URL contains a colon treat it as an fcm, else treat as a regular file
-    if ( $url =~ /:/ ) {
+    if ( $url =~ /:/sxm ) {
         @lines = `. $fcm; fcm cat $url 2>&1`;
         $error = $?;
     }
@@ -1083,7 +1093,7 @@ sub cat_file {
     if ( $error != 0 ) {
         @lines = `. $fcm; fcm info $url 2>&1`;
         if ( $? == 0 ) {
-            if ( ( join "\n", @lines ) !~ /Node Kind: file/gi ) {
+            if ( ( join "\n", @lines ) !~ /Node[ ]Kind:[ ]file/sxmgi ) {
                 @lines = ('');
                 $error = 0;
             }
