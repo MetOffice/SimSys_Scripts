@@ -10,8 +10,8 @@ um_heads_all:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     monitoring: True
-    time_launch: 00 02
-    time_clean: 00 01
+    time_launch: 02:00
+    time_clean: 01:00
     period: weekly
 
 
@@ -22,8 +22,8 @@ um_exz_heads_all:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 00 02
-    time_clean: 00 01
+    time_launch: 02:00
+    time_clean: 01:00
     period: weekly
 
 
@@ -35,8 +35,8 @@ um_xcs_heads_all:
         - HOST_XC40=\"xcsr\"
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 00 02
-    time_clean: 00 01
+    time_launch: 02:00
+    time_clean: 01:00
     period: weekly
 
 
@@ -47,8 +47,8 @@ um_set-revisions_all:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 00 01
-    time_clean: 05 00
+    time_launch: 01:00
+    time_clean: 00:05
     period: weekly
 
 
@@ -59,8 +59,8 @@ um_exz_set-revisions_all:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 00 01
-    time_clean: 05 00
+    time_launch: 01:00
+    time_clean: 00:05
     period: weekly
 
 
@@ -72,8 +72,8 @@ um_heads_nightly:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     monitoring: True
-    time_launch: 00 02
-    time_clean: 05 00
+    time_launch: 02:00
+    time_clean: 00:05
     period: nightly
 
 
@@ -84,8 +84,8 @@ um_exz_heads_nightly:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 00 02
-    time_clean: 05 00
+    time_launch: 02:00
+    time_clean: 00:05
     period: nightly
 
 
@@ -97,8 +97,8 @@ um_xcs_heads_nightly:
         - HOST_XC40=\"xcsr\"
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 00 02
-    time_clean: 05 00
+    time_launch: 02:00
+    time_clean: 00:05
     period: nightly
 
 
@@ -109,8 +109,8 @@ um_set-revisions_nightly:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 30 02
-    time_clean: 30 00
+    time_launch: 02:30
+    time_clean: 00:30
     period: nightly
 
 
@@ -121,8 +121,8 @@ um_exz_set-revisions_nightly:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 30 02
-    time_clean: 30 00
+    time_launch: 02:30
+    time_clean: 00:30
     period: nightly
 
 
@@ -136,8 +136,8 @@ um_nightly_next-compiler:
         - USE_NEXT_COMPILER=\"meto-xc40-cce,meto-x86-ifort,meto-x86-gnu\"
         - COMPARE_OUTPUT=false
         - COMPARE_WALLCLOCK=false
-    time_launch: 45 01
-    time_clean: 45 00
+    time_launch: 01:45
+    time_clean: 00:45
     period: nightly_all
 
 
@@ -149,8 +149,8 @@ um_set-revisions_nightly_cylc8:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 30 02
-    time_clean: 30 00
+    time_launch: 02:30
+    time_clean: 00:30
     period: nightly_all
 
 
@@ -163,8 +163,8 @@ jules_nightly:
     groups: all
     vars:
         - HOUSEKEEPING=false
-    time_launch: 00 03
-    time_clean: 00 02
+    time_launch: 03:00
+    time_clean: 02:00
     period: nightly_all
 
 
@@ -173,8 +173,8 @@ jules_exz_nightly:
     groups: ex1a
     vars:
         - HOUSEKEEPING=false
-    time_launch: 00 03
-    time_clean: 00 02
+    time_launch: 03:00
+    time_clean: 02:00
     period: nightly_all
 
 
@@ -184,18 +184,19 @@ jules_xcs_nightly:
     vars:
         - METO_HPC_GROUP=\"xcs\"
         - HOUSEKEEPING=false
-    time_launch: 00 03
-    time_clean: 00 02
+    time_launch: 03:00
+    time_clean: 02:00
     period: nightly_all
 
 
 jules_nightly_cylc8:
     repo: jules
     groups: all,ex1a
+    cylc_version: 8
     vars:
         - HOUSEKEEPING=false
-    time_launch: 00 01
-    time_clean: 01 00
+    time_launch: 01:00
+    time_clean: 00:05
     period: nightly_all
 
 
@@ -207,8 +208,8 @@ jules_nightly_cylc8:
 ukca_nightly:
     repo: ukca
     groups: scripts
-    time_launch: 30 00
-    time_clean: 01 00
+    time_launch: 00:30
+    time_clean: 00:05
     period: nightly_all
 
 
@@ -217,11 +218,12 @@ ukca_nightly:
 ######################
 
 lfric_apps_set-revisions_nightly:
-    repo: "lfric_apps"
+    repo: lfric_apps
     cylc_version: 8
     command:
         - module load scitools/default-current
-        - cd /home/h01/frzz/LFRic_Apps; python r1_split_script/split_wrapper.py --rosestem=True
-    time_launch: 00 01
-    time_clean: 05 00
+        - cd /home/h01/frzz/LFRic_Apps
+        - python r1_split_script/split_wrapper.py --rosestem=True
+    time_launch: 01:30
+    time_clean: 00:05
     period: nightly
