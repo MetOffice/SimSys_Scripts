@@ -11,7 +11,7 @@ um_heads_all:
         - PREBUILDS=false
     monitoring: True
     time_launch: 00 02
-    time_clean: 00 02
+    time_clean: 00 01
     period: weekly
 
 
@@ -23,7 +23,7 @@ um_exz_heads_all:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     time_launch: 00 02
-    time_clean: 00 02
+    time_clean: 00 01
     period: weekly
 
 
@@ -36,7 +36,7 @@ um_xcs_heads_all:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     time_launch: 00 02
-    time_clean: 00 02
+    time_clean: 00 01
     period: weekly
 
 
@@ -48,7 +48,7 @@ um_set-revisions_all:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     time_launch: 00 01
-    time_clean: 00 01
+    time_clean: 05 00
     period: weekly
 
 
@@ -60,7 +60,7 @@ um_exz_set-revisions_all:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     time_launch: 00 01
-    time_clean: 00 01
+    time_clean: 05 00
     period: weekly
 
 
