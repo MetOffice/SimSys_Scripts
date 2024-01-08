@@ -227,3 +227,14 @@ lfric_apps_set-revisions_nightly:
     time_launch: 01:30
     time_clean: 00:05
     period: nightly
+
+lfric_apps_heads_all:
+    repo: lfric_apps
+    groups: all
+    revisions: heads
+    cylc_version: 8
+    vars:
+        - HOUSEKEEPING=false
+    time_launch: 02:00
+    time_clean: 01:00
+    period: weekly

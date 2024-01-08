@@ -55,6 +55,8 @@ CYLC_DIFFS = {
 SCRATCH_DIR = os.environ["SCRATCH"]
 UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
+DATE_BASE = "date +\\%Y-\\%m-\\%d"
+MONITORING_TIME = "00 06"
 
 
 def run_command(command):
@@ -66,7 +68,20 @@ def run_command(command):
     )
 
 
-def fetch_working_copy_cron(repos, scratch):
+def join_checkout_commands(repos, scratch):
+    """
+    Join commands that delete repo then checkout new one
+    """
+
+    command = ""
+    for repo in repos:
+        wc_path = os.path.join(scratch, "wc_" + repo)
+        command += f"rm -rf {wc_path} ; "
+        command += f"fcm co -q --force fcm:{repo}.xm_tr@HEAD {wc_path} ; "
+    return command
+
+
+def fetch_working_copy_cron():
     """
     Cleanup and then re-checkout working copies for each of the repos used
     Runs just after midnight ahead of all other tasks
@@ -75,11 +90,8 @@ def fetch_working_copy_cron(repos, scratch):
     command = "# Checkout Working Copies #"
     l = len(command)
     command = f"{l*'#'}\n{command}\n{l*'#'}\n01 00 * * 1-5 "
+    command += join_checkout_commands(DEPENDENCIES.keys(), SCRATCH_DIR)
 
-    for repo in repos:
-        wc_path = os.path.join(scratch, "wc_" + repo)
-        command += f"rm -rf {wc_path} ; "
-        command += f"fcm co -q --force fcm:{repo}.xm_tr@HEAD {wc_path} ; "
     return command + "\n\n\n"
 
 
@@ -90,9 +102,44 @@ def lfric_heads_sed(wc_path):
 
     dep_path = os.path.join(wc_path, "dependencies.sh")
 
-    rstr = f"sed -i -e 's/^\(export .*_revision=@\).*/\\1HEAD/' {dep_path} ; "
-    rstr += f"sed -i -e 's/^\(export .*_rev=\).*/\\1HEAD/' {dep_path} ; "
+    rstr = f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
     return rstr
+
+
+def generate_cron_timing_str(suite, mode):
+    """
+    Return a string with the cron timing info included but no commands
+    """
+
+    if mode == "monitoring":
+        cron = f"{MONITORING_TIME} * * "
+    else:
+        if mode == "main":
+            cron = suite["cron_launch"]
+        elif mode == "clean":
+            cron = suite["cron_clean"]
+        else:
+            sys.exit("Unrecognised mode for cron timing string")
+        cron += " * * "
+
+    if suite["period"] == "weekly":
+        if mode == "main" or mode == "monitoring":
+            cron += "1 "
+        else:
+            cron += "7 "
+    else:
+        if suite["period"] == "nightly_all":
+            if mode == "main" or mode == "monitoring":
+                cron += "1-5 "
+            else:
+                cron += "2-6 "
+        else:
+            if mode == "main" or mode == "monitoring":
+                cron += "2-5 "
+            else:
+                cron += "3-6 "
+    return cron
 
 
 def generate_header(name, suite):
@@ -135,21 +182,26 @@ def generate_monitoring(name, suite, log_file):
     script = os.path.join(UMDIR, "bin", "monitoring.py")
     cylc_dir = os.path.expanduser(os.path.join("~", "cylc-run", name))
 
-    monitoring = "00 06 * * "
-    if suite["period"] == "weekly":
-        monitoring += "1 "
-    else:
-        if suite["period"] == "nightly_all":
-            monitoring += "1-5 "
-        else:
-            monitoring += "2-5 "
+    monitoring = generate_cron_timing_str(suite, "monitoring")
 
     monitoring += (
-        f"{PROFILE} ; " + "module load scitools/default-current ; "
+        f"{PROFILE} ; module load scitools/default-current ; "
         f"{script} {cylc_dir} >> {log_file} 2>&1"
     )
 
     return monitoring + "\n"
+
+
+def generate_clean_commands(cylc_version, name, log_file):
+    """
+    Generate the commands used to clean the suite
+    """
+    return (
+        f"{PROFILE} ; "
+        f"export CYLC_VERSION={cylc_version} ; "
+        f"{CYLC_DIFFS[cylc_version]['clean']} -y -q {name} "
+        f">> {log_file} 2>&1\n"
+    )
 
 
 def generate_clean_cron(suite_name, suite, log_file, cylc_version):
@@ -157,25 +209,17 @@ def generate_clean_cron(suite_name, suite, log_file, cylc_version):
     Return a string of the cronjob for cleaning the suite
     """
 
-    clean_cron = f"{suite['cron_clean']} * * "
+    clean_cron = generate_cron_timing_str(suite, "clean")
     if suite["period"] == "weekly":
-        clean_cron += "7 "
-        date_str = '_$(date +\%Y-\%m-\%d -d "6 days ago")'
+        date_str = f'_$({DATE_BASE} -d "6 days ago")'
     else:
-        if suite["period"] == "nightly_all":
-            clean_cron += "2-6 "
-        else:
-            clean_cron += "3-6 "
-        date_str = '_$(date +\%Y-\%m-\%d -d "1 day ago")'
+
+        date_str = f'_$({DATE_BASE} -d "1 day ago")'
 
     name = suite_name + date_str
 
-    clean_cron += (
-        f"{PROFILE} ; "
-        f"export CYLC_VERSION={cylc_version} ; "
-        f"{CYLC_DIFFS[cylc_version]['clean']} -y -q {name} "
-        f">> {log_file} 2>&1\n"
-    )
+    clean_cron += generate_clean_commands(cylc_version, name, log_file)
+
     return clean_cron
 
 
@@ -185,14 +229,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     """
 
     # Set up the timing for this job
-    cron_job = f"{suite['cron_launch']} * * "
-    if suite["period"] == "weekly":
-        cron_job += "1 "
-    else:
-        if suite["period"] == "nightly_all":
-            cron_job += "1-5 "
-        else:
-            cron_job += "2-5 "
+    cron_job = generate_cron_timing_str(suite, "main")
 
     cron_job += f"{PROFILE} ; "
 
@@ -238,7 +275,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     return cron_job + "\n"
 
 
-def generate_cron_job(suite_name, suite, log_file, wc_path):
+def generate_cron_job(suite_name, suite, log_file):
     """
     Using the suite settings from the config file, define a cronjob for the
     rose-stem task and for the suite-clean task
@@ -249,7 +286,7 @@ def generate_cron_job(suite_name, suite, log_file, wc_path):
     else:
         cylc_version = DEFAULT_CYLC_VERSION
 
-    date_str = "_$(date +\%Y-\%m-\%d)"
+    date_str = f"_$({DATE_BASE})"
     name = suite_name + date_str
     wc_path = os.path.join(SCRATCH_DIR, "wc_" + suite["repo"])
 
@@ -308,7 +345,7 @@ if __name__ == "__main__":
         "'generate_test-suite_cron.py' file.\n# Use that script and associated "
         "config file to modify these cron jobs.\n\n"
     )
-    main_crontab += fetch_working_copy_cron(DEPENDENCIES.keys(), SCRATCH_DIR)
+    main_crontab += fetch_working_copy_cron()
 
     last_repo = None
     for suite_name in sorted(suites.keys()):
