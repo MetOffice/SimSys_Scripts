@@ -12,8 +12,8 @@ Required:
               period value
 * period: 'weekly' runs on Monday, cleans on Sunday. 'nightly' runs Tue-Fri,
           cleans Wed-Sat. 'nightly_all' runs Mon-Fri, cleans Tue-Sat
-Optional:
 * groups: the groups to run
+Optional:
 * revisions: heads to use the HoT for sub-repos, set to use the set revisions
 * vars: strings that follow the -S command on the command line
 * monitoring: Boolean, whether to run the monitoring script on this suite
