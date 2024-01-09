@@ -10,8 +10,8 @@ um_heads_all:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     monitoring: True
-    time_launch: 02:00
-    time_clean: 01:00
+    time_launch: 01:15
+    time_clean: 00:15
     period: weekly
 
 
@@ -35,8 +35,8 @@ um_xcs_heads_all:
         - HOST_XC40=\"xcsr\"
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 02:00
-    time_clean: 01:00
+    time_launch: 01:05
+    time_clean: 00:05
     period: weekly
 
 
@@ -47,8 +47,8 @@ um_set-revisions_all:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 01:00
-    time_clean: 00:05
+    time_launch: 01:30
+    time_clean: 00:30
     period: weekly
 
 
@@ -59,8 +59,8 @@ um_exz_set-revisions_all:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 01:00
-    time_clean: 00:05
+    time_launch: 02:30
+    time_clean: 01:30
     period: weekly
 
 
@@ -72,8 +72,8 @@ um_heads_nightly:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     monitoring: True
-    time_launch: 02:00
-    time_clean: 00:05
+    time_launch: 01:15
+    time_clean: 00:15
     period: nightly
 
 
@@ -85,7 +85,7 @@ um_exz_heads_nightly:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     time_launch: 02:00
-    time_clean: 00:05
+    time_clean: 01:00
     period: nightly
 
 
@@ -97,7 +97,7 @@ um_xcs_heads_nightly:
         - HOST_XC40=\"xcsr\"
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 02:00
+    time_launch: 01:05
     time_clean: 00:05
     period: nightly
 
@@ -109,7 +109,7 @@ um_set-revisions_nightly:
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 02:30
+    time_launch: 01:30
     time_clean: 00:30
     period: nightly
 
@@ -122,7 +122,7 @@ um_exz_set-revisions_nightly:
         - HOUSEKEEPING=false
         - PREBUILDS=false
     time_launch: 02:30
-    time_clean: 00:30
+    time_clean: 01:30
     period: nightly
 
 
@@ -136,21 +136,21 @@ um_nightly_next-compiler:
         - USE_NEXT_COMPILER=\"meto-xc40-cce,meto-x86-ifort,meto-x86-gnu\"
         - COMPARE_OUTPUT=false
         - COMPARE_WALLCLOCK=false
-    time_launch: 01:45
-    time_clean: 00:45
+    time_launch: 01:10
+    time_clean: 00:10
     period: nightly_all
 
 
-um_set-revisions_nightly_cylc8:
+um_set-revisions_nightly_cylc7:
     repo: um
-    groups: nightly
-    cylc_version: 8
+    groups: developer,ex1a_developer
+    cylc_version: 7
     revisions: set
     vars:
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 02:30
-    time_clean: 00:30
+    time_launch: 03:00
+    time_clean: 02:00
     period: nightly_all
 
 
@@ -163,8 +163,8 @@ jules_nightly:
     groups: all
     vars:
         - HOUSEKEEPING=false
-    time_launch: 03:00
-    time_clean: 02:00
+    time_launch: 03:25
+    time_clean: 02:25
     period: nightly_all
 
 
@@ -173,8 +173,8 @@ jules_exz_nightly:
     groups: ex1a
     vars:
         - HOUSEKEEPING=false
-    time_launch: 03:00
-    time_clean: 02:00
+    time_launch: 03:35
+    time_clean: 02:35
     period: nightly_all
 
 
@@ -184,19 +184,19 @@ jules_xcs_nightly:
     vars:
         - METO_HPC_GROUP=\"xcs\"
         - HOUSEKEEPING=false
-    time_launch: 03:00
-    time_clean: 02:00
+    time_launch: 03:30
+    time_clean: 02:30
     period: nightly_all
 
 
-jules_nightly_cylc8:
+jules_nightly_cylc7:
     repo: jules
     groups: all,ex1a
-    cylc_version: 8
+    cylc_version: 7
     vars:
         - HOUSEKEEPING=false
-    time_launch: 01:00
-    time_clean: 00:05
+    time_launch: 03:15
+    time_clean: 02:15
     period: nightly_all
 
 
@@ -208,6 +208,6 @@ jules_nightly_cylc8:
 ukca_nightly:
     repo: ukca
     groups: scripts
-    time_launch: 00:30
-    time_clean: 00:05
+    time_launch: 04:00
+    time_clean: 04:30
     period: nightly_all

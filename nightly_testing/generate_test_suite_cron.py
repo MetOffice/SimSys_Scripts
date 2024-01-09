@@ -26,7 +26,7 @@ import yaml
 import argparse
 import subprocess
 
-DEFAULT_CYLC_VERSION = 7
+DEFAULT_CYLC_VERSION = 8
 DEPENDENCIES = {
     "lfric_apps": [
         "casim",
