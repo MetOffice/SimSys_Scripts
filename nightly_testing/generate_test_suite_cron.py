@@ -18,7 +18,6 @@ Optional:
 * vars: strings that follow the -S command on the command line
 * monitoring: Boolean, whether to run the monitoring script on this suite
 * cylc_version: 7 or 8
-* commands: list of commands to use. If set, will only run these commands
 """
 
 import os
@@ -89,7 +88,7 @@ def fetch_working_copy_cron():
 
     command = "# Checkout Working Copies #"
     l = len(command)
-    command = f"{l*'#'}\n{command}\n{l*'#'}\n01 00 * * 1-5 "
+    command = f"{l*'#'}\n{command}\n{l*'#'}\n01 00 * * 1-5 {PROFILE} ; "
     command += join_checkout_commands(DEPENDENCIES.keys(), SCRATCH_DIR)
 
     return command + "\n\n\n"
@@ -223,6 +222,56 @@ def generate_clean_cron(suite_name, suite, log_file, cylc_version):
     return clean_cron
 
 
+def generate_rose_stem_command(suite, wc_path, cylc_version, name):
+    """
+    Return a string with the rose-stem command
+    Ignores any additional source arguments
+    """
+
+    return (
+        f"export CYLC_VERSION={cylc_version} ; "
+        + f"rose stem --group={suite['groups']} "
+        + f"{CYLC_DIFFS[cylc_version]['name']}{name} "
+        + f"--source={wc_path} "
+    )
+
+
+def populate_heads_sources(suite):
+    """
+    Append all required dependency sources when using heads testing
+    """
+
+    heads = ""
+
+    if (
+        "revisions" not in suite
+        or suite["revisions"] != "heads"
+        or suite["repo"] == "lfric_apps"
+        or suite["repo"] not in DEPENDENCIES
+    ):
+        return heads
+
+    for item in sorted(DEPENDENCIES[suite["repo"]]):
+        heads += f"--source=fcm:{item}.xm_tr@HEAD "
+    return heads
+
+
+def populate_cl_variables(suite):
+    """
+    Combine variables with the -S command line argument
+    """
+
+    cl_vars = ""
+
+    if "vars" not in suite:
+        return cl_vars
+
+    for item in suite["vars"]:
+        cl_vars += f"-S {item} "
+
+    return cl_vars
+
+
 def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     """
     Generate the main cron_job commands
@@ -233,39 +282,18 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     cron_job += f"{PROFILE} ; "
 
-    # If commands are defined, enter these then return the completed job
-    if "command" in suite:
-        for item in suite["command"]:
-            cron_job += f"{item} "
-            cron_job += f">> {log_file} 2>&1 ; "
-        return cron_job + "\n"
-
     # LFRic Apps sets heads differently so add SED command here
     if suite["repo"] == "lfric_apps" and suite["revisions"] == "heads":
         cron_job += lfric_heads_sed(wc_path)
 
     # Begin rose-stem command
-    cron_job += (
-        f"export CYLC_VERSION={cylc_version} ; "
-        + f"rose stem --group={suite['groups']} "
-        + f"{CYLC_DIFFS[cylc_version]['name']}{name} "
-        + f"--source={wc_path} "
-    )
+    cron_job += generate_rose_stem_command(suite, wc_path, cylc_version, name)
 
-    # If using heads testing and not lfric_apps, define sources here
-    if (
-        "revisions" in suite
-        and suite["revisions"] == "heads"
-        and repo != "lfric_apps"
-        and suite["repo"] in DEPENDENCIES
-    ):
-        for item in DEPENDENCIES[suite["repo"]]:
-            cron_job += f"--source=fcm:{item}.xm_tr@HEAD "
+    # Add Heads Sources if required
+    cron_job += populate_heads_sources(suite)
 
     # Add any -S vars defined
-    if "vars" in suite:
-        for item in suite["vars"]:
-            cron_job += f"-S {item} "
+    cron_job += populate_cl_variables(suite)
 
     cron_job += f">> {log_file} 2>&1"
 

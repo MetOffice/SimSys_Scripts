@@ -116,3 +116,94 @@ data_generate_clean_commands = [
 )
 def test_generate_clean_commands(cylc_version, name, log_file, expected):
     assert generate_clean_commands(cylc_version, name, log_file) == expected
+
+
+# Test generate_rose_stem_command
+data_generate_rose_stem_command = [
+    (
+        {"groups": "all"},
+        "path/to/wc",
+        7,
+        "suite_name",
+        "export CYLC_VERSION=7 ; rose stem --group=all --name=suite_name --source=path/to/wc "
+    ),
+    (
+        {"groups": "nightly"},
+        "path/to/wc",
+        8,
+        "suite_name",
+        "export CYLC_VERSION=8 ; rose stem --group=nightly --workflow-name=suite_name --source=path/to/wc "
+    )
+]
+@pytest.mark.parametrize(
+    ("suite", "wc_path", "cylc_version", "name", "expected"),
+    [test_data for test_data in data_generate_rose_stem_command]
+)
+def test_generate_rose_stem_command(suite, wc_path, cylc_version, name, expected):
+    assert generate_rose_stem_command(suite, wc_path, cylc_version, name) == expected
+
+
+# Test populate_heads_sources
+data_populate_heads_sources = [
+    (
+        {
+            "repo": "um",
+            "revisions": "heads",
+        },
+        "--source=fcm:casim.xm_tr@HEAD --source=fcm:jules.xm_tr@HEAD --source=fcm:mule.xm_tr@HEAD --source=fcm:shumlib.xm_tr@HEAD --source=fcm:socrates.xm_tr@HEAD --source=fcm:ukca.xm_tr@HEAD "
+    ),
+    (
+        {
+            "repo": "um",
+            "revisions": "set",
+        },
+        ""
+    ),
+    (
+        {
+            "repo": "um",
+        },
+        ""
+    ),
+    (
+        {
+            "repo": "jules",
+            "revisions": "heads",
+        },
+        ""
+    ),
+    (
+        {
+            "repo": "lfric_apps",
+            "revisions": "heads"
+        },
+        ""
+    )
+]
+@pytest.mark.parametrize(
+    ("suite", "expected"),
+    [test_data for test_data in data_populate_heads_sources]
+)
+def test_populate_heads_sources(suite, expected):
+    assert populate_heads_sources(suite) == expected
+
+
+# Test populate_cl_variables
+data_populate_cl_variables = [
+    (
+        {
+            "vars": ["var1", "var2", "var3"]
+        },
+        "-S var1 -S var2 -S var3 "
+    ),
+    (
+        {},
+        ""
+    )
+]
+@pytest.mark.parametrize(
+    ("suite", "expected"),
+    [test_data for test_data in data_populate_cl_variables]
+)
+def test_populate_cl_variables(suite, expected):
+    assert populate_cl_variables(suite) == expected
