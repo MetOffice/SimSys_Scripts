@@ -48,7 +48,7 @@ CYLC_DIFFS = {
     },
     8: {
         "name": "--workflow-name=",
-        "clean": "cylc clean --timeout=3600",
+        "clean": "cylc clean --timeout=7200",
     },
 }
 SCRATCH_DIR = os.environ["SCRATCH"]
