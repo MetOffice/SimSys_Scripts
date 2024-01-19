@@ -318,6 +318,42 @@ def get_site():
     return site
 
 
+def get_variables_file_path(suite_dir, site, platform):
+    """
+    Find the path to the file containing kgo version info
+    Is one of variables.rc, variables.cylc or kgo_variables.cylc for lfric_apps
+    """
+
+    # This order is important as both kgo_variables.cylc and variables.cylc
+    # exist for lfric_apps and we want the 1st
+    options = ["kgo_variables.cylc", "variables.cylc", "variables.rc"]
+
+    for fname in options:
+        if site is not None:
+            if platform is not None:
+                file_name, extension = fname.split(".")
+                vars_file = f"{file_name}_{platform}.{extension}"
+                variables_path = os.path.join(
+                    suite_dir,
+                    "site",
+                    site,
+                    vars_file
+                )
+                print("INFO: Looking for a kgo variables file at "
+                      + variables_path)
+                if os.path.exists(variables_path):
+                    return fname, variables_path
+            variables_path = os.path.join(suite_dir, "site", site, fname)
+            print(f"INFO: Looking for a kgo variables file at {variables_path}")
+            if os.path.exists(variables_path):
+                return fname, variables_path
+        variables_path = os.path.join(suite_dir, fname)
+        print(f"INFO: Trying to find a variables file at {variables_path}")
+        if os.path.exists(variables_path):
+            return fname, variables_path
+    sys.exit("ERROR: Couldn't find a kgo variables file")
+
+
 def update_variables_rc(suite_dir, kgo_dirs, new_kgo_dir, site, platform,
                                                                  skip=False):
     """
@@ -326,28 +362,12 @@ def update_variables_rc(suite_dir, kgo_dirs, new_kgo_dir, site, platform,
     """
 
     # Attempt to get a copy of the variables.rc
-    if site is not None:
-        print("INFO: Look in rose-stem/site/{0} directory for variables.rc "
-               "file".format(site))
-        vars_file = "variables.rc"
-        if platform is not None:
-            vars_file = f"variables_{platform}.rc"
-        variables_rc = os.path.join(suite_dir, "site", site, vars_file)
-        if not os.path.exists(variables_rc):
-            print("INFO: variables.rc not found at {0}, trying base of "
-                   "rose-stem directory".format(variables_rc))
-            variables_rc = os.path.join(suite_dir, "variables.rc")
-    else:
-        print("INFO: No SITE found, so looking in base of rose-stem "
-               "directory for variables.rc file.")
-        variables_rc = os.path.join(suite_dir, "variables.rc")
-
-    if not os.path.exists(variables_rc):
-        sys.exit(f"ERROR: {variables_rc} not found.")
+    variables_name, variables_rc = get_variables_file_path(suite_dir,
+                                                           site,
+                                                           platform)
 
     # Create a file to hold the new variables.rc
-    variables_rc_new = os.path.expanduser(
-        "~/variables.rc_{0}".format(new_kgo_dir))
+    variables_rc_new = os.path.expanduser(f"~/{variables_name}_{new_kgo_dir}")
     if os.path.exists(variables_rc_new):
         print("WARNING: New variables.rc file for this update already exists "
               "at {0} and will be overwritten".format(variables_rc_new))
