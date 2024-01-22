@@ -42,8 +42,18 @@ read -p "Suite Name: " suite_name
 read -p "Enter the path to the merged trunk WC: " wc_path
 # Trim any trailing / from the end of the path
 wc_path=${wc_path%/}
+if [ ! -d "${wc_path}" ]; then
+    printf "${RED}${wc_path} is not a valid path${NC}\n"
+    exit 1
+fi
 read -p "Version Number (VV.V): " version_number
 read -p "Ticket Number (TTTT): " ticket_number
+read -p "Enter the variables file extension (.rc or .cylc (default)): " variables_extension
+variables_extension=${variables_extension:-".cylc"}
+if [[ $variables_extension != ".rc" ]] && [[ $variables_extension != ".cylc" ]]; then
+    printf "${RED}The provided variables extension '${variables_extension}' is not a valid choice (.cylc or .rc)${NC}\n"
+    exit 1
+fi
 read -p "How should the new kgo directory be named (default vn${version_number}_t${ticket_number}): " new_kgo_dir
 new_kgo_dir=${new_kgo_dir:-"vn${version_number}_t${ticket_number}"}
 
@@ -59,6 +69,7 @@ fi
 echo "Trunk WC Path: ${wc_path}"
 echo "Version Number: ${version_number}"
 echo "Ticket Number: ${ticket_number}"
+echo "Variables Extension: ${variables_extension}"
 echo "New KGO Dir: ${new_kgo_dir}"
 if [ $new_release -eq 1 ]; then
     echo "WARNING: Running with --new-release enabled"
@@ -80,6 +91,7 @@ command=". /etc/profile ; module load scitools ; cd kgo_update ;
                                   -N ${new_kgo_dir}
                                   -R ${new_release}
                                   -P '${platforms}'
+                                  -F ${variables_extension}
                                   -V ${version_number} ;
          cd ~ ; rm -rf kgo_update"
 
@@ -98,10 +110,10 @@ if [[ $platforms == *"spice"* ]]; then
         succeeded_spice=1
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the spice variables file into this working copy.\n${NC}"
-            scp -q frum@localhost:~/${variables_dir}/spice_updated_variables.rc \
-                                        ${wc_path}/rose-stem/site/meto/variables_spice.rc
+            scp -q frum@localhost:~/${variables_dir}/spice_updated_variables${variables_extension} \
+                                        ${wc_path}/rose-stem/site/meto/variables_spice${variables_extension}
             if [[ $? -ne 0 ]]; then
-                printf "${RED}The copy of the spice variables.rc into this working copy has failed.\n${NC}"
+                printf "${RED}The copy of the spice variables file into this working copy has failed.\n${NC}"
                 succeeded_spice=0
                 succeeded_all=0
             fi
@@ -116,10 +128,10 @@ if [[ $platforms == *"xc40"* ]]; then
         succeeded_xc40=1
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the xc40 variables file into this working copy.\n${NC}"
-            scp -q frum@localhost:~/${variables_dir}/xc40_updated_variables.rc \
-                                        ${wc_path}/rose-stem/site/meto/variables_xc40.rc
+            scp -q frum@localhost:~/${variables_dir}/xc40_updated_variables${variables_extension} \
+                                        ${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}
             if [[ $? -ne 0 ]]; then
-                printf "${RED}The copy of the xc40 variables.rc into this working copy has failed.\n${NC}"
+                printf "${RED}The copy of the xc40 variables file into this working copy has failed.\n${NC}"
                 succeeded_xc40=0
                 succeeded_all=0
             fi
@@ -134,10 +146,10 @@ if [[ $platforms == *"ex1a"* ]]; then
         succeeded_ex1a=1
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the ex1a variables file into this working copy.\n${NC}"
-            scp -q frum@localhost:~/${variables_dir}/ex1a_updated_variables.rc \
-                                        ${wc_path}/rose-stem/site/meto/variables_ex1a.rc
+            scp -q frum@localhost:~/${variables_dir}/ex1a_updated_variables${variables_extension} \
+                                        ${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}
             if [[ $? -ne 0 ]]; then
-                printf "${RED}The copy of the ex1a variables.rc into this working copy has failed.\n${NC}"
+                printf "${RED}The copy of the ex1a variables file into this working copy has failed.\n${NC}"
                 succeeded_ex1a=0
                 succeeded_all=0
             fi

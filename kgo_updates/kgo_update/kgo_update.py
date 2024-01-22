@@ -27,6 +27,7 @@ Optional Arguments:
                      version of the UM
 => -P Specify the platform this is being run on. Currently only relevant if the
       site is meto - if so then it will be automatically populated if not given
+=> -E --extension    Specify the extension of the variables file. .rc or .cylc
 
 
 """
@@ -38,8 +39,6 @@ import argparse
 import subprocess
 from collections import defaultdict
 
-if sys.version_info.major == 2:
-    sys.exit("kgo_update.py can no longer be run using python2")
 
 # Global criteria for updating - any statuses matched by this list will
 # be treated as "failed" for the purposes of updating.  When running a
@@ -318,56 +317,56 @@ def get_site():
     return site
 
 
-def get_variables_file_path(suite_dir, site, platform):
+def get_variables_file_path(suite_dir, site, platform, variables_extension):
     """
     Find the path to the file containing kgo version info
     Is one of variables.rc, variables.cylc or kgo_variables.cylc for lfric_apps
     """
 
-    # This order is important as both kgo_variables.cylc and variables.cylc
-    # exist for lfric_apps and we want the 1st
-    options = ["kgo_variables.cylc", "variables.cylc", "variables.rc"]
-
-    for fname in options:
-        if site is not None:
-            if platform is not None:
-                file_name, extension = fname.split(".")
-                vars_file = f"{file_name}_{platform}.{extension}"
-                variables_path = os.path.join(
-                    suite_dir,
-                    "site",
-                    site,
-                    vars_file
-                )
-                print("INFO: Looking for a kgo variables file at "
-                      + variables_path)
-                if os.path.exists(variables_path):
-                    return fname, variables_path
-            variables_path = os.path.join(suite_dir, "site", site, fname)
-            print(f"INFO: Looking for a kgo variables file at {variables_path}")
-            if os.path.exists(variables_path):
-                return fname, variables_path
-        variables_path = os.path.join(suite_dir, fname)
+    if site is not None and platform is not None:
+        vars_file = f"variables_{platform}{variables_extension}"
+        variables_path = os.path.join(
+            suite_dir,
+            "site",
+            site,
+            vars_file
+        )
+        print("INFO: Looking for a kgo variables file at "
+                + variables_path)
+        if os.path.exists(variables_path):
+            return variables_path
+        variables_path = os.path.join(suite_dir,
+                                      f"variables{variables_extension}")
         print(f"INFO: Trying to find a variables file at {variables_path}")
         if os.path.exists(variables_path):
-            return fname, variables_path
+            return variables_path
     sys.exit("ERROR: Couldn't find a kgo variables file")
 
 
-def update_variables_rc(suite_dir, kgo_dirs, new_kgo_dir, site, platform,
-                                                                 skip=False):
+def update_variables_rc(
+        suite_dir,
+        kgo_dirs,
+        new_kgo_dir,
+        site,
+        platform,
+        variables_extension,
+        skip=False
+    ):
     """
     Create an updated copy of the variables.rc with the KGO variables for
     any changed jobs updated
     """
 
     # Attempt to get a copy of the variables.rc
-    variables_name, variables_rc = get_variables_file_path(suite_dir,
-                                                           site,
-                                                           platform)
+    variables_rc = get_variables_file_path(suite_dir,
+                                           site,
+                                           platform,
+                                           variables_extension)
 
     # Create a file to hold the new variables.rc
-    variables_rc_new = os.path.expanduser(f"~/{variables_name}_{new_kgo_dir}")
+    variables_rc_new = os.path.expanduser(
+        f"~/variables{variables_extension}_{new_kgo_dir}"
+    )
     if os.path.exists(variables_rc_new):
         print("WARNING: New variables.rc file for this update already exists "
               "at {0} and will be overwritten".format(variables_rc_new))
@@ -474,6 +473,10 @@ def main():
                         "running on. Defaults as ''. If the site is meto then"
                         "the platform will be autopopulated.")
 
+    parser.add_argument('-E', "--extension",
+                        help="The extension of the variables file, either .rc "
+                        "or .cylc")
+
     args = parser.parse_args()
 
     if args.new_release:
@@ -487,6 +490,7 @@ def main():
     if new_kgo_dir is None:
         new_kgo_dir = "install_in_place"
     platform = args.platform
+    variables_extension = args.extension
 
     if suite_name is None or suite_user is None:
         message = "'kgo_update.py' will no longer ask for your suite "\
@@ -560,8 +564,15 @@ def main():
     # Update the variables.rc (don't do this for new releases as it's part
     # of the release process already)
     if not args.new_release:
-        update_variables_rc(suite_dir, kgo_dirs, new_kgo_dir, site,
-                                                platform, skip=confirm_skip)
+        update_variables_rc(
+            suite_dir,
+            kgo_dirs,
+            new_kgo_dir,
+            site,
+            platform,
+            variables_extension,
+            skip=confirm_skip
+        )
 
     # Open the file for viewing in user's editor
     if interactive:
