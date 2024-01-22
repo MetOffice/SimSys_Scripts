@@ -168,7 +168,13 @@ fi
 # For the xc40s rsync the generated kgo to the xcs
 if [[ $succeeded_xc40 -eq 1 ]]; then
     printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
-    rsync_com="ssh -Y xcel00 'rsync -av /projects/um1/standard_jobs/kgo/ xcslr0:/common/um1/standard_jobs/kgo/'"
+    read -p "Enter 1 to rsync UM KGO, 2 to rsync lfricinputs KGO (default 1): " rsync_type
+    if [[ $rsync_type == "2" ]]; then
+        rsync_dir="lfricinputs/kgo/"
+    else
+        rsync_dir="kgo/"
+    fi
+    rsync_com="ssh -Y xcel00 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
     ssh -Y frum@localhost $rsync_com
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the xcs has failed.\n${NC}"
