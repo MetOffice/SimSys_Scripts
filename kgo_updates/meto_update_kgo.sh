@@ -16,6 +16,9 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+# Move to the location of the script
+cd "$(dirname "$0")"
+
 # Check for command line argument to run with new release_mode
 new_release=0
 if [ $# -ne 0 ]; then
