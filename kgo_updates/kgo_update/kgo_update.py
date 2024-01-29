@@ -323,8 +323,10 @@ def get_variables_file_path(suite_dir, site, platform, variables_extension):
     Is one of variables.rc, variables.cylc or kgo_variables.cylc for lfric_apps
     """
 
-    if site is not None and platform is not None:
-        vars_file = f"variables_{platform}{variables_extension}"
+    if site is not None:
+        vars_file = "variables.rc"
+        if platform is not None:
+            vars_file = f"variables_{platform}{variables_extension}"
         variables_path = os.path.join(
             suite_dir,
             "site",
