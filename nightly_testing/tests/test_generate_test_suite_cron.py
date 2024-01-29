@@ -101,13 +101,13 @@ data_generate_clean_commands = [
         7,
         "suite_name",
         "cron_log",
-        f"{PROFILE} ; export CYLC_VERSION=7 ; rose suite-clean -y -q suite_name >> cron_log 2>&1\n"
+        f"{PROFILE} ; export CYLC_VERSION=7 ; cylc stop 'suite_name' >/dev/null 2>&1 ; sleep 10 ; rose suite-clean -y -q suite_name >> cron_log 2>&1\n"
     ),
     (
         8,
         "suite_name",
         "cron_log",
-        f"{PROFILE} ; export CYLC_VERSION=8 ; cylc clean --timeout=3600 -y -q suite_name >> cron_log 2>&1\n"
+        f"{PROFILE} ; export CYLC_VERSION=8 ; cylc stop 'suite_name' >/dev/null 2>&1 ; sleep 10 ; cylc clean --timeout=7200 -y -q suite_name >> cron_log 2>&1\n"
     )
 ]
 @pytest.mark.parametrize(

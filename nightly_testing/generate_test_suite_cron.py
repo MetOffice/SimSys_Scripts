@@ -198,6 +198,7 @@ def generate_clean_commands(cylc_version, name, log_file):
     return (
         f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
+        f"cylc stop '{name}' >/dev/null 2>&1 ; sleep 10 ; "
         f"{CYLC_DIFFS[cylc_version]['clean']} -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
