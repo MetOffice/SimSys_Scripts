@@ -17,7 +17,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 # Move to the location of the script
-cd "$(dirname "$0")"
+script_loc="$(dirname "$0")"
 
 # Check for command line argument to run with new release_mode
 new_release=0
@@ -62,7 +62,7 @@ if [ -f "${wc_path}/rose-stem/suite.rc" ]; then
 elif [ -f "${wc_path}/rose-stem/suite.cylc" ] || [ -f "${wc_path}/rose-stem/flow.cylc" ]; then
     variables_extension=".cylc"
 else
-    printf "${RED}Couldn't detect a flow.cylc or suite.rc at ${wc_path}/rose-stem/${NC}"
+    printf "${RED}Couldn't detect a flow.cylc or suite.rc at ${wc_path}/rose-stem/\n${NC}"
     exit 1
 fi
 
@@ -90,7 +90,7 @@ if [ $run_script != "y" ]; then
 fi
 
 # Move the kgo_update directory to frum on linux
-scp -rq kgo_update frum@localhost:~
+scp -rq $script_loc/kgo_update frum@localhost:~
 
 # Define command to run as frum
 command=". /etc/profile ; module load scitools ; cd kgo_update ;
