@@ -42,7 +42,7 @@ else
     suite_user_ex1a=None
 fi
 read -p "Suite Name: " suite_name
-read -p "Enter the path to the merged trunk WC: " wc_path
+read -p "Enter the path to the merged trunk WC (top directory): " wc_path
 # Trim any trailing / from the end of the path
 wc_path=${wc_path%/}
 if [ ! -d "${wc_path}" ]; then
@@ -51,14 +51,20 @@ if [ ! -d "${wc_path}" ]; then
 fi
 read -p "Version Number (VV.V): " version_number
 read -p "Ticket Number (TTTT): " ticket_number
-read -p "Enter the variables file extension (.rc or .cylc (default)): " variables_extension
-variables_extension=${variables_extension:-".cylc"}
-if [[ $variables_extension != ".rc" ]] && [[ $variables_extension != ".cylc" ]]; then
-    printf "${RED}The provided variables extension '${variables_extension}' is not a valid choice (.cylc or .rc)${NC}\n"
-    exit 1
-fi
 read -p "How should the new kgo directory be named (default vn${version_number}_t${ticket_number}): " new_kgo_dir
 new_kgo_dir=${new_kgo_dir:-"vn${version_number}_t${ticket_number}"}
+
+# Check in the working_copy rose-stem for .rc or .cylc files
+# Need this for the variables file extension
+# Can't use Cylc version as .rc can be used in compatability mode
+if [ -f "${wc_path}/rose-stem/suite.rc" ]; then
+    variables_extension=".rc"
+elif [ -f "${wc_path}/rose-stem/suite.cylc" ] || [ -f "${wc_path}/rose-stem/flow.cylc" ]; then
+    variables_extension=".cylc"
+else
+    printf "${RED}Couldn't detect a flow.cylc or suite.rc at ${wc_path}/rose-stem/${NC}"
+    exit 1
+fi
 
 # Get user to double check settings
 clear
