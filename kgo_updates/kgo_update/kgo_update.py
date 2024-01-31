@@ -475,7 +475,7 @@ def main():
                         "running on. Defaults as ''. If the site is meto then"
                         "the platform will be autopopulated.")
 
-    parser.add_argument('-E', "--extension",
+    parser.add_argument('-E', "--extension", default=".rc",
                         help="The extension of the variables file, either .rc "
                         "or .cylc")
 
