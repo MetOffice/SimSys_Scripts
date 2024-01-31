@@ -312,36 +312,39 @@ def get_site():
         site = stdout.decode('utf-8').split("=")[1].strip()
         print("Found site via rose-config: {0}\n".format(site))
     else:
-        site = None
-        print("No site found via 'rose config' ...")
+        sys.exit(
+            "No site was detected via rose config - this setting is required"
+        )
     return site
 
 
 def get_variables_file_path(suite_dir, site, platform, variables_extension):
     """
     Find the path to the file containing kgo version info
-    Is one of variables.rc, variables.cylc or kgo_variables.cylc for lfric_apps
+    Uses the variables_extension to search for both .cylc and .rc files
+    If the platform is set, it will search for variables_<platform>.extension
+    otherwise just variables.extension
     """
 
-    if site is not None:
-        vars_file = "variables.rc"
-        if platform is not None:
-            vars_file = f"variables_{platform}{variables_extension}"
-        variables_path = os.path.join(
-            suite_dir,
-            "site",
-            site,
-            vars_file
-        )
+    site_path = os.path.join(suite_dir, "site", site)
+
+    # Search for a variables_<platform>. file
+    if platform is not None:
+        vars_file = f"variables_{platform}{variables_extension}"
+        variables_path = os.path.join(site_path, vars_file)
         print("INFO: Looking for a kgo variables file at "
                 + variables_path)
         if os.path.exists(variables_path):
             return variables_path
-        variables_path = os.path.join(suite_dir,
-                                      f"variables{variables_extension}")
-        print(f"INFO: Trying to find a variables file at {variables_path}")
-        if os.path.exists(variables_path):
-            return variables_path
+
+    # Search for a variables. file if a platform one doesn't exist, eg. VM site
+    vars_file = "variables.rc"
+    variables_path = os.path.join(site_path, vars_file)
+    print("INFO: Looking for a kgo variables file at "
+            + variables_path)
+    if os.path.exists(variables_path):
+        return variables_path
+
     sys.exit("ERROR: Couldn't find a kgo variables file")
 
 
