@@ -338,7 +338,7 @@ def get_variables_file_path(suite_dir, site, platform, variables_extension):
             return variables_path
 
     # Search for a variables. file if a platform one doesn't exist, eg. VM site
-    vars_file = "variables.rc"
+    vars_file = f"variables{variables_extension}"
     variables_path = os.path.join(site_path, vars_file)
     print("INFO: Looking for a kgo variables file at "
             + variables_path)
