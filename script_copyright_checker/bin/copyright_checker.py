@@ -50,7 +50,7 @@ def load_templates():
 
     template_path = "."
     if "CYLC_TASK_WORK_PATH" in os.environ:
-        template_path = os.environ["CYLC_TASK_WORK_PATH"]
+        template_path = os.environ["CYLC_TASK_WORK_PATH"] + "/file/"
 
     filter_tmp = _FILENAME_FILTER
     _FILENAME_FILTER = re.compile(r".*\.template$")
