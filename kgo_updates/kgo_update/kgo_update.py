@@ -5,7 +5,7 @@
 # which you should have received as part of this distribution.
 # *****************************COPYRIGHT*******************************
 """
-This script will parse the rose-ana-comparisons.db produces by a valid
+This script will parse the rose-ana-comparisons.db produced by a valid
 rose-stem suite, writing and executing a sub-script which performs a
 KGO update (creating new KGO folders and installing the required files)
 
@@ -23,7 +23,7 @@ Optional Arguments:
                      found in.
 => --non-interactive Run in non-interactive mode. The suite will not ask any
                      questions. This is not a recommended option
-=> --new-release     Only for use by the UM Systems Team when releasing a new
+=> --new-release     Only for use by the Systems Team when releasing a new
                      version of the UM
 => -P Specify the platform this is being run on. Currently only relevant if the
       site is meto - if so then it will be automatically populated if not given
