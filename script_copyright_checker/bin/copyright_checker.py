@@ -32,6 +32,7 @@ _OUTPUT_LINE_WIDTH = 80
 # Pattern which will match the intended input files
 _FILENAME_FILTER = re.compile(r".*\.(py|c|F90|f90|h|sh)$")
 
+
 # ------------------------------------------------------------------------------
 def banner_print(message, maxwidth=_OUTPUT_LINE_WIDTH, char="%"):
     """
@@ -41,12 +42,12 @@ def banner_print(message, maxwidth=_OUTPUT_LINE_WIDTH, char="%"):
         char + " " + elt.ljust(maxwidth - 4) + " " + char
         for elt in wrap(message, width=maxwidth - 4)
     ]
-    wrapmessage = "\n".join(wrap_message)
+    wrap_message = "\n".join(wrap_message)
     print(f"\n{char * maxwidth}\n{wrap_message}\n{char * maxwidth}")
 
 
 # ------------------------------------------------------------------------------
-def load_templates():
+def load_templates(filter_pattern):
     """
     Attempt load allowed copyright templates
     """
@@ -59,8 +60,9 @@ def load_templates():
             os.environ["CYLC_TASK_WORK_PATH"], "file", ""
         )
 
-    filter_tmp = re.compile(r".*\.template$")
-    template_files = files_to_process(template_path, [], filter_pattern=filter_tmp)
+    template_files = files_to_process(
+        template_path, [], filter_pattern=filter_pattern
+    )
 
     for filename in template_files:
         with open(filename) as file:
@@ -82,9 +84,9 @@ def template_is_in_file(file, template):
 
 
 # ------------------------------------------------------------------------------
-def check_file_compliance(filename, templates):
+def check_file_compliance(filename, templates, regex_templates):
     """
-    Attempt to match the contents of the file "filename" to one of the 
+    Attempt to match the contents of the file "filename" to one of the
     pre-loaded templates.
 
     Returns True if any of the templates are found in the contents of the file.
@@ -97,6 +99,16 @@ def check_file_compliance(filename, templates):
         for _, template in templates:
             if not found_template:
                 if template_is_in_file(lines, template):
+                    found_template = True
+
+    if found_template:
+        return True
+
+    with open(filename) as file:
+        lines = file.read()
+        for _, template in regex_templates:
+            if not found_template:
+                if template.search(lines):
                     found_template = True
 
     return found_template
@@ -126,10 +138,21 @@ def main(inputs, ignore_list):
     """main program block"""
 
     templates = []
+    regex_templates_raw = []
+    regex_templates = []
 
     banner_print("Running copyright checker")
 
-    templates.append(load_templates())
+    filter_tmp = re.compile(r".*\.template$")
+    templates.extend(load_templates(filter_pattern=filter_tmp))
+
+    filter_tmp = re.compile(r".*\.regex_template$")
+    regex_templates_raw.extend(load_templates(filter_pattern=filter_tmp))
+
+    for filename, template_lines in regex_templates_raw:
+        regex_templates.append(
+            (filename, re.compile(r"\n".join(template_lines)))
+        )
 
     files_to_check = []
     for file_input in inputs:
@@ -155,7 +178,7 @@ def main(inputs, ignore_list):
     failed_files = []
     for item in files_to_check:
         print(f"file : {item}")
-        file_pass = check_file_compliance(item, templates)
+        file_pass = check_file_compliance(item, templates, regex_templates)
         if not file_pass:
             failed_files.append(item)
 
