@@ -32,9 +32,6 @@ _OUTPUT_LINE_WIDTH = 80
 # Pattern which will match the intended input files
 _FILENAME_FILTER = re.compile(r".*\.(py|c|F90|f90|h|sh)$")
 
-_TEMPLATES = []
-
-
 # ------------------------------------------------------------------------------
 def banner_print(message, maxwidth=_OUTPUT_LINE_WIDTH, char="%"):
     """
@@ -54,7 +51,7 @@ def load_templates():
     Attempt load allowed copyright templates
     """
 
-    global _FILENAME_FILTER
+    loaded_templates = []
 
     template_path = "."
     if "CYLC_TASK_WORK_PATH" in os.environ:
@@ -62,15 +59,15 @@ def load_templates():
             os.environ["CYLC_TASK_WORK_PATH"], "file", ""
         )
 
-    filter_tmp = _FILENAME_FILTER
-    _FILENAME_FILTER = re.compile(r".*\.template$")
-    template_files = files_to_process(template_path, [])
-    _FILENAME_FILTER = filter_tmp
+    filter_tmp = re.compile(r".*\.template$")
+    template_files = files_to_process(template_path, [], filter_pattern=filter_tmp)
 
     for filename in template_files:
         with open(filename) as file:
             lines = file.read().splitlines()
-            _TEMPLATES.append((filename, lines))
+            loaded_templates.append((filename, lines))
+
+    return loaded_templates
 
 
 # ------------------------------------------------------------------------------
@@ -85,20 +82,19 @@ def template_is_in_file(file, template):
 
 
 # ------------------------------------------------------------------------------
-def check_file_compliance(filename):
+def check_file_compliance(filename, templates):
     """
-    Attempt to compile the file and look for error messages.
-    Note : compileall returns a 0 return code if the file does NOT exist
-         : This may seem a little dangerous, but the assumption is that
-         : 'filename' was found/generated elsewhere and is known to exist
-         : by this point.
+    Attempt to match the contents of the file "filename" to one of the 
+    pre-loaded templates.
+
+    Returns True if any of the templates are found in the contents of the file.
     """
 
     found_template = False
 
     with open(filename) as file:
         lines = file.read().splitlines()
-        for _, template in _TEMPLATES:
+        for _, template in templates:
             if not found_template:
                 if template_is_in_file(lines, template):
                     found_template = True
@@ -107,7 +103,7 @@ def check_file_compliance(filename):
 
 
 # ------------------------------------------------------------------------------
-def files_to_process(filepath, ignore_list):
+def files_to_process(filepath, ignore_list, filter_pattern=_FILENAME_FILTER):
     """
     Generate list of files in given filepath.  Ignore any files matching
     the patterns in the ignore list
@@ -115,7 +111,7 @@ def files_to_process(filepath, ignore_list):
     files = []
     for root, _, filenames in os.walk(filepath):
         for filename in filenames:
-            if _FILENAME_FILTER.match(filename):
+            if filter_pattern.match(filename):
                 path_to_file = os.path.join(root, filename)
                 if any([ignore in path_to_file for ignore in ignore_list]):
                     print(f"WARNING: Ignoring file: {path_to_file}")
@@ -129,9 +125,11 @@ def files_to_process(filepath, ignore_list):
 def main(inputs, ignore_list):
     """main program block"""
 
+    templates = []
+
     banner_print("Running copyright checker")
 
-    load_templates()
+    templates.append(load_templates())
 
     files_to_check = []
     for file_input in inputs:
@@ -157,7 +155,7 @@ def main(inputs, ignore_list):
     failed_files = []
     for item in files_to_check:
         print(f"file : {item}")
-        file_pass = check_file_compliance(item)
+        file_pass = check_file_compliance(item, templates)
         if not file_pass:
             failed_files.append(item)
 
