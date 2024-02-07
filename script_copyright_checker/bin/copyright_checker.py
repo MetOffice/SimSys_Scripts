@@ -13,8 +13,14 @@ import os
 import sys
 import subprocess
 
-from fcm_bdiff import (get_branch_diff_filenames, text_decoder, is_trunk,
-                       use_mirror, get_branch_info, get_url)
+from fcm_bdiff import (
+    get_branch_diff_filenames,
+    text_decoder,
+    is_trunk,
+    use_mirror,
+    get_branch_info,
+    get_url,
+)
 import argparse
 from textwrap import wrap
 
@@ -34,10 +40,13 @@ def banner_print(message, maxwidth=_OUTPUT_LINE_WIDTH, char="%"):
     """
     Simple routine which prints a banner message
     """
-    wrap_message = [char + " " + elt.ljust(maxwidth-4) + " " + char
-                    for elt in wrap(message, width=maxwidth-4)]
-    print("\n{0:s}\n{1:s}\n{0:s}".format(char*maxwidth,
-                                         "\n".join(wrap_message)))
+    wrap_message = [
+        char + " " + elt.ljust(maxwidth - 4) + " " + char
+        for elt in wrap(message, width=maxwidth - 4)
+    ]
+    print(
+        "\n{0:s}\n{1:s}\n{0:s}".format(char * maxwidth, "\n".join(wrap_message))
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -69,7 +78,7 @@ def template_is_in_file(file, template):
     Check if the contemt of a template exists somehwere within the file.
     """
     for i in range(len(file) - len(template) + 1):
-        if all(template[j] == file[i+j] for j in range(len(template))):
+        if all(template[j] == file[i + j] for j in range(len(template))):
             return True
     return False
 
@@ -117,7 +126,7 @@ def files_to_process(filepath, ignore_list):
 
 # ------------------------------------------------------------------------------
 def main(inputs, ignore_list):
-    """ main program block """
+    """main program block"""
 
     banner_print("Running copyright checker")
 
@@ -136,9 +145,11 @@ def main(inputs, ignore_list):
             print("Source (dir) : {0:s}".format(file_input))
             files_to_check.extend(files_to_process(file_input, ignore_list))
         else:
-            raise SystemExit("[ERROR] Input sources must be files/directories"
-                             + "\n         : "
-                             + "\"{0:}\" is neither".format(file_input))
+            raise SystemExit(
+                "[ERROR] Input sources must be files/directories"
+                + "\n         : "
+                + '"{0:}" is neither'.format(file_input)
+            )
 
     print("\nFound {0:d} files to check".format(len(files_to_check)))
 
@@ -150,51 +161,80 @@ def main(inputs, ignore_list):
             failed_files.append(item)
 
     fail_count = len(failed_files)
-    banner_print("Checks completed with {0:d} failure{1:s}\n"
-                 .format(fail_count, "s" if fail_count != 1 else ""))
+    banner_print(
+        "Checks completed with {0:d} failure{1:s}\n".format(
+            fail_count, "s" if fail_count != 1 else ""
+        )
+    )
 
     if fail_count > 0:
-        print(": Failed file{0:s} :"
-              .format("s" if fail_count != 1 else ""))
+        print(": Failed file{0:s} :".format("s" if fail_count != 1 else ""))
         for filename in failed_files:
             full_fname = os.path.realpath(filename)
-            banner_print(full_fname, maxwidth=(len(full_fname) + 10), char='#')
+            banner_print(full_fname, maxwidth=(len(full_fname) + 10), char="#")
             print("")
         print("")
-        raise SystemExit("[ERROR] {0:d} {1:s}"
-                         .format(fail_count,
-                                 "files have missing copyright notices"
-                                 if fail_count != 1 else
-                                 "file is missing a copyright notice"))
+        raise SystemExit(
+            "[ERROR] {0:d} {1:s}".format(
+                fail_count,
+                "files have missing copyright notices"
+                if fail_count != 1
+                else "file is missing a copyright notice",
+            )
+        )
 
 
 # ------------------------------------------------------------------------------
 def parse_options():
     """Parse command line code options."""
     usage = "usage: %(prog)s [options] directory/file1 [[directory/file2] ...]"
-    description = ("This script will scan for files to "
-                   "check for copyright notices. "
-                   "Arguments may be any combination of files and/or "
-                   "directories; "
-                   "individual files will be scanned, and all files within "
-                   "directories and their sub-directories will be scanned.")
+    description = (
+        "This script will scan for files to "
+        "check for copyright notices. "
+        "Arguments may be any combination of files and/or "
+        "directories; "
+        "individual files will be scanned, and all files within "
+        "directories and their sub-directories will be scanned."
+    )
     parser = argparse.ArgumentParser(usage=usage, description=description)
     excl_group = parser.add_mutually_exclusive_group()
-    parser.add_argument("--ignore", action="store", dest="ignore",
-                        default=None,
-                        help=("ignore filename/s containing "
-                              "(comma separated list of patterns)"))
-    parser.add_argument("--base_path", action="store", dest="base_path",
-                        default=None,
-                        help="Override the base path to find the actual file.")
-    excl_group.add_argument("--full_trunk", action="store_true", default=False,
-                            help=("run on use the full file list when trunk, "
-                                  "else run on fcm branch-diff"))
-    excl_group.add_argument("--bdiff", action="store_true", default=False,
-                            help="run on an fcm branch-diff")
-    excl_group.add_argument('files', nargs='*', default=['./'],
-                            help="File(s) to check and/or directories to "
-                                 "recursively search")
+    parser.add_argument(
+        "--ignore",
+        action="store",
+        dest="ignore",
+        default=None,
+        help=(
+            "ignore filename/s containing " "(comma separated list of patterns)"
+        ),
+    )
+    parser.add_argument(
+        "--base_path",
+        action="store",
+        dest="base_path",
+        default=None,
+        help="Override the base path to find the actual file.",
+    )
+    excl_group.add_argument(
+        "--full_trunk",
+        action="store_true",
+        default=False,
+        help=(
+            "run on use the full file list when trunk, "
+            "else run on fcm branch-diff"
+        ),
+    )
+    excl_group.add_argument(
+        "--bdiff",
+        action="store_true",
+        default=False,
+        help="run on an fcm branch-diff",
+    )
+    excl_group.add_argument(
+        "files",
+        nargs="*",
+        default=["./"],
+        help="File(s) to check and/or directories to " "recursively search",
+    )
     args = parser.parse_args()
 
     if args.full_trunk:
@@ -212,16 +252,16 @@ def parse_options():
 
     if args.bdiff:
         # Filter the files returned by fcm bdiff to just the *.py ones
-        args.files = [code_file
-                      for code_file in
-                      get_branch_diff_filenames("./", args.base_path)
-                      if _FILENAME_FILTER.match(code_file)]
+        args.files = [
+            code_file
+            for code_file in get_branch_diff_filenames("./", args.base_path)
+            if _FILENAME_FILTER.match(code_file)
+        ]
     return args
 
 
 # ------------------------------------------------------------------------------
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # Parse command line options
     OPTS = parse_options()
 
