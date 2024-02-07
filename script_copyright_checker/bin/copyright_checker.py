@@ -44,9 +44,8 @@ def banner_print(message, maxwidth=_OUTPUT_LINE_WIDTH, char="%"):
         char + " " + elt.ljust(maxwidth - 4) + " " + char
         for elt in wrap(message, width=maxwidth - 4)
     ]
-    print(
-        "\n{0:s}\n{1:s}\n{0:s}".format(char * maxwidth, "\n".join(wrap_message))
-    )
+    wrapmessage = "\n".join(wrap_message)
+    print(f"\n{char * maxwidth}\n{wrap_message}\n{char * maxwidth}")
 
 
 # ------------------------------------------------------------------------------
@@ -59,7 +58,9 @@ def load_templates():
 
     template_path = "."
     if "CYLC_TASK_WORK_PATH" in os.environ:
-        template_path = os.environ["CYLC_TASK_WORK_PATH"] + "/file/"
+        template_path = os.path.join(
+            os.environ["CYLC_TASK_WORK_PATH"], "file", ""
+        )
 
     filter_tmp = _FILENAME_FILTER
     _FILENAME_FILTER = re.compile(r".*\.template$")
@@ -117,7 +118,7 @@ def files_to_process(filepath, ignore_list):
             if _FILENAME_FILTER.match(filename):
                 path_to_file = os.path.join(root, filename)
                 if any([ignore in path_to_file for ignore in ignore_list]):
-                    print("WARNING: Ignoring file: {0:s}".format(path_to_file))
+                    print(f"WARNING: Ignoring file: {path_to_file}")
                     continue
                 files.append(path_to_file)
 
@@ -136,51 +137,44 @@ def main(inputs, ignore_list):
     for file_input in inputs:
         if os.path.isfile(file_input):
             if any([ignore in file_input for ignore in ignore_list]):
-                print("WARNING: Ignoring file: {0:s}".format(file_input))
+                print(f"WARNING: Ignoring file: {file_input}")
                 continue
             else:
-                print("Source (file): {0:s}".format(file_input))
+                print(f"Source (file): {file_input}")
                 files_to_check.append(file_input)
         elif os.path.isdir(file_input):
-            print("Source (dir) : {0:s}".format(file_input))
+            print(f"Source (dir) : {file_input}")
             files_to_check.extend(files_to_process(file_input, ignore_list))
         else:
             raise SystemExit(
                 "[ERROR] Input sources must be files/directories"
                 + "\n         : "
-                + '"{0:}" is neither'.format(file_input)
+                + f'"{file_input}" is neither'
             )
 
-    print("\nFound {0:d} files to check".format(len(files_to_check)))
+    print(f"\nFound {len(files_to_check)} files to check")
 
     failed_files = []
     for item in files_to_check:
-        print("file : {0:}".format(item))
+        print(f"file : {item}")
         file_pass = check_file_compliance(item)
         if not file_pass:
             failed_files.append(item)
 
     fail_count = len(failed_files)
-    banner_print(
-        "Checks completed with {0:d} failure{1:s}\n".format(
-            fail_count, "s" if fail_count != 1 else ""
-        )
-    )
+    plural = "s" if fail_count != 1 else ""
+    banner_print(f"Checks completed with {fail_count} failure{plural}\n")
 
     if fail_count > 0:
-        print(": Failed file{0:s} :".format("s" if fail_count != 1 else ""))
+        print(f": Failed file{plural} :")
         for filename in failed_files:
             full_fname = os.path.realpath(filename)
             banner_print(full_fname, maxwidth=(len(full_fname) + 10), char="#")
             print("")
         print("")
+        plural2 = "have" if fail_count != 1 else "is"
         raise SystemExit(
-            "[ERROR] {0:d} {1:s}".format(
-                fail_count,
-                "files have missing copyright notices"
-                if fail_count != 1
-                else "file is missing a copyright notice",
-            )
+            f"[ERROR] {fail_count} file{plural} {plural2} missing copyright notice{plural}"
         )
 
 
@@ -204,7 +198,7 @@ def parse_options():
         dest="ignore",
         default=None,
         help=(
-            "ignore filename/s containing " "(comma separated list of patterns)"
+            "ignore filename/s containing (comma separated list of patterns)"
         ),
     )
     parser.add_argument(
@@ -233,7 +227,7 @@ def parse_options():
         "files",
         nargs="*",
         default=["./"],
-        help="File(s) to check and/or directories to " "recursively search",
+        help="File(s) to check and/or directories to recursively search",
     )
     args = parser.parse_args()
 
