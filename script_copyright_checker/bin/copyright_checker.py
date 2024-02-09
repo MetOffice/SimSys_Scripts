@@ -92,26 +92,19 @@ def check_file_compliance(filename, templates, regex_templates):
     Returns True if any of the templates are found in the contents of the file.
     """
 
-    found_template = False
-
     with open(filename) as file:
         lines = file.read().splitlines()
         for _, template in templates:
-            if not found_template:
-                if template_is_in_file(lines, template):
-                    found_template = True
-
-    if found_template:
-        return True
+            if template_is_in_file(lines, template):
+                return True
 
     with open(filename) as file:
         lines = file.read()
         for _, template in regex_templates:
-            if not found_template:
-                if template.search(lines):
-                    found_template = True
+            if template.search(lines):
+                return True
 
-    return found_template
+    return False
 
 
 # ------------------------------------------------------------------------------
@@ -195,7 +188,8 @@ def main(inputs, ignore_list):
         print("")
         plural2 = "have" if fail_count != 1 else "is"
         raise SystemExit(
-            f"[ERROR] {fail_count} file{plural} {plural2} missing copyright notice{plural}"
+            f"[ERROR] {fail_count} file{plural} "
+            + f"{plural2} missing copyright notice{plural}"
         )
 
 
