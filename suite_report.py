@@ -1995,7 +1995,7 @@ class SuiteReport(object):
 
             if (
                 not self.required_comparisons
-                and "LFRIC" not in self.job_sources
+                and "LFRIC_APPS" not in self.job_sources
             ):
                 trac_log.append("")
                 trac_log.append("-----")
