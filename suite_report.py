@@ -56,6 +56,7 @@ BACKGROUND_COLOURS = {
     "um": "#FFFFBF",
     "lfric_apps": "#E9D2FF",
     "jules": "#BFD0FF",
+    "ukca": "#BFFFD1",
     "unknown": "#BFFFD1",
 }
 
