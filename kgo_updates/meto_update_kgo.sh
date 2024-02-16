@@ -174,15 +174,18 @@ else
     printf "${RED}\n\nAt least 1 platform suffered an error during installation.\n${NC}"
 fi
 
-# For the xc40s rsync the generated kgo to the xcs
-if [[ $succeeded_xc40 -eq 1 ]]; then
-    printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
+if [[ $platforms == *"xc40"* ]] || [[ $platforms == *"ex1a"* ]]; then
     read -p "Enter 1 to rsync UM KGO, 2 to rsync lfricinputs KGO (default 1): " rsync_type
     if [[ $rsync_type == "2" ]]; then
         rsync_dir="lfricinputs/kgo/"
     else
         rsync_dir="kgo/"
     fi
+fi
+
+# For the xc40s rsync the generated kgo to the xcs
+if [[ $succeeded_xc40 -eq 1 ]]; then
+    printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
     rsync_com="ssh -Y xcel00 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
     ssh -Y frum@localhost $rsync_com
     if [[ $? -ne 0 ]]; then
@@ -192,6 +195,23 @@ if [[ $succeeded_xc40 -eq 1 ]]; then
     fi
 elif [[ $platforms == *"xc40"* ]]; then
     printf "${RED}\n\nSkipping the rsync to the xcs as the xc40 install failed.\n${NC}"
+fi
+
+# For EX's currently rsync the generated kgo to the exa from the exz
+# This process will need modifying as we go forward
+# Currently hardcoded to UM kgo as lfricinputs not on ex machines
+if [[ $succeeded_ex1a -eq 1 ]]; then
+    printf "${GREEN}\n\nrsyncing the kgo to exa.\n${NC}"
+    printf "Warning: Always rsyncing UM KGO on EXZ"
+    rsync_dir="kgo/"
+    rsync_com="ssh -Y login.exz 'rsync -av /common/umdir/standard_jobs/${rsync_dir} login.exa.sc:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+    ssh -Y frum@localhost $rsync_com
+    if [[ $? -ne 0 ]]; then
+        printf "${RED}The rsync to the exa has failed.\n${NC}"
+    else
+        printf "${Green}The rsync to the exa has succeeded.\n${NC}"
+elif [[ $platforms == *"ex1a"* ]]; then
+    printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
 fi
 
 printf "\n\nInstallation Summary:\n\n"
