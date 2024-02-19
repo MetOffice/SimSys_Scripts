@@ -127,17 +127,16 @@ def generate_cron_timing_str(suite, mode):
             cron += "1 "
         else:
             cron += "7 "
-    else:
-        if suite["period"] == "nightly_all":
-            if mode == "main" or mode == "monitoring":
-                cron += "1-5 "
-            else:
-                cron += "2-6 "
+    elif suite["period"] == "nightly_all":
+        if mode == "main" or mode == "monitoring":
+            cron += "1-5 "
         else:
-            if mode == "main" or mode == "monitoring":
-                cron += "2-5 "
-            else:
-                cron += "3-6 "
+            cron += "2-6 "
+    else:
+        if mode == "main" or mode == "monitoring":
+            cron += "2-5 "
+        else:
+            cron += "3-6 "
     return cron
 
 
@@ -152,19 +151,17 @@ def generate_header(name, suite):
     header += f"# Launch at {suite['time_launch']} on "
     if suite["period"] == "weekly":
         header += "Mon\n"
+    elif suite["period"] == "nightly_all":
+        header += "Mon-Fri\n"
     else:
-        if suite["period"] == "nightly_all":
-            header += "Mon-Fri\n"
-        else:
-            header += "Tue-Fri\n"
+        header += "Tue-Fri\n"
     header += f"# Clean at {suite['time_clean']} on "
     if suite["period"] == "weekly":
         header += "Sun\n"
+    elif suite["period"] == "nightly_all":
+        header += "Tue-Sat\n"
     else:
-        if suite["period"] == "nightly_all":
-            header += "Tue-Sat\n"
-        else:
-            header += "Wed-Sat\n"
+        header += "Wed-Sat\n"
     return header
 
 
@@ -310,10 +307,7 @@ def generate_cron_job(suite_name, suite, log_file):
     rose-stem task and for the suite-clean task
     """
 
-    if "cylc_version" in suite:
-        cylc_version = suite["cylc_version"]
-    else:
-        cylc_version = DEFAULT_CYLC_VERSION
+    cylc_version = suite.get("cylc_version", DEFAULT_CYLC_VERSION)
 
     date_str = f"_$({DATE_BASE})"
     name = suite_name + date_str
