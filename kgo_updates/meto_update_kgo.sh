@@ -210,6 +210,7 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
         printf "${RED}The rsync to the exa has failed.\n${NC}"
     else
         printf "${Green}The rsync to the exa has succeeded.\n${NC}"
+    fi
 elif [[ $platforms == *"ex1a"* ]]; then
     printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
 fi
