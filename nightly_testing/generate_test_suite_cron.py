@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Script which launches a rose-stem suite.
 Used for nightly testing for UM, Jules, UKCA, LFRic_Apps
