@@ -83,11 +83,8 @@ def retrigger_suite(suite):
     Generate and run commands to retrigger failed and submit-failed tasks
     """
     failed_command = f"cylc trigger {suite}//*:failed"
-    subfail_command = f"cylc trigger {suite}//*:submit-failed"
     print(f"Triggering Failed Tasks in {suite}")
     _ = run_command(failed_command)
-    print(f"Triggering Submit-Failed Tasks in {suite}")
-    _ = run_command(subfail_command)
 
 
 if __name__ == "__main__":
@@ -130,8 +127,13 @@ if __name__ == "__main__":
 
     # Restart failed suites
     run_all = ask_yn("Do you want to restart all failed suites")
+    restarted_suites = []
     for suite in failed_suites:
         if not run_all and not ask_yn(f"Do you want to restart {suite}"):
             continue
         restart_suite(suite)
+        restarted_suites.append(suite)
+
+    # Retrigger failed tasks
+    for suite in restarted_suites:
         retrigger_suite(suite)
