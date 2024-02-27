@@ -136,5 +136,5 @@ if __name__ == "__main__":
     print()
 
     # Retrigger failed tasks
-    for suite in restarted_suites:
-        retrigger_suite(suite)
+    # for suite in restarted_suites:
+    #     retrigger_suite(suite)
