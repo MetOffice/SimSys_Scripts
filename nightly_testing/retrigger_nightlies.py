@@ -135,6 +135,6 @@ if __name__ == "__main__":
         restarted_suites.append(suite)
     print()
 
-    Retrigger failed tasks
+    # Retrigger failed tasks
     for suite in restarted_suites:
         retrigger_suite(suite)
