@@ -9,6 +9,8 @@ import os
 import re
 import subprocess
 import sqlite3
+from time import sleep
+from datetime import datetime
 from datetime import datetime, timedelta
 
 
@@ -20,7 +22,7 @@ def run_command(command):
     return result
 
 
-def connect_to_kgo_database(suite_dir):
+def connect_to_database(suite_dir):
     """
     Make a connection to the suite database
     """
@@ -50,12 +52,14 @@ def check_for_failed_tasks(conn):
     Search for tasks in table "task_state" with failed in status
     If any exist return True, else False
     """
-    res = conn.execute(
+    res_failed = conn.execute(
         "SELECT name, status FROM task_states WHERE status LIKE '%failed%'"
     ).fetchall()
-    if len(res) > 0:
-        return True
-    return False
+    res_subfail = conn.execute(
+        "SELECT name, status FROM task_states "
+        "WHERE status LIKE '%submit-failed%'"
+    ).fetchall()
+    return res_failed + res_subfail
 
 
 def ask_yn(message):
@@ -78,13 +82,14 @@ def restart_suite(suite):
     _ = run_command(play_command)
 
 
-def retrigger_suite(suite):
+def retrigger_suite(suite, tasks):
     """
     Generate and run commands to retrigger failed and submit-failed tasks
     """
-    failed_command = f"cylc trigger {suite}//*:failed"
     print(f"Triggering Failed Tasks in {suite}")
-    _ = run_command(failed_command)
+    for task in tasks:
+        failed_command = f"cylc trigger {suite}//*/{task[0]}"
+        _ = run_command(failed_command)
 
 
 if __name__ == "__main__":
@@ -111,14 +116,15 @@ if __name__ == "__main__":
             valid_suites.append(suite)
 
     # Parse the valid_suites for ones which are cylc8 and have failed tasks
-    failed_suites = []
+    failed_suites = {}
     for suite in valid_suites:
         suite_dir = os.path.join(cylc_run, suite, "runN")
-        conn = connect_to_kgo_database(suite_dir)
+        conn = connect_to_database(suite_dir)
         if conn is None or not check_suite_cylc8(conn):
             continue
-        if check_for_failed_tasks(conn):
-            failed_suites.append(suite)
+        failed_tasks = check_for_failed_tasks(conn)
+        if failed_tasks:
+            failed_suites[suite] = failed_tasks
 
     print("\nFound the following suites with errors:")
     for suite in failed_suites:
@@ -133,8 +139,13 @@ if __name__ == "__main__":
             continue
         restart_suite(suite)
         restarted_suites.append(suite)
-    print()
+
+    print(
+        f"\n{datetime.now().strftime('%H:%M:%S')} "
+        "Sleeping for 2 minutes to allow suites to restart\n"
+    )
+    sleep(120)
 
     # Retrigger failed tasks
-    # for suite in restarted_suites:
-    #     retrigger_suite(suite)
+    for suite in restarted_suites:
+        retrigger_suite(suite, failed_suites[suite])
