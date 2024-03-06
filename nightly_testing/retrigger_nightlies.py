@@ -10,7 +10,6 @@ import re
 import subprocess
 import sqlite3
 from time import sleep
-from datetime import datetime
 from datetime import datetime, timedelta
 
 
