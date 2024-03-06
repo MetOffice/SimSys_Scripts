@@ -86,10 +86,13 @@ def retrigger_suite(suite, tasks):
     """
     Generate and run commands to retrigger failed and submit-failed tasks
     """
-    print(f"Triggering Failed Tasks in {suite}")
-    for task in tasks:
+    print(f"\nTriggering Failed Tasks in {suite}")
+    ntasks = len(tasks)
+    for i, task in enumerate(tasks):
+        print(f"\rTask {i}/{ntasks}", end="", flush=True)
         failed_command = f"cylc trigger {suite}//*/{task[0]}"
         _ = run_command(failed_command)
+    print()
 
 
 if __name__ == "__main__":
