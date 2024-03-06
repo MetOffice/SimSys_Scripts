@@ -48,8 +48,8 @@ def check_suite_cylc8(conn):
 
 def check_for_failed_tasks(conn):
     """
-    Search for tasks in table "task_state" with failed in status
-    If any exist return True, else False
+    Search for tasks in table "task_state" with failed or submit-failed status
+    Return a list of these tasks
     """
     res_failed = conn.execute(
         "SELECT name, status FROM task_states WHERE status LIKE '%failed%'"
