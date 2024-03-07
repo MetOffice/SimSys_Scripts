@@ -347,7 +347,20 @@ if ( $trunkmode == 0 ) {
     }
 
 }
+
+my @extracts = ( "" );
+
+if ( $trunkmode == 0 ) {
+    # enable trunkmode for sepecific repositories if rose-stem/rose-suite.conf is modified
+    if (exists $additions{"ose-stem/rose-suite.conf"}) {
+        print "rose-stem/rose-suite.conf modified: checking for external repository updates\n";
+    }
+}
 else {
+    @extracts = ( "", "um", "shumlib", "meta", "ukca" );
+}
+
+if ( $trunkmode == 1 ) {
 
     #trunk mode: cat all the source files to %additions
 
@@ -358,8 +371,6 @@ else {
 
         # If we are in suite mode, we need to generate the ls from the extracted
         # sources, not from FCM.
-
-        my @extracts = ( "", "um", "shumlib", "meta", "ukca" );
 
         my $ss_env = $ENV{SCRIPT_SOURCE};
         my $extracts_path = join( " $ss_env/", @extracts );
