@@ -88,7 +88,7 @@ def retrigger_suite(suite, tasks):
     print(f"\nTriggering Failed Tasks in {suite}")
     ntasks = len(tasks)
     for i, task in enumerate(tasks):
-        print(f"\rTask {i}/{ntasks}", end="", flush=True)
+        print(f"\rTask {i+1}/{ntasks}", end="", flush=True)
         failed_command = f"cylc trigger {suite}//*/{task[0]}"
         _ = run_command(failed_command)
     print()
