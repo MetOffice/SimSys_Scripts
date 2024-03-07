@@ -348,13 +348,32 @@ if ( $trunkmode == 0 ) {
 
 }
 
-my @extracts = ( "" );
+my @extracts = ();
 
 if ( $trunkmode == 0 ) {
-    # enable trunkmode for sepecific repositories if rose-stem/rose-suite.conf is modified
-    if (exists $additions{"ose-stem/rose-suite.conf"}) {
-        print "rose-stem/rose-suite.conf modified: checking for external repository updates\n";
-    }
+     if $suite_mode {
+        # enable trunkmode for sepecific repositories if the environment does not match rose-stem/rose-suite.conf
+
+        my $ss_env = $ENV{SCRIPT_SOURCE};
+        my @suite_conf = cat_file($ss_env+/"rose-stem/rose-suite.conf");
+        my @host_sources = grep /^HOST_SOURCE_.*=/, @suite_conf;;
+        
+        print "Detected HOST_SOURCE variables:\n";
+        print join( "\n", @host_sources );
+
+     }
+
+     # enable trunkmode for sepecific repositories if rose-stem/rose-suite.conf is modified
+     if (exists $additions{"rose-stem/rose-suite.conf"}) {
+         print "rose-stem/rose-suite.conf modified: checking for external repository updates\n";
+     }
+
+     @extracts = keys {map {$_ => 1} @extracts};
+
+     if scalar(@extracts) > 0 {
+         $trunkmode = 1;
+         unshift @extracts, "";
+     }     
 }
 else {
     @extracts = ( "", "um", "shumlib", "meta", "ukca" );
