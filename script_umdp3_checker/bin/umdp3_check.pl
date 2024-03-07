@@ -370,7 +370,7 @@ if ( $trunkmode == 0 ) {
 
      @extracts = keys {map {$_ => 1} @extracts};
 
-     if scalar(@extracts) > 0 {
+     if (scalar(@extracts) > 0) {
          $trunkmode = 1;
          unshift @extracts, "";
      }     
