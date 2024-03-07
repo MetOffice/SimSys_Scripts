@@ -355,7 +355,7 @@ if ( $trunkmode == 0 ) {
         # enable trunkmode for sepecific repositories if the environment does not match rose-stem/rose-suite.conf
 
         my $ss_env = $ENV{SCRIPT_SOURCE};
-        my @suite_conf = cat_file($ss_env . "/rose-stem/rose-suite.conf");
+        my @suite_conf = cat_file($ss_env . "/um/rose-stem/rose-suite.conf");
         my @host_sources = grep /^HOST_SOURCE_.*=/, @suite_conf;
         
         print "Detected HOST_SOURCE variables:\n";
