@@ -351,6 +351,7 @@ if ( $trunkmode == 0 ) {
 # The @external_checks array contains the names of all the non-UM repositories
 # extracted by the UM which should also be checked.
 my @external_checks = ( "shumlib", "meta", "ukca" );
+my %filepath_mapping = ( 'meta' => 'um_meta' );
 my @extracts = ();
 
 if ( $trunkmode == 0 ) {
@@ -367,11 +368,15 @@ if ( $trunkmode == 0 ) {
         foreach (@external_checks)
         {
             my $repo = $_;
+            my $o_repo = $repo;
+            if (exists $filepath_mapping{$repo}) {
+                $repo = $filepath_mapping{$repo};
+            }
             my $host_var_name = "HOST_SOURCE_" . uc($repo);
             my $env_var_res = $ENV{$host_var_name};
             if (! grep /^$host_var_name=(\"|\')$env_var_res(\"|\')/, @host_sources ) {
                print $host_var_name . " modified in environment. Running full check on this repository\n";
-               push @extracts, $repo;
+               push @extracts, $o_repo;
             } 
         }
 
@@ -385,10 +390,14 @@ if ( $trunkmode == 0 ) {
         foreach (@external_checks)
         {
             my $repo = $_;
+            my $o_repo = $repo;
+            if (exists $filepath_mapping{$repo}) {
+                $repo = $filepath_mapping{$repo};
+            }
             my $host_var_name = "HOST_SOURCE_" . uc($repo);
             if ( grep /^$host_var_name=/, @added_lines ) {
                print $host_var_name . " modified in rose-suite.conf. Running full check on this repository\n";
-               push @extracts, $repo;
+               push @extracts, $o_repo;
             } 
         }
      }
@@ -399,6 +408,7 @@ if ( $trunkmode == 0 ) {
      # If we capturede any changes, enable trunk-mode for those repositories.
      if (scalar(@extracts) > 0) {
          $trunkmode = 1;
+         $error_trunk = 1;
          unshift @extracts, "";
      }     
 }
