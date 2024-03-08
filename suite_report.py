@@ -120,6 +120,7 @@ HIGHLIGHT_ROSE_ANA_FAILS = [
     "atmos_omp",
     "atmos_nruncrun",
     "atmos_thread",
+    "-v-",
 ]
 COMMON_GROUPS = {
     "meto": [
