@@ -364,13 +364,14 @@ if ( $trunkmode == 0 ) {
         print "Detected HOST_SOURCE variables:\n";
         print join( "", @host_sources );
 
-        foreach (@host_sources)
+        foreach (@external_checks)
         {
-            my $host_var_name = "HOST_SOURCE_" . uc($_);
+            my $repo = $_;
+            my $host_var_name = "HOST_SOURCE_" . uc($repo);
             my $env_var_res = $ENV{$host_var_name};
             if (! grep /^$host_var_name=$env_var_res/, @host_sources ) {
                print $host_var_name . " modified. Running full check on this repository\n";
-               push @extracts, $_;
+               push @extracts, $repo;
             } 
         }
 
