@@ -369,8 +369,8 @@ if ( $trunkmode == 0 ) {
             my $repo = $_;
             my $host_var_name = "HOST_SOURCE_" . uc($repo);
             my $env_var_res = $ENV{$host_var_name};
-            if (! grep /^$host_var_name=$env_var_res/, @host_sources ) {
-               print $host_var_name . " modified. Running full check on this repository\n";
+            if (! grep /^$host_var_name=(\"|\')$env_var_res(\"|\')/, @host_sources ) {
+               print $host_var_name . " modified in environment. Running full check on this repository\n";
                push @extracts, $repo;
             } 
         }
@@ -379,7 +379,18 @@ if ( $trunkmode == 0 ) {
 
      # enable trunkmode for sepecific repositories if rose-stem/rose-suite.conf is modified
      if (exists $additions{"rose-stem/rose-suite.conf"}) {
-         print "rose-stem/rose-suite.conf modified: checking for external repository updates\n";
+        print "rose-stem/rose-suite.conf modified: checking for external repository updates\n";
+        my $added_lines_ref = $additions{"rose-stem/rose-suite.conf"};
+        my @added_lines     = @$added_lines_ref;
+        foreach (@external_checks)
+        {
+            my $repo = $_;
+            my $host_var_name = "HOST_SOURCE_" . uc($repo);
+            if ( grep /^$host_var_name=/, @added_lines ) {
+               print $host_var_name . " modified in rose-suite.conf. Running full check on this repository\n";
+               push @extracts, $repo;
+            } 
+        }
      }
 
      # remove any duplicates
