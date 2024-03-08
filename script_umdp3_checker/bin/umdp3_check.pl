@@ -348,6 +348,9 @@ if ( $trunkmode == 0 ) {
 
 }
 
+# The @external_checks array contains the names of all the non-UM repositories
+# extracted by the UM which should also be checked.
+my @external_checks = ( "shumlib", "meta", "ukca" );
 my @extracts = ();
 
 if ( $trunkmode == 0 ) {
@@ -359,7 +362,17 @@ if ( $trunkmode == 0 ) {
         my @host_sources = grep /^HOST_SOURCE_.*=/, @suite_conf;
         
         print "Detected HOST_SOURCE variables:\n";
-        print join( "\n", @host_sources );
+        print join( "", @host_sources );
+
+        foreach (@host_sources)
+        {
+            my $host_var_name = "HOST_SOURCE_" . uc($_);
+            my $env_var_res = $ENV{$host_var_name};
+            if (! grep /^$host_var_name=$env_var_res/, @host_sources ) {
+               print $host_var_name . " modified. Running full check on this repository\n";
+               push @extracts, $_;
+            } 
+        }
 
      }
 
@@ -368,15 +381,18 @@ if ( $trunkmode == 0 ) {
          print "rose-stem/rose-suite.conf modified: checking for external repository updates\n";
      }
 
+     # remove any duplicates
      @extracts = keys {map {$_ => 1} @extracts};
 
+     # If we capturede any changes, enable trunk-mode for those repositories.
      if (scalar(@extracts) > 0) {
          $trunkmode = 1;
          unshift @extracts, "";
      }     
 }
 else {
-    @extracts = ( "", "um", "shumlib", "meta", "ukca" );
+    @extracts = ( "", "um" );
+    push @extracts, @external_checks;
 }
 
 if ( $trunkmode == 1 ) {
