@@ -3,6 +3,10 @@
 Scan a users (inteded as frzz for nightly testing) cylc-run directory for
 cylc8 suites with uncompleted tasks
 Restart each found and retrigger failed/submit-failed tasks
+Can pass names of suites as posiional arguments. Doesn't need to be entire name,
+eg. passing lfric_apps will retrigger any suite with lfric_apps in the name
+Syntax:
+    python retrigger_nightlies.py [suite_name1 suite_name2 ...]
 """
 
 import os
