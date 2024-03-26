@@ -6,6 +6,7 @@ Restart each found and retrigger failed/submit-failed tasks
 """
 
 import os
+import sys
 import re
 import subprocess
 import sqlite3
@@ -95,6 +96,11 @@ def retrigger_suite(suite, tasks):
 
 
 if __name__ == "__main__":
+    # If names to restart are specified then record list of them here
+    restart_names = []
+    if len(sys.argv) > 1:
+        restart_names = sys.argv[1:]
+
     # Get the current date
     today = datetime.now()
     # If Monday then include suites from the weekend, otherwise just today
@@ -107,6 +113,14 @@ if __name__ == "__main__":
     valid_suites = []
     cylc_run = os.path.expanduser(os.path.join("~frzz", "cylc-run"))
     for suite in os.listdir(cylc_run):
+        # If restart names are defined then check whether this suite matches any
+        # If not found then continue and don't restart the suite
+        if restart_names:
+            for wanted in restart_names:
+                if wanted in suite:
+                    break
+            else:
+                continue
         # Get the date string from the suite name - if not present then skip
         try:
             date_str = re.findall(r"\d{4}-\d{2}-\d{2}", suite)[0]
