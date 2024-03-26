@@ -51,7 +51,7 @@ CYLC_DIFFS = {
         "clean": "cylc clean --timeout=7200",
     },
 }
-SCRATCH_DIR = os.environ["SCRATCH"]
+WC_DIR = "/tmp/frzz"
 UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
@@ -67,14 +67,14 @@ def run_command(command):
     )
 
 
-def join_checkout_commands(repos, scratch):
+def join_checkout_commands(repos, dir_wc):
     """
     Join commands that delete repo then checkout new one
     """
 
     command = ""
     for repo in repos:
-        wc_path = os.path.join(scratch, "wc_" + repo)
+        wc_path = os.path.join(dir_wc, "wc_" + repo)
         command += f"rm -rf {wc_path} ; "
         command += f"fcm co -q --force fcm:{repo}.xm_tr@HEAD {wc_path} ; "
     return command
@@ -86,10 +86,10 @@ def fetch_working_copy_cron():
     Runs just after midnight ahead of all other tasks
     """
 
-    command = "# Checkout Working Copies #"
+    command = "# Checkout Working Copies - every day at 23:30 #"
     l = len(command)
-    command = f"{l*'#'}\n{command}\n{l*'#'}\n01 00 * * 1-5 {PROFILE} ; "
-    command += join_checkout_commands(DEPENDENCIES.keys(), SCRATCH_DIR)
+    command = f"{l*'#'}\n{command}\n{l*'#'}\n30 23 * * * {PROFILE} ; "
+    command += join_checkout_commands(DEPENDENCIES.keys(), WC_DIR)
 
     return command + "\n\n\n"
 
@@ -311,7 +311,7 @@ def generate_cron_job(suite_name, suite, log_file):
 
     date_str = f"_$({DATE_BASE})"
     name = suite_name + date_str
-    wc_path = os.path.join(SCRATCH_DIR, "wc_" + suite["repo"])
+    wc_path = os.path.join(WC_DIR, "wc_" + suite["repo"])
 
     header = generate_header(suite_name, suite)
     cron_job = generate_main_job(name, suite, log_file, wc_path, cylc_version)
