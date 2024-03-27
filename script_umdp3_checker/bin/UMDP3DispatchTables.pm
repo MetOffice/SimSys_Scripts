@@ -12,7 +12,7 @@ use warnings;
 use 5.010;
 
 # Declare version - this is the last UM version this script was updated for:
-our $VERSION = '13.2.0';
+our $VERSION = '13.5.0';
 
 my %dispatch_table_diff_fortran = (
     'Lowercase Fortran keywords not permitted' => \&UMDP3::capitalised_keywords,
@@ -102,7 +102,7 @@ sub get_file_dispatch_table_fortran {
     my $modified_file                      = shift;
     my %dispatch_table_file_fortran_custom = %dispatch_table_file_fortran;
 
-    if ( $modified_file =~ /um_abort_mod.F90$/ ) {
+    if ( $modified_file =~ /um_abort_mod.F90$/sxm ) {
         delete(
             $dispatch_table_file_fortran_custom{'Never use STOP or CALL abort'}
         );

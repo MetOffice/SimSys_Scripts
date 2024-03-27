@@ -25,7 +25,7 @@ use 5.010;
 use Text::Balanced qw(extract_quotelike extract_multiple);
 
 # Declare version - this is the last UM version this script was updated for:
-our $VERSION = '13.2.0';
+our $VERSION = '13.5.0';
 
 # Global variables
 
@@ -51,7 +51,7 @@ sub remove_quoted {
     # Stitch the non-quoted fields back together into a single string:
     my $remainder = "";
     foreach my $string (@strings) {
-        $remainder .= $string if not( $string =~ /^Quoted=SCALAR/ );
+        $remainder .= $string if not( $string =~ /^Quoted=SCALAR/sxm );
     }
     return $remainder;
 }
@@ -486,38 +486,38 @@ sub capitalised_keywords {
         $line = remove_quoted($line);
 
         next unless $line;
-        next unless $line =~ /\S/;    # If line empty, try the next
+        next unless $line =~ /\S/sxm;    # If line empty, try the next
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
-        if ( $line =~ /^!\$/ ) {
+        if ( $line =~ /^!\$/sxm ) {
             push @keywords_to_check, get_openmp_keywords();
         }
 
         foreach my $keyword (@keywords_to_check) {
 
             # If the keyword is present on the line
-            if ( $line =~ /(^|\W)$keyword(\W|$)/i ) {
+            if ( $line =~ /(^|\W)$keyword(\W|$)/sxmi ) {
 
-                if ( $line =~ /\(\s*kind\s*=.*::/ ) {
+                if ( $line =~ /\(\s*kind\s*=.*::/sxm ) {
                     $extra_error_information{'KIND'}++;
                     $failed++;
                 }
 
                 # Ignore cases such as RESHAPE(len=something) where 'len' would
                 # otherwise be triggered
-                next if ( $line =~ /,\s*$keyword\s*=/i );
-                next if ( $line =~ /\(\s*$keyword\s*=/i );
+                next if ( $line =~ /,\s*$keyword\s*=/sxmi );
+                next if ( $line =~ /\(\s*$keyword\s*=/sxmi );
 
                 # Ignore CPP
-                next if ( $line =~ /^\s*#/ );
+                next if ( $line =~ /^\s*\#/sxm );
 
                 # Fail if the keyword occurance(s) are not uppercase
-                while ( $line =~ s/(^|\W)($keyword)(\W|$)/ /i ) {
-                    unless ( $2 =~ /$keyword/ ) {
+                while ( $line =~ s/(^|\W)($keyword)(\W|$)/ /sxmi ) {
+                    unless ( $2 =~ /$keyword/sxm ) {
                         $extra_error_information{$keyword}++;
                         $failed++;
                     }
@@ -538,7 +538,7 @@ sub openmp_sentinels_in_column_one {
     foreach my $line (@lines) {
 
         # Check for one or more spaces before !$
-        $failed++ if ( $line =~ /\s+!\$/ );
+        $failed++ if ( $line =~ /\s+!\$/sxm );
     }
 
     return $failed;
@@ -556,14 +556,14 @@ sub unseparated_keywords {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         # Check for frequent ones - should rewrite as a loop
-        unless ( $line =~ /^\s*#/ ) {    # Ignore CPP
+        unless ( $line =~ /^\s*\#/sxm ) {    # Ignore CPP
             foreach my $keyword (@keywords) {
-                if ( $line =~ /(^|\W)$keyword(\W|$)/i ) {
+                if ( $line =~ /(^|\W)$keyword(\W|$)/sxmi ) {
                     $failed++;
                     $extra_error_information{$keyword}++;
                 }
@@ -584,12 +584,12 @@ sub forbidden_keywords {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
-        $failed++ if ( $line =~ /(^|\W)EQUIVALENCE(\W|$)/i );
-        $failed++ if ( $line =~ /(^|\W)PAUSE(\W|$)/i );
+        $failed++ if ( $line =~ /(^|\W)EQUIVALENCE(\W|$)/sxmi );
+        $failed++ if ( $line =~ /(^|\W)PAUSE(\W|$)/sxmi );
     }
 
     return $failed;
@@ -605,16 +605,16 @@ sub forbidden_operators {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
-        $failed++ if ( $line =~ /\.GT\./i );
-        $failed++ if ( $line =~ /\.GE\./i );
-        $failed++ if ( $line =~ /\.LT\./i );
-        $failed++ if ( $line =~ /\.LE\./i );
-        $failed++ if ( $line =~ /\.EQ\./i );
-        $failed++ if ( $line =~ /\.NE\./i );
+        $failed++ if ( $line =~ /\.GT\./sxmi );
+        $failed++ if ( $line =~ /\.GE\./sxmi );
+        $failed++ if ( $line =~ /\.LT\./sxmi );
+        $failed++ if ( $line =~ /\.LE\./sxmi );
+        $failed++ if ( $line =~ /\.EQ\./sxmi );
+        $failed++ if ( $line =~ /\.NE\./sxmi );
     }
 
     return $failed;
@@ -630,15 +630,15 @@ sub go_to_other_than_9999 {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         # Find lines matching GO TO
-        if ( $line =~ /GO\s*TO/i ) {
+        if ( $line =~ /GO\s*TO/sxmi ) {
 
             # If the line number isn't 9999
-            unless ( $line =~ /GO\s*TO\s*9999/i ) {
+            unless ( $line =~ /GO\s*TO\s*9999/sxmi ) {
                 $failed++;
             }
         }
@@ -658,12 +658,12 @@ sub write_using_default_format {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         # Check for WRITE(...*)
-        if ( $line =~ /WRITE\s*\(.*\*\)/i ) {
+        if ( $line =~ /WRITE\s*\(.*\*\)/sxmi ) {
             $failed++;
         }
 
@@ -684,17 +684,17 @@ sub lowercase_variable_names {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
-        if (   $line =~ /^\s*REAL/i
-            or $line =~ /^\s*INTEGER/i
-            or $line =~ /^\s*LOGICAL/
-            or $line =~ /^\s*CHARACTER/ )
+        if (   $line =~ /^\s*REAL/sxmi
+            or $line =~ /^\s*INTEGER/sxmi
+            or $line =~ /^\s*LOGICAL/sxm
+            or $line =~ /^\s*CHARACTER/sxm )
         {
-            if ( $line =~ /::/ ) {
-                $line =~ /::\s*(\w+)/;
+            if ( $line =~ /::/sxm ) {
+                $line =~ /::\s*(\w+)/sxm;
                 my $variable = $1;
                 next unless ($variable);
                 push @variables, $variable;
@@ -706,12 +706,12 @@ sub lowercase_variable_names {
     foreach my $line (@lines) {
 
         # Ignore CPP defs:
-        next if ( $line =~ /^\s*#/ );
+        next if ( $line =~ /^\s*\#/sxm );
 
         $line = remove_quoted($line);
 
         foreach my $variable (@variables) {
-            if ( $line =~ /\b($variable)\b/i ) {
+            if ( $line =~ /\b($variable)\b/sxmi ) {
                 my $instance_of_variable = $1;
 
 # If the variable is 4 or more characters and is uppercase in the declaration fail the test
@@ -736,15 +736,15 @@ sub include_files_for_variable_declarations {
 
     my $found_dr_hook = 0;
     foreach my $line (@lines) {
-        $found_dr_hook++ if ( $line =~ /CALL\s+dr_hook/i );
+        $found_dr_hook++ if ( $line =~ /CALL\s+dr_hook/sxmi );
     }
 
     # File which don't have directly executable code automatically pass this
     return 0 unless $found_dr_hook;
 
     foreach my $line (@lines) {
-        $failed++ if ( $line =~ /^\s*#include/ );
-        last if ( $line =~ /CALL\s+dr_hook/i );
+        $failed++ if ( $line =~ /^\s*\#include/sxm );
+        last if ( $line =~ /CALL\s+dr_hook/sxmi );
     }
 
     $number_of_files_with_variable_declarations_in_includes++ if $failed;
@@ -760,12 +760,12 @@ sub dimension_forbidden {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         next unless $line;
-        $failed++ if ( $line =~ /(^|\W)DIMENSION\W/i );
+        $failed++ if ( $line =~ /(^|\W)DIMENSION\W/sxmi );
     }
 
     return $failed;
@@ -780,12 +780,12 @@ sub forbidden_stop {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
-        $failed++ if ( $line =~ /^\s*STOP\s/i );
-        $failed++ if ( $line =~ /^\s*CALL\s*abort\W/i );
+        $failed++ if ( $line =~ /^\s*STOP\s/sxmi );
+        $failed++ if ( $line =~ /^\s*CALL\s*abort\W/sxmi );
     }
 
     return $failed;
@@ -797,8 +797,8 @@ sub ampersand_continuation {
     my $failed = 0;
     foreach my $line (@lines) {
 
-        $failed++ if ( $line =~ /^\s*&/i );
-        $failed++ if ( $line =~ /^\s*!\$\s*&/i );
+        $failed++ if ( $line =~ /^\s*&/sxmi );
+        $failed++ if ( $line =~ /^\s*!\$\s*&/sxmi );
     }
 
     return $failed;
@@ -818,31 +818,31 @@ sub implicit_none {
         $input_line = remove_quoted($input_line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $input_line =~ /![^\$]/ ) {
-            $input_line =~ s/![^\$].*//g;
+        if ( $input_line =~ /![^\$]/sxm ) {
+            $input_line =~ s/![^\$].*?$//sxmg;
         }
 
         # MODULEs etc in INTERFACEs don't have implicit none, so ignore these
-        if ( $input_line =~ /^\s*INTERFACE\s/i ) {
+        if ( $input_line =~ /^\s*INTERFACE\s/sxmi ) {
             $in_interface = 1;
         }
         push @lines_to_test, $input_line unless $in_interface;
-        if ( $input_line =~ /^\s*END\s*INTERFACE/i ) {
+        if ( $input_line =~ /^\s*END\s*INTERFACE/sxmi ) {
             $in_interface = 0;
         }
     }
 
     foreach my $line (@lines_to_test) {
 
-        $foundit++ if ( $line =~ /^\s*IMPLICIT\s+NONE/i );
+        $foundit++ if ( $line =~ /^\s*IMPLICIT\s+NONE/sxmi );
         $modules++
-          if ( $line =~ /^\s*SUBROUTINE\W/i
-            or $line =~ /^\s*MODULE\W/i
-            or $line =~ /^\s*FUNCTION\W/i
-            or $line =~ /^\s*REAL\s*FUNCTION\W/i
-            or $line =~ /^\s*LOGICAL\s*FUNCTION\W/i
-            or $line =~ /^\s*INTEGER\s*FUNCTION\W/i
-            or $line =~ /^\s*PROGRAM\W/i );
+          if ( $line =~ /^\s*SUBROUTINE\W/sxmi
+            or $line =~ /^\s*MODULE\W/sxmi
+            or $line =~ /^\s*FUNCTION\W/sxmi
+            or $line =~ /^\s*REAL\s*FUNCTION\W/sxmi
+            or $line =~ /^\s*LOGICAL\s*FUNCTION\W/sxmi
+            or $line =~ /^\s*INTEGER\s*FUNCTION\W/sxmi
+            or $line =~ /^\s*PROGRAM\W/sxmi );
     }
 
     $failed = 1 unless ( $foundit >= $modules );
@@ -872,12 +872,12 @@ sub intrinsic_as_variable {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         # Remove pre-processing directives
-        if ( $line =~ /^\s*#/ ) {
+        if ( $line =~ /^\s*\#/sxm ) {
             $line = "";
         }
 
@@ -887,14 +887,14 @@ sub intrinsic_as_variable {
     my $entire = join( "", @fixed_lines );
 
     # Sort out continuation lines
-    $entire =~ s/&\s*\n//g;
+    $entire =~ s/&\s*\n//sxmg;
 
-    @fixed_lines = split /\n/, $entire;
+    @fixed_lines = split /\n/sxm, $entire;
 
     foreach my $line (@fixed_lines) {
 
         next unless $line;
-        next unless $line =~ /\S/;
+        next unless $line =~ /\S/sxm;
 
         my $oline = $line;
 
@@ -903,22 +903,26 @@ sub intrinsic_as_variable {
             $line = $oline;
 
             #  ii)  look for match
-            if ( $line =~ /(^|\W)$keyword($|\W)/i ) {
+            if ( $line =~ /(^|\W)$keyword($|\W)/sxmi ) {
                 foreach my $type (@fortran_types) {
+                    my $type_r = $type;
+                    $type_r =~ s/[ ]/[ ]/sxm;
 
 #  iii) check if match is a variable declaration (which always starts with a type):
-                    if ( $line =~ /^\s*$type(\W.*\W|\W)$keyword/i ) {
-                        if ( $type =~ 'CLASS' and $keyword =~ /(IS|DEFAULT)/ ) {
+                    if ( $line =~ /^\s*$type_r(\W.*\W|\W)$keyword/sxmi ) {
+                        if (    $type =~ 'CLASS'
+                            and $keyword =~ /(IS|DEFAULT)/sxm )
+                        {
 
                   # statments within SELECT TYPE constructs are not declarations
-                            unless ( $line =~ /^\s*CLASS\s+(IS|DEFAULT)/i ) {
+                            unless ( $line =~ /^\s*CLASS\s+(IS|DEFAULT)/sxmi ) {
                                 $decl_match = 1;
                             }
                         }
                         elsif ( $type =~ 'TYPE' and $keyword =~ 'IS' ) {
 
                   # statments within SELECT TYPE constructs are not declarations
-                            unless ( $line =~ /^\s*TYPE\s+IS/i ) {
+                            unless ( $line =~ /^\s*TYPE\s+IS/sxmi ) {
                                 $decl_match = 1;
                             }
                         }
@@ -938,22 +942,22 @@ sub intrinsic_as_variable {
      # (i.e. the keyword is the RHS of the = in this variable initialisation).
 
                 # remove any type attributes which may match the keyword
-                $line =~ s/^.*:://;
+                $line =~ s/^.*:://sxm;
 
                 # If we have a function declaration of the form
                 # FUNCTION foo() RESULT(bar)
                 # We need to strip the RESULT keyword out.
-                if ( $line =~ /^(.*?\bFUNCTION\s.*?\b)RESULT(\s*\()/ ) {
+                if ( $line =~ /^(.*?\bFUNCTION\s.*?\b)RESULT(\s*\()/sxm ) {
                     my $grp1 = quotemeta($1);
                     my $grp2 = quotemeta($2);
-                    $line =~ s/($grp1)RESULT($grp2)/$grp1$grp2/;
+                    $line =~ s/($grp1)RESULT($grp2)/$grp1$grp2/sxm;
                 }
 
             # at this point, things in brackets aren't relevant because they can
             # only be attributes of a variable, not the definition of a variable
             # itself
-                while ( $line =~ /\(.*\)/ ) {
-                    $line =~ s/\([^()]*\)//;
+                while ( $line =~ /\(.*\)/sxm ) {
+                    $line =~ s/\([^()]*\)//sxm;
                 }
 
                # At this point, remove array initialisations, as they mess with
@@ -968,31 +972,31 @@ sub intrinsic_as_variable {
                 # "]". It repeatedly removes the innermost pair of "[" and "]"
                 # in a nest until no more exist.
 
-                while ( $line =~ /\[(.*?)\[([^\[]*?)\](.*?)\]/ ) {
-                    $line =~ s/\[(.*?)\[([^\[]*?)\](.*?)\]/[$1$2$3]/;
+                while ( $line =~ /\[(.*?)\[([^\[]*?)\](.*?)\]/sxm ) {
+                    $line =~ s/\[(.*?)\[([^\[]*?)\](.*?)\]/[$1$2$3]/sxm;
                 }
 
                 # The following removes the actual array initialisations, which
                 # must be flattened and of the "[]" form following an "=" sign.
 
-                while ( $line =~ /\=\s*\[.*?\]/ ) {
-                    $line =~ s/\=\s*\[.*?\]//;
+                while ( $line =~ /\=\s*\[.*?\]/sxm ) {
+                    $line =~ s/\=\s*\[.*?\]//sxm;
                 }
 
              # split on commas, in case there are multiple variable declarations
-                my @decls = split /,/, $line;
+                my @decls = split /,/sxm, $line;
 
                 foreach my $decl (@decls) {
 
             # As anything to the right of '=' signs are not variable definitions
             # (they are instead initialiser etc.) we're not interested in them.
-                    $decl =~ s/=.*$//;
+                    $decl =~ s/=.*$//sxm;
 
                     # Remove function declarations
-                    $decl =~ s/^.*?\bFUNCTION\s//i;
+                    $decl =~ s/^.*?\bFUNCTION\s//sxmi;
 
                     # If we get this far any matches are fails
-                    if ( $decl =~ /(^|\W)$keyword(\W|$)/i ) {
+                    if ( $decl =~ /(^|\W)$keyword(\W|$)/sxmi ) {
                         $line = "\n    $keyword";
                         $failed++;
                         $extra_error_information{$line}++;
@@ -1030,7 +1034,7 @@ sub tab_detection {
     foreach my $line (@lines) {
 
         # If any line contains a tab character
-        if ( $line =~ /\t/ ) {
+        if ( $line =~ /\t/sxm ) {
             $failed++;
 
             # Reformat line so it prints the offending line neatly
@@ -1057,9 +1061,11 @@ sub check_crown_copyright {
     );
 
     foreach my $line (@lines) {
-        $failed = 0 if ( $line =~ /^\s*(!|\/\*).*Crown\s*copyright/i );
+        $failed = 0 if ( $line =~ /^\s*(!|\/\*).*Crown\s*copyright/sxmi );
         foreach my $agreement (@valid_agreements) {
-            $failed = 0 if ( $line =~ /^\s*(!|\/\*).*$agreement/i );
+            my $agreement_r = $agreement;
+            $agreement_r =~ s/[ ]/[ ]/sxm;
+            $failed = 0 if ( $line =~ /^\s*(!|\/\*).*$agreement_r/sxmi );
         }
     }
 
@@ -1076,7 +1082,7 @@ sub check_code_owner {
     foreach my $line (@lines) {
         $is_shumlib = 1
           if ( $line =~
-/^\s*(!|\/\*)\s*This\s*file\s*is\s*part\s*of\s*the\s*UM\s*Shared\s*Library\s*project/i
+/^\s*(!|\/\*)\s*This\s*file\s*is\s*part\s*of\s*the\s*UM\s*Shared\s*Library\s*project/sxmi
           );
     }
 
@@ -1087,11 +1093,11 @@ sub check_code_owner {
         foreach my $line (@lines) {
             $failed_co++
               if ( $line =~
-/^\s*(!|\/\*)\s*Code\s*Owner:\s*Please\s*refer\s*to\s*the\s*UM\s*file\s*CodeOwners\.txt/i
+/^\s*(!|\/\*)\s*Code\s*Owner:\s*Please\s*refer\s*to\s*the\s*UM\s*file\s*CodeOwners\.txt/sxmi
               );
             $failed_bi++
               if ( $line =~
-                /^\s*(!|\/\*)\s*This\s*file\s*belongs\s*in\s*section:/i );
+                /^\s*(!|\/\*)\s*This\s*file\s*belongs\s*in\s*section:/sxmi );
         }
 
         if ( $failed_co > 1 or $failed_bi > 1 ) {
@@ -1118,12 +1124,12 @@ sub array_init_form {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         # Remove pre-processing directives
-        if ( $line =~ /^\s*#/ ) {
+        if ( $line =~ /^\s*\#/sxm ) {
             $line = "";
         }
 
@@ -1133,17 +1139,17 @@ sub array_init_form {
     my $entire = join( "", @fixed_lines );
 
     # Sort out continuation lines
-    $entire =~ s/&\s*\n//g;
+    $entire =~ s/&\s*\n//sxmg;
 
-    @fixed_lines = split /\n/, $entire;
+    @fixed_lines = split /\n/sxm, $entire;
 
     # Now check for the existence of lines containing (/ /)
     foreach my $line (@fixed_lines) {
 
         next unless $line;
-        next unless $line =~ /\S/;
+        next unless $line =~ /\S/sxm;
 
-        $failed = 1 if ( $line =~ /\(\/.*\/\)/ );
+        $failed = 1 if ( $line =~ /\(\/.*\/\)/sxm );
     }
 
     return $failed;
@@ -1155,8 +1161,8 @@ sub retire_if_def {
 
     # Sort out C continuation lines
     my $entire = join( "", @lines );
-    $entire =~ s/\\\s*\n//g;
-    @lines = split /\n/, $entire;
+    $entire =~ s/\\\s*\n//sxmg;
+    @lines = split /\n/sxm, $entire;
 
     my $failed = 0;
     for ( my $i = 0 ; $i < scalar @lines ; $i++ ) {
@@ -1164,7 +1170,7 @@ sub retire_if_def {
         foreach my $ifdef (@ifdefs) {
 
 # matches #if defined(<def>), #elif defined(<def>), #ifdef <def>, and #ifndef <def>
-            if ( $line =~ /^\s*#(el)?if.*\W$ifdef/ ) {
+            if ( $line =~ /^\s*\#(el)?if.*\W$ifdef/sxm ) {
                 $failed++;
                 $extra_error_information{$ifdef}++;
             }
@@ -1189,22 +1195,22 @@ sub c_deprecated {
     my $entire = join( "", @lines );
 
     #remove commented sections
-    $entire =~ s/\/\*(.|\n)+?(\*\/)//g;
+    $entire =~ s/\/\*(.|\n)+?(\*\/)//sxmg;
 
     # Sort out continuation lines
-    $entire =~ s/\\\s*\n//g;
+    $entire =~ s/\\\s*\n//sxmg;
 
     #remove #pragmas
-    $entire =~ s/(^|\n)\s*#pragma.+?\n/\n/g;
+    $entire =~ s/(^|\n)\s*\#pragma.+?\n/\n/sxmg;
 
-    @lines = split /\n/, $entire;
+    @lines = split /\n/sxm, $entire;
 
     my $failed = 0;
     for ( my $i = 0 ; $i < scalar @lines ; $i++ ) {
         my $line = $lines[$i];
 
         foreach my $dep ( keys %deprecateds ) {
-            if ( $line =~ /$dep/ ) {
+            if ( $line =~ /$dep/sxm ) {
                 my $extra_msg = "$dep$deprecateds{$dep}";
                 $failed++;
                 $extra_error_information{$extra_msg}++;
@@ -1220,7 +1226,7 @@ sub printstatus_mod {
 
     my $failed = 0;
     foreach my $line (@lines) {
-        $failed++ if ( $line =~ /^\s*USE\s*printstatus_mod/i );
+        $failed++ if ( $line =~ /^\s*USE\s*printstatus_mod/sxmi );
     }
     return $failed;
 }
@@ -1230,8 +1236,8 @@ sub write6 {
     my $failed = 0;
 
     for ( my $i = 0 ; $i < scalar @lines ; $i++ ) {
-        if ( $lines[$i] =~ /^\s*WRITE/i ) {
-            if ( $lines[$i] =~ /^\s*WRITE\s*\(\s*6/ ) {
+        if ( $lines[$i] =~ /^\s*WRITE/sxmi ) {
+            if ( $lines[$i] =~ /^\s*WRITE\s*\(\s*6/sxm ) {
                 $failed++;
             }
         }
@@ -1246,7 +1252,7 @@ sub printstar {
 
     my $failed = 0;
     foreach my $line (@lines) {
-        $failed++ if ( $line =~ /^\s*PRINT\s*\*/i );
+        $failed++ if ( $line =~ /^\s*PRINT\s*\*/sxmi );
     }
     return $failed;
 }
@@ -1256,7 +1262,7 @@ sub um_fort_flush {
 
     my $failed = 0;
     foreach my $line (@lines) {
-        $failed++ if ( $line =~ /^\s*CALL\s*UM_FORT_FLUSH/i );
+        $failed++ if ( $line =~ /^\s*CALL\s*UM_FORT_FLUSH/sxmi );
     }
     return $failed;
 }
@@ -1266,17 +1272,17 @@ sub svn_keyword_subst {
 
     my $failed = 0;
     foreach my $line (@lines) {
-        $failed++ if ( $line =~ /\$Date\$/ );
-        $failed++ if ( $line =~ /\$LastChangedDate\$/ );
-        $failed++ if ( $line =~ /\$Revision\$/ );
-        $failed++ if ( $line =~ /\$Rev\$/ );
-        $failed++ if ( $line =~ /\$LastChangedRevision\$/ );
-        $failed++ if ( $line =~ /\$Author\$/ );
-        $failed++ if ( $line =~ /\$LastChangedBy\$/ );
-        $failed++ if ( $line =~ /\$HeadURL\$/ );
-        $failed++ if ( $line =~ /\$URL\$/ );
-        $failed++ if ( $line =~ /\$Id\$/ );
-        $failed++ if ( $line =~ /\$Header\$/ );
+        $failed++ if ( $line =~ /\$Date\$/sxm );
+        $failed++ if ( $line =~ /\$LastChangedDate\$/sxm );
+        $failed++ if ( $line =~ /\$Revision\$/sxm );
+        $failed++ if ( $line =~ /\$Rev\$/sxm );
+        $failed++ if ( $line =~ /\$LastChangedRevision\$/sxm );
+        $failed++ if ( $line =~ /\$Author\$/sxm );
+        $failed++ if ( $line =~ /\$LastChangedBy\$/sxm );
+        $failed++ if ( $line =~ /\$HeadURL\$/sxm );
+        $failed++ if ( $line =~ /\$URL\$/sxm );
+        $failed++ if ( $line =~ /\$Id\$/sxm );
+        $failed++ if ( $line =~ /\$Header\$/sxm );
     }
 
     return $failed;
@@ -1288,7 +1294,7 @@ sub omp_missing_dollar {
 
     my $failed = 0;
     foreach my $line (@lines) {
-        if ( $line =~ /^\s*!OMP/ ) {
+        if ( $line =~ /^\s*!OMP/sxm ) {
             $failed = 1;
         }
     }
@@ -1306,15 +1312,15 @@ sub intrinsic_modules {
         my @keywords_to_check = get_intrinsic_modules_keywords();
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         next unless $line;
-        next unless $line =~ /\S/;    # If line empty, try the next
+        next unless $line =~ /\S/sxm;    # If line empty, try the next
 
         foreach my $keyword (@keywords_to_check) {
-            if ( $line =~ /^\s*USE\s*$keyword/i ) {
+            if ( $line =~ /^\s*USE\s*$keyword/sxmi ) {
                 $extra_error_information{$keyword}++;
                 $failed++;
             }
@@ -1330,10 +1336,10 @@ sub cpp_ifdef {
     my @lines  = @_;
     my $failed = 0;
     foreach my $line (@lines) {
-        if ( $line =~ /^\s*#ifdef/ ) {
+        if ( $line =~ /^\s*\#ifdef/sxm ) {
             $failed++;
         }
-        elsif ( $line =~ /^\s*#ifndef/ ) {
+        elsif ( $line =~ /^\s*\#ifndef/sxm ) {
             $failed++;
         }
     }
@@ -1350,19 +1356,20 @@ sub cpp_comment {
     foreach my $line (@lines) {
 
         # is this an #if statement?
-        if ( ( $line =~ /^\s*#if / ) || ( $line =~ /^\s*#elif / ) ) {
+        if ( ( $line =~ m/^\s*\#if[ ]/sxm ) || ( $line =~ m/^\s*\#elif[ ]/sxm ) )
+        {
 
             # does this ifdef have a ! in it?
-            if ( $line =~ /!/ ) {
+            if ( $line =~ /!/sxm ) {
 
                 # split the possible regions (ignoring the 0th)
                 # and loop over to check each one in turn
-                @comments = split /!/, $line, -1;
+                @comments = split /!/sxm, $line, -1;
                 splice( @comments, 0, 1 );
                 foreach my $comment (@comments) {
 
                     # must be a recognisable CPP directive
-                    if ( $comment !~ /(^\s*\(?\s*defined)|(^=\s*[0-9])/ ) {
+                    if ( $comment !~ /(^\s*\(?\s*defined)|(^=\s*[0-9])/sxm ) {
                         $failed++;
                     }
                 }
@@ -1370,17 +1377,17 @@ sub cpp_comment {
         }
 
         # is this an #else?
-        elsif ( $line =~ /^\s*#else\s*!/ ) {
+        elsif ( $line =~ /^\s*\#else\s*!/sxm ) {
             $failed++;
         }
 
         # is this an #endif?
-        elsif ( $line =~ /^\s*#endif\s*!/ ) {
+        elsif ( $line =~ /^\s*\#endif\s*!/sxm ) {
             $failed++;
         }
 
         # is this an #include?
-        elsif ( $line =~ /^\s*#include[^!]+!/ ) {
+        elsif ( $line =~ /^\s*\#include[^!]+!/sxm ) {
             $failed++;
         }
     }
@@ -1399,20 +1406,20 @@ sub obsolescent_fortran_intrinsic {
         $line = remove_quoted($line);
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         next unless $line;
-        next unless $line =~ /\S/;    # If line empty, try the next
+        next unless $line =~ /\S/sxm;    # If line empty, try the next
 
         # Ignore CPP
-        next if ( $line =~ /^\s*#/ );
+        next if ( $line =~ /^\s*\#/sxm );
 
         foreach my $keyword (@keywords_to_check) {
 
             # If the keyword is present on the line
-            if ( $line =~ /(^|\W)$keyword(\W|$)/i ) {
+            if ( $line =~ /(^|\W)$keyword(\W|$)/sxmi ) {
                 $extra_error_information{$keyword}++;
                 $failed++;
             }
@@ -1428,15 +1435,15 @@ sub exit_stmt_label {
     foreach my $line (@lines) {
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         # Find if the line appears to contain a solitary EXIT
-        if ( $line =~ /\bEXIT\b/ ) {
+        if ( $line =~ /\bEXIT\b/sxm ) {
 
             # fail if that EXIT is not followed by a label
-            $failed++ if ( $line =~ /EXIT\s*$/ );
+            $failed++ if ( $line =~ /EXIT\s*$/sxm );
         }
     }
 
@@ -1451,15 +1458,15 @@ sub read_unit_args {
     foreach my $line (@lines) {
 
         # Remove comments unless they're OpenMP commands
-        if ( $line =~ /![^\$]/ ) {
-            $line =~ s/![^\$].*//g;
+        if ( $line =~ /![^\$]/sxm ) {
+            $line =~ s/![^\$].*?$//sxmg;
         }
 
         # Find if the line appears to be a READ statement
-        if ( $line =~ /^\s*READ\s*\(/ ) {
+        if ( $line =~ /^\s*READ\s*\(/sxm ) {
 
             # fail if that READ does not have UNIT= as the first argument
-            $failed++ if ( !( $line =~ /^\s*READ\s*\(\s*UNIT\s*=/ ) );
+            $failed++ if ( !( $line =~ /^\s*READ\s*\(\s*UNIT\s*=/sxm ) );
         }
     }
 
@@ -1475,12 +1482,12 @@ sub c_openmp_define_pair_thread_utils {
         my $line = $lines[$i];
 
         # match ifdef and defined style for _OPENMP
-        if ( $line =~ /^\s*#(el)?if.*defined\(_OPENMP\)/ ) {
+        if ( $line =~ /^\s*\#(el)?if.*defined\(_OPENMP\)/sxm ) {
 
             # fail if _OPENMP is not the first defined() test, or it is not
             # followed by SHUM_USE_C_OPENMP_VIA_THREAD_UTILS
             if ( $line !~
-/^\s*#(el)?if\s*!?defined\(_OPENMP\)\s*&&\s*!?defined\(SHUM_USE_C_OPENMP_VIA_THREAD_UTILS\)/
+/^\s*\#(el)?if\s*!?defined\(_OPENMP\)\s*&&\s*!?defined\(SHUM_USE_C_OPENMP_VIA_THREAD_UTILS\)/sxm
               )
             {
                 $failed++;
@@ -1500,7 +1507,7 @@ sub c_openmp_define_no_combine {
 
         # fail if we match defined(_OPENMP) + at least two other defined()
         if ( $line =~
-            /^\s*#(el)?if\s*defined\(_OPENMP\)(.*?!?defined\(\w+\)){2,}/ )
+            /^\s*\#(el)?if\s*defined\(_OPENMP\)(.*?!?defined\(\w+\)){2,}/sxm )
         {
             $failed++;
         }
@@ -1517,7 +1524,7 @@ sub c_openmp_define_not {
         my $line = $lines[$i];
 
         # fail if we match !defined(_OPENMP)
-        if ( $line =~ /^\s*#(el)?if.*!defined\(_OPENMP\)/ ) {
+        if ( $line =~ /^\s*\#(el)?if.*!defined\(_OPENMP\)/sxm ) {
             $failed++;
         }
     }
@@ -1533,7 +1540,7 @@ sub c_ifdef_defines {
         my $line = $lines[$i];
 
         # fail if we match #ifdef or #ifndef
-        if ( $line =~ /^\s*#if(n)?def/ ) {
+        if ( $line =~ /^\s*\#if(n)?def/sxm ) {
             $failed++;
         }
     }
@@ -1552,13 +1559,13 @@ sub c_protect_omp_pragma {
 
         # as we are going from the bottom, the first #if will be an
         # innermost one.
-        if ( $line =~ /^\s*#if/ ) {
+        if ( $line =~ /^\s*\#if/sxm ) {
 
             splice @lines, $i - 1, 1, '';
 
             my $whipe = 0;
 
-            if ( $line =~ /defined\(_OPENMP\)/ ) {
+            if ( $line =~ /defined\(_OPENMP\)/sxm ) {
                 $whipe = 1;
             }
 
@@ -1569,24 +1576,24 @@ sub c_protect_omp_pragma {
                     splice @lines, $j, 1, '';
                 }
 
-                if ( $jline =~ /#else/ ) {
+                if ( $jline =~ /\#else/sxm ) {
                     if ( $whipe == 1 ) {
                         $whipe = 0;
                     }
                     splice @lines, $j, 1, '';
                 }
 
-                if ( $jline =~ /#elif/ ) {
+                if ( $jline =~ /\#elif/sxm ) {
                     if ( $whipe == 1 ) {
                         $whipe = 0;
                     }
-                    if ( $jline =~ /defined\(_OPENMP\)/ ) {
+                    if ( $jline =~ /defined\(_OPENMP\)/sxm ) {
                         $whipe = 1;
                     }
                     splice @lines, $j, 1, '';
                 }
 
-                if ( $jline =~ /#endif/ ) {
+                if ( $jline =~ /\#endif/sxm ) {
                     splice @lines, $j, 1, '';
                     last;
                 }
@@ -1601,12 +1608,12 @@ sub c_protect_omp_pragma {
 
         # as we have removed all lines protected by _OPENMP,
         # any remaining pragma lines are a fail.
-        if ( $line =~ /#pragma\s+omp/ ) {
+        if ( $line =~ /\#pragma\s+omp/sxm ) {
             $failed++;
         }
 
         # as are omp includes
-        if ( $line =~ /#include\s+(<|")omp.h(>|")/ ) {
+        if ( $line =~ /\#include\s+(<|")omp.h(>|")/sxm ) {
             $failed++;
         }
     }
@@ -1620,16 +1627,16 @@ sub c_sanitise_lines {
     my $entire = join( "", @lines );
 
     #remove commented sections
-    $entire =~ s/\/\*(.|\n)+?(\*\/)//g;
+    $entire =~ s/\/\*(.|\n)+?(\*\/)//sxmg;
 
     # Sort out continuation lines
-    $entire =~ s/\\\s*\n//g;
+    $entire =~ s/\\\s*\n//sxmg;
 
     # standardise format for defined(<DEF>) style tests
     $entire =~
-s/defined\s*?\(?\s*?(\w+)[^\S\n]*\)?([|&><*+%^$()\/\-\s])/defined($1) $2/g;
+s/defined\s*?\(?\s*?(\w+)[^\S\n]*\)?([|&><*+%^$()\/\-\s])/defined($1) $2/sxmg;
 
-    @lines = split /\n/, $entire;
+    @lines = split /\n/sxm, $entire;
 
     return @lines;
 }
@@ -1640,10 +1647,10 @@ sub line_trail_whitespace {
 
     foreach my $line (@lines) {
 
-        $line =~ s/\n//g;
+        $line =~ s/\n//sxmg;
 
         # Fail if there are whitespace characters at the end of a line.
-        if ( $line =~ /\s+$/ ) {
+        if ( $line =~ /\s+$/sxm ) {
             $failed++;
             $line = "\n    '$line'";
             $extra_error_information{$line}++;
@@ -1674,13 +1681,14 @@ sub c_integral_format_specifiers {
                     foreach my $fwsfx (@fixed_suffix) {
 
         # Fail if format specifier immediately follows or proceeds a " character
-                        if ( $line =~ /"${fwpre}${fwps}${fwsfx}${fwsz}/ ) {
+                        if ( $line =~ /"${fwpre}${fwps}${fwsfx}${fwsz}/sxm ) {
                             $failed++;
                             chomp($line);
                             $line = "\n    '$line'";
                             $extra_error_information{$line}++;
                         }
-                        elsif ( $line =~ /${fwpre}${fwps}${fwsfx}${fwsz}"/ ) {
+                        elsif ( $line =~ /${fwpre}${fwps}${fwsfx}${fwsz}"/sxm )
+                        {
                             $failed++;
                             chomp($line);
                             $line = "\n    '$line'";
@@ -1699,13 +1707,13 @@ sub c_integral_format_specifiers {
                 foreach my $fwt (@fixed_width_type) {
 
         # Fail if format specifier immediately follows or proceeds a " character
-                    if ( $line =~ /"${fwpre}${fwps}${fwt}/ ) {
+                    if ( $line =~ /"${fwpre}${fwps}${fwt}/sxm ) {
                         $failed++;
                         chomp($line);
                         $line = "\n    '$line'";
                         $extra_error_information{$line}++;
                     }
-                    elsif ( $line =~ /${fwpre}${fwps}${fwt}"/ ) {
+                    elsif ( $line =~ /${fwpre}${fwps}${fwt}"/sxm ) {
                         $failed++;
                         chomp($line);
                         $line = "\n    '$line'";
