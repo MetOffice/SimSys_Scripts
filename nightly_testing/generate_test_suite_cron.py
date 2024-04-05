@@ -98,13 +98,17 @@ def fetch_working_copy_cron():
 def lfric_heads_sed(wc_path):
     """
     Add sed commands to setup dependencies.sh for heads testing
+    As this edits the working copy it copies the original copy with _heads added
+    and returns this new wc path
     """
 
-    dep_path = os.path.join(wc_path, "dependencies.sh")
+    wc_path_new = wc_path + "_heads"
+    dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
-    rstr = f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    rstr = f"cp -r {wc_path} {wc_path_new} ; "
+    rstr += f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
     rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
-    return rstr
+    return rstr, wc_path_new
 
 
 def generate_cron_timing_str(suite, mode):
@@ -283,7 +287,8 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     # LFRic Apps sets heads differently so add SED command here
     if suite["repo"] == "lfric_apps" and suite["revisions"] == "heads":
-        cron_job += lfric_heads_sed(wc_path)
+        heads_cmd, wc_path = lfric_heads_sed(wc_path)
+        cron_job += heads_cmd
 
     # Begin rose-stem command
     cron_job += generate_rose_stem_command(suite, wc_path, cylc_version, name)
