@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Script which launches a rose-stem suite.
+Script which to generate a cron file for run nightly testing from.
+Cron jobs are based on a provided yaml config file (-c command line option) and
+the resulting cron file is installed if the --install option is added.
+See https://metoffice.github.io/simulation-systems/Reviewers/nightlytesting.html
 Used for nightly testing for UM, Jules, UKCA, LFRic_Apps
 Compatible for both Cylc7 + Cylc8
 
@@ -52,7 +55,7 @@ CYLC_DIFFS = {
         "clean": "cylc clean --timeout=7200",
     },
 }
-WC_DIR = "/tmp/frzz"
+WC_DIR = f"/tmp/{os.getlogin()}"
 UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
@@ -117,15 +120,14 @@ def generate_cron_timing_str(suite, mode):
     """
 
     if mode == "monitoring":
-        cron = f"{MONITORING_TIME} * * "
+        cron = f"{MONITORING_TIME}"
+    elif mode == "main":
+        cron = suite["cron_launch"]
+    elif mode == "clean":
+        cron = suite["cron_clean"]
     else:
-        if mode == "main":
-            cron = suite["cron_launch"]
-        elif mode == "clean":
-            cron = suite["cron_clean"]
-        else:
-            sys.exit("Unrecognised mode for cron timing string")
-        cron += " * * "
+        sys.exit("Unrecognised mode for cron timing string")
+    cron += " * * "
 
     if suite["period"] == "weekly":
         if mode == "main" or mode == "monitoring":

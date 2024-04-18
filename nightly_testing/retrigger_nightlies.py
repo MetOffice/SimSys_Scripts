@@ -38,10 +38,11 @@ def connect_to_database(suite_dir):
     return sqlite3.connect(db_filename)
 
 
-def check_suite_cylc8(conn):
+def check_for_workflow_params(conn):
     """
-    Search the DB for a "workflow_params" table - if it exists this is a cylc8
-    suite so return True
+    Takes in Conn, a DB connection object and searches the DB for a
+    "workflow_params" table - if it exists return True.
+    This is used as a proxy for whether a suite is cylc8 - if return True, it is
     """
     res = conn.execute(
         "SELECT name FROM sqlite_master "
@@ -73,9 +74,9 @@ def ask_yn(message):
     Return True for y, False for n
     """
     rval = ""
-    while rval not in ["y", "n"]:
+    while rval.lower().strip() not in ["y", "n"]:
         rval = input(f"{message}? (y/n) ")
-    return {"y": True, "n": False}[rval]
+    return rval.lower().strip()=="y"
 
 
 def restart_suite(suite):
@@ -100,6 +101,52 @@ def retrigger_suite(suite, tasks):
     print()
 
 
+def check_suite_valid(suite, restart_names, day_delta):
+    """
+    Check whether a suite is valid for a restart - return True if so.
+    Valid if from last testing cycle (weekend or nightly) and in restart_names
+    if this is defined.
+    """
+    # If restart names are defined then check whether this suite matches any
+    # If not found then return False and don't restart the suite
+    # The else will get executed if the for loop hasn't been broken out of -
+    # ie. when no suite in restart_names matches the current suite being
+    # looked at.
+    if restart_names:
+        for wanted in restart_names:
+            if wanted in suite:
+                break
+        else:
+            return False
+    # Get the date string from the suite name - if not present then skip
+    try:
+        date_str = re.findall(r"\d{4}-\d{2}-\d{2}", suite)[0]
+    except IndexError:
+        return False
+    # Convert to datetime and compare with day difference
+    suite_date = datetime.strptime(date_str, "%Y-%m-%d")
+    if suite_date > today - timedelta(days=day_delta):
+        return True
+    return False
+
+
+def check_failed_suites(valid_suites, cylc_run):
+    """
+    For any suite valid to be restarted, check it's cylc8 and has task failures.
+    Return in a dictionary with key:suite, value:list of failed tasks.
+    """
+    failed_suites = {}
+    for suite in valid_suites:
+        suite_dir = os.path.join(cylc_run, suite, "runN")
+        conn = connect_to_database(suite_dir)
+        if conn is None or not check_for_workflow_params(conn):
+            continue
+        failed_tasks = check_for_failed_tasks(conn)
+        if failed_tasks:
+            failed_suites[suite] = failed_tasks
+    return failed_suites
+
+
 if __name__ == "__main__":
     # If names to restart are specified then record list of them here
     restart_names = []
@@ -116,36 +163,13 @@ if __name__ == "__main__":
 
     # Get a list of suites from the last day(weekend) to check for failed tasks
     valid_suites = []
-    cylc_run = os.path.expanduser(os.path.join("~frzz", "cylc-run"))
+    cylc_run = os.path.expanduser(os.path.join("~", "cylc-run"))
     for suite in os.listdir(cylc_run):
-        # If restart names are defined then check whether this suite matches any
-        # If not found then continue and don't restart the suite
-        if restart_names:
-            for wanted in restart_names:
-                if wanted in suite:
-                    break
-            else:
-                continue
-        # Get the date string from the suite name - if not present then skip
-        try:
-            date_str = re.findall(r"\d{4}-\d{2}-\d{2}", suite)[0]
-        except IndexError:
-            continue
-        # Convert to datetime and compare with day difference
-        suite_date = datetime.strptime(date_str, "%Y-%m-%d")
-        if suite_date > today - timedelta(days=day_delta):
+        if check_suite_valid(suite, restart_names, day_delta):
             valid_suites.append(suite)
 
     # Parse the valid_suites for ones which are cylc8 and have failed tasks
-    failed_suites = {}
-    for suite in valid_suites:
-        suite_dir = os.path.join(cylc_run, suite, "runN")
-        conn = connect_to_database(suite_dir)
-        if conn is None or not check_suite_cylc8(conn):
-            continue
-        failed_tasks = check_for_failed_tasks(conn)
-        if failed_tasks:
-            failed_suites[suite] = failed_tasks
+    failed_suites = check_failed_suites(valid_suites, cylc_run)
 
     print("\nFound the following suites with errors:")
     for suite in failed_suites:
