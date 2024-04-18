@@ -55,7 +55,8 @@ CYLC_DIFFS = {
         "clean": "cylc clean --timeout=7200",
     },
 }
-WC_DIR = f"/tmp/{os.getlogin()}"
+
+WC_DIR = os.path.join(os.environ["TMPDIR"], os.environ["USER"])
 UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
