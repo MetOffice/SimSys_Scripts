@@ -28,15 +28,16 @@ def test_join_checkout_commands(inlist, scratch, expected):
 data_lfric_heads_sed = [
     (
         "path/to/wc",
-        "sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' path/to/wc/dependencies.sh ; sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' path/to/wc/dependencies.sh ; "
+        "cp -r path/to/wc path/to/wc_heads ; sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; ",
+        "path/to/wc_heads"
     )
 ]
 @pytest.mark.parametrize(
-    ("wc_path", "expected"),
+    ("wc_path", "expected", "new_wc"),
     [test_data for test_data in data_lfric_heads_sed]
 )
-def test_lfric_heads_sed(wc_path, expected):
-    assert lfric_heads_sed(wc_path) == expected
+def test_lfric_heads_sed(wc_path, expected, new_wc):
+    assert lfric_heads_sed(wc_path) == (expected, new_wc)
 
 
 # Test generate_cron_timing_str

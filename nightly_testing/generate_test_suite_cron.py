@@ -1,5 +1,9 @@
+#!/usr/bin/env python3
 """
-Script which launches a rose-stem suite.
+Script to generate a cron file, from which nightly testing is run.
+Cron jobs are based on a provided yaml config file (-c command line option) and
+the resulting cron file is installed if the --install option is added.
+See https://metoffice.github.io/simulation-systems/Reviewers/nightlytesting.html
 Used for nightly testing for UM, Jules, UKCA, LFRic_Apps
 Compatible for both Cylc7 + Cylc8
 
@@ -51,6 +55,7 @@ CYLC_DIFFS = {
         "clean": "cylc clean --timeout=7200",
     },
 }
+
 WC_DIR = os.path.join(os.environ["TMPDIR"], os.environ["USER"])
 UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
@@ -97,13 +102,17 @@ def fetch_working_copy_cron():
 def lfric_heads_sed(wc_path):
     """
     Add sed commands to setup dependencies.sh for heads testing
+    As this edits the working copy it copies the original copy with _heads added
+    and returns this new wc path
     """
 
-    dep_path = os.path.join(wc_path, "dependencies.sh")
+    wc_path_new = wc_path + "_heads"
+    dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
-    rstr = f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    rstr = f"cp -r {wc_path} {wc_path_new} ; "
+    rstr += f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
     rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
-    return rstr
+    return rstr, wc_path_new
 
 
 def generate_cron_timing_str(suite, mode):
@@ -112,15 +121,14 @@ def generate_cron_timing_str(suite, mode):
     """
 
     if mode == "monitoring":
-        cron = f"{MONITORING_TIME} * * "
+        cron = f"{MONITORING_TIME}"
+    elif mode == "main":
+        cron = suite["cron_launch"]
+    elif mode == "clean":
+        cron = suite["cron_clean"]
     else:
-        if mode == "main":
-            cron = suite["cron_launch"]
-        elif mode == "clean":
-            cron = suite["cron_clean"]
-        else:
-            sys.exit("Unrecognised mode for cron timing string")
-        cron += " * * "
+        sys.exit("Unrecognised mode for cron timing string")
+    cron += " * * "
 
     if suite["period"] == "weekly":
         if mode == "main" or mode == "monitoring":
@@ -282,7 +290,8 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     # LFRic Apps sets heads differently so add SED command here
     if suite["repo"] == "lfric_apps" and suite["revisions"] == "heads":
-        cron_job += lfric_heads_sed(wc_path)
+        heads_cmd, wc_path = lfric_heads_sed(wc_path)
+        cron_job += heads_cmd
 
     # Begin rose-stem command
     cron_job += generate_rose_stem_command(suite, wc_path, cylc_version, name)
