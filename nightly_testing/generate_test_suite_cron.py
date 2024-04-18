@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script which to generate a cron file for run nightly testing from.
+Script to generate a cron file, from which nightly testing is run.
 Cron jobs are based on a provided yaml config file (-c command line option) and
 the resulting cron file is installed if the --install option is added.
 See https://metoffice.github.io/simulation-systems/Reviewers/nightlytesting.html
