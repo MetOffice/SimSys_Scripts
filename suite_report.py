@@ -1285,13 +1285,13 @@ class SuiteReport(object):
             else:
                 message += ["There was 1 project "]
             message += [
-                "with LFRic interaction.[[br]]LFRic testing is "
+                "with LFRic Apps interaction.[[br]]LFRic Apps testing is "
                 + "'''required''' before this ticket is submitted for review."
             ]
         else:
             message += [
-                "No files shared with LFRic have been modified.[[br]]LFRic "
-                + "testing is not required for this ticket."
+                "No files shared with LFRic Apps have been modified.[[br]]LFRic"
+                + " Apps testing is not required for this ticket."
             ]
 
         message.append("")
@@ -1310,8 +1310,8 @@ class SuiteReport(object):
         # Export the extract list from the lfric trunk
         exported_extract_file = "~/tmp_extract.txt"
         extract_list_path = self.export_file(
-            "fcm:lfric.xm_tr",
-            "lfric_atm/fcm-make/extract.cfg",
+            "fcm:lfric_apps.xm_tr",
+            "build/extract/extract.cfg",
             exported_extract_file,
         )
 
@@ -1328,8 +1328,8 @@ class SuiteReport(object):
         # the user doesn't have lfric access. In this case return a warning.
         if extract_list_path is None:
             return_message += [
-                "Unable to export the lfric extract_list. "
-                + "LFRic testing may be required.[[br]]"
+                "Unable to export the lfric Apps extract_list. "
+                + "LFRic Apps testing may be required.[[br]]"
             ]
             return return_message + [""]
 
