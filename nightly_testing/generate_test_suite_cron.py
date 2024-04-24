@@ -381,6 +381,8 @@ if __name__ == "__main__":
 
     last_repo = None
     for suite_name in sorted(suites.keys()):
+        if suite_name == "base":
+            continue
         repo = suites[suite_name]["repo"]
         tlaunch = suites[suite_name]["time_launch"].split(":")
         tclean = suites[suite_name]["time_clean"].split(":")
