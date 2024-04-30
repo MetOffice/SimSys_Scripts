@@ -813,10 +813,20 @@ class SuiteReport(object):
             prefix = "https://code.metoffice.gov.uk/svn/"
             project = vcs_data["url"]
             if project.startswith(prefix):
-                project = project[len(prefix) :]
+                project = project[len(prefix):]
             project = project.split("/")[0].upper()
             projects[project] = {}
-            projects[project]["repo loc"] = vcs_data["url"] + ending
+            url = vcs_data["url"]
+            if "dev" in url:
+                splitter = "dev"
+            else:
+                splitter = "test"
+            start_url, end_url = url.split(f"/{splitter}/", 1)
+            start_url += f"/{splitter}/"
+            end_url = end_url.split("/")
+            end_url = f"{end_url[0]}/{end_url[1]}"
+
+            projects[project]["repo loc"] = start_url + end_url + ending
 
         for item in vcs_data["status"]:
             if not item.startswith("?") and len(item) > 0:
@@ -877,7 +887,18 @@ class SuiteReport(object):
         return False
 
     @staticmethod
-    def export_file(repo_url, fname, outname="~/temp.txt"):
+    def choose_tempfile_loc(outname="temp.txt"):
+        """
+        If TMPDIR is defined place temporary file there, otherwise in ~
+        Default filename is temp.txt
+        """
+        if "TMPDIR" in os.environ:
+            outname = os.path.join(os.environ["TMPDIR"], outname)
+        else:
+            outname = os.path.join("~", outname)
+        return outname
+
+    def export_file(self, repo_url, fname, outname=""):
         """
         Runs an fcm export on a file and saves it as outname
         Attempts to check it out 5 times to account for any network glitches.
@@ -887,6 +908,10 @@ class SuiteReport(object):
                 fname: the path of the file in the repo
                 outname: the path to the output file. Default ~/temp.txt
         """
+
+        # If TMPDIR is defined checkout to there, otherwise to ~
+        if not outname:
+            outname = self.choose_tempfile_loc()
 
         fname = fname.lstrip("/")
         outname = os.path.expanduser(outname)
@@ -904,16 +929,51 @@ class SuiteReport(object):
         else:
             return None
 
-    @staticmethod
-    def clean_tempfile(fname="~/temp.txt"):
+    def clean_tempfile(self, fname=""):
         """
         Clean up a temp file exported
         """
+
+        if not fname:
+            fname = self.choose_tempfile_loc()
 
         try:
             os.remove(os.path.expanduser(fname))
         except EnvironmentError:
             pass
+
+    def parse_owner_file(self, line, sep):
+        """
+        Parse a line in an Owners file for Section and Owners
+        For UM Code/Config Owners + Apps Code Owners
+        """
+        if line == "\n" or sep in line:
+            return None, None
+        dummy_list = line.split()
+        section = dummy_list[0].strip()
+        owners = dummy_list[1].strip()
+        if "umsysteam" in owners:
+            owners = "Simulation Systems and Deployment"
+        if self.primary_project.lower() == "um":
+            try:
+                others = dummy_list[2].replace("\n", "")
+                if others == "--":
+                    others = ""
+            except IndexError:
+                others = ""
+            return section.lower(), [owners, others]
+        else:
+            try:
+                others = dummy_list[2].strip()
+                if "um/browser/main/trunk/CodeOwners.txt" in others:
+                    others = f"[{others} UM Code Owners]"
+            except IndexError:
+                others = "-"
+            try:
+                team = dummy_list[3].strip()
+            except IndexError:
+                team = "-"
+            return section.lower(), [owners, others, team]
 
     def generate_owner_dictionary(self, mode):
         """
@@ -934,12 +994,14 @@ class SuiteReport(object):
             return None
 
         # Export the Owners file from the HOT
-        exported_file = "~/tmp_owners.txt"
-        file_path = self.export_file("fcm:um.xm_tr", fname, exported_file)
+        exported_file = self.choose_tempfile_loc("tmp_owners.txt")
+        file_path = self.export_file(
+            f"fcm:{self.primary_project.lower()}.xm_tr", fname, exported_file
+        )
         if file_path is None:
             # Couldn't check out file - use working copy Owners file instead
             wc_path = get_working_copy_path(
-                self.job_sources["UM"]["tested source"]
+                self.job_sources[self.primary_project]["tested source"]
             )
             if not wc_path:
                 wc_path = ""
@@ -959,21 +1021,10 @@ class SuiteReport(object):
                         inside_listing = False
                         continue
                     if inside_listing:
-                        if line != "\n" and sep not in line:
-                            dummy_list = line.split()
-                            section = dummy_list[0].strip()
-                            owners = dummy_list[1].strip()
-                            if "umsysteam" in owners:
-                                owners = "!umsysteam@metoffice.gov.uk"
-                            try:
-                                others = dummy_list[2].replace("\n", "")
-                                if others == "--":
-                                    others = ""
-                            except IndexError:
-                                others = ""
-                            owners_dict.update(
-                                {section.lower(): [owners, others]}
-                            )
+                        key, value = self.parse_owner_file(line, sep)
+                        if key is not None:
+                            owners_dict[key] = value
+
         except EnvironmentError:
             print("Can't find working copy for Owners File")
             return None
@@ -995,22 +1046,37 @@ class SuiteReport(object):
         table = ["'''Required " + mode.capitalize() + " Owner Approvals'''"]
 
         if mode == "config":
-            table += [" || '''Owner''' || '''Approval''' || '''Configs''' || "]
+            table += [
+                " || '''Owner''' || '''Others''' || '''Approval''' || "
+                "'''Configs''' || "
+            ]
         else:
             table += [
-                " || '''Owner (Deputy)''' || '''Approval''' || "
-                + "'''Code Section''' || "
+                " || '''Owner''' || '''Deputy[[br]]Team''' "
+                "|| '''Approval''' || '''Code Section''' || "
             ]
 
         if needed_approvals is None:
             table += [
-                " |||||| No UM "
+                f" |||||| No {self.primary_project} "
                 + mode.capitalize()
                 + " Owner Approvals Required || "
             ]
         else:
-            for owner in needed_approvals.keys():
-                row = " || " + owner + " || Pending || "
+            for owners in list(needed_approvals.keys()):
+                owners = list(owners)
+                if len(owners) < 2:
+                    owners.append("-")
+                if self.primary_project.lower() == "lfric_apps":
+                    if len(owners) < 3:
+                        owners.append("-")
+                    owner, deputy, team = owners
+                else:
+                    owner, deputy = owners
+                row = f" || {owner} || {deputy}"
+                if self.primary_project.lower() == "lfric_apps":
+                    row += f"[[br]]{team}"
+                row += " || Pending || "
                 count = 0
                 for val in needed_approvals[owner]:
                     if count == 3:
@@ -1059,15 +1125,10 @@ class SuiteReport(object):
                 owners = config_owners[config]
             except KeyError:
                 owners = ["Unknown", ""]
-            owner = owners[0]
-            notify = owners[1]
-
-            # If others to notify, append names to config name
-            if notify != "":
-                config += "(" + notify + ")"
+            owners = tuple(owners)
 
             # Record Owner and Config
-            needed_approvals[owner].add(config)
+            needed_approvals[owners].add(config)
 
         return needed_approvals
 
@@ -1088,6 +1149,77 @@ class SuiteReport(object):
         approval_table = self.create_approval_table(config_approvals, "config")
 
         return approval_table
+
+    def um_code_owners(self, file_path, needed_approvals):
+        """
+        Given a file changed get a UM code section
+        """
+
+        fle = file_path
+        file_path = file_path.lower()
+
+        # Manually sort directories with known sections
+        if "configowners.txt" in file_path or "codeowners.txt" in file_path:
+            return None
+        if file_path.startswith("admin"):
+            needed_approvals[("!umsysteam@metoffice.gov.uk",)].add("admin")
+            return None, needed_approvals
+        if file_path.startswith("bin"):
+            needed_approvals[("!umsysteam@metoffice.gov.uk",)].add("bin")
+            return None, needed_approvals
+        if file_path.startswith("fcm-make"):
+            return "fcm-make_um", needed_approvals
+        elif file_path.startswith("fab"):
+            return "fab", needed_approvals
+        elif file_path.startswith("rose-stem"):
+            if "umdp3_check" in file_path:
+                return "umdp3_checker", needed_approvals
+            elif "run_cppcheck" in file_path:
+                return "run_cppcheck", needed_approvals
+            elif "rose-stem/bin" in file_path:
+                return "rose_bin", needed_approvals
+            else:
+                return "rose_stem", needed_approvals
+        elif file_path.startswith("rose-meta"):
+            if "versions.py" in file_path:
+                return "upgrade_macros", needed_approvals
+            elif "rose-meta.conf" in file_path:
+                return "rose-meta.conf", needed_approvals
+            elif "stash" in file_path:
+                return "stash", needed_approvals
+            else:
+                needed_approvals[("!umsysteam@metoffice.gov.uk",)].add(
+                    "macro_infrastructure"
+                )
+                return None, needed_approvals
+        else:
+            # Find area of files in other directories
+            tmp_path = self.export_file("fcm:um.xm_tr", fle)
+            if tmp_path is None:
+                tmp_path = ""
+
+            try:
+                with open(tmp_path, "r") as inp_file:
+                    for line in inp_file:
+                        if "file belongs in" in line:
+                            section = line.strip("\n")
+                            break
+                    else:
+                        section = ""
+            except EnvironmentError:
+                section = ""
+
+            # Clean up checked out file
+            self.clean_tempfile()
+
+            # Get code area name out
+            section = re.sub(r"/\*", "", section)
+            section = re.sub(r"\*/", "", section)
+            try:
+                section = section.split(":")[1].strip().lower()
+            except IndexError:
+                section = ""
+            return section, needed_approvals
 
     def get_code_owners(self, code_owners):
         """
@@ -1120,76 +1252,25 @@ class SuiteReport(object):
                 # value of that list. We then remove any trailing '/'.
                 branch_name = repo_loc.split("/")[-1]
                 fle = fle.split(branch_name, 1)[1].strip("/")
-            fpath = fle
-            fle = fle.lower()
 
-            # Manually sort directories with known sections
-            if "configowners.txt" in fle or "codeowners.txt" in fle:
-                continue
-            if fle.startswith("admin"):
-                needed_approvals["!umsysteam@metoffice.gov.uk"].add("admin")
-                continue
-            if fle.startswith("bin"):
-                needed_approvals["!umsysteam@metoffice.gov.uk"].add("bin")
-                continue
-            if fle.startswith("fcm-make"):
-                section = "fcm-make_um"
-            elif fle.startswith("fab"):
-                section = "fab"
-            elif fle.startswith("rose-stem"):
-                if "umdp3_check" in fle:
-                    section = "umdp3_checker"
-                elif "run_cppcheck" in fle:
-                    section = "run_cppcheck"
-                elif "rose-stem/bin" in fle:
-                    section = "rose_bin"
-                else:
-                    section = "rose_stem"
-            elif fle.startswith("rose-meta"):
-                if "versions.py" in fle:
-                    section = "upgrade_macros"
-                elif "rose-meta.conf" in fle:
-                    section = "rose-meta.conf"
-                else:
-                    section = "stash"
+            if self.primary_project.lower() == "um":
+                section, needed_approvals = self.um_code_owners(
+                    fle, needed_approvals
+                )
             else:
-                # Find area of files in other directories
-                file_path = self.export_file("fcm:um.xm_tr", fpath)
-                if file_path is None:
-                    file_path = ""
+                section, needed_approvals = self.lfric_apps_code_owners()
 
-                try:
-                    with open(file_path, "r") as inp_file:
-                        for line in inp_file:
-                            if "file belongs in" in line:
-                                section = line.strip("\n")
-                                break
-                        else:
-                            section = ""
-                except EnvironmentError:
-                    section = ""
-
-                # Clean up checked out file
-                self.clean_tempfile()
-
-                # Get code area name out
-                section = re.sub(r"/\*", "", section)
-                section = re.sub(r"\*/", "", section)
-                try:
-                    section = section.split(":")[1].strip().lower()
-                except IndexError:
-                    section = ""
+            if section is None:
+                continue
 
             # Compare area name to code owners list
             try:
-                owners = code_owners[section]
-                owner, deputy = owners
-                if len(deputy) > 0:
-                    owner += " (" + deputy + ")"
-                needed_approvals[owner].add(section)
+                owners = tuple(code_owners[section])
+                needed_approvals[owners].add(section)
             except KeyError:
+                print(fle)
                 needed_approvals[
-                    "Unknown - ensure section " "is in CodeOwners.txt"
+                    "Unknown - ensure section is in CodeOwners.txt"
                 ].add(section)
 
         return needed_approvals
@@ -1470,7 +1551,10 @@ class SuiteReport(object):
         # Check whether lfric shared files have been touched
         # Not needed if lfric the suite source
         lfric_testing_message = [""]
-        if "LFRIC" not in self.primary_project and self.primary_project != "UNKNOWN":
+        if (
+            "LFRIC" not in self.primary_project
+            and self.primary_project != "UNKNOWN"
+        ):
             lfric_testing_message = self.check_lfric_extract_list()
 
         # Generate table for required config and code owners
