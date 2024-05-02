@@ -154,6 +154,19 @@ um_set-revisions_nightly_cylc7:
     period: nightly_all
 
 
+um_set-revisions_nightly_next-cylc:
+    repo: um
+    groups: developer,ex1a_developer
+    use_next_cylc: 8-next
+    revisions: set
+    vars:
+        - HOUSEKEEPING=false
+        - PREBUILDS=false
+    time_launch: 03:00
+    time_clean: 02:00
+    period: nightly_all
+
+
 #################
 # Jules Configs #
 #################
