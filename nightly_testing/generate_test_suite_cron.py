@@ -22,6 +22,8 @@ Optional:
 * vars: strings that follow the -S command on the command line
 * monitoring: Boolean, whether to run the monitoring script on this suite
 * cylc_version: 7 or 8
+* use_next_cylc: String, if defined will use this string after export
+  CYLC_VERSION=. Intended to test the 'next' version of cylc
 """
 
 import os
@@ -200,7 +202,6 @@ def export_cylc_string(suite, cylc_version):
     """
     Based on the cylc version and the use_next_cylc setting return the version
     string to export
-    Assumes the next cylc version is loaded with 'export CYLC_VERSION=8-next'
     """
 
     if "use_next_cylc" not in suite or not suite["use_next_cylc"]:
