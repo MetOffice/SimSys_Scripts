@@ -99,12 +99,14 @@ def test_generate_cron_timing_str(suite, mode, expected):
 # Test generate_clean_commands
 data_generate_clean_commands = [
     (
+        {},
         7,
         "suite_name",
         "cron_log",
         f"{PROFILE} ; export CYLC_VERSION=7 ; cylc stop 'suite_name' >/dev/null 2>&1 ; sleep 10 ; rose suite-clean -y -q suite_name >> cron_log 2>&1\n"
     ),
     (
+        {},
         8,
         "suite_name",
         "cron_log",
@@ -112,11 +114,11 @@ data_generate_clean_commands = [
     )
 ]
 @pytest.mark.parametrize(
-    ("cylc_version", "name", "log_file", "expected"),
+    ("suite", "cylc_version", "name", "log_file", "expected"),
     [test_data for test_data in data_generate_clean_commands]
 )
-def test_generate_clean_commands(cylc_version, name, log_file, expected):
-    assert generate_clean_commands(cylc_version, name, log_file) == expected
+def test_generate_clean_commands(suite, cylc_version, name, log_file, expected):
+    assert generate_clean_commands(suite, cylc_version, name, log_file) == expected
 
 
 # Test generate_rose_stem_command
@@ -208,3 +210,34 @@ data_populate_cl_variables = [
 )
 def test_populate_cl_variables(suite, expected):
     assert populate_cl_variables(suite) == expected
+
+
+# Test export_cylc_string
+data_export_cylc_string = [
+    (
+        {},
+        7,
+        7,
+    ),
+    (
+        {},
+        8,
+        8,
+    ),
+    (
+        {"use_next_cylc": ""},
+        8,
+        8,
+    ),
+    (
+        {"use_next_cylc": "8-next"},
+        8,
+        "8-next",
+    )
+]
+@pytest.mark.parametrize(
+    ("suite", "cylc_version", "expected"),
+    [test_data for test_data in data_export_cylc_string]
+)
+def test_export_cylc_string(suite, cylc_version, expected):
+    assert export_cylc_string(suite, cylc_version) == expected

@@ -196,13 +196,26 @@ def generate_monitoring(name, suite, log_file):
     return monitoring + "\n"
 
 
-def generate_clean_commands(cylc_version, name, log_file):
+def export_cylc_string(suite, cylc_version):
+    """
+    Based on the cylc version and the use_next_cylc setting return the version
+    string to export
+    Assumes the next cylc version is loaded with 'export CYLC_VERSION=8-next'
+    """
+
+    if "use_next_cylc" not in suite or not suite["use_next_cylc"]:
+        return cylc_version
+    else:
+        return suite["use_next_cylc"]
+
+
+def generate_clean_commands(suite, cylc_version, name, log_file):
     """
     Generate the commands used to clean the suite
     """
     return (
         f"{PROFILE} ; "
-        f"export CYLC_VERSION={cylc_version} ; "
+        f"export CYLC_VERSION={export_cylc_string(suite, cylc_version)} ; "
         f"cylc stop '{name}' >/dev/null 2>&1 ; sleep 10 ; "
         f"{CYLC_DIFFS[cylc_version]['clean']} -y -q {name} "
         f">> {log_file} 2>&1\n"
@@ -223,7 +236,7 @@ def generate_clean_cron(suite_name, suite, log_file, cylc_version):
 
     name = suite_name + date_str
 
-    clean_cron += generate_clean_commands(cylc_version, name, log_file)
+    clean_cron += generate_clean_commands(suite, cylc_version, name, log_file)
 
     return clean_cron
 
@@ -235,7 +248,7 @@ def generate_rose_stem_command(suite, wc_path, cylc_version, name):
     """
 
     return (
-        f"export CYLC_VERSION={cylc_version} ; "
+        f"export CYLC_VERSION={export_cylc_string(suite, cylc_version)} ; "
         + f"rose stem --group={suite['groups']} "
         + f"{CYLC_DIFFS[cylc_version]['name']}{name} "
         + f"--source={wc_path} "
