@@ -1008,10 +1008,6 @@ class SuiteReport(object):
             file_path = os.path.join(wc_path, fname)
             print("Using the checked out version of Owners file")
 
-        file_path = (
-            "/tmp/persistent/review_copies/vn1.0_codeowners/CodeOwners.txt"
-        )
-
         # Read through file and generate dictionary
         try:
             with open(file_path, "r") as inp_file:
