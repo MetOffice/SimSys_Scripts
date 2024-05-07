@@ -161,24 +161,6 @@ COMMON_GROUPS = {
     "Unknown": [],
 }
 
-
-def is_cylc8():
-    """
-    Determine if the Cylc version is Cylc 8 (or later)
-
-    """
-
-    # Assume Cylc 7 by default
-    test_version = 7
-
-    if "CYLC_VERSION" in os.environ:
-        test_version = int(os.environ["CYLC_VERSION"].split(".")[0])
-
-    if test_version < 8:
-        return False
-    return True
-
-
 def _read_file(filename):
     """Takes filename (str)
     Return contents of a file, as list of strings."""
@@ -365,24 +347,19 @@ class SuiteReport(object):
         also the boolean sort_by_name to force sorting by task name over
         status when generating the task table in the report.
         """
-        suite_path = re.sub(r"/$", "", suite_path)  # remove trailing '/'
-        self.suite_path = suite_path
+        self.suite_path = os.path.abspath(suite_path)
+        self.is_cylc8 = os.path.isdir(
+            os.path.join(self.suite_path, "log", "config")
+        )
+
         self.log_path = log_path
         self.sort_by_name = sort_by_name
         self.verbosity = verbosity
         self.creation_time = time.strftime("%Y/%m/%d %X")
         self.uncommitted_changes = 0
-        self.suitename = os.path.basename(self.suite_path)
-        if is_cylc8():
-            self.suitename = (
-                os.path.basename(self.suite_path.strip("/" + self.suitename))
-                + "/"
-                + self.suitename
-            )
 
         self.site = "Unknown"
         self.rose_orig_host = None
-        self.suite_owner = None
         self.groups = []
         self.job_sources = {}
         self.primary_project = ""
@@ -390,7 +367,20 @@ class SuiteReport(object):
         self.status_counts = defaultdict(int)
         self.status_counts["failed"] = 0
 
-        self.ascertain_suite_owner()
+        try:
+            # Resolve "runN" soft link - Required for Cylc8 cylc-review path
+            link_target = os.readlink(self.suite_path)
+            suitename = os.path.join(os.path.dirname(self.suite_path), link_target)
+        except OSError:
+            suitename = self.suite_path
+
+        suite_dir, self.suitename = suitename.split("cylc-run/")
+        # Default to userID from suite path unless CYLC_SUITE_OWNER is present
+        self.suite_owner = os.environ.get(
+            "CYLC_SUITE_OWNER",
+            os.path.basename(suite_dir.rstrip("/"))
+        )
+
         self.parse_rose_suite_run()
         self.initialise_projects()
         self.parse_processed_config_file()
@@ -588,7 +578,7 @@ class SuiteReport(object):
         rose_orig_host = "Unknown rose_orig_host"
 
         srp_file = ""
-        if is_cylc8():
+        if self.is_cylc8:
             srp_file = os.path.join(suite_dir, "log", "config")
             for filename in os.listdir(srp_file):
                 if (
@@ -645,19 +635,6 @@ class SuiteReport(object):
         self.multi_branches = multiple_branches
         return
 
-    def ascertain_suite_owner(self):
-        """Find suite owner.
-        To retrieve suite owner :
-           Take default from ENV['USER'] or 'Unknown Suite Owner' if none.
-           Use ENV['CYLC_SUITE_OWNER'] if present.
-        Sets Class variables"""
-
-        # Get a default
-        suite_owner = os.environ.get("USER", "Unknown Suite Owner")
-        suite_owner = os.environ.get("CYLC_SUITE_OWNER", suite_owner)
-        self.suite_owner = suite_owner
-        return
-
     def parse_rose_suite_run(self):
         """Parse rose-suite-run.conf file.
         Takes full path for suite dir.
@@ -665,7 +642,7 @@ class SuiteReport(object):
 
         suite_dir = self.suite_path
         rsr_file = ""
-        if is_cylc8():
+        if self.is_cylc8:
             glob_format = "{0:s}/*{1:s}".format(
                 os.path.join(suite_dir, "log", "config"),
                 ROSE_SUITE_RUN_CONF_CYLC8,
@@ -680,13 +657,9 @@ class SuiteReport(object):
         )
         self.fcm = _parse_string("FCM_VERSION", lines)
         self.cylc = _parse_string("CYLC_VERSION", lines)
-        self.rose = _parse_string("ROSE_VERSION", lines)
-
         if not self.cylc:
-            if "CYLC_VERSION" in os.environ:
-                self.cylc = os.environ["CYLC_VERSION"]
-            else:
-                self.cylc = "7"
+            self.cylc = "8" if self.is_cylc8 is True else "7"
+        self.rose = _parse_string("ROSE_VERSION", lines)
 
         # This test is a little problematic when running this script on a JULES
         # rose-stem suite as JULES has no 'need' of the two compare variables
@@ -698,9 +671,7 @@ class SuiteReport(object):
             compare_output == "true" and compare_wallclock == "true"
         )
 
-        self.trustzone = None
-        if "TRUSTZONE" in os.environ:
-            self.trustzone = os.environ["TRUSTZONE"]
+        self.trustzone = os.environ.get("TRUSTZONE", None)
 
         self.host_xcs = False
         if self.site == "meto":
@@ -788,7 +759,7 @@ class SuiteReport(object):
         projects = {}
         self.uncommitted_changes = 0
 
-        if not is_cylc8():
+        if not self.is_cylc8:
             return self.cylc7_check_versions_file(projects)
 
         vcs_path = os.path.join(self.suite_path, "log", "version", "vcs.json")
@@ -810,11 +781,15 @@ class SuiteReport(object):
                 ending = "@" + vcs_data["revision"]
             else:
                 ending = ""
-            prefix = "https://code.metoffice.gov.uk/svn/"
             project = vcs_data["url"]
+
+            prefix = "https://code.metoffice.gov.uk/svn/"
+            prefix_svn = "svn://fcm1/"
             if project.startswith(prefix):
                 project = project[len(prefix) :]
-            project = project.split("/")[0].upper()
+            if project.startswith(prefix_svn):
+                project = project[len(prefix_svn) :]
+            project = re.split("[/.]", project)[0].upper()
             projects[project] = {}
             projects[project]["repo loc"] = vcs_data["url"] + ending
 
@@ -1954,7 +1929,7 @@ class SuiteReport(object):
             )
 
             trac_log.append(
-                " || Cylc-Review: || {0:s}/{1:s}/{2:s}/{3:s} || ".format(
+                " || Cylc-Review: || {0:s}/{1:s}/{2:s}/?suite={3:s} || ".format(
                     CYLC_REVIEW_URL[self.site],
                     "taskjobs",
                     self.suite_owner,
@@ -2035,7 +2010,7 @@ class SuiteReport(object):
             trac_log.append("")
 
             db_file = ""
-            if is_cylc8():
+            if self.is_cylc8:
                 db_file = os.path.join(
                     self.suite_path, "log", SUITE_DB_FILENAME_CYLC8
                 )
@@ -2227,20 +2202,20 @@ def parse_options():
 
     # Find the suite database file
     if opts.suite_path is None:
-        if "CYLC_SUITE_RUN_DIR" in os.environ:
-            # cylc7 cylc-run dir name
-            opts.suite_path = os.environ["CYLC_SUITE_RUN_DIR"]
-            # cylc provides 3 args to the shutdown handler - so allow for them.
-            expected_args = 3
-        elif "CYLC_WORKFLOW_RUN_DIR" in os.environ:
-            # cylc8 cylc-run dir name
-            opts.suite_path = os.environ["CYLC_WORKFLOW_RUN_DIR"]
-            # cylc provides 3 args to the shutdown handler - so allow for them.
-            expected_args = 3
-        else:
-            for item in os.environ:
-                print(item, os.environ[item])
-            sys.exit("Path to suite not provided.")
+        # Running online as a shutdown handler in a suite.
+        # cylc provides 3 args to the shutdown handler - so allow for them.
+        expected_args = 3
+        opts.suite_path = os.environ.get(
+            # Cylc7 environment variable
+            "CYLC_SUITE_RUN_DIR",
+            # Default to Cylc8 environment variable
+            os.environ.get("CYLC_WORKFLOW_RUN_DIR")
+        )
+        if opts.suite_path is None:
+            print("Available Environment Variables:")
+            for key, val in os.environ.items():
+                print(f"  {key}: {val}")
+            sys.exit("[ERROR] Path to suite not provided.")
 
     if len(args) != expected_args:
         parser.print_help()
