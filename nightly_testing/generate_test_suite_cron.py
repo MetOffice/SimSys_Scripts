@@ -74,7 +74,7 @@ def run_command(command):
 
 def join_checkout_commands(repos, dir_wc):
     """
-    Join commands that delete repo then checkout new one
+    Join commands that checkout new repos
     """
 
     command = ""
@@ -87,7 +87,8 @@ def join_checkout_commands(repos, dir_wc):
 def fetch_working_copy_cron():
     """
     Cleanup and then re-checkout working copies for each of the repos used
-    Runs just after midnight ahead of all other tasks
+    Create an lfric_apps heads working copy
+    Runs at 23:30, before all other tasks
     """
 
     command = "# Checkout Working Copies - every day at 23:30 #"
