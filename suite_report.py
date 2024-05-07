@@ -1255,9 +1255,9 @@ class SuiteReport(object):
             return None
 
         # Get the mirror repo and remove the @REVISION part
-        repo_loc = self.job_sources[
-            self.primary_project
-        ]["repo mirror"].split("@")[0]
+        repo_loc = self.job_sources[self.primary_project]["repo mirror"].split(
+            "@"
+        )[0]
 
         # Dictionary to store needed approvals
         needed_approvals = defaultdict(set)
