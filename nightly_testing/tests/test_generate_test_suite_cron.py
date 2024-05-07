@@ -28,7 +28,7 @@ def test_join_checkout_commands(inlist, scratch, expected):
 data_lfric_heads_sed = [
     (
         "path/to/wc",
-        "cp -r path/to/wc path/to/wc_heads ; sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; ",
+        "cp -rf path/to/wc path/to/wc_heads ; sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; ",
         "path/to/wc_heads"
     )
 ]

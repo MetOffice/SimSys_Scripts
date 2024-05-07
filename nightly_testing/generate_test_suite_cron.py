@@ -109,7 +109,7 @@ def lfric_heads_sed(wc_path):
     wc_path_new = wc_path + "_heads"
     dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
-    rstr = f"cp -r {wc_path} {wc_path_new} ; "
+    rstr = f"cp -rf {wc_path} {wc_path_new} ; "
     rstr += f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
     rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
     return rstr, wc_path_new
