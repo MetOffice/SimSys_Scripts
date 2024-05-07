@@ -1066,10 +1066,10 @@ class SuiteReport(object):
             for owners, sections in needed_approvals.items():
                 owners = list(owners)
                 if len(owners) < 2:
-                    owners.append("-")
+                    owners.append("--")
                 if self.primary_project.lower() == "lfric_apps":
                     if len(owners) < 3:
-                        owners.append("-")
+                        owners.append("--")
                     owner, deputy, team = owners
                 else:
                     owner, deputy = owners
@@ -1219,7 +1219,7 @@ class SuiteReport(object):
             section = ""
         return section, needed_approvals
 
-    def lfric_apps_code_section(self, file_path):
+    def lfric_apps_code_section(self, file_path, needed_approvals):
         """
         Given a file get the lfric_apps code section
         """
@@ -1232,13 +1232,20 @@ class SuiteReport(object):
             return "makefiles"
         if "rose-stem" in file_path:
             return "rose-stem"
+        if "codeowners.txt" in file_name:
+            needed_approvals[("!umsysteam@metoffice.gov.uk",)].add("other")
+            return None, needed_approvals
         if file_path.strip("/").startswith("build"):
             return "build"
 
         # Find area of other files based on Application or Science Section
         # The 2nd part of the file_path will be the Application or Science part
-        # Return this
-        return file_path.split("/")[1]
+        # Return this 2nd part if Application or Science exists
+        # Otherwise return file_name to get an Unknown section
+        try:
+            return file_path.split("/")[1]
+        except IndexError:
+            return file_name
 
     def get_code_owners(self, code_owners):
         """
@@ -1279,7 +1286,9 @@ class SuiteReport(object):
                     fle, needed_approvals
                 )
             else:
-                section = self.lfric_apps_code_section(fle)
+                section, needed_approvals = self.lfric_apps_code_section(
+                    fle, needed_approvals
+                )
 
             if section is None:
                 continue
