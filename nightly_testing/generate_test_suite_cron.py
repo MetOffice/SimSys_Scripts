@@ -80,7 +80,6 @@ def join_checkout_commands(repos, dir_wc):
     command = ""
     for repo in repos:
         wc_path = os.path.join(dir_wc, "wc_" + repo)
-        command += f"rm -rf {wc_path} ; "
         command += f"fcm co -q --force fcm:{repo}.xm_tr@HEAD {wc_path} ; "
     return command
 
@@ -94,7 +93,9 @@ def fetch_working_copy_cron():
     command = "# Checkout Working Copies - every day at 23:30 #"
     l = len(command)
     command = f"{l*'#'}\n{command}\n{l*'#'}\n30 23 * * * {PROFILE} ; "
+    command += f"rm -rf {os.path.join(WC_DIR, 'wc_*')} ; "
     command += join_checkout_commands(DEPENDENCIES.keys(), WC_DIR)
+    command += lfric_heads_sed(os.path.join(WC_DIR, "wc_lfric_apps"))
 
     return command + "\n\n\n"
 
@@ -112,7 +113,7 @@ def lfric_heads_sed(wc_path):
     rstr = f"cp -rf {wc_path} {wc_path_new} ; "
     rstr += f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
     rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
-    return rstr, wc_path_new
+    return rstr
 
 
 def generate_cron_timing_str(suite, mode):
@@ -288,10 +289,9 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     cron_job += f"{PROFILE} ; "
 
-    # LFRic Apps sets heads differently so add SED command here
+    # LFRic Apps heads uses a different working copy
     if suite["repo"] == "lfric_apps" and suite["revisions"] == "heads":
-        heads_cmd, wc_path = lfric_heads_sed(wc_path)
-        cron_job += heads_cmd
+        wc_path = wc_path + "_heads"
 
     # Begin rose-stem command
     cron_job += generate_rose_stem_command(suite, wc_path, cylc_version, name)
