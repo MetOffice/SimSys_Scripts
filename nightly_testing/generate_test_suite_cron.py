@@ -21,7 +21,9 @@ Optional:
 * revisions: heads to use the HoT for sub-repos, set to use the set revisions
 * vars: strings that follow the -S command on the command line
 * monitoring: Boolean, whether to run the monitoring script on this suite
-* cylc_version: 7 or 8
+* cylc_version: Can be any string beginning 7 or 8 that is a valid cylc install
+                at the site, such that `export CYLC_VERSION=<cylc_version>`
+                works.
 """
 
 import os
@@ -206,7 +208,7 @@ def generate_clean_commands(cylc_version, name, log_file):
         f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
         f"cylc stop '{name}' >/dev/null 2>&1 ; sleep 10 ; "
-        f"{CYLC_DIFFS[cylc_version]['clean']} -y -q {name} "
+        f"{CYLC_DIFFS[int(cylc_version[0])]['clean']} -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
 
@@ -239,7 +241,7 @@ def generate_rose_stem_command(suite, wc_path, cylc_version, name):
     return (
         f"export CYLC_VERSION={cylc_version} ; "
         + f"rose stem --group={suite['groups']} "
-        + f"{CYLC_DIFFS[cylc_version]['name']}{name} "
+        + f"{CYLC_DIFFS[int(cylc_version[0])]['name']}{name} "
         + f"--source={wc_path} "
     )
 
@@ -305,7 +307,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     cron_job += f">> {log_file} 2>&1"
 
-    if cylc_version == 8:
+    if int(cylc_version[0]) == 8:
         cron_job += f" ; cylc play {name} >> {log_file} 2>&1"
 
     return cron_job + "\n"
@@ -318,6 +320,7 @@ def generate_cron_job(suite_name, suite, log_file):
     """
 
     cylc_version = suite.get("cylc_version", DEFAULT_CYLC_VERSION)
+    cylc_version = str(cylc_version)
 
     date_str = f"_$({DATE_BASE})"
     name = suite_name + date_str

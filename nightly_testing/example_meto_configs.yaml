@@ -157,7 +157,7 @@ um_set-revisions_nightly_cylc7:
 um_set-revisions_nightly_next-cylc:
     repo: um
     groups: developer,ex1a_developer
-    use_next_cylc: 8-next
+    cylc_version: 8-next
     revisions: set
     vars:
         - HOUSEKEEPING=false
