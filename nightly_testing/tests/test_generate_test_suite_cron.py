@@ -220,3 +220,30 @@ data_populate_cl_variables = [
 )
 def test_populate_cl_variables(suite, expected):
     assert populate_cl_variables(suite) == expected
+
+
+# Test major_cylc_version
+data_major_cylc_version = [
+    (
+        "7",
+        7
+    ),
+    (
+        "8",
+        8
+    ),
+    (
+        "8-next",
+        8
+    ),
+    (
+        8,
+        8
+    )
+]
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [test_data for test_data in data_major_cylc_version]
+)
+def test_major_cylc_version(version, expected):
+    assert major_cylc_version(version) == expected

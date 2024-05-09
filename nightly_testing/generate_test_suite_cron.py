@@ -74,6 +74,16 @@ def run_command(command):
     )
 
 
+def major_cylc_version(cylc_version):
+    """
+    Return the major version of cylc being requested by cylc_version
+    Expected to be 7 or 8
+    """
+    if type(cylc_version) == int:
+        return cylc_version
+    return int(cylc_version[0])
+
+
 def join_checkout_commands(repos, dir_wc):
     """
     Join commands that checkout new repos
@@ -208,7 +218,7 @@ def generate_clean_commands(cylc_version, name, log_file):
         f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
         f"cylc stop '{name}' >/dev/null 2>&1 ; sleep 10 ; "
-        f"{CYLC_DIFFS[int(cylc_version[0])]['clean']} -y -q {name} "
+        f"{CYLC_DIFFS[major_cylc_version(cylc_version)]['clean']} -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
 
@@ -241,7 +251,7 @@ def generate_rose_stem_command(suite, wc_path, cylc_version, name):
     return (
         f"export CYLC_VERSION={cylc_version} ; "
         + f"rose stem --group={suite['groups']} "
-        + f"{CYLC_DIFFS[int(cylc_version[0])]['name']}{name} "
+        + f"{CYLC_DIFFS[major_cylc_version(cylc_version)]['name']}{name} "
         + f"--source={wc_path} "
     )
 
@@ -307,7 +317,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     cron_job += f">> {log_file} 2>&1"
 
-    if int(cylc_version[0]) == 8:
+    if major_cylc_version(cylc_version) == 8:
         cron_job += f" ; cylc play {name} >> {log_file} 2>&1"
 
     return cron_job + "\n"
