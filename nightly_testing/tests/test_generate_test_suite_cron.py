@@ -8,12 +8,12 @@ data_join_checkout_commands = [
     (
         ["um"],
         "scratch/dir/",
-        "rm -rf scratch/dir/wc_um ; fcm co -q --force fcm:um.xm_tr@HEAD scratch/dir/wc_um ; "
+        "fcm co -q --force fcm:um.xm_tr@HEAD scratch/dir/wc_um ; "
     ),
     (
         ["um", "lfric"],
         "scratch/dir",
-        "rm -rf scratch/dir/wc_um ; fcm co -q --force fcm:um.xm_tr@HEAD scratch/dir/wc_um ; rm -rf scratch/dir/wc_lfric ; fcm co -q --force fcm:lfric.xm_tr@HEAD scratch/dir/wc_lfric ; "
+        "fcm co -q --force fcm:um.xm_tr@HEAD scratch/dir/wc_um ; fcm co -q --force fcm:lfric.xm_tr@HEAD scratch/dir/wc_lfric ; "
     )
 ]
 @pytest.mark.parametrize(
@@ -28,16 +28,15 @@ def test_join_checkout_commands(inlist, scratch, expected):
 data_lfric_heads_sed = [
     (
         "path/to/wc",
-        "cp -r path/to/wc path/to/wc_heads ; sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; ",
-        "path/to/wc_heads"
+        "cp -rf path/to/wc path/to/wc_heads ; sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; ",
     )
 ]
 @pytest.mark.parametrize(
-    ("wc_path", "expected", "new_wc"),
+    ("wc_path", "expected"),
     [test_data for test_data in data_lfric_heads_sed]
 )
-def test_lfric_heads_sed(wc_path, expected, new_wc):
-    assert lfric_heads_sed(wc_path) == (expected, new_wc)
+def test_lfric_heads_sed(wc_path, expected):
+    assert lfric_heads_sed(wc_path) == (expected)
 
 
 # Test generate_cron_timing_str
