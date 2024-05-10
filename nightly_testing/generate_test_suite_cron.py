@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# *****************************COPYRIGHT*******************************
+# (C) Crown copyright Met Office. All rights reserved.
+# For further details please refer to the file COPYRIGHT.txt
+# which you should have received as part of this distribution.
+# *****************************COPYRIGHT*******************************
+
 """
 Script to generate a cron file, from which nightly testing is run.
 Cron jobs are based on a provided yaml config file (-c command line option) and
