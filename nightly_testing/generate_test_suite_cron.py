@@ -34,6 +34,7 @@ Optional:
 
 import os
 import sys
+import re
 import yaml
 import argparse
 import subprocess
@@ -54,11 +55,11 @@ DEPENDENCIES = {
     "ukca": [],
 }
 CYLC_DIFFS = {
-    7: {
+    "7": {
         "name": "--name=",
         "clean": "rose suite-clean",
     },
-    8: {
+    "8": {
         "name": "--workflow-name=",
         "clean": "cylc clean --timeout=7200",
     },
@@ -85,9 +86,7 @@ def major_cylc_version(cylc_version):
     Return the major version of cylc being requested by cylc_version
     Expected to be 7 or 8
     """
-    if type(cylc_version) == int:
-        return cylc_version
-    return int(cylc_version[0])
+    return re.split("[._-]", cylc_version)[0]
 
 
 def join_checkout_commands(repos, dir_wc):
@@ -130,7 +129,9 @@ def lfric_heads_sed(wc_path):
     dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
     rstr = f"cp -rf {wc_path} {wc_path_new} ; "
-    rstr += f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    rstr += (
+        f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    )
     rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
     return rstr
 
@@ -238,7 +239,6 @@ def generate_clean_cron(suite_name, suite, log_file, cylc_version):
     if suite["period"] == "weekly":
         date_str = f'_$({DATE_BASE} -d "6 days ago")'
     else:
-
         date_str = f'_$({DATE_BASE} -d "1 day ago")'
 
     name = suite_name + date_str

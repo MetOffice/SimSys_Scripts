@@ -226,20 +226,16 @@ def test_populate_cl_variables(suite, expected):
 data_major_cylc_version = [
     (
         "7",
-        7
+        "7"
     ),
     (
         "8",
-        8
+        "8"
     ),
     (
         "8-next",
-        8
+        "8"
     ),
-    (
-        8,
-        8
-    )
 ]
 @pytest.mark.parametrize(
     ("version", "expected"),
