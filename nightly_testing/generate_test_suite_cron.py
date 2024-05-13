@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# *****************************COPYRIGHT*******************************
+# (C) Crown copyright Met Office. All rights reserved.
+# For further details please refer to the file COPYRIGHT.txt
+# which you should have received as part of this distribution.
+# *****************************COPYRIGHT*******************************
+
 """
 Script to generate a cron file, from which nightly testing is run.
 Cron jobs are based on a provided yaml config file (-c command line option) and
@@ -21,16 +27,19 @@ Optional:
 * revisions: heads to use the HoT for sub-repos, set to use the set revisions
 * vars: strings that follow the -S command on the command line
 * monitoring: Boolean, whether to run the monitoring script on this suite
-* cylc_version: 7 or 8
+* cylc_version: Can be any string beginning 7 or 8 that is a valid cylc install
+                at the site, such that `export CYLC_VERSION=<cylc_version>`
+                works.
 """
 
 import os
 import sys
+import re
 import yaml
 import argparse
 import subprocess
 
-DEFAULT_CYLC_VERSION = 8
+DEFAULT_CYLC_VERSION = "8"
 DEPENDENCIES = {
     "lfric_apps": [
         "casim",
@@ -46,11 +55,11 @@ DEPENDENCIES = {
     "ukca": [],
 }
 CYLC_DIFFS = {
-    7: {
+    "7": {
         "name": "--name=",
         "clean": "rose suite-clean",
     },
-    8: {
+    "8": {
         "name": "--workflow-name=",
         "clean": "cylc clean --timeout=7200",
     },
@@ -70,6 +79,14 @@ def run_command(command):
     return subprocess.run(
         command, shell=True, capture_output=True, text=True, timeout=5
     )
+
+
+def major_cylc_version(cylc_version):
+    """
+    Return the major version of cylc being requested by cylc_version
+    Expected to be 7 or 8
+    """
+    return re.split("[._-]", cylc_version)[0]
 
 
 def join_checkout_commands(repos, dir_wc):
@@ -112,7 +129,9 @@ def lfric_heads_sed(wc_path):
     dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
     rstr = f"cp -rf {wc_path} {wc_path_new} ; "
-    rstr += f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    rstr += (
+        f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    )
     rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
     return rstr
 
@@ -206,7 +225,7 @@ def generate_clean_commands(cylc_version, name, log_file):
         f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
         f"cylc stop '{name}' >/dev/null 2>&1 ; sleep 10 ; "
-        f"{CYLC_DIFFS[cylc_version]['clean']} -y -q {name} "
+        f"{CYLC_DIFFS[major_cylc_version(cylc_version)]['clean']} -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
 
@@ -220,7 +239,6 @@ def generate_clean_cron(suite_name, suite, log_file, cylc_version):
     if suite["period"] == "weekly":
         date_str = f'_$({DATE_BASE} -d "6 days ago")'
     else:
-
         date_str = f'_$({DATE_BASE} -d "1 day ago")'
 
     name = suite_name + date_str
@@ -239,7 +257,7 @@ def generate_rose_stem_command(suite, wc_path, cylc_version, name):
     return (
         f"export CYLC_VERSION={cylc_version} ; "
         + f"rose stem --group={suite['groups']} "
-        + f"{CYLC_DIFFS[cylc_version]['name']}{name} "
+        + f"{CYLC_DIFFS[major_cylc_version(cylc_version)]['name']}{name} "
         + f"--source={wc_path} "
     )
 
@@ -305,7 +323,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     cron_job += f">> {log_file} 2>&1"
 
-    if cylc_version == 8:
+    if major_cylc_version(cylc_version) == 8:
         cron_job += f" ; cylc play {name} >> {log_file} 2>&1"
 
     return cron_job + "\n"
@@ -318,6 +336,7 @@ def generate_cron_job(suite_name, suite, log_file):
     """
 
     cylc_version = suite.get("cylc_version", DEFAULT_CYLC_VERSION)
+    cylc_version = str(cylc_version)
 
     date_str = f"_$({DATE_BASE})"
     name = suite_name + date_str
