@@ -323,7 +323,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     cron_job += f">> {log_file} 2>&1"
 
-    if major_cylc_version(cylc_version) == 8:
+    if major_cylc_version(cylc_version) == "8":
         cron_job += f" ; cylc play {name} >> {log_file} 2>&1"
 
     return cron_job + "\n"
