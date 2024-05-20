@@ -791,17 +791,7 @@ class SuiteReport(object):
                 project = project[len(prefix_svn) :]
             project = re.split("[/.]", project)[0].upper()
             projects[project] = {}
-            url = vcs_data["url"]
-            if "dev" in url:
-                splitter = "dev"
-            else:
-                splitter = "test"
-            start_url, end_url = url.split(f"/{splitter}/", 1)
-            start_url += f"/{splitter}/"
-            end_url = end_url.split("/")
-            end_url = f"{end_url[0]}/{end_url[1]}"
-
-            projects[project]["repo loc"] = start_url + end_url + ending
+            projects[project]["repo loc"] = vcs_data["url"] + ending
 
         for item in vcs_data["status"]:
             if not item.startswith("?") and len(item) > 0:
