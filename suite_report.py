@@ -804,9 +804,11 @@ class SuiteReport(object):
             start_url += f"/{splitter}/"
             end_url = end_url.split("/")
             if splitter == "branches":
+                # For branches, format is "/branches/[dev|test]/[branch-name]"
                 end_url = f"{end_url[0]}/{end_url[1]}/{end_url[2]}"
             else:
-                end_url = end_url[0]
+                # For trunk, format is just "/trunk/"
+                end_url = ""
             projects[project]["repo loc"] = start_url + end_url + ending
 
         for item in vcs_data["status"]:
