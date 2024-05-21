@@ -804,7 +804,7 @@ class SuiteReport(object):
             start_url += f"/{splitter}/"
             end_url = end_url.split("/")
             if splitter == "branches":
-                # For branches, format is "/branches/[dev|test]/[branch-name]"
+                # For branches, format is "/[dev|test]/<username>/<branch-name>"
                 end_url = f"{end_url[0]}/{end_url[1]}/{end_url[2]}"
             else:
                 # For trunk, format is just "/trunk/"
