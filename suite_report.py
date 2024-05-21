@@ -791,7 +791,25 @@ class SuiteReport(object):
                 project = project[len(prefix_svn) :]
             project = re.split("[/.]", project)[0].upper()
             projects[project] = {}
-            projects[project]["repo loc"] = vcs_data["url"] + ending
+
+            # Use the version control url as the project source
+            # This url isn't necessarily to top of the working copy so split
+            # the url around "branches" or "trunk" to ensure the correct url
+            url = vcs_data["url"]
+            if "branches" in url:
+                splitter = "branches"
+            else:
+                splitter = "trunk"
+            start_url, end_url = url.split(f"/{splitter}/", 1)
+            start_url += f"/{splitter}/"
+            end_url = end_url.split("/")
+            if splitter == "branches":
+                # For branches, format is "/[dev|test]/<username>/<branch-name>"
+                end_url = f"{end_url[0]}/{end_url[1]}/{end_url[2]}"
+            else:
+                # For trunk, format is just "/trunk/"
+                end_url = ""
+            projects[project]["repo loc"] = start_url + end_url + ending
 
         for item in vcs_data["status"]:
             if not item.startswith("?") and len(item) > 0:
