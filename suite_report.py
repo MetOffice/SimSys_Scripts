@@ -936,7 +936,7 @@ class SuiteReport(object):
         section = dummy_list[0].strip()
         owners = dummy_list[1].strip()
         if "umsysteam" in owners:
-            owners = "Simulation Systems and Deployment"
+            owners = "Simulation Systems and Deployment Team"
         if self.primary_project.lower() == "um":
             try:
                 others = dummy_list[2].replace("\n", "")
@@ -1034,10 +1034,16 @@ class SuiteReport(object):
                 "'''Configs''' || "
             ]
         else:
-            table += [
-                " || '''Owner''' || '''Deputy /[[br]]Team''' "
-                "|| '''Approval''' || '''Code Section''' || "
-            ]
+            if self.primary_project.lower() == "lfric_apps":
+                table += [
+                    " || '''Owner''' || '''Deputy''' || '''Team''' "
+                    "|| '''Approval''' || '''Code Section''' || "
+                ]
+            else:
+                table += [
+                    " || '''Owner''' || '''Deputy''' "
+                    "|| '''Approval''' || '''Code Section''' || "
+                ]
 
         if needed_approvals is None:
             table += [
@@ -1058,7 +1064,7 @@ class SuiteReport(object):
                     owner, deputy = owners
                 row = f" || {owner} || {deputy}"
                 if self.primary_project.lower() == "lfric_apps":
-                    row += f" /[[br]]{team}"
+                    row += f" || {team}"
                 row += " || Pending || "
                 count = 0
                 for val in sections:
@@ -1212,23 +1218,23 @@ class SuiteReport(object):
 
         # Manually sort sections that aren't an Application or Science section
         if "makefile" in file_name or file_name.endswith(".mk"):
-            return "makefiles"
+            return "makefiles", needed_approvals
         if "rose-stem" in file_path:
-            return "rose-stem"
+            return "rose-stem", needed_approvals
         if "codeowners.txt" in file_name:
-            needed_approvals[("!umsysteam@metoffice.gov.uk",)].add("other")
+            needed_approvals[("Simulation Systems and Deployment Team",)].add("Code Owners")
             return None, needed_approvals
         if file_path.strip("/").startswith("build"):
-            return "build"
+            return "build", needed_approvals
 
         # Find area of other files based on Application or Science Section
         # The 2nd part of the file_path will be the Application or Science part
         # Return this 2nd part if Application or Science exists
         # Otherwise return file_name to get an Unknown section
         try:
-            return file_path.split("/")[1]
+            return file_path.split("/")[1], needed_approvals
         except IndexError:
-            return file_name
+            return file_name, needed_approvals
 
     def get_code_owners(self, code_owners):
         """
@@ -1570,7 +1576,7 @@ class SuiteReport(object):
             lfric_testing_message = self.check_lfric_extract_list()
 
         # Generate table for required config and code owners
-        # Only run if a UM suite
+        # Only run if a UM or LFRic_Apps (only code) suite
         return_list = []
         if self.primary_project.lower() in ["um", "lfric_apps"]:
             co_approval_table = self.required_co_approvals()
