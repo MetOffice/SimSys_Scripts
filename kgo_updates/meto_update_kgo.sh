@@ -19,11 +19,22 @@ NC='\033[0m' # No Color
 # Move to the location of the script
 script_loc="$(dirname "$0")"
 
-# Check for command line argument to run with new release_mode
+# Check for command line argument to run with new-release mode
+# If only option doesn't match ask if that is what was intended
 new_release=0
 if [ $# -ne 0 ]; then
     if [[ $1 == *"new-release"* ]]; then
         new_release=1
+    else
+        printf "${RED}'%s' is not a recognised command line argument.\n" "${1}"
+        printf "The only command line option available is --new-release.\n"
+        read -p "Would you like to run in new-release mode (default n)? " answer
+        answer=${answer:-"n"}
+        if [[ $answer == "y" ]]; then
+            new_release=1
+        fi
+        printf "${NC}"
+        clear
     fi
 fi
 
@@ -81,7 +92,7 @@ echo "Ticket Number: ${ticket_number}"
 echo "Variables Extension: ${variables_extension}"
 echo "New KGO Dir: ${new_kgo_dir}"
 if [ $new_release -eq 1 ]; then
-    echo "WARNING: Running with --new-release enabled"
+    printf "${RED}WARNING: Running with --new-release enabled${NC}\n"
 fi
 read -p "Run with the above settings y/n (default n): " run_script
 run_script=${run_script:-n}
