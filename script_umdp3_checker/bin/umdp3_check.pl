@@ -130,7 +130,7 @@ start_branch_checking:
 $binfocode = $?;
 
 unless ( $binfocode == 0 ) {
-    if ( grep( /svn[ ]info[ ]--xml/sxm, @binfo ) ) {
+    if ( grep( /svn\sinfo\s--xml/sxm, @binfo ) ) {
         if ($suite_mode) {
             for ( my $i = 1 ; $i <= $max_snooze ; $i++ ) {
                 print
@@ -149,10 +149,10 @@ unless ( $binfocode == 0 ) {
     }
 }
 
-if (   grep( /URL:[ ]svn:\/\/fcm\d+\/(\w|\.)+_svn\/\w+\/trunk/sxm, @binfo )
+if (   grep( /URL:\ssvn:\/\/fcm\d+\/(\w|\.)+_svn\/\w+\/trunk/sxm, @binfo )
     or grep( /URL:.*\/svn\/\w+\/main\/trunk/sxm, @binfo )
     or grep( /URL:..*_svn\/main\/trunk/sxm,      @binfo )
-    or grep( /URL:[ ]file:\/\/.*\/trunk/sxm,     @binfo ) )
+    or grep( /URL:\sfile:\/\/.*\/trunk/sxm,      @binfo ) )
 {
     print "Detected trunk: checking full source tree\n";
     $branch =~ s/@.*$//sxm;
@@ -187,10 +187,10 @@ if (   grep( /URL:[ ]svn:\/\/fcm\d+\/(\w|\.)+_svn\/\w+\/trunk/sxm, @binfo )
 }
 
 foreach my $line (@binfo) {
-    if ( $line =~ m{Branch[ ]Parent:.*/trunk@.*}sxm ) {
+    if ( $line =~ m{Branch\sParent:.*/trunk@.*}sxm ) {
         last;
     }
-    elsif ( $line =~ m/Branch[ ]Parent:\s*(.*)/sxm ) {
+    elsif ( $line =~ m/Branch\sParent:\s*(.*)/sxm ) {
         print "This branch is a branch-of-branch - testing parent ($1)\n";
         $branch = $1;
         goto start_branch_checking;
@@ -232,7 +232,7 @@ $repository_relative_path =~ s/$repository_branch_path//sxm;
 $repository_relative_path =~ s/\n//sxm;
 
 # replace relative branch paths with absolute paths
-if ( grep( /Working[ ]Copy[ ]Root[ ]Path:/sxm, @info ) ) {
+if ( grep( /Working\sCopy\sRoot\sPath:/sxm, @info ) ) {
     $branch = abs_path($branch);
 }
 
@@ -329,7 +329,7 @@ if ( $trunkmode == 0 ) {
                 if ( !exists( $deletions{$filename} ) ) {
                     if (
                         !(
-                            grep( /^Property[ ]changes[ ]on:[ ]$filename$/sxm,
+                            grep( /^Property\schanges\son:\s$filename$/sxm,
                                 @diff )
                         )
                       )
@@ -1031,7 +1031,7 @@ sub run_checks {
                     $failed++;
                     my $shellcheck_fails = $out . $err;
                     $shellcheck_fails =~ s{\n?\n}{\n  }sxmg;
-                    $shellcheck_fails =~ s/[ ][ ]In[ ]-[ ]/  /sxmg;
+                    $shellcheck_fails =~ s/\s\sIn\s-\s/  /sxmg;
                     push @failed_tests, $shellcheck_fails;
                 }
             }
@@ -1093,7 +1093,7 @@ sub cat_file {
     if ( $error != 0 ) {
         @lines = `. $fcm; fcm info $url 2>&1`;
         if ( $? == 0 ) {
-            if ( ( join "\n", @lines ) !~ /Node[ ]Kind:[ ]file/sxmgi ) {
+            if ( ( join "\n", @lines ) !~ /Node\sKind:\sfile/sxmgi ) {
                 @lines = ('');
                 $error = 0;
             }

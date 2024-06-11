@@ -906,7 +906,7 @@ sub intrinsic_as_variable {
             if ( $line =~ /(^|\W)$keyword($|\W)/sxmi ) {
                 foreach my $type (@fortran_types) {
                     my $type_r = $type;
-                    $type_r =~ s/[ ]/[ ]/sxm;
+                    $type_r =~ s/\s/\s/sxm;
 
 #  iii) check if match is a variable declaration (which always starts with a type):
                     if ( $line =~ /^\s*$type_r(\W.*\W|\W)$keyword/sxmi ) {
@@ -1064,7 +1064,7 @@ sub check_crown_copyright {
         $failed = 0 if ( $line =~ /^\s*(!|\/\*).*Crown\s*copyright/sxmi );
         foreach my $agreement (@valid_agreements) {
             my $agreement_r = $agreement;
-            $agreement_r =~ s/[ ]/[ ]/sxm;
+            $agreement_r =~ s/\s/\s/sxm;
             $failed = 0 if ( $line =~ /^\s*(!|\/\*).*$agreement_r/sxmi );
         }
     }
@@ -1081,8 +1081,10 @@ sub check_code_owner {
 
     foreach my $line (@lines) {
         $is_shumlib = 1
-          if ( $line =~
-/^\s*(!|\/\*)\s*This\s*file\s*is\s*part\s*of\s*the\s*UM\s*Shared\s*Library\s*project/sxmi
+          if (
+            $line =~ / ^\s*(!|\/\*)\s*This\s*file\s*
+                       is\s*part\s*of\s*the\s*
+                       UM\s*Shared\s*Library\s*project /sxmi
           );
     }
 
@@ -1092,12 +1094,17 @@ sub check_code_owner {
     else {
         foreach my $line (@lines) {
             $failed_co++
-              if ( $line =~
-/^\s*(!|\/\*)\s*Code\s*Owner:\s*Please\s*refer\s*to\s*the\s*UM\s*file\s*CodeOwners\.txt/sxmi
+              if (
+                $line =~ / ^\s*(!|\/\*)\s*Code\s*Owner:\s*
+                           Please\s*refer\s*to\s*the\s*UM\s*file\s*
+                           CodeOwners\.txt /sxmi
               );
             $failed_bi++
-              if ( $line =~
-                /^\s*(!|\/\*)\s*This\s*file\s*belongs\s*in\s*section:/sxmi );
+              if (
+                $line =~ / ^\s*(!|\/\*)\s*
+                           This\s*file\s*belongs\s*in\s*
+                           section: /sxmi
+              );
         }
 
         if ( $failed_co > 1 or $failed_bi > 1 ) {
@@ -1356,7 +1363,7 @@ sub cpp_comment {
     foreach my $line (@lines) {
 
         # is this an #if statement?
-        if ( ( $line =~ m/^\s*\#if[ ]/sxm ) || ( $line =~ m/^\s*\#elif[ ]/sxm ) )
+        if ( ( $line =~ m/^\s*\#if\s/sxm ) || ( $line =~ m/^\s*\#elif\s/sxm ) )
         {
 
             # does this ifdef have a ! in it?
@@ -1486,8 +1493,11 @@ sub c_openmp_define_pair_thread_utils {
 
             # fail if _OPENMP is not the first defined() test, or it is not
             # followed by SHUM_USE_C_OPENMP_VIA_THREAD_UTILS
-            if ( $line !~
-/^\s*\#(el)?if\s*!?defined\(_OPENMP\)\s*&&\s*!?defined\(SHUM_USE_C_OPENMP_VIA_THREAD_UTILS\)/sxm
+            if (
+                $line !~ / ^\s*\#(el)?if\s*!?
+                           defined\(_OPENMP\)\s*
+                           &&\s*!?
+                           defined\(SHUM_USE_C_OPENMP_VIA_THREAD_UTILS\) /sxm
               )
             {
                 $failed++;
@@ -1633,8 +1643,22 @@ sub c_sanitise_lines {
     $entire =~ s/\\\s*\n//sxmg;
 
     # standardise format for defined(<DEF>) style tests
-    $entire =~
-s/defined\s*?\(?\s*?(\w+)[^\S\n]*\)?([|&><*+%^$()\/\-\s])/defined($1) $2/sxmg;
+    $entire =~ s/ defined\s*?             # start with "defined", 
+                                          # optionally followed by space(s)
+                  \(?\s*?(\w+)[^\S\n]*\)? # Form capture group one from
+                                          # the following 'word'
+                                          # characters contained within
+                                          # (the optional) parantheses -
+                                          # i.e. the name of the macro being
+                                          # tested for.
+                  ([|&><*+%^$()\/\-\s])   # Form capture group two from
+                                          # the space, linebreak, or 
+                                          # operator immediately
+                                          # following the macro name
+
+                  /defined($1) $2/sxmg;    # Standardise the form to
+                                           # include parantheses and a
+                                           # following white-space
 
     @lines = split /\n/sxm, $entire;
 
