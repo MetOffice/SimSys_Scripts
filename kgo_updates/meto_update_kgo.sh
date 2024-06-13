@@ -19,11 +19,22 @@ NC='\033[0m' # No Color
 # Move to the location of the script
 script_loc="$(dirname "$0")"
 
-# Check for command line argument to run with new release_mode
+# Check for command line argument to run with new-release mode
+# If only option doesn't match ask if that is what was intended
 new_release=0
 if [ $# -ne 0 ]; then
     if [[ $1 == *"new-release"* ]]; then
         new_release=1
+    else
+        printf "${RED}'%s' is not a recognised command line argument.\n" "${1}"
+        printf "The only command line option available is --new-release.\n"
+        read -p "Would you like to run in new-release mode (default n)? " answer
+        answer=${answer:-"n"}
+        if [[ $answer == "y" ]]; then
+            new_release=1
+        fi
+        printf "${NC}"
+        clear
     fi
 fi
 
@@ -81,7 +92,7 @@ echo "Ticket Number: ${ticket_number}"
 echo "Variables Extension: ${variables_extension}"
 echo "New KGO Dir: ${new_kgo_dir}"
 if [ $new_release -eq 1 ]; then
-    echo "WARNING: Running with --new-release enabled"
+    printf "${RED}WARNING: Running with --new-release enabled${NC}\n"
 fi
 read -p "Run with the above settings y/n (default n): " run_script
 run_script=${run_script:-n}
@@ -186,7 +197,8 @@ fi
 # For the xc40s rsync the generated kgo to the xcs
 if [[ $succeeded_xc40 -eq 1 ]]; then
     printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
-    rsync_com="ssh -Y xcel00 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
+    host_rsync=$(rose host-select xc)
+    rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
     ssh -Y frum@localhost $rsync_com
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the xcs has failed.\n${NC}"
@@ -204,7 +216,8 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     printf "${GREEN}\n\nrsyncing the kgo to exa.\n${NC}"
     printf "Warning: Always rsyncing UM KGO on EXZ"
     rsync_dir="kgo/"
-    rsync_com="ssh -Y login.exz 'rsync -av /common/umdir/standard_jobs/${rsync_dir} login.exa.sc:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+    host_rsync=$(rose host-select exab)
+    rsync_com="ssh -Y login.exz 'rsync -av /common/umdir/standard_jobs/${rsync_dir} ${host_rsync}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
     ssh -Y frum@localhost $rsync_com
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the exa has failed.\n${NC}"

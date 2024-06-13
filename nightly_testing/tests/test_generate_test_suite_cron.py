@@ -8,12 +8,12 @@ data_join_checkout_commands = [
     (
         ["um"],
         "scratch/dir/",
-        "rm -rf scratch/dir/wc_um ; fcm co -q --force fcm:um.xm_tr@HEAD scratch/dir/wc_um ; "
+        "fcm co -q --force fcm:um.xm_tr@HEAD scratch/dir/wc_um ; "
     ),
     (
         ["um", "lfric"],
         "scratch/dir",
-        "rm -rf scratch/dir/wc_um ; fcm co -q --force fcm:um.xm_tr@HEAD scratch/dir/wc_um ; rm -rf scratch/dir/wc_lfric ; fcm co -q --force fcm:lfric.xm_tr@HEAD scratch/dir/wc_lfric ; "
+        "fcm co -q --force fcm:um.xm_tr@HEAD scratch/dir/wc_um ; fcm co -q --force fcm:lfric.xm_tr@HEAD scratch/dir/wc_lfric ; "
     )
 ]
 @pytest.mark.parametrize(
@@ -28,7 +28,7 @@ def test_join_checkout_commands(inlist, scratch, expected):
 data_lfric_heads_sed = [
     (
         "path/to/wc",
-        "sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' path/to/wc/dependencies.sh ; sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' path/to/wc/dependencies.sh ; "
+        "cp -rf path/to/wc path/to/wc_heads ; sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' path/to/wc_heads/dependencies.sh ; ",
     )
 ]
 @pytest.mark.parametrize(
@@ -36,7 +36,7 @@ data_lfric_heads_sed = [
     [test_data for test_data in data_lfric_heads_sed]
 )
 def test_lfric_heads_sed(wc_path, expected):
-    assert lfric_heads_sed(wc_path) == expected
+    assert lfric_heads_sed(wc_path) == (expected)
 
 
 # Test generate_cron_timing_str
@@ -98,16 +98,22 @@ def test_generate_cron_timing_str(suite, mode, expected):
 # Test generate_clean_commands
 data_generate_clean_commands = [
     (
-        7,
+        "7",
         "suite_name",
         "cron_log",
         f"{PROFILE} ; export CYLC_VERSION=7 ; cylc stop 'suite_name' >/dev/null 2>&1 ; sleep 10 ; rose suite-clean -y -q suite_name >> cron_log 2>&1\n"
     ),
     (
-        8,
+        "8",
         "suite_name",
         "cron_log",
         f"{PROFILE} ; export CYLC_VERSION=8 ; cylc stop 'suite_name' >/dev/null 2>&1 ; sleep 10 ; cylc clean --timeout=7200 -y -q suite_name >> cron_log 2>&1\n"
+    ),
+    (
+        "8-next",
+        "suite_name",
+        "cron_log",
+        f"{PROFILE} ; export CYLC_VERSION=8-next ; cylc stop 'suite_name' >/dev/null 2>&1 ; sleep 10 ; cylc clean --timeout=7200 -y -q suite_name >> cron_log 2>&1\n"
     )
 ]
 @pytest.mark.parametrize(
@@ -123,16 +129,23 @@ data_generate_rose_stem_command = [
     (
         {"groups": "all"},
         "path/to/wc",
-        7,
+        "7",
         "suite_name",
         "export CYLC_VERSION=7 ; rose stem --group=all --name=suite_name --source=path/to/wc "
     ),
     (
         {"groups": "nightly"},
         "path/to/wc",
-        8,
+        "8",
         "suite_name",
         "export CYLC_VERSION=8 ; rose stem --group=nightly --workflow-name=suite_name --source=path/to/wc "
+    ),
+    (
+        {"groups": "nightly"},
+        "path/to/wc",
+        "8-next",
+        "suite_name",
+        "export CYLC_VERSION=8-next ; rose stem --group=nightly --workflow-name=suite_name --source=path/to/wc "
     )
 ]
 @pytest.mark.parametrize(
@@ -207,3 +220,26 @@ data_populate_cl_variables = [
 )
 def test_populate_cl_variables(suite, expected):
     assert populate_cl_variables(suite) == expected
+
+
+# Test major_cylc_version
+data_major_cylc_version = [
+    (
+        "7",
+        "7"
+    ),
+    (
+        "8",
+        "8"
+    ),
+    (
+        "8-next",
+        "8"
+    ),
+]
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [test_data for test_data in data_major_cylc_version]
+)
+def test_major_cylc_version(version, expected):
+    assert major_cylc_version(version) == expected

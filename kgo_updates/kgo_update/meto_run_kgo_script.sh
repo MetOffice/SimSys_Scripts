@@ -72,15 +72,17 @@ fi
 if [[ $platforms == *"xc40"* ]]; then
     printf "${GREEN}\n\nRunning KGO Update Script on xc40.\n${NC}"
 
+    host_xc40=$(rose host-select xc)
+
     # SCP the python script to the xc40
-    scp -q kgo_update.py frum@xcel00:~
+    scp -q kgo_update.py frum@$host_xc40:~
 
     # Define the commands to run on xc40
     command=". /etc/profile ; module load scitools ;
              ${kgo_command_xc40}"
 
     # SSH to the xc40 with the run command
-    ssh -Y xcel00 $command
+    ssh -Y $host_xc40 $command
 
     if [[ $? -ne 0 ]]; then
         printf "${RED}\nThe installation script has failed on xc40.\n${NC}"
@@ -91,31 +93,34 @@ if [[ $platforms == *"xc40"* ]]; then
         printf "${GREEN}Rsyncing the generated files into SPICE ${variables_dir}.\n${NC}"
         if [ $new_release -ne 1 ]; then
             rsync --remove-source-files -avz \
-                frum@xcel00:~/variables${variables_extension}_${new_kgo_dir} \
+                frum@$host_xc40:~/variables${variables_extension}_${new_kgo_dir} \
                 ${variables_dir}/xc40_updated_variables${variables_extension}
         fi
         rsync --remove-source-files -avz \
-                frum@xcel00:~/kgo_update_${new_kgo_dir}.sh \
+                frum@$host_xc40:~/kgo_update_${new_kgo_dir}.sh \
                 ${variables_dir}/xc40_update_script.sh
     fi
 
     # Clean up kgo_update.py on xc40
-    ssh -Yq xcel00 "rm kgo_update.py"
+    ssh -Yq $host_xc40 "rm kgo_update.py"
 fi
 
 # If ex1a has kgo updates
 if [[ $platforms == *"ex1a"* ]]; then
     printf "${GREEN}\n\nRunning KGO Update Script on ex1a.\n${NC}"
 
+    # Should change to rose host-select when on the quads properly
+    host_ex=login.exz
+
     # SCP the python script to the ex1a
-    scp -q kgo_update.py umadmin@login.exz:~
+    scp -q kgo_update.py umadmin@$host_ex:~
 
     # Define the commands to run on ex1a
     command="module load scitools ;
              ${kgo_command_ex1a}"
 
     # SSH to the ex1a with the run command
-    ssh -Y login.exz $command
+    ssh -Y $host_ex $command
 
     if [[ $? -ne 0 ]]; then
         printf "${RED}\nThe installation script has failed on ex1a.\n${NC}"
@@ -126,14 +131,14 @@ if [[ $platforms == *"ex1a"* ]]; then
         printf "${GREEN}Rsyncing the generated files into SPICE ${variables_dir}.\n${NC}"
         if [ $new_release -ne 1 ]; then
             rsync --remove-source-files -avz \
-                    umadmin@login.exz:~/variables${variables_extension}_${new_kgo_dir} \
+                    umadmin@$host_ex:~/variables${variables_extension}_${new_kgo_dir} \
                     ${variables_dir}/ex1a_updated_variables${variables_extension}
         fi
         rsync --remove-source-files -avz \
-                umadmin@login.exz:~/kgo_update_${new_kgo_dir}.sh \
+                umadmin@$host_ex:~/kgo_update_${new_kgo_dir}.sh \
                 ${variables_dir}/ex1a_update_script.sh
     fi
 
     # Clean up kgo_update.py on ex1a
-    ssh -Yq login.exz "rm kgo_update.py"
+    ssh -Yq $host_ex "rm kgo_update.py"
 fi

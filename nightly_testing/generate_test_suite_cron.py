@@ -1,5 +1,15 @@
+#!/usr/bin/env python3
+# *****************************COPYRIGHT*******************************
+# (C) Crown copyright Met Office. All rights reserved.
+# For further details please refer to the file COPYRIGHT.txt
+# which you should have received as part of this distribution.
+# *****************************COPYRIGHT*******************************
+
 """
-Script which launches a rose-stem suite.
+Script to generate a cron file, from which nightly testing is run.
+Cron jobs are based on a provided yaml config file (-c command line option) and
+the resulting cron file is installed if the --install option is added.
+See https://metoffice.github.io/simulation-systems/Reviewers/nightlytesting.html
 Used for nightly testing for UM, Jules, UKCA, LFRic_Apps
 Compatible for both Cylc7 + Cylc8
 
@@ -17,16 +27,19 @@ Optional:
 * revisions: heads to use the HoT for sub-repos, set to use the set revisions
 * vars: strings that follow the -S command on the command line
 * monitoring: Boolean, whether to run the monitoring script on this suite
-* cylc_version: 7 or 8
+* cylc_version: Can be any string beginning 7 or 8 that is a valid cylc install
+                at the site, such that `export CYLC_VERSION=<cylc_version>`
+                works.
 """
 
 import os
 import sys
+import re
 import yaml
 import argparse
 import subprocess
 
-DEFAULT_CYLC_VERSION = 8
+DEFAULT_CYLC_VERSION = "8"
 DEPENDENCIES = {
     "lfric_apps": [
         "casim",
@@ -42,16 +55,17 @@ DEPENDENCIES = {
     "ukca": [],
 }
 CYLC_DIFFS = {
-    7: {
+    "7": {
         "name": "--name=",
         "clean": "rose suite-clean",
     },
-    8: {
+    "8": {
         "name": "--workflow-name=",
         "clean": "cylc clean --timeout=7200",
     },
 }
-SCRATCH_DIR = os.environ["SCRATCH"]
+
+WC_DIR = os.path.join(os.environ["TMPDIR"], os.environ["USER"])
 UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
@@ -67,15 +81,22 @@ def run_command(command):
     )
 
 
-def join_checkout_commands(repos, scratch):
+def major_cylc_version(cylc_version):
     """
-    Join commands that delete repo then checkout new one
+    Return the major version of cylc being requested by cylc_version
+    Expected to be 7 or 8
+    """
+    return re.split("[._-]", cylc_version)[0]
+
+
+def join_checkout_commands(repos, dir_wc):
+    """
+    Join commands that checkout new repos
     """
 
     command = ""
     for repo in repos:
-        wc_path = os.path.join(scratch, "wc_" + repo)
-        command += f"rm -rf {wc_path} ; "
+        wc_path = os.path.join(dir_wc, "wc_" + repo)
         command += f"fcm co -q --force fcm:{repo}.xm_tr@HEAD {wc_path} ; "
     return command
 
@@ -83,13 +104,16 @@ def join_checkout_commands(repos, scratch):
 def fetch_working_copy_cron():
     """
     Cleanup and then re-checkout working copies for each of the repos used
-    Runs just after midnight ahead of all other tasks
+    Create an lfric_apps heads working copy
+    Runs at 23:30, before all other tasks
     """
 
-    command = "# Checkout Working Copies #"
+    command = "# Checkout Working Copies - every day at 23:30 #"
     l = len(command)
-    command = f"{l*'#'}\n{command}\n{l*'#'}\n01 00 * * 1-5 {PROFILE} ; "
-    command += join_checkout_commands(DEPENDENCIES.keys(), SCRATCH_DIR)
+    command = f"{l*'#'}\n{command}\n{l*'#'}\n30 23 * * * {PROFILE} ; "
+    command += f"rm -rf {os.path.join(WC_DIR, 'wc_*')} ; "
+    command += join_checkout_commands(DEPENDENCIES.keys(), WC_DIR)
+    command += lfric_heads_sed(os.path.join(WC_DIR, "wc_lfric_apps"))
 
     return command + "\n\n\n"
 
@@ -97,11 +121,17 @@ def fetch_working_copy_cron():
 def lfric_heads_sed(wc_path):
     """
     Add sed commands to setup dependencies.sh for heads testing
+    As this edits the working copy it copies the original copy with _heads added
+    and returns this new wc path
     """
 
-    dep_path = os.path.join(wc_path, "dependencies.sh")
+    wc_path_new = wc_path + "_heads"
+    dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
-    rstr = f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    rstr = f"cp -rf {wc_path} {wc_path_new} ; "
+    rstr += (
+        f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
+    )
     rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
     return rstr
 
@@ -112,15 +142,14 @@ def generate_cron_timing_str(suite, mode):
     """
 
     if mode == "monitoring":
-        cron = f"{MONITORING_TIME} * * "
+        cron = f"{MONITORING_TIME}"
+    elif mode == "main":
+        cron = suite["cron_launch"]
+    elif mode == "clean":
+        cron = suite["cron_clean"]
     else:
-        if mode == "main":
-            cron = suite["cron_launch"]
-        elif mode == "clean":
-            cron = suite["cron_clean"]
-        else:
-            sys.exit("Unrecognised mode for cron timing string")
-        cron += " * * "
+        sys.exit("Unrecognised mode for cron timing string")
+    cron += " * * "
 
     if suite["period"] == "weekly":
         if mode == "main" or mode == "monitoring":
@@ -196,7 +225,7 @@ def generate_clean_commands(cylc_version, name, log_file):
         f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
         f"cylc stop '{name}' >/dev/null 2>&1 ; sleep 10 ; "
-        f"{CYLC_DIFFS[cylc_version]['clean']} -y -q {name} "
+        f"{CYLC_DIFFS[major_cylc_version(cylc_version)]['clean']} -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
 
@@ -210,7 +239,6 @@ def generate_clean_cron(suite_name, suite, log_file, cylc_version):
     if suite["period"] == "weekly":
         date_str = f'_$({DATE_BASE} -d "6 days ago")'
     else:
-
         date_str = f'_$({DATE_BASE} -d "1 day ago")'
 
     name = suite_name + date_str
@@ -229,7 +257,7 @@ def generate_rose_stem_command(suite, wc_path, cylc_version, name):
     return (
         f"export CYLC_VERSION={cylc_version} ; "
         + f"rose stem --group={suite['groups']} "
-        + f"{CYLC_DIFFS[cylc_version]['name']}{name} "
+        + f"{CYLC_DIFFS[major_cylc_version(cylc_version)]['name']}{name} "
         + f"--source={wc_path} "
     )
 
@@ -280,9 +308,9 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     cron_job += f"{PROFILE} ; "
 
-    # LFRic Apps sets heads differently so add SED command here
+    # LFRic Apps heads uses a different working copy
     if suite["repo"] == "lfric_apps" and suite["revisions"] == "heads":
-        cron_job += lfric_heads_sed(wc_path)
+        wc_path = wc_path + "_heads"
 
     # Begin rose-stem command
     cron_job += generate_rose_stem_command(suite, wc_path, cylc_version, name)
@@ -295,7 +323,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     cron_job += f">> {log_file} 2>&1"
 
-    if cylc_version == 8:
+    if major_cylc_version(cylc_version) == "8":
         cron_job += f" ; cylc play {name} >> {log_file} 2>&1"
 
     return cron_job + "\n"
@@ -308,10 +336,11 @@ def generate_cron_job(suite_name, suite, log_file):
     """
 
     cylc_version = suite.get("cylc_version", DEFAULT_CYLC_VERSION)
+    cylc_version = str(cylc_version)
 
     date_str = f"_$({DATE_BASE})"
     name = suite_name + date_str
-    wc_path = os.path.join(SCRATCH_DIR, "wc_" + suite["repo"])
+    wc_path = os.path.join(WC_DIR, "wc_" + suite["repo"])
 
     header = generate_header(suite_name, suite)
     cron_job = generate_main_job(name, suite, log_file, wc_path, cylc_version)
@@ -372,6 +401,8 @@ if __name__ == "__main__":
 
     last_repo = None
     for suite_name in sorted(suites.keys()):
+        if suite_name == "base":
+            continue
         repo = suites[suite_name]["repo"]
         tlaunch = suites[suite_name]["time_launch"].split(":")
         tclean = suites[suite_name]["time_clean"].split(":")
