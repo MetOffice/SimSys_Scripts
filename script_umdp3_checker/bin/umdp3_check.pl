@@ -355,62 +355,70 @@ my %filepath_mapping = ( 'meta' => 'um_meta' );
 my @extracts = ();
 
 if ( $trunkmode == 0 ) {
-     if ($suite_mode) {
-        # enable trunkmode for sepecific repositories if the environment does not match rose-stem/rose-suite.conf
+    if ($suite_mode) {
 
-        my $ss_env = $ENV{SCRIPT_SOURCE};
-        my @suite_conf = cat_file($ss_env . "/um/rose-stem/rose-suite.conf");
+        # enable trunkmode for sepecific repositories if the environment does
+        # not match rose-stem/rose-suite.conf
+
+        my $ss_env     = $ENV{SCRIPT_SOURCE};
+        my @suite_conf = cat_file( $ss_env . "/um/rose-stem/rose-suite.conf" );
         my @host_sources = grep /^HOST_SOURCE_.*=/, @suite_conf;
-        
+
         print "Detected HOST_SOURCE variables:\n";
         print join( "", @host_sources );
 
-        foreach (@external_checks)
-        {
-            my $repo = $_;
+        foreach (@external_checks) {
+            my $repo   = $_;
             my $o_repo = $repo;
-            if (exists $filepath_mapping{$repo}) {
+            if ( exists $filepath_mapping{$repo} ) {
                 $repo = $filepath_mapping{$repo};
             }
             my $host_var_name = "HOST_SOURCE_" . uc($repo);
-            my $env_var_res = $ENV{$host_var_name};
-            if (! grep /^$host_var_name=(\"|\')$env_var_res(\"|\')/, @host_sources ) {
-               print $host_var_name . " modified in environment. Running full check on this repository\n";
-               push @extracts, $o_repo;
-            } 
+            my $env_var_res   = $ENV{$host_var_name};
+            if ( !grep /^$host_var_name=(\"|\')$env_var_res(\"|\')/,
+                @host_sources )
+            {
+                print $host_var_name
+                  . " modified in environment."
+                  . " Running full check on this repository\n";
+                push @extracts, $o_repo;
+            }
         }
 
-     }
+    }
 
-     # enable trunkmode for sepecific repositories if rose-stem/rose-suite.conf is modified
-     if (exists $additions{"rose-stem/rose-suite.conf"}) {
-        print "rose-stem/rose-suite.conf modified: checking for external repository updates\n";
+    # enable trunkmode for sepecific repositories if rose-stem/rose-suite.conf
+    # is modified
+    if ( exists $additions{"rose-stem/rose-suite.conf"} ) {
+        print "rose-stem/rose-suite.conf modified:"
+          . " checking for external repository updates\n";
         my $added_lines_ref = $additions{"rose-stem/rose-suite.conf"};
         my @added_lines     = @$added_lines_ref;
-        foreach (@external_checks)
-        {
-            my $repo = $_;
+        foreach (@external_checks) {
+            my $repo   = $_;
             my $o_repo = $repo;
-            if (exists $filepath_mapping{$repo}) {
+            if ( exists $filepath_mapping{$repo} ) {
                 $repo = $filepath_mapping{$repo};
             }
             my $host_var_name = "HOST_SOURCE_" . uc($repo);
             if ( grep /^$host_var_name=/, @added_lines ) {
-               print $host_var_name . " modified in rose-suite.conf. Running full check on this repository\n";
-               push @extracts, $o_repo;
-            } 
+                print $host_var_name
+                  . " modified in rose-suite.conf."
+                  . " Running full check on this repository\n";
+                push @extracts, $o_repo;
+            }
         }
-     }
+    }
 
-     # remove any duplicates
-     @extracts = keys {map {$_ => 1} @extracts};
+    # remove any duplicates
+    @extracts = keys { map { $_ => 1 } @extracts };
 
-     # If we capturede any changes, enable trunk-mode for those repositories.
-     if (scalar(@extracts) > 0) {
-         $trunkmode = 1;
-         $error_trunk = 1;
-         unshift @extracts, "";
-     }     
+    # If we capturede any changes, enable trunk-mode for those repositories.
+    if ( scalar(@extracts) > 0 ) {
+        $trunkmode   = 1;
+        $error_trunk = 1;
+        unshift @extracts, "";
+    }
 }
 else {
     @extracts = ( "", "um" );
