@@ -906,7 +906,7 @@ sub intrinsic_as_variable {
             if ( $line =~ /(^|\W)$keyword($|\W)/sxmi ) {
                 foreach my $type (@fortran_types) {
                     my $type_r = $type;
-                    $type_r =~ s/\s/\s/sxm;
+                    $type_r =~ s/\s/\\s/sxm;
 
 #  iii) check if match is a variable declaration (which always starts with a type):
                     if ( $line =~ /^\s*$type_r(\W.*\W|\W)$keyword/sxmi ) {
@@ -1064,7 +1064,7 @@ sub check_crown_copyright {
         $failed = 0 if ( $line =~ /^\s*(!|\/\*).*Crown\s*copyright/sxmi );
         foreach my $agreement (@valid_agreements) {
             my $agreement_r = $agreement;
-            $agreement_r =~ s/\s/\s/sxm;
+            $agreement_r =~ s/\s/\\s/sxm;
             $failed = 0 if ( $line =~ /^\s*(!|\/\*).*$agreement_r/sxmi );
         }
     }
