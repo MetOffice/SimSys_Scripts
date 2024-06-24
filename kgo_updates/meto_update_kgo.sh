@@ -209,24 +209,27 @@ elif [[ $platforms == *"xc40"* ]]; then
     printf "${RED}\n\nSkipping the rsync to the xcs as the xc40 install failed.\n${NC}"
 fi
 
+##################################################################################
+# WARNING: DURING SIAT NO ACCESS TO QUADS SO COMMENTING OUT ENTIRE SECTION BELOW #
+##################################################################################
 # For EX's currently rsync the generated kgo to the exa from the exz
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
-if [[ $succeeded_ex1a -eq 1 ]]; then
-    printf "${GREEN}\n\nrsyncing the kgo to exa.\n${NC}"
-    printf "Warning: Always rsyncing UM KGO on EXZ"
-    rsync_dir="kgo/"
-    host_rsync=$(rose host-select exab)
-    rsync_com="ssh -Y login.exz 'rsync -av /common/umdir/standard_jobs/${rsync_dir} ${host_rsync}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
-    ssh -Y frum@localhost $rsync_com
-    if [[ $? -ne 0 ]]; then
-        printf "${RED}The rsync to the exa has failed.\n${NC}"
-    else
-        printf "${Green}The rsync to the exa has succeeded.\n${NC}"
-    fi
-elif [[ $platforms == *"ex1a"* ]]; then
-    printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
-fi
+# if [[ $succeeded_ex1a -eq 1 ]]; then
+#     printf "${GREEN}\n\nrsyncing the kgo to exa.\n${NC}"
+#     printf "Warning: Always rsyncing UM KGO on EXZ"
+#     rsync_dir="kgo/"
+#     host_rsync=$(rose host-select exab)
+#     rsync_com="ssh -Y login.exz 'rsync -av /common/umdir/standard_jobs/${rsync_dir} ${host_rsync}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+#     ssh -Y frum@localhost $rsync_com
+#     if [[ $? -ne 0 ]]; then
+#         printf "${RED}The rsync to the exa has failed.\n${NC}"
+#     else
+#         printf "${Green}The rsync to the exa has succeeded.\n${NC}"
+#     fi
+# elif [[ $platforms == *"ex1a"* ]]; then
+#     printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
+# fi
 
 printf "\n\nInstallation Summary:\n\n"
 if [[ $platforms == *"spice"* ]]; then
