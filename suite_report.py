@@ -161,6 +161,7 @@ COMMON_GROUPS = {
     "Unknown": [],
 }
 
+
 def _read_file(filename):
     """Takes filename (str)
     Return contents of a file, as list of strings."""
@@ -370,15 +371,16 @@ class SuiteReport(object):
         try:
             # Resolve "runN" soft link - Required for Cylc8 cylc-review path
             link_target = os.readlink(self.suite_path)
-            suitename = os.path.join(os.path.dirname(self.suite_path), link_target)
+            suitename = os.path.join(
+                os.path.dirname(self.suite_path), link_target
+            )
         except OSError:
             suitename = self.suite_path
 
         suite_dir, self.suitename = suitename.split("cylc-run/")
         # Default to userID from suite path unless CYLC_SUITE_OWNER is present
         self.suite_owner = os.environ.get(
-            "CYLC_SUITE_OWNER",
-            os.path.basename(suite_dir.rstrip("/"))
+            "CYLC_SUITE_OWNER", os.path.basename(suite_dir.rstrip("/"))
         )
 
         self.parse_rose_suite_run()
@@ -399,6 +401,13 @@ class SuiteReport(object):
             self.primary_project = "UKCA"
         else:
             self.primary_project = "UNKNOWN"
+
+        # The sources used by lfric_apps aren't populated yet as they are for
+        # other repos as apps uses dependencies.sh instead of rose variables.
+        # This will populate the job_sources dictionary with a 'tested source'
+        # variable showing the source used.
+        if self.primary_project == "LFRIC_APPS":
+            self.determine_lfric_apps_sources()
 
         self.groups = [_remove_quotes(group) for group in self.groups]
 
@@ -622,13 +631,13 @@ class SuiteReport(object):
                     sources[result.group(1)] = {}
                     if " " in result.group(3):
                         multiple_branches[(result.group(1))] = result.group(3)
-                        sources[result.group(1)][
-                            "tested source"
-                        ] = result.group(3).split()[0]
+                        sources[result.group(1)]["tested source"] = (
+                            result.group(3).split()[0]
+                        )
                     else:
-                        sources[result.group(1)][
-                            "tested source"
-                        ] = result.group(3)
+                        sources[result.group(1)]["tested source"] = (
+                            result.group(3)
+                        )
 
         self.rose_orig_host = rose_orig_host
         self.job_sources = sources
@@ -816,6 +825,62 @@ class SuiteReport(object):
                 self.uncommitted_changes += 1
 
         return projects
+
+    def determine_lfric_apps_sources(self):
+        """
+        Read through an lfric_apps dependencies.sh file to get sources for
+        sub-repos. Populate a "tested source" variable in the job_sources
+        dictionary.
+        """
+
+        # Find the dependencies.sh file. If housekeeping has been run it will
+        # be in the cylc-run directory. Otherwise it will be in the apps source
+        # in the share directory.
+        dep_path = os.path.join(self.suite_path, "dependencies.sh")
+        if not os.path.exists(dep_path):
+            dep_path = os.path.join(
+                self.suite_path, "share", "source", "apps", "dependencies.sh"
+            )
+
+        # If a dependencies.sh file can't be opened then return. The other
+        # sources will not be populated
+        try:
+            with open(dep_path) as f:
+                dependencies_file = f.readlines()
+        except FileNotFoundError:
+            return
+
+        # Read through the dependencies file and record projects and sources
+        source_info = defaultdict(dict)
+        for line in dependencies_file:
+            line = line.strip()
+            repo, rev, source = "", "", ""
+            try:
+                rev_line = re.search("export (\w+)_rev=(\S*)", line)
+                repo = rev_line.group(1)
+                rev = rev_line.group(2)
+                source_info[repo]["revision"] = rev
+            except AttributeError:
+                pass
+            try:
+                source_line = re.search("export (\w+)_sources=(\S*)", line)
+                repo = source_line.group(1)
+                source = source_line.group(2)
+                source_info[repo]["source"] = source
+            except AttributeError:
+                pass
+
+        for item in source_info:
+            if source_info[item]["source"]:
+                tested_source = source_info[item]["source"]
+            elif "lfric_core" in item:
+                tested_source = "fcm:lfric.x_tr"
+            else:
+                tested_source = f"fcm:{item}.x_tr"
+            if source_info[item]["revision"]:
+                tested_source += f"@{source_info[item]['revision']}"
+
+            self.job_sources[item.upper()] = {"tested source": tested_source}
 
     @staticmethod
     def parse_versions_file(vfile):
@@ -1463,7 +1528,10 @@ class SuiteReport(object):
         # Check whether lfric shared files have been touched
         # Not needed if lfric the suite source
         lfric_testing_message = [""]
-        if "LFRIC" not in self.primary_project and self.primary_project != "UNKNOWN":
+        if (
+            "LFRIC" not in self.primary_project
+            and self.primary_project != "UNKNOWN"
+        ):
             lfric_testing_message = self.check_lfric_extract_list()
 
         # Generate table for required config and code owners
@@ -2227,7 +2295,7 @@ def parse_options():
             # Cylc7 environment variable
             "CYLC_SUITE_RUN_DIR",
             # Default to Cylc8 environment variable
-            os.environ.get("CYLC_WORKFLOW_RUN_DIR")
+            os.environ.get("CYLC_WORKFLOW_RUN_DIR"),
         )
         if opts.suite_path is None:
             print("Available Environment Variables:")
