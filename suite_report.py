@@ -23,6 +23,9 @@
        suite_report.py -S <suite_dir> [-v] [-q] [-N] [-L <log_dir>]
 """
 
+# pylint: disable=too-many-lines
+# pylint: disable=consider-using-f-string
+
 from __future__ import print_function
 
 import glob
@@ -166,7 +169,7 @@ def _read_file(filename):
     """Takes filename (str)
     Return contents of a file, as list of strings."""
     if os.path.exists(filename):
-        with open(filename, "r") as filehandle:
+        with open(filename, "r", encoding="utf-8") as filehandle:
             lines = filehandle.readlines()
     else:
         print('[ERROR] Unable to find file :\n    "{0:s}"'.format(filename))
@@ -183,7 +186,7 @@ def _write_file(filename, lines, newline=False):
     element of the list.
     Returns None"""
     retn = "\n" if newline else ""
-    with open(filename, "w") as filehandle:
+    with open(filename, "w", encoding="utf-8") as filehandle:
         for line in lines:
             filehandle.write("{0:s}{1:s}".format(line, retn))
 
@@ -193,15 +196,16 @@ def _run_command(command, ignore_fail=False):
     Runs the command with subprocess.Popen.
     Returns the exit code, standard out and standard error as list.
     """
-    pobj = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    pobj.wait()
-    retcode, stdout, stderr = (
-        pobj.returncode,
-        pobj.stdout.read().decode("utf-8"),
-        pobj.stderr.read().decode("utf-8"),
-    )
+    with subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            encoding="utf-8",
+    ) as pobj:
+        pobj.wait()
+        retcode, stdout, stderr = (
+            pobj.returncode,
+            pobj.stdout.read(),
+            pobj.stderr.read(),
+        )
     if retcode != 0 and not ignore_fail:
         print("[ERROR] running {0:s}".format(command))
         print("[INFO] RC: {0:}".format(retcode))
@@ -331,7 +335,13 @@ def _parse_string(
     return value
 
 
-class SuiteReport(object):
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-public-methods
+
+class SuiteReport:
     """Object to hold data and methods required to produce a suite report
     from a rose-stem suite output."""
 
@@ -496,10 +506,8 @@ class SuiteReport(object):
             self.only_common_groups = True
         else:
             self.only_common_groups = all(
-                [
                     group.strip() in COMMON_GROUPS[self.site]
                     for group in self.groups
-                ]
             )
 
         # Finally, remove any projects which were deemed invalid.
@@ -634,7 +642,6 @@ class SuiteReport(object):
         self.rose_orig_host = rose_orig_host
         self.job_sources = sources
         self.multi_branches = multiple_branches
-        return
 
     def parse_rose_suite_run(self):
         """Parse rose-suite-run.conf file.
@@ -679,7 +686,6 @@ class SuiteReport(object):
             for line in lines:
                 if "HOST_XC40='xcsr'" in line:
                     self.host_xcs = True
-        return
 
     def initialise_projects(self):
         """Uses fcm kp to initialise a directory containing project keywords
@@ -715,7 +721,6 @@ class SuiteReport(object):
                 ):
                     projects[project] = url
         self.projects = projects
-        return
 
     def cylc7_check_versions_file(self, projects):
         """
@@ -764,7 +769,7 @@ class SuiteReport(object):
             return self.cylc7_check_versions_file(projects)
 
         vcs_path = os.path.join(self.suite_path, "log", "version", "vcs.json")
-        with open(vcs_path) as vcs_file:
+        with open(vcs_path, encoding="utf-8") as vcs_file:
             vcs_data = json.load(vcs_file)
 
         if (
@@ -895,8 +900,8 @@ class SuiteReport(object):
                 return outname
             except subprocess.CalledProcessError as error:
                 print(error)
-        else:
-            return None
+
+        return None
 
     @staticmethod
     def clean_tempfile(fname="~/temp.txt"):
@@ -942,7 +947,7 @@ class SuiteReport(object):
 
         # Read through file and generate dictionary
         try:
-            with open(file_path, "r") as inp_file:
+            with open(file_path, "r", encoding="utf-8") as inp_file:
                 owners_dict = {}
                 inside_listing = False
                 for line in inp_file:
@@ -1153,7 +1158,7 @@ class SuiteReport(object):
                     file_path = ""
 
                 try:
-                    with open(file_path, "r") as inp_file:
+                    with open(file_path, "r", encoding="utf-8") as inp_file:
                         for line in inp_file:
                             if "file belongs in" in line:
                                 section = line.strip("\n")
@@ -1219,7 +1224,7 @@ class SuiteReport(object):
         # Jules also depends on the shared metadata files so add those manually
         dirs.append("rose-meta/jules-shared")
 
-        with open(os.path.expanduser(fpath)) as input_file:
+        with open(os.path.expanduser(fpath), encoding="utf-8") as input_file:
             for line in input_file:
                 line = line.strip()
                 if in_include_section:
@@ -1336,13 +1341,15 @@ class SuiteReport(object):
 
         return return_message
 
+    # pylint: disable=too-many-arguments
+
     def generate_task_table(
         self,
         data,
         common_groups=False,
         verbosity=DEFAULT_VERBOSITY,
         sort_by_name=False,
-        status_counts=defaultdict(int),
+        status_counts=None,
     ):
         """Returns a trac-formatted table of the tasks run in this suite.
         Tasks are provided in a dictionary of format {"task" : "status",...}
@@ -1355,6 +1362,8 @@ class SuiteReport(object):
         number of tasks found with each status type. The 2nd is only present
         if not empty and indicates how many tasks of the relevant types have
         been hidden"""
+
+        status_counts = status_counts or defaultdict(int)
 
         def key_by_name_or_status(task_item):
             """A key generating function for use by sorted.
@@ -1480,6 +1489,8 @@ class SuiteReport(object):
             if config_approval_table:
                 return_list += config_approval_table
         return lfric_testing_message + return_list + status_summary + lines
+
+    # pylint: enable=too-many-arguments
 
     @staticmethod
     def convert_to_mirror(url, projects_dict):
@@ -1767,6 +1778,9 @@ class SuiteReport(object):
         find_mem_n_units = re.compile(
             r"(?P<num>[0-9]*\.[0-9]*)(?P<unit>[A-Za-z])"
         )
+
+        # pylint: disable=broad-exception-caught
+
         try:
             for line in _read_file(filename):
                 result = find_wallclock.search(line)
@@ -1797,6 +1811,9 @@ class SuiteReport(object):
             )
             print("Error type : {0:s}".format(type(err)))
             print(err)
+
+        # pylint: enable=broad-exception-caught
+
         return wallclock, memory
 
     @staticmethod
@@ -1840,6 +1857,8 @@ class SuiteReport(object):
         """
 
         for attempt in range(5):
+            # pylint: disable=broad-exception-caught
+
             try:
                 # Get a list of altered files from the fcm mirror url
                 bdiff_files = get_branch_diff_filenames(
@@ -1855,8 +1874,8 @@ class SuiteReport(object):
                     )
                     bdiff_files = []
                     break
-                else:
-                    pass
+
+            # pylint: enable=broad-exception-caught
 
         # If '.' is in the files list remove it
         try:
@@ -1887,6 +1906,9 @@ class SuiteReport(object):
 
     def print_report(self):
         """'Prints a Trac formatted report of the suite_report object"""
+
+        # pylint: disable=broad-exception-caught
+
         try:
             trac_log = []
             ticket_nos = ""
@@ -2054,7 +2076,7 @@ class SuiteReport(object):
             print(err)
             try:
                 suite_dir = self.suite_path
-            except:
+            except Exception:
                 suite_dir = "--cylc_suite_dir--"
             trac_log.extend(
                 [
@@ -2096,6 +2118,13 @@ class SuiteReport(object):
                 )
                 raise
 
+        # pylint: disable=broad-exception-caught
+
+# pylint: enable=too-many-instance-attributes
+# pylint: enable=too-many-locals
+# pylint: enable=too-many-statements
+# pylint: enable=too-many-branches
+# pylint: enable=too-many-public-methods
 
 # ==============================================================================
 #    End of   "class.SuiteReport()"
