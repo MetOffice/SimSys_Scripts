@@ -34,7 +34,8 @@ import traceback
 import time
 import subprocess
 import json
-from optparse import OptionParser, OptionGroup
+from argparse import ArgumentParser, ArgumentTypeError, \
+    RawDescriptionHelpFormatter
 from collections import defaultdict
 from fcm_bdiff import get_branch_diff_filenames
 
@@ -2119,97 +2120,71 @@ def get_working_copy_path(path):
     return path
 
 
-def parse_options():
-    """Use OptionParser to parse options from command line.
-    Would prefer ArgParse but currently unavailable in default site
-    Python installation at meto."""
-    expected_args = 0
-    parser = OptionParser()
-    parser.add_option(
-        "--increase-verbosity",
-        "-v",
-        dest="increase_verbosity",
-        action="count",
-        default=0,
-        help="Increases Verbosity level. Default = "
-        "{0:2d}".format(DEFAULT_VERBOSITY),
-    )
-    parser.add_option(
-        "--decrease-verbosity",
-        "-q",
-        dest="decrease_verbosity",
-        action="count",
-        default=0,
-        help="Decreases Verbosity level.                         "
-        "  Levels are as follows :                          "
-        "0: print everything.                               "
-        "1: print except Housekeeping tasks.                "
-        "2: print except above and Gatekeeping tasks.       "
-        "3: print except above and Successful tasks if only "
-        '.  running "common" groups.    [Default]         '
-        "4: print except above and all Successful tasks     "
-        ".  for all groups/tasks.                           ",
-    )
-    parser.add_option(
-        "--name-sort",
-        "-N",
-        dest="sort_by_name",
-        default=False,
-        action="store_true",
-        help="Sort task table by task names",
-    )
-    parser.add_option(
-        "--suite-path",
-        "-S",
-        dest="suite_path",
-        action="store",
-        help="Path to suite",
-    )
-    parser.add_option(
-        "--log_path",
-        "-L",
-        dest="log_path",
-        action="store",
-        default=None,
-        help="Output dir for {0:s}".format(TRAC_LOG_FILE),
-    )
-    # Deprecated options - the options below have been deprecated and should no
-    # longer be used or have any effect.
-    # "sort by status" is now the default action - "-N" sort by name re-instates
-    # the original default sorting mechanism
-    # "-H" to "include" the housekeeping tasks has been removed and is now
-    # handled by the verbosity flags "-v" and "-q". As is including/excluding
-    # the gatekeeper tasks which is new with the version that deprecated these
-    # options.
-    group = OptionGroup(
-        parser,
-        "Deprecated Options",
-        "The following options have been deprecated and no "
-        "longer have any effect.  "
-        "Please stop using them as they will cause a fatal "
-        "unknown option error in the near future",
-    )
-    group.add_option(
-        "--include-housekeeping",
-        "-H",
-        dest="include_housekeep",
-        action="store_true",
-        default=False,
-        help="Include housekeeping tasks",
-    )
-    group.add_option(
-        "--status-sort",
-        "-s",
-        dest="sort_by_status",
-        default=False,
-        action="store_true",
-        help="Sort by task status is now default and this option"
-        + " is deprecated",
-    )
-    parser.add_option_group(group)
-    # -- End of deprecated options -- block to be removed around Dec 2023
+def directory_type(opt):
 
-    (opts, args) = parser.parse_args()
+    """Check location exists and is a directory."""
+
+    if not os.path.exists(opt):
+        raise ArgumentTypeError(f"location {repr(opt)} does not exist")
+
+    if not os.path.isdir(opt):
+        raise ArgumentTypeError(f"location {repr(opt)} is not a directory")
+
+    # Return canonical directory with symlinks fully resolved
+    return os.path.realpath(opt)
+
+
+def parse_arguments():
+
+    """Process command line arguments."""
+
+    suite_path = os.environ.get(
+        # Cylc7 environment variable
+        "CYLC_SUITE_RUN_DIR",
+        # Default to Cylc8 environment variable
+        os.environ.get("CYLC_WORKFLOW_RUN_DIR", None)
+    )
+
+    parser = ArgumentParser(usage="%(prog)s [options] [args]",
+                            description="Generate a suite report",
+                            formatter_class=RawDescriptionHelpFormatter)
+
+    paths = parser.add_argument_group("location arguments")
+
+    paths.add_argument("-S", "--suite-path", type=directory_type,
+                       dest="suite_path",
+                       metavar="DIR",
+                       default=suite_path,
+                       help="path to suite")
+
+    paths.add_argument("-L", "--log_path", type=directory_type,
+                       dest="log_path",
+                       metavar="DIR",
+                       help="output dir for {0:s}".format(TRAC_LOG_FILE))
+
+    verbose = parser.add_argument_group("diagnostic arguments")
+
+    verbose.add_argument("-v", "--increase-verbosity",
+                         dest="increase_verbosity",
+                         action="count",
+                         default=0,
+                         help="increases Verbosity level. Default = "
+                         "{0:2d}".format(DEFAULT_VERBOSITY))
+
+    verbose.add_argument("-q", "--decrease-verbosity",
+                         dest="decrease_verbosity",
+                         action="count",
+                         default=0,
+                         help="decreases Verbosity level.")
+
+    misc = parser.add_argument_group("misc arguments")
+
+    misc.add_argument("-N", "--name-sort",
+                      dest="sort_by_name",
+                      action="store_true",
+                      help="sort task table by task names")
+
+    opts, rest = parser.parse_known_args()
 
     # The calculation below seems counter-intuative. Lower 'verbosity' score
     # actually means a higher verbosity. So SUBTRACT the count for
@@ -2218,73 +2193,17 @@ def parse_options():
         DEFAULT_VERBOSITY - opts.increase_verbosity + opts.decrease_verbosity
     )
 
-    # Find the suite database file
+    if len(rest) not in (0, 3):
+        # If running interactively, there should be zero positional
+        # arguments.  If running from a suite's shutdown handler,
+        # there should be three arguments.  Anything else should
+        # trigger an error.
+        parser.error("expected exactly zero or three positional arguments")
+
     if opts.suite_path is None:
-        # Running online as a shutdown handler in a suite.
-        # cylc provides 3 args to the shutdown handler - so allow for them.
-        expected_args = 3
-        opts.suite_path = os.environ.get(
-            # Cylc7 environment variable
-            "CYLC_SUITE_RUN_DIR",
-            # Default to Cylc8 environment variable
-            os.environ.get("CYLC_WORKFLOW_RUN_DIR")
-        )
-        if opts.suite_path is None:
-            print("Available Environment Variables:")
-            for key, val in os.environ.items():
-                print(f"  {key}: {val}")
-            sys.exit("[ERROR] Path to suite not provided.")
-
-    if len(args) != expected_args:
-        parser.print_help()
-        message = "got {0:d} extra arguments, expected {1:d}\n".format(
-            len(args), expected_args
-        )
-        message += "Extra arguments are :\n{0:}".format(args)
-        print(message)
-        sys.exit(message)
-
-    if opts.sort_by_status or opts.include_housekeep:
-        message = []
-        message.append("")
-        message.append(
-            "       ---------------------------------------------"
-            "----------------"
-        )
-        message.append(
-            """                            ###  WARNING !!!  ###
-                       suite_report.py was called using a deprecated option.
-                       Please remove this option from wherever the call was made
-                       before this option becomes invalid and this warning
-                       becomes a fatal error"""
-        )
-        message.append(
-            "       ---------------------------------------------"
-            "----------------"
-        )
-        message.append("")
-        if opts.sort_by_status:
-            message.append(
-                """
-         -s, --status-sort   Sort by task status is now default
-                             Use -N to sort by task name (previous default)
-            """
-            )
-        if opts.include_housekeep:
-            message.append(
-                """
-         -H, --include-housekeeping         Include housekeeping tasks
-            This is now handled by setting the verbosity level using -[qv]
-            """
-            )
-        message.append(
-            """
-         Please use "suite_report.py -h" to see full help on options.
-        """
-        )
-        message.append("")
-        for line in message:
-            print(line)
+        # Should only happen if environment variables are not set and
+        # option has been ommitted
+        parser.error("path to suite not provided")
 
     return opts
 
@@ -2292,7 +2211,7 @@ def parse_options():
 def main():
     """Main program.
     Sets up a SuiteReport object and calls it's print_report method."""
-    opts = parse_options()
+    opts = parse_arguments()
 
     suite_report_obj = SuiteReport(
         suite_path=opts.suite_path,
