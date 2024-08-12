@@ -6,10 +6,11 @@
 # *****************************COPYRIGHT*******************************
 """
    ## NOTE ##
+
    This module is one of several for which the Master copy is in the
-   UM repository. When making changes, please ensure the changes are made in
-   the UM repository or they will be lost during the release process when the UM
-   copy is copied over.
+   UM repository. When making changes, please ensure the changes are
+   made in the UM repository or they will be lost during the release
+   process when the UM copy is copied over.
 
    Script to process the results of a suite and write a summary to file. The
    summary is in Trac wiki mark-up. Any projects that do not have a local
@@ -21,6 +22,7 @@
    Cylc Suite Syntax: shutdown handler = "suite_report.py"
    Command Line syntax:
        suite_report.py -S <suite_dir> [-v] [-q] [-N] [-L <log_dir>]
+
 """
 
 # pylint: disable=too-many-lines
@@ -164,6 +166,7 @@ COMMON_GROUPS = {
     "psc": [],
     "Unknown": [],
 }
+
 
 def _read_file(filename):
     """Takes filename (str)
@@ -379,14 +382,17 @@ class SuiteReport:
         self.status_counts["failed"] = 0
 
         try:
-            # Resolve "runN" soft link - Required for Cylc8 cylc-review path
+            # Resolve "runN" soft link - Required for Cylc8
+            # cylc-review path
             link_target = os.readlink(self.suite_path)
-            suitename = os.path.join(os.path.dirname(self.suite_path), link_target)
+            suitename = os.path.join(os.path.dirname(self.suite_path),
+                                     link_target)
         except OSError:
             suitename = self.suite_path
 
         suite_dir, self.suitename = suitename.split("cylc-run/")
-        # Default to userID from suite path unless CYLC_SUITE_OWNER is present
+        # Default to userID from suite path unless CYLC_SUITE_OWNER is
+        # present
         self.suite_owner = os.environ.get(
             "CYLC_SUITE_OWNER",
             os.path.basename(suite_dir.rstrip("/"))
@@ -499,9 +505,9 @@ class SuiteReport:
                 proj_dict["repo mirror"]
             )
 
-        # Check to see if ALL the groups being run fall into the "common groups"
-        # category. This is used to control automatic hiding of successful tasks
-        # later.
+        # Check to see if ALL the groups being run fall into the
+        # "common groups" category. This is used to control automatic
+        # hiding of successful tasks later.
         if self.site == "meto" and "all" in self.groups:
             self.only_common_groups = True
         else:
@@ -517,10 +523,12 @@ class SuiteReport:
     def debug_print_obj(self):
         """Debug print method.
         Prints everything in the SuiteReport object."""
-        print("-" * 80 + "\nSet up SuiteReport object\n" + "-" * 80 + "\n\n")
+        print("-" * 80 + "\nSet up SuiteReport object\n"
+              + "-" * 80 + "\n\n")
         for key, value in self.__dict__.items():
             if key == "projects":
-                print('{0:s} contains "{1:d}" entries.'.format(key, len(value)))
+                print('{0:s} contains "{1:d}" entries.'
+                      .format(key, len(value)))
             elif key == "sort_by_name":
                 if value:
                     print('{0:s} is :"True"'.format(key))
@@ -541,8 +549,9 @@ class SuiteReport:
                 elif value >= 3:
                     print(
                         text
-                        + "Hide Housekeeping, Gatekeeping and if all groups run"
-                        'were "common" groups also hide Successful tasks'
+                        + "Hide Housekeeping, Gatekeeping and if all "
+                        + "groups run were \"common\" groups also hide "
+                        + "Successful tasks"
                     )
                 elif value >= 2:
                     print(text + "Hide Housekeeping and Gatekeeping tasks")
@@ -571,7 +580,8 @@ class SuiteReport:
                     else:
                         print('        {0:s} is :"False"'.format(sub_key))
                 else:
-                    print('        {0:s} is :"{1:}"'.format(sub_key, sub_value))
+                    print('        {0:s} is :"{1:}"'
+                          .format(sub_key, sub_value))
 
     def parse_processed_config_file(self):
         """Parse the suite.rc.processed file.
@@ -669,10 +679,11 @@ class SuiteReport:
             self.cylc = "8" if self.is_cylc8 is True else "7"
         self.rose = _parse_string("ROSE_VERSION", lines)
 
-        # This test is a little problematic when running this script on a JULES
-        # rose-stem suite as JULES has no 'need' of the two compare variables
-        # and to prevent the warning their absence would produce from occuring
-        # unnecessarily in JULES they have been added to rose-suite.conf for now
+        # This test is a little problematic when running this script
+        # on a JULES rose-stem suite as JULES has no 'need' of the two
+        # compare variables and to prevent the warning their absence
+        # would produce from occuring unnecessarily in JULES they have
+        # been added to rose-suite.conf for now
         compare_output = _parse_string("COMPARE_OUTPUT", lines)
         compare_wallclock = _parse_string("COMPARE_WALLCLOCK", lines)
         self.required_comparisons = (
@@ -792,9 +803,9 @@ class SuiteReport:
             prefix = "https://code.metoffice.gov.uk/svn/"
             prefix_svn = "svn://fcm1/"
             if project.startswith(prefix):
-                project = project[len(prefix) :]
+                project = project[len(prefix):]
             if project.startswith(prefix_svn):
-                project = project[len(prefix_svn) :]
+                project = project[len(prefix_svn):]
             project = re.split("[/.]", project)[0].upper()
             projects[project] = {}
 
@@ -810,7 +821,8 @@ class SuiteReport:
             start_url += f"/{splitter}/"
             end_url = end_url.split("/")
             if splitter == "branches":
-                # For branches, format is "/[dev|test]/<username>/<branch-name>"
+                # For branches, format is
+                # "/[dev|test]/<username>/<branch-name>"
                 end_url = f"{end_url[0]}/{end_url[1]}/{end_url[2]}"
             else:
                 # For trunk, format is just "/trunk/"
@@ -987,8 +999,8 @@ class SuiteReport:
         Function to write out the trac.log table for config and CO approvals
         Input: needed_approvals - dictionary with keys as owners and values,
                                   a list of configs or code sections
-               mode - either "config" or "code" depending on which type of table
-                      is being created
+               mode - either "config" or "code" depending on
+                      which type of table is being created
         """
 
         table = ["'''Required " + mode.capitalize() + " Owner Approvals'''"]
@@ -1079,7 +1091,8 @@ class SuiteReport:
         if config_owners is None:
             return None
 
-        config_approvals = self.get_config_owners(failed_configs, config_owners)
+        config_approvals = self.get_config_owners(failed_configs,
+                                                  config_owners)
 
         if len(config_approvals.keys()) == 0:
             config_approvals = None
@@ -1093,11 +1106,11 @@ class SuiteReport:
         Function to get required code owner approvals based on fcm_bdiff
         - code_owners - dict returning code owners for a given code section
         """
-
         # Get list of altered files and exit if no files changed
-        # 'UM' used here and just below as this function is currently only valid
-        # for the UM. Hopefully lfric_apps will be able to use similar in the
-        # future - at this point we can change 'UM' to self.primary_project
+        # 'UM' used here and just below as this function is
+        # currently only valid for the UM. Hopefully lfric_apps
+        # will be able to use similar in the future - at this
+        # point we can change 'UM' to self.primary_project
         bdiff_files = self.job_sources["UM"]["bdiff_files"]
         if len(bdiff_files) == 0:
             return None
@@ -1289,7 +1302,8 @@ class SuiteReport:
             ]
         else:
             message += [
-                "No files shared with LFRic Apps have been modified.[[br]]LFRic"
+                "No files shared with LFRic Apps have been "
+                + "modified.[[br]]LFRic"
                 + " Apps testing is not required for this ticket."
             ]
 
@@ -1298,9 +1312,11 @@ class SuiteReport:
 
     def check_lfric_extract_list(self):
         """
-        Determine whether any files modified in source branches are extracted by
-        lfric.
-        Return a trac formatted string stating whether LFRic testing is required
+        Determine whether any files modified in source branches are
+        extracted by lfric.
+
+        Return a trac formatted string stating whether LFRic testing
+        is required
         """
 
         return_message = ["'''LFRic Testing Requirements'''"]
@@ -1473,7 +1489,8 @@ class SuiteReport:
         # Check whether lfric shared files have been touched
         # Not needed if lfric the suite source
         lfric_testing_message = [""]
-        if "LFRIC" not in self.primary_project and self.primary_project != "UNKNOWN":
+        if ("LFRIC" not in self.primary_project
+            and self.primary_project != "UNKNOWN"):
             lfric_testing_message = self.check_lfric_extract_list()
 
         # Generate table for required config and code owners
@@ -1566,7 +1583,8 @@ class SuiteReport:
                             )
                         # maintain keyword style, but convert to srs.
                         else:
-                            srs_url = re.sub(proj, shared_project, url, count=1)
+                            srs_url = re.sub(proj, shared_project, url,
+                                             count=1)
                         break
         return srs_url
 
@@ -1970,7 +1988,8 @@ class SuiteReport:
             )
 
             trac_log.append(
-                " || Cylc-Review: || {0:s}/{1:s}/{2:s}/?suite={3:s} || ".format(
+                " || Cylc-Review: || {0:s}/{1:s}/{2:s}/?suite={3:s} || "
+                .format(
                     CYLC_REVIEW_URL[self.site],
                     "taskjobs",
                     self.suite_owner,
