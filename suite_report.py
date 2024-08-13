@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 # *****************************COPYRIGHT*******************************
 # (C) Crown copyright Met Office. All rights reserved.
 # For further details please refer to the file COPYRIGHT.txt
@@ -43,6 +44,12 @@ from argparse import ArgumentParser, ArgumentTypeError, \
     RawDescriptionHelpFormatter
 from collections import defaultdict
 from fcm_bdiff import get_branch_diff_filenames
+
+try:
+    import argcomplete
+    COMPLETION = True
+except ModuleNotFoundError:
+    COMPLETION = False
 
 
 CYLC_SUITE_ENV_FILE = "cylc-suite-env"
@@ -2199,16 +2206,22 @@ def parse_arguments():
 
     paths = parser.add_argument_group("location arguments")
 
-    paths.add_argument("-S", "--suite-path", type=directory_type,
-                       dest="suite_path",
-                       metavar="DIR",
-                       default=suite_path,
-                       help="path to suite")
+    item = paths.add_argument("-S", "--suite-path",
+                              type=directory_type,
+                              dest="suite_path",
+                              metavar="DIR",
+                              default=suite_path,
+                              help="path to suite")
+    if COMPLETION:
+        item.completer = argcomplete.DirectoriesCompleter()
 
-    paths.add_argument("-L", "--log_path", type=directory_type,
-                       dest="log_path",
-                       metavar="DIR",
-                       help="output dir for {0:s}".format(TRAC_LOG_FILE))
+    item = paths.add_argument("-L", "--log_path", type=directory_type,
+                              dest="log_path",
+                              metavar="DIR",
+                              help="output dir for {0:s}"
+                              .format(TRAC_LOG_FILE))
+    if COMPLETION:
+        item.completer = argcomplete.DirectoriesCompleter()
 
     verbose = parser.add_argument_group("diagnostic arguments")
 
