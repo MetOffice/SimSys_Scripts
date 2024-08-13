@@ -27,7 +27,6 @@
 """
 
 # pylint: disable=too-many-lines
-# pylint: disable=consider-using-f-string
 
 from __future__ import print_function
 
@@ -182,9 +181,9 @@ def _read_file(filename):
         with open(filename, "r", encoding="utf-8") as filehandle:
             lines = filehandle.readlines()
     else:
-        print('[ERROR] Unable to find file :\n    "{0:s}"'.format(filename))
+        print(f'[ERROR] Unable to find file :\n    "{filename}"')
         raise IOError(
-            '_read_file got invalid filename : "{0:s}"'.format(filename)
+            f'_read_file got invalid filename : "{filename}"'
         )
     return lines
 
@@ -198,7 +197,7 @@ def _write_file(filename, lines, newline=False):
     retn = "\n" if newline else ""
     with open(filename, "w", encoding="utf-8") as filehandle:
         for line in lines:
-            filehandle.write("{0:s}{1:s}".format(line, retn))
+            filehandle.write(f"{line}{retn}")
 
 
 def _run_command(command, ignore_fail=False):
@@ -217,10 +216,10 @@ def _run_command(command, ignore_fail=False):
             pobj.stderr.read(),
         )
     if retcode != 0 and not ignore_fail:
-        print("[ERROR] running {0:s}".format(command))
-        print("[INFO] RC: {0:}".format(retcode))
-        print("[INFO] Stdout: {0:s}".format(stdout))
-        print("[INFO] Stderr: {0:s}".format(stderr))
+        print(f"[ERROR] running {command}")
+        print(f"[INFO] RC: {retcode}")
+        print(f"[INFO] Stdout: {stdout}")
+        print(f"[INFO] Stderr: {stderr}")
         raise IOError("run_command")
     # Reformat stdout into a list
     stdout = "".join(stdout)
@@ -324,7 +323,7 @@ def _parse_string(
 ):
     """Given a variable name in the rose-suite-run.conf file, return its
     value."""
-    find_var = re.compile(r"{0}\s*=\s*(.*)".format(varname))
+    find_var = re.compile(rf"{varname}\s*=\s*(.*)")
     if split_on_comma:
         value = [None]
     elif default_unknown:
@@ -534,18 +533,11 @@ class SuiteReport:
               + "-" * 80 + "\n\n")
         for key, value in self.__dict__.items():
             if key == "projects":
-                print('{0:s} contains "{1:d}" entries.'
-                      .format(key, len(value)))
+                print(f'{key} contains "{len(value)}" entries.')
             elif key == "sort_by_name":
-                if value:
-                    print('{0:s} is :"True"'.format(key))
-                else:
-                    print('{0:s} is :"False"'.format(key))
+                print(f'{key} is :"{key == "sort_by_name"}"')
             elif key == "only_common_groups":
-                if value:
-                    print('{0:s} is :"True"'.format(key))
-                else:
-                    print('{0:s} is :"False"'.format(key))
+                print(f'{key} is :"{value}"')
             elif key == "verbosity":
                 text = "Verbosity level is set to : "
                 if value >= 4:
@@ -569,7 +561,7 @@ class SuiteReport:
             elif key == "job_sources":
                 self.print_job_sources(value)
             else:
-                print('{0:s} is :"{1:}"'.format(key, value))
+                print(f'{key} is :"{value}"')
         print(
             "\n" + "-" * 80 + "\nEnd of SuiteReport object\n" + "-" * 80 + "\n"
         )
@@ -579,16 +571,9 @@ class SuiteReport:
         """Debug print method.
         Prints everything in projects dictionary."""
         for key, value in job_srcs_dict.items():
-            print("    {0:s} :".format(key))
+            print(f"    {key} :")
             for sub_key, sub_value in value.items():
-                if isinstance(sub_value, bool):
-                    if sub_value:
-                        print('        {0:s} is :"True"'.format(sub_key))
-                    else:
-                        print('        {0:s} is :"False"'.format(sub_key))
-                else:
-                    print('        {0:s} is :"{1:}"'
-                          .format(sub_key, sub_value))
+                print(f'        {sub_key} is :"{sub_value}"')
 
     def parse_processed_config_file(self):
         """Parse the suite.rc.processed file.
@@ -666,15 +651,13 @@ class SuiteReport:
         Sets class variables"""
 
         suite_dir = self.suite_path
+        log_dir = os.path.join(suite_dir, "log")
         rsr_file = ""
         if self.is_cylc8:
-            glob_format = "{0:s}/*{1:s}".format(
-                os.path.join(suite_dir, "log", "config"),
-                ROSE_SUITE_RUN_CONF_CYLC8,
-            )
+            glob_format = f"{log_dir}/config/*{ROSE_SUITE_RUN_CONF_CYLC8}"
             rsr_file = glob.glob(glob_format)[0]
         else:
-            rsr_file = os.path.join(suite_dir, "log", ROSE_SUITE_RUN_CONF)
+            rsr_file = os.path.join(log_dir, ROSE_SUITE_RUN_CONF)
         lines = _read_file(rsr_file)
         self.site = _parse_string("SITE", lines, default_unknown=True)
         self.groups = _parse_string(
@@ -748,7 +731,7 @@ class SuiteReport:
         find_proj_name = re.compile(r"/(\w+)-\d+.version")
         version_files = []
         version_files = glob.glob(
-            "{0:s}/*.version".format(os.path.join(self.suite_path, "log"))
+            f"{self.suite_path}/log/*.version"
         )
 
         for vfile in version_files:
@@ -912,9 +895,7 @@ class SuiteReport:
         # Try 5 times, if all fail then use working copy version
         for _ in range(5):
             try:
-                subproc = "fcm export -q {}/{} {} --force".format(
-                    repo_url, fname, outname
-                )
+                subproc = f"fcm export -q {repo_url}/{fname} {outname} --force"
                 subprocess.check_output(subproc, shell=True)
                 return outname
             except subprocess.CalledProcessError as error:
@@ -1300,7 +1281,7 @@ class SuiteReport:
 
         if num_interactions > 0:
             if num_interactions > 1:
-                message += ["There were {} projects ".format(num_interactions)]
+                message += [f"There were {num_interactions} projects "]
             else:
                 message += ["There was 1 project "]
             message += [
@@ -1460,9 +1441,7 @@ class SuiteReport:
                     failed_configs.append(task)
 
             lines.append(
-                " || {0:s} || {2:s}{1:s}{3:s} || ".format(
-                    task, state, highlight_start, highlight_end
-                )
+                f" || {task} || {highlight_start}{state}{highlight_end} || "
             )
         if len(lines) == 1:
             lines.append(
@@ -1479,7 +1458,7 @@ class SuiteReport:
             status_counts.items(), key=forced_status_sort
         ):
             status_summary.append(
-                " || {0:s} || {1:6d} || ".format(status, count)
+                f" || {status} ||   {count} || "
             )
         status_summary.append("")
         if len(hidden_counts) > 0:
@@ -1489,7 +1468,7 @@ class SuiteReport:
             )
             for task_type, count in hidden_counts.items():
                 status_summary.append(
-                    " || {0:s} || {1:6d} || ".format(task_type, count)
+                    f" || {task_type} ||   {count} || "
                 )
             status_summary.append("")
 
@@ -1608,7 +1587,7 @@ class SuiteReport:
         for proj, proj_url in projects.items():
             if proj_url in url:
                 old_proj_url = projects[proj]
-                new_proj_url = "fcm:{0:s}".format(proj)
+                new_proj_url = f"fcm:{proj}"
                 keyword_url = re.sub(old_proj_url, new_proj_url, url, count=1)
                 keyword_url = re.sub(r"/trunk", "_tr", keyword_url, count=1)
                 keyword_url = re.sub(r"/branches", "_br", keyword_url, count=1)
@@ -1668,7 +1647,7 @@ class SuiteReport:
                 elements.insert(elements.index("trac") + 2, "browser")
                 url = "/".join(elements)
                 if revision is not None:
-                    link = url + "?rev={0:s}".format(revision)
+                    link = url + f"?rev={revision}"
                 else:
                     link = url
         return link
@@ -1710,13 +1689,9 @@ class SuiteReport:
             text = _select_preferred(text_list)
             highlight = "'''" if bold else ""
             if text is not None and link is not None:
-                element = " {2:s}[{0:s} {1:s}]{2:s} || ".format(
-                    link, text, highlight
-                )
+                element = f" {highlight}[{link} {text}]{highlight} || "
             elif text is not None:
-                element = " {1:s}{0:s}{1:s} || ".format(
-                    _escape_svn(text), highlight
-                )
+                element = f" {highlight}{_escape_svn(text)}{highlight} || "
             else:
                 element = " || "
             return element
@@ -1724,7 +1699,7 @@ class SuiteReport:
         for project in sorted(self.job_sources):
             proj_dict = self.job_sources[project]
 
-            line = " || {0:s} || ".format(project)
+            line = f" || {project} || "
             line += gen_table_element([proj_dict["tested source"]], None)
             line += gen_table_element(
                 [proj_dict["human repo loc"], proj_dict["repo loc"]],
@@ -1737,7 +1712,7 @@ class SuiteReport:
             if "ticket no" in proj_dict:
                 if proj_dict["ticket no"] is not None:
                     project_ticket_link = [
-                        "{0:s}:{1:s}".format(project, proj_dict["ticket no"])
+                        f"{project}:{proj_dict['ticket no']}"
                     ]
                 else:
                     project_ticket_link = [None]
@@ -1749,6 +1724,7 @@ class SuiteReport:
             if "working copy changes" in proj_dict:
                 if proj_dict["working copy changes"]:
                     wc_text = "YES"
+                    # pylint: disable=consider-using-f-string
                     wc_link = r"{0:s}/{1:s}/{2:s}/{3:s}?path=log/{4:s}".format(
                         CYLC_REVIEW_URL[self.site],
                         "view",
@@ -1756,6 +1732,7 @@ class SuiteReport:
                         self.suitename,
                         proj_dict["version file"],
                     )
+                    # pylint: enable=consider-using-f-string
             line += gen_table_element([wc_text], wc_link, bold=True)
             lines.append(line)
         return lines
@@ -1781,9 +1758,7 @@ class SuiteReport:
                         ]
                         found_nothing = False
                     lines.append(
-                        " || {0:s} || {1:} || {2:} || ".format(
-                            job, wallclock, memory
-                        )
+                        f" || {job} || {wallclock} || {memory} || "
                     )
         lines.append("")
         return lines
@@ -1830,11 +1805,9 @@ class SuiteReport:
             memory = "Failure processing EOJ"
             stacktr = traceback.format_exc()
             print(
-                "[ERROR] Processing wallclock and memory use :\n{0:s}".format(
-                    stacktr
-                )
+                f"[ERROR] Processing wallclock and memory use :\n{stacktr}"
             )
-            print("Error type : {0:s}".format(type(err)))
+            print(f"Error type : {type(err)}")
             print(err)
 
         # pylint: enable=broad-exception-caught
@@ -1925,8 +1898,8 @@ class SuiteReport:
         """Convert the list of groups run into a trac-formatted string."""
         output = ""
         for group in grouplist[:-1]:
-            output += "{0:s} [[br]]".format(_remove_quotes(group))
-        output += "{0:s}".format(_remove_quotes(grouplist[-1]))
+            output += f"{_remove_quotes(group)} [[br]]"
+        output += _remove_quotes(grouplist[-1])
         return output
 
     def print_report(self):
@@ -1943,19 +1916,19 @@ class SuiteReport:
             for project, url_dict in self.job_sources.items():
                 try:
                     if url_dict["ticket no"] is not None:
-                        ticket_nos += "{0:s}:{1:s} ".format(
-                            project, url_dict["ticket no"]
-                        )
+                        ticket_nos += f"{project}:{url_dict['ticket no']} "
                 except KeyError:
                     pass
             trac_log.append(
+                # pylint: disable=consider-using-f-string
                 "{{{{{{#!div style='background : {0:s}'".format(
                     BACKGROUND_COLOURS[self.primary_project.lower()]
                 )
+                # pylint: enable=consider-using-f-string
             )
             if ticket_nos != "":
                 trac_log.append(
-                    " = Ticket {0:s} ".format(ticket_nos)
+                    f" = Ticket {ticket_nos} "
                     + "Testing Results - rose-stem output = "
                 )
             else:
@@ -1963,37 +1936,38 @@ class SuiteReport:
             trac_log.append("")
 
             trac_log.append(
-                " || Suite Name: || {0:s} || ".format(self.suitename)
+                f" || Suite Name: || {self.suitename} || "
             )
 
             trac_log.append(
-                " || Suite Owner: || {0:s} || ".format(self.suite_owner)
+                f" || Suite Owner: || {self.suite_owner} || "
             )
 
             if self.trustzone:
                 trac_log.append(
-                    " || Trustzone: || {0:s} || ".format(self.trustzone)
+                    f" || Trustzone: || {self.trustzone} || "
                 )
 
             if self.fcm:
                 trac_log.append(
-                    " || FCM version: || {0:s} || ".format(self.fcm)
+                    f" || FCM version: || {self.fcm} || "
                 )
 
             if self.rose:
                 trac_log.append(
-                    " || Rose version: || {0:s} || ".format(self.rose)
+                    f" || Rose version: || {self.rose} || "
                 )
 
             if self.cylc:
                 trac_log.append(
-                    " || Cylc version: || {0:s} || ".format(self.cylc)
+                    f" || Cylc version: || {self.cylc} || "
                 )
 
             trac_log.append(
-                " || Report Generated: || {0:s} || ".format(self.creation_time)
+                f" || Report Generated: || {self.creation_time} || "
             )
 
+            # pylint: disable=consider-using-f-string
             trac_log.append(
                 " || Cylc-Review: || {0:s}/{1:s}/{2:s}/?suite={3:s} || "
                 .format(
@@ -2003,18 +1977,15 @@ class SuiteReport:
                     self.suitename,
                 )
             )
+            # pylint: enable=consider-using-f-string
 
-            trac_log.append(" || Site: || {0:s} || ".format(self.site))
+            trac_log.append(f" || Site: || {self.site} || ")
             trac_log.append(
-                " || Groups Run: || {0:s} || ".format(
-                    self.generate_groups(self.groups)
-                )
+                f" || Groups Run: || {self.generate_groups(self.groups)} || "
             )
             if self.rose_orig_host is not None:
                 trac_log.append(
-                    " || ''ROSE_ORIG_HOST:'' || {0:s} || ".format(
-                        self.rose_orig_host
-                    )
+                    f" || ''ROSE_ORIG_HOST:'' || {self.rose_orig_host} || "
                 )
             if self.host_xcs:
                 trac_log.append(" || HOST_XCS || True || ")
@@ -2030,8 +2001,8 @@ class SuiteReport:
                     word = "change"
                 trac_log.append(
                     "This rose-stem suite included "
-                    + "{0:d} uncommitted".format(self.uncommitted_changes)
-                    + " project {0:s} and is therefore ".format(word)
+                    + f"{self.uncommitted_changes} uncommitted"
+                    + f" project {word} and is therefore "
                     + "'''not valid''' for review"
                 )
                 trac_log.append("-----")
@@ -2058,17 +2029,19 @@ class SuiteReport:
                 trac_log.append("")
                 trac_log.append("-----")
                 trac_log.append(" = WARNING !!! = ")
+                # pylint: disable=consider-using-f-string
                 trac_log.append(
                     "This rose-stem suite included multiple "
                     + "branches in {0:d} projects:".format(
                         len(self.multi_branches.keys())
                     )
                 )
+                # pylint: enable=consider-using-f-string
                 trac_log.append("")
                 for project, branch_names in self.multi_branches.items():
-                    trac_log.append("'''{0}'''".format(project))
+                    trac_log.append(f"'''{project}'''")
                     for branch_name in "".join(branch_names).split():
-                        trac_log.append(" * {0}".format(branch_name))
+                        trac_log.append(f" * {branch_name}")
                 trac_log.append("")
                 trac_log.append("-----")
                 trac_log.append("")
@@ -2110,7 +2083,7 @@ class SuiteReport:
                     + "SuiteReport.print_report()",
                     "See output for more information",
                     "rose-stem suite output will be in the files :\n",
-                    "~/cylc-run/{0:s}/log/suite/log".format(suite_dir),
+                    f"~/cylc-run/{suite_dir}/log/suite/log",
                 ]
             )
         finally:
@@ -2128,20 +2101,17 @@ class SuiteReport:
                 _write_file(trac_log_path, trac_log, newline=True)
             except IOError:
                 print(
-                    "[ERROR] Writing to {0:s} file : {1:s}".format(
-                        TRAC_LOG_FILE, trac_log_path
-                    )
+                    f"[ERROR] Writing to {TRAC_LOG_FILE} file : {trac_log_path}"
                 )
                 print(
-                    "{0:s} to this point ".format(TRAC_LOG_FILE)
+                    f"{TRAC_LOG_FILE} to this point "
                     + "would have read as follows :\n"
                 )
-                print("----- Start of {0:s}.log -----".format(TRAC_LOG_FILE))
+                print(f"----- Start of {TRAC_LOG_FILE}.log -----")
                 for line in trac_log:
                     print(line)
-                print(
-                    "\n----- End of {0:s}.log -----\n\n".format(TRAC_LOG_FILE)
-                )
+                print(f"\n----- End of {TRAC_LOG_FILE}.log -----\n\n")
+
                 raise
 
         # pylint: disable=broad-exception-caught
@@ -2218,8 +2188,7 @@ def parse_arguments():
     item = paths.add_argument("-L", "--log_path", type=directory_type,
                               dest="log_path",
                               metavar="DIR",
-                              help="output dir for {0:s}"
-                              .format(TRAC_LOG_FILE))
+                              help=f"output dir for {TRAC_LOG_FILE}")
     if COMPLETION:
         item.completer = argcomplete.DirectoriesCompleter()
 
@@ -2229,8 +2198,8 @@ def parse_arguments():
                          dest="increase_verbosity",
                          action="count",
                          default=0,
-                         help="increases Verbosity level. Default = "
-                         "{0:2d}".format(DEFAULT_VERBOSITY))
+                         help="increases Verbosity level. "
+                         f"(default: {DEFAULT_VERBOSITY})")
 
     verbose.add_argument("-q", "--decrease-verbosity",
                          dest="decrease_verbosity",
