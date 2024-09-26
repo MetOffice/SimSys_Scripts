@@ -1,4 +1,6 @@
 import pytest
+import subprocess
+import shutil
 from ..apply_macros import *
 
 # A macro that we want to find for these tests
@@ -47,11 +49,29 @@ expected_split_macros = [
     existing_macro
 ]
 
+# ApplyMacros below requires an LFRic Apps working copy to work - check out the
+# head of the lfric_apps trunk for this purpose. The actual contents of the
+# working copy are not important for the purposes of the unit tests
+appsdir = "/tmp/persistent/tmpapps"#tempfile.mkdtemp()
+result = subprocess.run(
+    f"fcm co fcm:lfric_apps.x_tr {appsdir}".split(),
+    check=False,
+    capture_output=True,
+    text=True,
+    timeout=120
+)
+if result.returncode:
+    raise RuntimeError(
+        "Failed to checkout required LFRic Apps Working Copy with error ",
+        result.stderr
+    )
+
 # Create an instance of the apply_macros class
 # Pass a known directory in as the Jules and Core sources as these are not
 # required for testing
 am = ApplyMacros(
     "vn0.0_t001",
+    appsdir,
     "/tmp",
     "/tmp"
 )
@@ -156,3 +176,9 @@ def test_match_python_imports():
     assert match_python_import("from a import b.c") == True
     assert match_python_import("import m as n") == True
     assert match_python_import("false") == False
+
+# Remove appsdir
+@pytest.fixture(scope='session', autouse=True)
+def remove_tempdir():
+    yield
+    shutil.rmtree(appsdir)

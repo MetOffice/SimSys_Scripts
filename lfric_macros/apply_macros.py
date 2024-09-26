@@ -36,7 +36,7 @@ def run_command(command, shell=False):
         command,
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=120,
         shell=shell,
         check=False,
     )
