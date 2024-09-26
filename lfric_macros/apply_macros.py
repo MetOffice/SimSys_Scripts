@@ -357,9 +357,7 @@ class ApplyMacros:
         # macros for this ticket, so only grab these once
         # These are not vital so don't fail if not found
         if self.ticket_number is None or self.author is None:
-            ticket_details = re.search(
-                r"Upgrade .* (#\d+) by (\S+.*)", macro
-            )
+            ticket_details = re.search(r"Upgrade .* (#\d+) by (\S+.*)", macro)
             try:
                 self.ticket_number = ticket_details.group(1)
                 self.author = ticket_details.group(2).rstrip('".')
@@ -923,7 +921,7 @@ def parse_args():
         default=".",
         help="The path to the LFRic Apps working copy being used. Defaults to  "
         "the location the script is being run from - this assumes you are in a "
-        "working copy."
+        "working copy.",
     )
     parser.add_argument(
         "-c",
@@ -981,7 +979,6 @@ def main():
             )
             continue
         shutil.rmtree(directory)
-
 
     # Run rose config-dump on rose-stem
     config_dump_apps = (
