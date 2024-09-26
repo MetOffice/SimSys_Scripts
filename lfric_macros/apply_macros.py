@@ -42,16 +42,31 @@ def run_command(command, shell=False):
     )
 
 
-def get_root_path():
+def get_root_path(apps_path):
     """
-    Get the root path of the current working copy
+    Given a path to a working copy, ensure the path and working copy are both
+    valid and return the path to the working copy root directory
+    Inputs:
+        - apps_path, command line argument to the apps working copy
     Outputs:
         - str, path to the top level of the apps working copy
     """
 
-    return os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    )
+    # Run fcm info on the given path to ensure it is
+    command = f"fcm info {apps_path}"
+    result = run_command(command)
+    if result.returncode:
+        raise FileNotFoundError(
+            f"The provided LFRic Apps source, '{apps_path}', was not a valid "
+            "working copy. Please either run this script from within an LFRic "
+            "Apps working copy, or provide a path using the -a argument."
+        )
+
+    # If no error, then search through output for the working copy root path
+    # return the found path
+    for line in result.stdout.split("\n"):
+        if line.startswith("Working Copy Root Path"):
+            return line.split(":", 1)[1].strip()
 
 
 def run_black(filepath):
@@ -148,12 +163,12 @@ class ApplyMacros:
     Object to hold data + methods to apply upgrade macros in lfric_apps
     """
 
-    def __init__(self, tag, core, jules):
+    def __init__(self, tag, apps, core, jules):
         self.tag = tag
         # The class name is the After Tag with the . removed from the version
         self.class_name = tag.replace(".", "")
         self.temp_dirs = {}
-        self.root_path = get_root_path()
+        self.root_path = get_root_path(apps)
         self.core_source = self.get_dependency_paths(core, "lfric_core")
         self.jules_source = self.get_dependency_paths(jules, "jules")
         self.set_rose_meta_path()
@@ -903,6 +918,14 @@ def parse_args():
         help="The After Tag of the upgrade macro being upgraded to.",
     )
     parser.add_argument(
+        "-a",
+        "--apps",
+        default=".",
+        help="The path to the LFRic Apps working copy being used. Defaults to  "
+        "the location the script is being run from - this assumes you are in a "
+        "working copy."
+    )
+    parser.add_argument(
         "-c",
         "--core",
         default=None,
@@ -937,7 +960,7 @@ def main():
             "'vnXX.Y_tTTTT' naming scheme. Please modify and rerun."
         )
 
-    macro_object = ApplyMacros(args.tag, args.core, args.jules)
+    macro_object = ApplyMacros(args.tag, args.apps, args.core, args.jules)
 
     # Pre-process macros
     banner_print("Pre-Processing Macros")
