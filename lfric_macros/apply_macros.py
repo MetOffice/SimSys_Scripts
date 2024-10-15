@@ -791,6 +791,7 @@ class ApplyMacros:
 
     def metadata_check(self, meta_dir):
         """ "
+        Note: Not currently run - see comment below
         Run rose metadata-check on rose metadata directories to check the
         validity of the metadata.
         Inputs:
@@ -889,6 +890,12 @@ class ApplyMacros:
         - rose macro --fix
         """
 
+        # This step would be good to do (as we do in the UM). However, not all
+        # metadata files validate currently as they use gungho namelists but are
+        # imported by gungho (eg. um_physics_interface). The remainder are
+        # tested regularly by the lfric_apps validate_rose_meta script, so happy
+        # to not do this here. Leaving the code, so that we do validate these
+        # once the metadata structure has been improved.
         # banner_print("[INFO] Validating Metadata Config Files")
         # for meta_dir in self.meta_dirs:
         #     self.metadata_check(meta_dir)
