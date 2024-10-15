@@ -785,6 +785,129 @@ class ApplyMacros:
                 self.write_new_macro(meta_dir, full_command)
                 self.apps_with_macro.append(meta_dir)
 
+    ############################################################################
+    # Upgrade Apps Functions
+    ############################################################################
+
+    def metadata_check(self, meta_dir):
+        """ "
+        Note: Not currently run - see comment below
+        Run rose metadata-check on rose metadata directories to check the
+        validity of the metadata.
+        Inputs:
+            - meta_dir, path to a rose metadata directory
+        """
+
+        print(f"[INFO] Checking metadata in {meta_dir}")
+        command = f"rose metadata-check -C {os.path.join(meta_dir, 'HEAD')}"
+        result = run_command(command)
+        if result.returncode:
+            print(f"[FAIL] The metadata at {meta_dir} failed to validate.")
+            raise RuntimeError(
+                f"\nThe command run:\n{command}"
+                f"\nThe error message produced:\n{result.stderr}"
+            )
+        print(f"[PASS] {meta_dir} validated")
+
+    def apps_to_upgrade(self):
+        """
+        Loop over rose-stem apps, finding ones using metadata with an upgrade
+        macro.
+        Returns:
+            - list of paths to apps requiring upgrading
+        """
+        upgradeable_apps = []
+        app_dir_apps = os.path.join(self.root_path, "rose-stem", "app")
+        apps_lstdir = os.listdir(app_dir_apps)
+        app_dir_core = os.path.join(self.core_source, "rose-stem", "app")
+        core_lstdir = os.listdir(app_dir_core)
+        for app in apps_lstdir + core_lstdir:
+            if "fcm_make" in app or "lfric_coupled_rivers" in app:
+                continue
+            if app in apps_lstdir:
+                app_path = os.path.join(app_dir_apps, app)
+            else:
+                app_path = os.path.join(app_dir_core, app)
+            if not os.path.isdir(app_path):
+                continue
+            meta_import = self.read_meta_imports(
+                os.path.join(app_path, "rose-app.conf"), "meta"
+            )
+            meta_import = os.path.dirname(meta_import)
+            if meta_import in self.apps_with_macro:
+                upgradeable_apps.append((app, app_path))
+
+        return upgradeable_apps
+
+    def run_app_upgrade(self, app, app_path):
+        """
+        Run 'rose app-upgrade' on a particular rose-stem app
+        Inputs:
+            - app, the name of the app being upgraded
+            - app_path, the path to this app
+        """
+
+        print(f"[INFO] Upgrading the rose-stem app {app}")
+        command = f"rose app-upgrade -a -y -C {app_path} {self.tag}"
+        result = run_command(command)
+        if result.returncode:
+            print(f"[FAIL] The rose-stem app {app} failed to upgrade")
+            raise RuntimeError(
+                f"\nThe command run:\n{command}"
+                f"\nThe error message produced:\n{result.stderr}"
+            )
+        print(f"[PASS] Upgraded rose-stem app {app} successfully")
+
+    def run_macro_fix(self, app, app_path):
+        """
+        Run 'rose macro --fix' on a particular rose-stem app to force metadata
+        consistency
+        Inputs:
+            - app, the name of the app being upgraded
+            - app_path, the path to this app
+        """
+        print(f"[INFO] Forcing metadata consistency in app {app}")
+        command = f"rose macro --fix -y -C {app_path}"
+        result = run_command(command)
+        if result.returncode:
+            print(f"[FAIL] Unable to force metadata consistency in {app}")
+            raise RuntimeError(
+                f"\nThe command run:\n{command}"
+                f"\nThe error message produced:\n{result.stderr}"
+            )
+        print(f"[PASS] Successfully forced metadata consistency in {app}")
+
+    def upgrade_apps(self):
+        """
+        Overarching function to run rose commands to apply upgrade macros to
+        rose-stem apps.
+        First run over all metadata directories and run rose metadata-check on
+        each
+        Then run over all rose apps. If there is an import statement for an
+        application with the upgrade macro (stored in self.apps_with_macro) then
+        run rose commands on it.
+        - rose app-upgrade
+        - rose macro --fix
+        """
+
+        # This step would be good to do (as we do in the UM). However, not all
+        # metadata files validate currently as they use gungho namelists but are
+        # imported by gungho (eg. um_physics_interface). The remainder are
+        # tested regularly by the lfric_apps validate_rose_meta script, so happy
+        # to not do this here. Leaving the code, so that we do validate these
+        # once the metadata structure has been improved.
+        # banner_print("[INFO] Validating Metadata Config Files")
+        # for meta_dir in self.meta_dirs:
+        #     self.metadata_check(meta_dir)
+
+        banner_print("[INFO] Upgrading Apps")
+        upgradeable_apps = self.apps_to_upgrade()
+        for app, app_path in upgradeable_apps:
+            self.run_app_upgrade(app, app_path)
+            self.run_macro_fix(app, app_path)
+            if app_path.startswith(self.core_source):
+                self.upgraded_core = True
+
 
 def parse_args():
     """
@@ -848,6 +971,9 @@ def main():
     banner_print("Pre-Processing Macros")
     macro_object.preprocess_macros()
 
+    # Upgrade Rose Stem Apps
+    macro_object.upgrade_apps()
+
     # Clean up temporary directories
     for repo, directory in macro_object.temp_dirs.items():
         if macro_object.upgraded_core and repo == "lfric_core":
@@ -860,6 +986,13 @@ def main():
             )
             continue
         shutil.rmtree(directory)
+
+    # Run rose config-dump on rose-stem
+    config_dump_apps = (
+        f"rose config-dump {os.path.join(macro_object.root_path), 'rose-stem'}"
+    )
+    run_command(config_dump_apps)
+
 
 if __name__ == "__main__":
     main()
