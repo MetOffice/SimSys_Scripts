@@ -52,7 +52,7 @@ expected_split_macros = [
 # ApplyMacros below requires an LFRic Apps working copy to work - check out the
 # head of the lfric_apps trunk for this purpose. The actual contents of the
 # working copy are not important for the purposes of the unit tests
-appsdir = "/tmp/persistent/tmpapps"#tempfile.mkdtemp()
+appsdir = tempfile.mkdtemp()
 result = subprocess.run(
     f"fcm co fcm:lfric_apps.x_tr {appsdir}".split(),
     check=False,
