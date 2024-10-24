@@ -100,10 +100,11 @@ def test_parse_macro():
     am.parse_macro(desired_macro, "meta_dir")
     expected_dict = {
         "before_tag": "vn0.0_t000",
-        "commands": """        self.add_setting(
-            config, ["namelist:namelist1", "opt1"], "value1"
+        "commands": (
+        '        self.add_setting(\n'
+        '            config, ["namelist:namelist1", "opt1"], "value1"\n'
+        '        )\n'
         )
-"""
     }
     assert am.parsed_macros["meta_dir"] == expected_dict
     assert am.ticket_number == "#001"
