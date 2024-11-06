@@ -202,9 +202,10 @@ class ApplyMacros:
         Returns:
             - path to the metadata directory with the root path removed
         """
-        meta_dir = meta_dir.removeprefix(self.root_path + "/")
-        meta_dir = meta_dir.removeprefix(self.core_source + "/")
-        meta_dir = meta_dir.removeprefix(self.jules_source + "/")
+        meta_dir = meta_dir.removeprefix(self.root_path )
+        meta_dir = meta_dir.removeprefix(self.core_source)
+        meta_dir = meta_dir.removeprefix(self.jules_source)
+        meta_dir = meta_dir.removeprefix("/")
 
         meta_dir = meta_dir.removesuffix("/HEAD")
         meta_dir = meta_dir.removesuffix("/versions.py")
@@ -322,7 +323,7 @@ class ApplyMacros:
     def find_meta_dirs(self, path):
         """
         Searching from a working copy root path, return a list of paths to all
-        the rose-meta firectories using the "find" command. Search by looking
+        the rose-meta directories using the "find" command. Search by looking
         for versions.py files
         Outputs:
             - str, stdout of find command looking for versions.py files
@@ -541,6 +542,7 @@ class ApplyMacros:
             if flag == "meta":
                 return ""
             self.parsed_macros[meta_dir]["imports"] = []
+            return
 
         imports = []
         with open(meta_file, "r") as f:
@@ -577,6 +579,9 @@ class ApplyMacros:
         started_imports = False
         for line in versions:
             line = line.strip()
+            if not line:
+                # skip blank lines
+                continue
             if match_python_import(line):
                 started_imports = True
                 self.python_imports.add(line)
@@ -676,7 +681,8 @@ class ApplyMacros:
             ):
                 # Add a comment labelling where these commands came from
                 full_command += (
-                    f"        # {self.parse_application_section(meta_import)}\n"
+                    "        # Commands From: "
+                    f"{self.parse_application_section(meta_import)}\n"
                 )
                 if self.parsed_macros[meta_import]["commands"].strip("\n"):
                     full_command += (
