@@ -357,7 +357,7 @@ my @extracts = ();
 if ( $trunkmode == 0 ) {
     if ($suite_mode) {
 
-        # enable trunkmode for sepecific repositories if the environment does
+        # enable trunkmode for specific repositories if the environment does
         # not match rose-stem/rose-suite.conf
 
         my $ss_env     = $ENV{SCRIPT_SOURCE};
