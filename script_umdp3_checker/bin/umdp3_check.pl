@@ -413,7 +413,7 @@ if ( $trunkmode == 0 ) {
     # remove any duplicates
     @extracts = keys { map { $_ => 1 } @extracts };
 
-    # If we capturede any changes, enable trunk-mode for those repositories.
+    # If we captured any changes, enable trunk-mode for those repositories.
     if ( scalar(@extracts) > 0 ) {
         $trunkmode   = 1;
         $error_trunk = 1;
