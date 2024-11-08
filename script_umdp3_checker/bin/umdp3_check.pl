@@ -387,7 +387,7 @@ if ( $trunkmode == 0 ) {
 
     }
 
-    # enable trunkmode for sepecific repositories if rose-stem/rose-suite.conf
+    # enable trunkmode for specific repositories if rose-stem/rose-suite.conf
     # is modified
     if ( exists $additions{"rose-stem/rose-suite.conf"} ) {
         print "rose-stem/rose-suite.conf modified:"
