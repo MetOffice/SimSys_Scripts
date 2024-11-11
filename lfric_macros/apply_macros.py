@@ -202,7 +202,7 @@ class ApplyMacros:
         Returns:
             - path to the metadata directory with the root path removed
         """
-        meta_dir = meta_dir.removeprefix(self.root_path )
+        meta_dir = meta_dir.removeprefix(self.root_path)
         meta_dir = meta_dir.removeprefix(self.core_source)
         meta_dir = meta_dir.removeprefix(self.jules_source)
         meta_dir = meta_dir.removeprefix("/")
@@ -866,6 +866,7 @@ def main():
             )
             continue
         shutil.rmtree(directory)
+
 
 if __name__ == "__main__":
     main()
