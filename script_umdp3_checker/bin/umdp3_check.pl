@@ -417,7 +417,8 @@ if ( $trunkmode == 0 ) {
     }
 
     # remove any duplicates
-    @extracts = keys { map { $_ => 1 } @extracts };
+    my %unique_extracts = map { $_ => 1 } @extracts;
+    @extracts = keys %unique_extracts;
 
     # If we captured any changes, enable trunk-mode for those repositories.
     if ( scalar(@extracts) > 0 ) {
