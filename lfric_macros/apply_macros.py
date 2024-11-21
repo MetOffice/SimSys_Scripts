@@ -18,7 +18,7 @@ import tempfile
 import subprocess
 
 BLACK_COMMAND = "black --line-length=80"
-CLASS_NAME_REGEX = r"vn\d+_t\d+\w."
+CLASS_NAME_REGEX = r"vn\d+(_t\d+\w.)?"
 TAG_REGEX = r"\s*=\s*[\"']\s*(\S+)\s*[\"']"
 
 
@@ -172,7 +172,7 @@ class ApplyMacros:
         self.core_source = self.get_dependency_paths(core, "lfric_core")
         self.jules_source = self.get_dependency_paths(jules, "jules")
         self.set_rose_meta_path()
-        self.version = re.search(r".*vn(\d+\.\d+)_.*", tag).group(1)
+        self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
         self.ticket_number = None
         self.author = None
         self.parsed_macros = {}
