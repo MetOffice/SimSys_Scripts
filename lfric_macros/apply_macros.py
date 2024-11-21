@@ -833,7 +833,6 @@ class ApplyMacros:
             meta_import = self.read_meta_imports(
                 os.path.join(app_path, "rose-app.conf"), "meta"
             )
-            meta_import = os.path.dirname(meta_import)
             if meta_import in self.apps_with_macro:
                 upgradeable_apps.append((app, app_path))
 
