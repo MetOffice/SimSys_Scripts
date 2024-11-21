@@ -163,10 +163,14 @@ class ApplyMacros:
     Object to hold data + methods to apply upgrade macros in lfric_apps
     """
 
-    def __init__(self, tag, apps, core, jules):
+    def __init__(self, tag, cname, apps, core, jules):
         self.tag = tag
-        # The class name is the After Tag with the . removed from the version
-        self.class_name = tag.replace(".", "")
+        if cname:
+            self.class_name = cname
+        else:
+            # The default class name is the After Tag with the '.'
+            #  removed from the version
+            self.class_name = tag.replace(".", "")
         self.temp_dirs = {}
         self.root_path = get_root_path(apps)
         self.core_source = self.get_dependency_paths(core, "lfric_core")
@@ -806,6 +810,13 @@ def parse_args():
         help="The After Tag of the upgrade macro being upgraded to.",
     )
     parser.add_argument(
+        "-n",
+        "--cname",
+        default=None,
+        help="The class name of the upgrade macro. This should only be used at "
+        "a new release when the tag and classname differ."
+    )
+    parser.add_argument(
         "-a",
         "--apps",
         default=".",
@@ -848,7 +859,7 @@ def main():
             "'vnXX.Y_tTTTT' naming scheme. Please modify and rerun."
         )
 
-    macro_object = ApplyMacros(args.tag, args.apps, args.core, args.jules)
+    macro_object = ApplyMacros(args.tag, args.cname, args.apps, args.core, args.jules)
 
     # Pre-process macros
     banner_print("Pre-Processing Macros")
