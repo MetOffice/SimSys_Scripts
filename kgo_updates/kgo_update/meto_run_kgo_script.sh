@@ -41,6 +41,7 @@ if [ $new_release -eq 1 ]; then
 fi
 kgo_command="${kgo_command} -S $suite_name -N $new_kgo_dir -E $variables_extension"
 kgo_command_spice="$kgo_command -U $suite_user -P spice"
+kgo_command_azspice="$kgo_command -U $suite_user -P azspice"
 kgo_command_xc40="$kgo_command -U $suite_user -P xc40"
 kgo_command_ex1a="$kgo_command -U $suite_user_ex1a -P ex1a"
 
@@ -49,7 +50,7 @@ variables_dir=~/kgo_update_files/vn$version_number/$new_kgo_dir
 mkdir -p $variables_dir
 
 # If Spice has kgo updates
-if [[ $platforms == *"spice"* ]]; then
+if [[ $platforms == "spice"* ]]; then
     printf "${GREEN}\n\nRunning KGO Update Script on SPICE.\n${NC}"
 
     # Run the Update Script
@@ -65,6 +66,26 @@ if [[ $platforms == *"spice"* ]]; then
             mv ~/variables${variables_extension}_${new_kgo_dir} ${variables_dir}/spice_updated_variables${variables_extension}
         fi
         mv ~/kgo_update_${new_kgo_dir}.sh ${variables_dir}/spice_update_script.sh
+    fi
+fi
+
+# If Azspice has kgo updates
+if [[ $platforms == *"azspice"* ]]; then
+    printf "${GREEN}\n\nRunning KGO Update Script on AZSPICE.\n${NC}"
+
+    # Run the Update Script
+    $kgo_command_azspice
+
+    if [[ $? -ne 0 ]]; then
+        printf "${RED}\nThe installation script has failed on azspice.\n${NC}"
+    else
+        # Move the updated variables file and script into the ticket folder
+        printf "${GREEN}\n\nSuccessfully installed on Azspice.\n${NC}"
+        printf "${GREEN}Moving the generated files into AZSPICE ${variables_dir}.${NC}\n"
+        if [ $new_release -ne 1 ]; then
+            mv ~/variables${variables_extension}_${new_kgo_dir} ${variables_dir}/azspice_updated_variables${variables_extension}
+        fi
+        mv ~/kgo_update_${new_kgo_dir}.sh ${variables_dir}/azspice_update_script.sh
     fi
 fi
 
@@ -128,7 +149,7 @@ if [[ $platforms == *"ex1a"* ]]; then
         # rsync the generated variables file and script back to frum on linux
         # This cleans up the original files
         printf "${GREEN}\n\nSuccessfully installed on ex1a.\n${NC}"
-        printf "${GREEN}Rsyncing the generated files into SPICE ${variables_dir}.\n${NC}"
+        printf "${GREEN}Rsyncing the generated files into AZSPICE ${variables_dir}.\n${NC}"
         if [ $new_release -ne 1 ]; then
             rsync --remove-source-files -avz \
                     umadmin@$host_ex:~/variables${variables_extension}_${new_kgo_dir} \

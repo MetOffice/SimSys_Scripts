@@ -530,6 +530,8 @@ def main():
             platform = "ex1a"
         elif hostname.startswith("xc"):
             platform = "xc40"
+        elif hostname.startswith("caz"):
+            platform = "azspice"
         else:
             platform = "spice"
 
