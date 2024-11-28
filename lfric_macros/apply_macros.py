@@ -208,9 +208,7 @@ def read_python_imports(path):
 
 def banner_print(message):
     """Print a simple banner message"""
-    print(
-        f"\n{(len(message)+4)*'*'}\n* {message} *\n{(len(message)+4)*'*'}\n"
-    )
+    print(f"\n{(len(message)+4)*'*'}\n* {message} *\n{(len(message)+4)*'*'}\n")
 
 
 class ApplyMacros:
