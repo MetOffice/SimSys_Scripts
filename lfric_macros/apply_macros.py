@@ -66,6 +66,10 @@ def get_root_path(wc_path):
     for line in result.stdout.split("\n"):
         if line.startswith("Working Copy Root Path"):
             return line.split(":", 1)[1].strip()
+    raise Exception(
+        "Couldn't extract the Working Copy Root path from the output of the "
+        f"command '{command}'"
+    )
 
 
 def run_black(filepath):
@@ -76,7 +80,7 @@ def run_black(filepath):
     """
     result = run_command(f"{BLACK_COMMAND} {filepath}")
     if result.returncode:
-        raise RuntimeError(
+        raise Exception(
             "Running 'black' as a subprocess failed. This may indicate a "
             "syntax error with your macro.\nThe error message produced "
             f"was:\n\n{result.stderr}"
@@ -99,7 +103,7 @@ def read_versions_file(meta_dir):
         file_raw = f.readlines()
     file_parsed = []
     for line in file_raw:
-        if len(line.strip().strip("\n")) > 0:
+        if len(line.strip()) > 0:
             file_parsed.append(line)
 
     return file_parsed
@@ -204,7 +208,9 @@ def read_python_imports(path):
 
 def banner_print(message):
     """Print a simple banner message"""
-    print(f"\n{(len(message)+4)*'*'}\n* {message} *\n{(len(message)+4)*'*'}\n")
+    print(
+        f"\n{(len(message)+4)*'*'}\n* {message} *\n{(len(message)+4)*'*'}\n"
+    )
 
 
 class ApplyMacros:
@@ -299,7 +305,7 @@ class ApplyMacros:
 
         # Check that the source looks like an fcm keyword, raise an error if not
         if "fcm:" not in source:
-            raise RuntimeError(
+            raise Exception(
                 f"The {repo} source: {source}, was not found as a working copy "
                 "and does not look like an fcm url. Please check the source."
                 "If not set on the command then the dependencies.sh file is "
@@ -363,7 +369,7 @@ class ApplyMacros:
         command = f"fcm co {url} {tempdir}"
         result = run_command(command)
         if result.returncode:
-            raise RuntimeError(
+            raise Exception(
                 f"Failed to checkout from URL {url} into directory {tempdir} "
                 f"with error message:\n\n{result.stderr}"
             )
@@ -415,7 +421,7 @@ class ApplyMacros:
         try:
             before_tag = re.search(rf"BEFORE_TAG{TAG_REGEX}", macro).group(1)
         except AttributeError as exc:
-            raise RuntimeError(
+            raise Exception(
                 "Couldn't find a Before tag for the requested "
                 f"macro in the file {version_file}"
             ) from exc
@@ -456,8 +462,9 @@ class ApplyMacros:
         """
 
         filepath = os.path.join(meta_dir, "versions.py")
+        temppath = os.path.join(meta_dir, ".versions.py")
 
-        with open(filepath, "w") as f:
+        with open(temppath, "w") as f:
             in_new_macro = False
             for line in contents:
                 if re.match(r"class vn\d+_t\d+", line):
@@ -468,7 +475,15 @@ class ApplyMacros:
                 if not in_new_macro:
                     f.write(line)
 
+        os.rename(temppath, filepath)
+
         run_black(filepath)
+
+        if not os.path.getsize(filepath) > 0:
+            raise Exception(
+                f"The file modified at {filepath} has zero size, indicating "
+                "something has gone wrong"
+            )
 
     def find_last_macro(self, macros, meta_dir):
         """
@@ -490,16 +505,16 @@ class ApplyMacros:
                         after_tag = re.search(
                             rf"AFTER_TAG{TAG_REGEX}", macro
                         ).group(1)
-                    except AttributeError:
-                        raise RuntimeError(
+                    except AttributeError as exc:
+                        raise Exception(
                             "Couldn't find an after tag in the macro:\n"
                             f"{macro}"
-                        )
+                        ) from exc
                     found_macro = macro
                     macros.remove(found_macro)
                     break
             else:
-                raise RuntimeError(
+                raise Exception(
                     f"Couldn't find the before tag '{after_tag}' in macros in "
                     f"the versions.py file at {meta_dir}"
                 )
@@ -527,7 +542,7 @@ class ApplyMacros:
                     rf"class ({CLASS_NAME_REGEX})\(", macro
                 ).group(1)
             except AttributeError as exc:
-                raise RuntimeError(
+                raise Exception(
                     "Unable to determine macro class name in "
                     f"{version_file} in macro:\n{macro}"
                 ) from exc
@@ -559,7 +574,7 @@ class ApplyMacros:
         if os.path.exists(apps_imp):
             return apps_imp
 
-        raise RuntimeError(
+        raise Exception(
             f"Couldn't find the import '{imp}' in any of the Apps, Core or "
             "Jules sources."
         )
@@ -579,12 +594,6 @@ class ApplyMacros:
             meta_file = os.path.join(meta_dir, "HEAD", "rose-meta.conf")
         else:
             meta_file = meta_dir
-
-        # First grep for lines starting with import=
-        # No imports if it doesn't return anything
-        result = run_command(f"grep -E '^ *{flag}=' {meta_file}", shell=True)
-        if not result.stdout:
-            return []
 
         imports = []
         with open(meta_file, "r") as f:
@@ -617,20 +626,21 @@ class ApplyMacros:
             - meta_dir, path to the metadata directory with a versions.py file
         """
 
-        fpath = os.path.join(meta_dir, "versions.py")
+        filepath = os.path.join(meta_dir, "versions.py")
+        temppath = os.path.join(meta_dir, ".versions.py")
 
         # Work out where we need to insert the new imports
         # For simplicity, do this at the beginning of the existing imports
         # Should be safe as versions.py files always require importing code
         # from rose
-        with open(fpath) as f:
+        with open(filepath) as f:
             versions_file = f.readlines()
         for i, line in enumerate(versions_file):
             if match_python_import(line):
                 insertion_index = i
                 break
 
-        found_imports = read_python_imports(fpath)
+        found_imports = read_python_imports(filepath)
         missing_imports = self.python_imports.difference(found_imports)
         for mod, name, alias in missing_imports:
             imp_str = f"import {','.join(n for n in name)}"
@@ -640,9 +650,11 @@ class ApplyMacros:
                 imp_str += f" as {alias}"
             versions_file.insert(insertion_index, imp_str)
 
-        with open(fpath, "w") as f:
+        with open(temppath, "w") as f:
             for line in versions_file:
                 f.write(line.strip("\n") + "\n")
+
+        os.rename(temppath, filepath)
 
     def determine_import_order(self, app):
         """
@@ -663,7 +675,7 @@ class ApplyMacros:
         except KeyError:
             # Jules Shared directories will produce a key error - these are
             # guaranteed to not import anything
-            imports = []
+            return []
         for meta_import in imports:
             import_list = self.determine_import_order(meta_import) + import_list
 
@@ -709,9 +721,11 @@ class ApplyMacros:
         """
 
         parsed_macro = self.parsed_macros[meta_dir]
-        version_file = os.path.join(meta_dir, "versions.py")
+        filepath = os.path.join(meta_dir, "versions.py")
+        temppath = os.path.join(meta_dir, ".versions.py")
+        shutil.copy(filepath, temppath)
 
-        with open(version_file, "a") as f:
+        with open(temppath, "a") as f:
             f.write(
                 f"class {self.class_name}(MacroUpgrade):\n"
                 f'    """Upgrade macro for ticket {self.ticket_number} '
@@ -723,7 +737,9 @@ class ApplyMacros:
                 "        return config, self.reports\n"
             )
 
-        run_black(version_file)
+        os.rename(temppath, filepath)
+
+        run_black(filepath)
 
     def preprocess_macros(self):
         """
@@ -805,6 +821,19 @@ class ApplyMacros:
                 self.apps_with_macro.append(meta_dir)
 
 
+def check_tag(opt):
+    """
+    Check that a command line supplied tag is of a valid format
+    """
+    class_name = opt.replace(".", "")
+    if not re.match(CLASS_NAME_REGEX, class_name):
+        raise Exception(
+            f"The tag '{opt}' does not conform to the "
+            "'vnXX.Y_tTTTT' naming scheme. Please modify and rerun."
+        )
+    return opt
+
+
 def parse_args():
     """
     Read command line args
@@ -815,6 +844,7 @@ def parse_args():
     )
     parser.add_argument(
         "tag",
+        type=check_tag,
         metavar="after-tag",
         help="The After Tag of the upgrade macro being upgraded to.",
     )
@@ -858,15 +888,6 @@ def main():
     """
 
     args = parse_args()
-
-    # if the class name doesn't conform to the expected vnXX.Y_tTTTT naming
-    # convention raise an error
-    class_name = args.tag.replace(".", "")
-    if not re.match(CLASS_NAME_REGEX, class_name):
-        raise RuntimeError(
-            f"The tag '{args.tag}' does not conform to the "
-            "'vnXX.Y_tTTTT' naming scheme. Please modify and rerun."
-        )
 
     macro_object = ApplyMacros(
         args.tag, args.cname, args.apps, args.core, args.jules
