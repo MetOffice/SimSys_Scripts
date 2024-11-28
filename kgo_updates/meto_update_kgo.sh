@@ -238,7 +238,11 @@ if [[ $succeeded_xc40 -eq 1 ]]; then
     printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
     host_rsync=$(rose host-select xc)
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
-    ssh -Y frum@localhost $rsync_com
+    if [[ $launch_platform == "spice" ]]; then
+        ssh -Y frum@localhost $rsync_com
+    else
+        $rsync_com
+    fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the xcs has failed.\n${NC}"
     else
@@ -257,7 +261,11 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     rsync_dir="kgo/"
     host_rsync=$(rose host-select exab)
     rsync_com="ssh -Y login.exz 'rsync -av /common/umdir/standard_jobs/${rsync_dir} ${host_rsync}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
-    ssh -Y frum@localhost $rsync_com
+    if [[ $launch_platform == "spice" ]]; then
+        ssh -Y frum@localhost $rsync_com
+    else
+        $rsync_com
+    fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the exa has failed.\n${NC}"
     else
