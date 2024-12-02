@@ -736,9 +736,9 @@ class ApplyMacros:
                 "        return config, self.reports\n"
             )
 
-        os.rename(temppath, filepath)
-
         run_black(filepath)
+
+        os.rename(temppath, filepath)
 
     def preprocess_macros(self):
         """
