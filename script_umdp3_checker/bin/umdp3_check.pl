@@ -353,7 +353,86 @@ if ( $trunkmode == 0 ) {
     }
 
 }
+
+# The @external_checks array contains the names of all the non-UM repositories
+# extracted by the UM which should also be checked.
+my @external_checks = ( "shumlib", "meta", "ukca" );
+my %filepath_mapping = ( 'meta' => 'um_meta' );
+my @extracts = ();
+
+if ( $trunkmode == 0 ) {
+    if ($suite_mode) {
+
+        # enable trunkmode for specific repositories if the environment does
+        # not match rose-stem/rose-suite.conf
+
+        my $ss_env     = $ENV{SCRIPT_SOURCE};
+        my @suite_conf = cat_file( $ss_env . "/um/rose-stem/rose-suite.conf" );
+        my @host_sources = grep /^HOST_SOURCE_.*=/, @suite_conf;
+
+        print "Detected HOST_SOURCE variables:\n";
+        print join( "", @host_sources );
+
+        foreach (@external_checks) {
+            my $repo   = $_;
+            my $o_repo = $repo;
+            if ( exists $filepath_mapping{$repo} ) {
+                $repo = $filepath_mapping{$repo};
+            }
+            my $host_var_name = "HOST_SOURCE_" . uc($repo);
+            my $env_var_res   = $ENV{$host_var_name};
+            if ( !grep /^$host_var_name=(\"|\')$env_var_res(\"|\')/,
+                @host_sources )
+            {
+                print $host_var_name
+                  . " modified in environment."
+                  . " Running full check on this repository\n";
+                push @extracts, $o_repo;
+            }
+        }
+
+    }
+
+    # enable trunkmode for specific repositories if rose-stem/rose-suite.conf
+    # is modified
+    if ( exists $additions{"rose-stem/rose-suite.conf"} ) {
+        print "rose-stem/rose-suite.conf modified:"
+          . " checking for external repository updates\n";
+        my $added_lines_ref = $additions{"rose-stem/rose-suite.conf"};
+        my @added_lines     = @$added_lines_ref;
+        foreach (@external_checks) {
+            my $repo   = $_;
+            my $o_repo = $repo;
+            if ( exists $filepath_mapping{$repo} ) {
+                $repo = $filepath_mapping{$repo};
+            }
+            my $host_var_name = "HOST_SOURCE_" . uc($repo);
+            if ( grep /^$host_var_name=/, @added_lines ) {
+                print $host_var_name
+                  . " modified in rose-suite.conf."
+                  . " Running full check on this repository\n";
+                push @extracts, $o_repo;
+            }
+        }
+    }
+
+    # remove any duplicates
+    my %unique_extracts = map { $_ => 1 } @extracts;
+    @extracts = keys %unique_extracts;
+
+    # If we captured any changes, enable trunk-mode for those repositories.
+    if ( scalar(@extracts) > 0 ) {
+        $trunkmode   = 1;
+        $error_trunk = 1;
+        unshift @extracts, "";
+    }
+}
 else {
+    @extracts = ( "", "um" );
+    push @extracts, @external_checks;
+}
+
+if ( $trunkmode == 1 ) {
 
     #trunk mode: cat all the source files to %additions
 
@@ -364,8 +443,6 @@ else {
 
         # If we are in suite mode, we need to generate the ls from the extracted
         # sources, not from FCM.
-
-        my @extracts = ( "", "um", "shumlib", "meta", "ukca" );
 
         my $ss_env = $ENV{SCRIPT_SOURCE};
         my $extracts_path = join( " $ss_env/", @extracts );
