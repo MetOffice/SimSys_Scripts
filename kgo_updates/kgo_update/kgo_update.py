@@ -632,7 +632,7 @@ def main():
     else:
         print(f"\nThe kgo update for {platform} is complete.\n\nIf this was "
                "run from 'meto_update_kgo.sh' in the UM, the generated files "
-               "will be moved to frum on spice and the process will continue "
+               "will be moved to UMDIR on spice and the process will continue "
                "for other platforms requested.\n\nOtherwise, eg. for "
                "lfric_inputs, you will need to merge the generated variables "
                "file with the one in your working copy and run the script "

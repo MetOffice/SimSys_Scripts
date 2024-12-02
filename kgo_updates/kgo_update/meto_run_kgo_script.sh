@@ -41,7 +41,7 @@ if [ $new_release -eq 1 ]; then
 fi
 kgo_command="${kgo_command} -S $suite_name -N $new_kgo_dir -E $variables_extension"
 kgo_command_spice="$kgo_command -U $suite_user -P spice"
-kgo_command_azspice="$kgo_command -U $suite_user -P azspice"
+kgo_command_azspice="$kgo_command -U $suite_user_ex1a -P azspice"
 kgo_command_xc40="$kgo_command -U $suite_user -P xc40"
 kgo_command_ex1a="$kgo_command -U $suite_user_ex1a -P ex1a"
 
