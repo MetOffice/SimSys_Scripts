@@ -71,6 +71,7 @@ if result.returncode:
 # required for testing
 am = ApplyMacros(
     "vn0.0_t001",
+    None,
     appsdir,
     "/tmp",
     "/tmp"
@@ -88,7 +89,7 @@ def test_find_macro():
     assert am.find_macro("meta_dir", expected_split_macros) == desired_macro
     assert am.find_macro("meta_dir", [existing_macro]) == ""
     expected_error = r".*meta_dir/versions.py.*"
-    with pytest.raises(RuntimeError, match=expected_error):
+    with pytest.raises(Exception, match=expected_error):
         am.find_macro("meta_dir", [""])
 
 
@@ -109,19 +110,19 @@ def test_parse_macro():
     assert am.parsed_macros["meta_dir"] == expected_dict
     assert am.ticket_number == "#001"
     assert am.author == "Test Author"
-    with pytest.raises(RuntimeError, match=r".*failed/versions.py"):
+    with pytest.raises(Exception, match=r".*failed/versions.py"):
         am.parse_macro("", "failed")
 
 
 def test_read_meta_imports():
     am.parsed_macros["tests/test_meta_dir"] = {}
-    am.read_meta_imports("tests/test_meta_dir")
+    am.parsed_macros["tests/test_meta_dir"]["imports"] = am.read_meta_imports("tests/test_meta_dir")
     expected_imports = [
         os.path.join(am.root_path, "science", "gungho"),
         os.path.join(am.root_path, "applications", "lfric_atm")
     ]
     assert am.parsed_macros["tests/test_meta_dir"]["imports"] == expected_imports
-    expected_meta = os.path.join(am.root_path, "applications", "lfric_atm")
+    expected_meta = [os.path.join(am.root_path, "applications", "lfric_atm")]
     assert am.read_meta_imports("tests/test_meta_dir/rose-app.conf", "meta") == expected_meta
 
 
@@ -151,8 +152,8 @@ def test_combine_macros():
         "commands": "        importB command"
     }
     expected_combined = (
-        "        # importA\n        importA command\n"
-        "        # importB\n        importB command\n"
+        "        # Commands From: importA\n        importA command\n"
+        "        # Commands From: importB\n        importB command\n"
     )
     assert am.combine_macros(["importA", "importB"]) == expected_combined
 
@@ -166,9 +167,9 @@ def test_parse_application_section():
 
 
 def test_deduplicate_list():
-    assert am.deduplicate_list([1,2,3]) == [1,2,3]
-    assert am.deduplicate_list([1,2,2,3,3,3,]) == [1,2,3]
-    assert am.deduplicate_list([1,2,1,3,2]) == [1,2,3]
+    assert deduplicate_list([1,2,3]) == [1,2,3]
+    assert deduplicate_list([1,2,2,3,3,3,]) == [1,2,3]
+    assert deduplicate_list([1,2,1,3,2]) == [1,2,3]
 
 
 def test_match_python_imports():

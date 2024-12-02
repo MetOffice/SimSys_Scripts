@@ -234,7 +234,7 @@ class ApplyMacros:
         self.author = None
         self.parsed_macros = {}
         self.meta_dirs = set()
-        self.apps_with_macro = []
+        self.sections_with_macro = []
         self.python_imports = set()
         self.upgraded_core = False
 
@@ -817,7 +817,7 @@ class ApplyMacros:
                 )
                 self.write_python_imports(meta_dir)
                 self.write_new_macro(meta_dir, full_command)
-                self.apps_with_macro.append(meta_dir)
+                self.sections_with_macro.append(meta_dir)
 
     ############################################################################
     # Upgrade Apps Functions
@@ -868,10 +868,11 @@ class ApplyMacros:
                 os.path.join(app_path, "rose-app.conf"), "meta"
             )
             # If there was a metadata import, it is the first value in the list
+            # It includes the version directory, so remove this to compare with
+            # self.sections_with_macro
             if meta_import:
-                meta_import = meta_import[0]
-            if meta_import in self.apps_with_macro:
-                upgradeable_apps.append((app, app_path))
+                if os.path.dirname(meta_import[0]) in self.sections_with_macro:
+                    upgradeable_apps.append((app, app_path))
 
         return upgradeable_apps
 
@@ -920,8 +921,8 @@ class ApplyMacros:
         First run over all metadata directories and run rose metadata-check on
         each
         Then run over all rose apps. If there is an import statement for an
-        application with the upgrade macro (stored in self.apps_with_macro) then
-        run rose commands on it.
+        application with the upgrade macro (stored in self.sections_with_macro)
+        then run rose commands on it.
         - rose app-upgrade
         - rose macro --fix
         """
