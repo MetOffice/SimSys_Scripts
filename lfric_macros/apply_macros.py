@@ -473,15 +473,16 @@ class ApplyMacros:
                 if not in_new_macro:
                     f.write(line)
 
-        os.rename(temppath, filepath)
-
-        run_black(filepath)
-
-        if not os.path.getsize(filepath) > 0:
+       
+        run_black(temppath)
+        
+        if not os.path.getsize(temppath) > 0:
             raise Exception(
                 f"The file modified at {filepath} has zero size, indicating "
                 "something has gone wrong"
             )
+            
+        os.rename(temppath, filepath)
 
     def find_last_macro(self, macros, meta_dir):
         """
