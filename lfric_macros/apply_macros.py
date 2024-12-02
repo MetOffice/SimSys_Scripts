@@ -826,7 +826,7 @@ def check_tag(opt):
     """
     class_name = opt.replace(".", "")
     if not re.match(CLASS_NAME_REGEX, class_name):
-        raise Exception(
+        raise argparse.ArgumentTypeError(
             f"The tag '{opt}' does not conform to the "
             "'vnXX.Y_tTTTT' naming scheme. Please modify and rerun."
         )
