@@ -50,7 +50,7 @@ variables_dir=~/kgo_update_files/vn$version_number/$new_kgo_dir
 mkdir -p $variables_dir
 
 # If Spice has kgo updates
-if [[ $platforms == "spice"* ]]; then
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     printf "${GREEN}\n\nRunning KGO Update Script on SPICE.\n${NC}"
 
     # Run the Update Script

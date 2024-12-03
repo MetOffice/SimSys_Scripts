@@ -55,7 +55,7 @@ fi
 echo "Enter the platforms requiring a kgo update"
 echo "Enter platforms lowercase and space separated, eg. spice xc40 ex1a azspice"
 read platforms
-if [[ $platforms == "spice"* ]] || [[ $platforms == *"xc40"* ]]; then
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platforms == *"xc40"* ]]; then
     read -p "SPICE/XC40 Suite Username: " suite_user
 else
     suite_user=None
@@ -93,7 +93,7 @@ fi
 # Get user to double check settings
 clear
 echo "Suite Name: ${suite_name}"
-if [[ $platforms == "spice"* ]] || [[ $platforms == *"xc40"* ]]; then
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platforms == *"xc40"* ]]; then
     echo "User: ${suite_user}"
 fi
 if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
@@ -146,7 +146,7 @@ succeeded_azspice=0
 succeeded_xc40=0
 succeeded_ex1a=0
 succeeded_all=1
-if [[ $platforms == "spice"* ]]; then
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     file=~frum/${variables_dir}/spice_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_spice=1
@@ -287,7 +287,7 @@ elif [[ $platforms == *"ex1a"* ]]; then
 fi
 
 printf "\n\nInstallation Summary:\n\n"
-if [[ $platforms == "spice"* ]]; then
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     if [[ $succeeded_spice -eq 1 ]]; then
         printf "${GREEN}Installation on spice successful.\n${NC}"
     else
