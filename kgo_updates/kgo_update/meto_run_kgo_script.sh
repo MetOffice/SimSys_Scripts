@@ -41,6 +41,7 @@ if [ $new_release -eq 1 ]; then
 fi
 kgo_command="${kgo_command} -S $suite_name -N $new_kgo_dir -E $variables_extension"
 kgo_command_spice="$kgo_command -U $suite_user -P spice"
+kgo_command_azspice="$kgo_command -U $suite_user_ex1a -P azspice"
 kgo_command_xc40="$kgo_command -U $suite_user -P xc40"
 kgo_command_ex1a="$kgo_command -U $suite_user_ex1a -P ex1a"
 
@@ -48,9 +49,9 @@ kgo_command_ex1a="$kgo_command -U $suite_user_ex1a -P ex1a"
 variables_dir=~/kgo_update_files/vn$version_number/$new_kgo_dir
 mkdir -p $variables_dir
 
-# If Spice has kgo updates
-if [[ $platforms == *"spice"* ]]; then
-    printf "${GREEN}\n\nRunning KGO Update Script on SPICE.\n${NC}"
+# If spice has kgo updates
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
+    printf "${GREEN}\n\nRunning KGO Update Script on spice.\n${NC}"
 
     # Run the Update Script
     $kgo_command_spice
@@ -59,12 +60,32 @@ if [[ $platforms == *"spice"* ]]; then
         printf "${RED}\nThe installation script has failed on spice.\n${NC}"
     else
         # Move the updated variables file and script into the ticket folder
-        printf "${GREEN}\n\nSuccessfully installed on Spice.\n${NC}"
-        printf "${GREEN}Moving the generated files into SPICE ${variables_dir}.${NC}\n"
+        printf "${GREEN}\n\nSuccessfully installed on spice.\n${NC}"
+        printf "${GREEN}Moving the generated files into spice ${variables_dir}.${NC}\n"
         if [ $new_release -ne 1 ]; then
             mv ~/variables${variables_extension}_${new_kgo_dir} ${variables_dir}/spice_updated_variables${variables_extension}
         fi
         mv ~/kgo_update_${new_kgo_dir}.sh ${variables_dir}/spice_update_script.sh
+    fi
+fi
+
+# If azspice has kgo updates
+if [[ $platforms == *"azspice"* ]]; then
+    printf "${GREEN}\n\nRunning KGO Update Script on azspice.\n${NC}"
+
+    # Run the Update Script
+    $kgo_command_azspice
+
+    if [[ $? -ne 0 ]]; then
+        printf "${RED}\nThe installation script has failed on azspice.\n${NC}"
+    else
+        # Move the updated variables file and script into the ticket folder
+        printf "${GREEN}\n\nSuccessfully installed on azspice.\n${NC}"
+        printf "${GREEN}Moving the generated files into azspice ${variables_dir}.${NC}\n"
+        if [ $new_release -ne 1 ]; then
+            mv ~/variables${variables_extension}_${new_kgo_dir} ${variables_dir}/azspice_updated_variables${variables_extension}
+        fi
+        mv ~/kgo_update_${new_kgo_dir}.sh ${variables_dir}/azspice_update_script.sh
     fi
 fi
 
@@ -90,7 +111,7 @@ if [[ $platforms == *"xc40"* ]]; then
         # rsync the generated variables file and script back to frum on linux
         # This cleans up the original files
         printf "${GREEN}\n\nSuccessfully installed on xc40.\n${NC}"
-        printf "${GREEN}Rsyncing the generated files into SPICE ${variables_dir}.\n${NC}"
+        printf "${GREEN}Rsyncing the generated files into spice ${variables_dir}.\n${NC}"
         if [ $new_release -ne 1 ]; then
             rsync --remove-source-files -avz \
                 frum@$host_xc40:~/variables${variables_extension}_${new_kgo_dir} \
@@ -109,8 +130,7 @@ fi
 if [[ $platforms == *"ex1a"* ]]; then
     printf "${GREEN}\n\nRunning KGO Update Script on ex1a.\n${NC}"
 
-    # Should change to rose host-select when on the quads properly
-    host_ex=login.exz
+    host_ex=$(rose host-select exab)
 
     # SCP the python script to the ex1a
     scp -q kgo_update.py umadmin@$host_ex:~
@@ -128,7 +148,7 @@ if [[ $platforms == *"ex1a"* ]]; then
         # rsync the generated variables file and script back to frum on linux
         # This cleans up the original files
         printf "${GREEN}\n\nSuccessfully installed on ex1a.\n${NC}"
-        printf "${GREEN}Rsyncing the generated files into SPICE ${variables_dir}.\n${NC}"
+        printf "${GREEN}Rsyncing the generated files into azspice ${variables_dir}.\n${NC}"
         if [ $new_release -ne 1 ]; then
             rsync --remove-source-files -avz \
                     umadmin@$host_ex:~/variables${variables_extension}_${new_kgo_dir} \
