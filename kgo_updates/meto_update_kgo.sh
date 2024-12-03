@@ -277,8 +277,8 @@ fi
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
 if [[ $succeeded_ex1a -eq 1 ]]; then
-    printf "${GREEN}\n\nrsyncing the kgo to exa.\n${NC}"
-    printf "Warning: Always rsyncing UM KGO on EXZ"
+    printf "${GREEN}\n\nrsyncing the kgo to exz.\n${NC}"
+    printf "Warning: Always rsyncing UM KGO (not lfricinputs) on ex1a"
     rsync_dir="kgo/"
     host_rsync=$(rose host-select exab)
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/umdir/standard_jobs/${rsync_dir} login.exz:/common/internal/umdir/standard_jobs/${rsync_dir}'"
@@ -288,9 +288,9 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
         sudo -iu umadmin bash -c '$rsync_com'
     fi
     if [[ $? -ne 0 ]]; then
-        printf "${RED}The rsync to the exa has failed.\n${NC}"
+        printf "${RED}The rsync to the exz has failed.\n${NC}"
     else
-        printf "${Green}The rsync to the exa has succeeded.\n${NC}"
+        printf "${Green}The rsync to the exz has succeeded.\n${NC}"
     fi
 elif [[ $platforms == *"ex1a"* ]]; then
     printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
