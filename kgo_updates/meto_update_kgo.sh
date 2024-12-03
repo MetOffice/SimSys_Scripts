@@ -61,7 +61,7 @@ if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platf
         printf "${RED}Attempting to install spice kgo from azspice - this isn't possible"
         exit 1
     fi
-    read -p "SPICE/XC40 Suite Username: " suite_user
+    read -p "spice/xc40 Suite Username: " suite_user
 else
     suite_user=None
 fi
@@ -71,7 +71,7 @@ if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
         printf "${RED}Attempting to install azspice kgo from spice - this isn't possible"
         exit 1
     fi
-    read -p "EX1A/AZSPICE Suite Username: " suite_user_ex1a
+    read -p "ex1a/azspice Suite Username: " suite_user_ex1a
 else
     suite_user_ex1a=None
 fi
@@ -107,7 +107,7 @@ if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platf
     echo "User: ${suite_user}"
 fi
 if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
-    echo "EX1A User: ${suite_user_ex1a}"
+    echo "ex1a User: ${suite_user_ex1a}"
 fi
 echo "Trunk WC Path: ${wc_path}"
 echo "Version Number: ${version_number}"
