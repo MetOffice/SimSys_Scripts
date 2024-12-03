@@ -56,11 +56,21 @@ echo "Enter the platforms requiring a kgo update"
 echo "Enter platforms lowercase and space separated, eg. spice xc40 ex1a azspice"
 read platforms
 if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platforms == *"xc40"* ]]; then
+    # Check we're not trying to install to spice while on azspice
+    if [[ $launch_platform == "azspice" ]] && [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
+        printf "${RED}Attempting to install spice kgo from azspice - this isn't possible"
+        exit 1
+    fi
     read -p "SPICE/XC40 Suite Username: " suite_user
 else
     suite_user=None
 fi
 if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
+    # Check we're not trying to install to azspice while on spice
+    if [[ $launch_platform == "spice" ]] && [[ $platforms == *"azspice"* ]]; then
+        printf "${RED}Attempting to install azspice kgo from spice - this isn't possible"
+        exit 1
+    fi
     read -p "EX1A/AZSPICE Suite Username: " suite_user_ex1a
 else
     suite_user_ex1a=None
