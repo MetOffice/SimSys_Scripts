@@ -130,8 +130,7 @@ fi
 if [[ $platforms == *"ex1a"* ]]; then
     printf "${GREEN}\n\nRunning KGO Update Script on ex1a.\n${NC}"
 
-    # Should change to rose host-select when on the quads properly
-    host_ex=login.exz
+    host_ex=$(rose host-select exab)
 
     # SCP the python script to the ex1a
     scp -q kgo_update.py umadmin@$host_ex:~

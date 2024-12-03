@@ -263,7 +263,7 @@ elif [[ $platforms == *"xc40"* ]]; then
     printf "${RED}\n\nSkipping the rsync to the xcs as the xc40 install failed.\n${NC}"
 fi
 
-# For EX's currently rsync the generated kgo to the exa from the exz
+# For EX's currently rsync the generated kgo to the exz from the exab
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
 if [[ $succeeded_ex1a -eq 1 ]]; then
@@ -271,7 +271,7 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     printf "Warning: Always rsyncing UM KGO on EXZ"
     rsync_dir="kgo/"
     host_rsync=$(rose host-select exab)
-    rsync_com="ssh -Y login.exz 'rsync -av /common/umdir/standard_jobs/${rsync_dir} ${host_rsync}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/umdir/standard_jobs/${rsync_dir} login.exz:/common/internal/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y frum@localhost $rsync_com
     else
