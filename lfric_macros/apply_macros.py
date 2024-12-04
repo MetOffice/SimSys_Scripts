@@ -881,7 +881,6 @@ class ApplyMacros:
         """
         Run 'rose app-upgrade' on a particular rose-stem app
         Inputs:
-            - app, the name of the app being upgraded
             - app_path, the path to this app
         """
         app = os.path.basename(app_path)
@@ -901,7 +900,6 @@ class ApplyMacros:
         Run 'rose macro --fix' on a particular rose-stem app to force metadata
         consistency
         Inputs:
-            - app, the name of the app being upgraded
             - app_path, the path to this app
         """
         app = os.path.basename(app_path)
