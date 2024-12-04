@@ -473,7 +473,6 @@ class ApplyMacros:
                 if not in_new_macro:
                     f.write(line)
 
-
         run_black(temppath)
 
         if not os.path.getsize(temppath) > 0:
@@ -853,13 +852,16 @@ class ApplyMacros:
         upgradeable_apps = []
         app_dir_apps = os.path.join(self.root_path, "rose-stem", "app")
         app_dir_core = os.path.join(self.core_source, "rose-stem", "app")
-        apps_list = [os.path.join(app_dir_apps, f) for f in os.listdir(app_dir_apps)]
-        apps_list += [os.path.join(app_dir_core, f) for f in os.listdir(app_dir_core)]
+        apps_list = [
+            os.path.join(app_dir_apps, f) for f in os.listdir(app_dir_apps)
+        ]
+        apps_list += [
+            os.path.join(app_dir_core, f) for f in os.listdir(app_dir_core)
+        ]
         for app_path in apps_list:
-            app = os.path.basename(app_path)
             # Ignore lfric_coupled_rivers as this is based on Jules-standalone
             # metadata which is not currently available
-            if "fcm_make" in app or "lfric_coupled_rivers" in app:
+            if "fcm_make" in app_path or "lfric_coupled_rivers" in app_path:
                 continue
             if not os.path.isdir(app_path):
                 continue
@@ -871,18 +873,18 @@ class ApplyMacros:
             # self.sections_with_macro
             if meta_import:
                 if os.path.dirname(meta_import[0]) in self.sections_with_macro:
-                    upgradeable_apps.append((app, app_path))
+                    upgradeable_apps.append(app_path)
 
         return upgradeable_apps
 
-    def run_app_upgrade(self, app, app_path):
+    def run_app_upgrade(self, app_path):
         """
         Run 'rose app-upgrade' on a particular rose-stem app
         Inputs:
             - app, the name of the app being upgraded
             - app_path, the path to this app
         """
-
+        app = os.path.basename(app_path)
         print(f"[INFO] Upgrading the rose-stem app {app}")
         command = f"rose app-upgrade -a -y -C {app_path} {self.tag}"
         result = run_command(command)
@@ -894,7 +896,7 @@ class ApplyMacros:
             )
         print(f"[PASS] Upgraded rose-stem app {app} successfully")
 
-    def run_macro_fix(self, app, app_path):
+    def run_macro_fix(self, app_path):
         """
         Run 'rose macro --fix' on a particular rose-stem app to force metadata
         consistency
@@ -902,6 +904,7 @@ class ApplyMacros:
             - app, the name of the app being upgraded
             - app_path, the path to this app
         """
+        app = os.path.basename(app_path)
         print(f"[INFO] Forcing metadata consistency in app {app}")
         command = f"rose macro --fix -y -C {app_path}"
         result = run_command(command)
@@ -938,11 +941,12 @@ class ApplyMacros:
 
         banner_print("[INFO] Upgrading Apps")
         upgradeable_apps = self.apps_to_upgrade()
-        for app, app_path in upgradeable_apps:
-            self.run_app_upgrade(app, app_path)
-            self.run_macro_fix(app, app_path)
+        for app_path in upgradeable_apps:
+            self.run_app_upgrade(app_path)
+            self.run_macro_fix(app_path)
             if app_path.startswith(self.core_source):
                 self.upgraded_core = True
+
 
 def check_tag(opt):
     """
