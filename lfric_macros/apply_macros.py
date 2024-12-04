@@ -852,16 +852,17 @@ class ApplyMacros:
         """
         upgradeable_apps = []
         app_dir_apps = os.path.join(self.root_path, "rose-stem", "app")
-        apps_lstdir = os.listdir(app_dir_apps)
         app_dir_core = os.path.join(self.core_source, "rose-stem", "app")
-        core_lstdir = os.listdir(app_dir_core)
-        for app in apps_lstdir + core_lstdir:
+        apps = os.listdir(app_dir_apps)
+        app_paths = [os.path.join(app_dir_apps, app) for app in apps]
+        core = os.listdir(app_dir_core)
+        app_paths += [os.path.join(app_dir_core, app) for app in core]
+        apps += core
+        for app, app_path in zip(apps, app_paths):
+            # Ignore lfric_coupled_rivers as this is based on Jules-standalone
+            # metadata which is not currently available
             if "fcm_make" in app or "lfric_coupled_rivers" in app:
                 continue
-            if app in apps_lstdir:
-                app_path = os.path.join(app_dir_apps, app)
-            else:
-                app_path = os.path.join(app_dir_core, app)
             if not os.path.isdir(app_path):
                 continue
             meta_import = self.read_meta_imports(
