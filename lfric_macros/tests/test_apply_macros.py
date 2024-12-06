@@ -163,7 +163,6 @@ def test_parse_application_section():
     assert am.parse_application_section("meta_dir/versions.py") == "meta_dir"
     assert am.parse_application_section(f"{am.root_path}/meta_dir") == "meta_dir"
     assert am.parse_application_section(f"{am.core_source}/meta_dir") == "meta_dir"
-    assert am.parse_application_section(f"{am.jules_source}/meta_dir") == "meta_dir"
 
 
 def test_deduplicate_list():

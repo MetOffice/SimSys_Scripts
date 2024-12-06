@@ -227,7 +227,10 @@ class ApplyMacros:
         self.temp_dirs = {}
         self.root_path = get_root_path(apps)
         self.core_source = self.get_dependency_paths(core, "lfric_core")
-        self.jules_source = self.get_dependency_paths(jules, "jules")
+        # The Jules source is temporarily ignored as Jules Shared metadata has a
+        # copy in LFRic, rather than using the Jules version. The LFRic build
+        # system needs modifying to enable this
+        # self.jules_source = self.get_dependency_paths(jules, "jules")
         self.set_rose_meta_path()
         self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
         self.ticket_number = None
@@ -242,10 +245,12 @@ class ApplyMacros:
         """
         Set up the ROSE_META_PATH environment variable in order to use the Jules
         and Core metadata. We also add the working copy root path as this should
-        allow the script to be run from anywhere
+        allow the script to be run from anywhere.
+        When Jules Shared from Jules is enabled, self.jules_source will need
+        adding here
         """
         rose_meta_path = (
-            f"{self.root_path}:{self.core_source}:{self.jules_source}"
+            f"{self.root_path}:{self.core_source}"
         )
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
@@ -261,7 +266,8 @@ class ApplyMacros:
         """
         meta_dir = meta_dir.removeprefix(self.root_path)
         meta_dir = meta_dir.removeprefix(self.core_source)
-        meta_dir = meta_dir.removeprefix(self.jules_source)
+        # Reinstate when using Jules Shared from Jules
+        # meta_dir = meta_dir.removeprefix(self.jules_source)
         meta_dir = meta_dir.removeprefix("/")
 
         meta_dir = meta_dir.removesuffix("/HEAD")
@@ -564,9 +570,10 @@ class ApplyMacros:
         if os.path.exists(core_imp):
             return core_imp
 
-        jules_imp = os.path.join(self.jules_source, imp)
-        if os.path.exists(jules_imp):
-            return jules_imp
+        # Reinstate when using Jules Shared from Jules
+        # jules_imp = os.path.join(self.jules_source, imp)
+        # if os.path.exists(jules_imp):
+        #     return jules_imp
 
         apps_imp = os.path.join(self.root_path, imp)
         if os.path.exists(apps_imp):
