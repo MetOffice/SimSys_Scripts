@@ -125,13 +125,9 @@ def split_macros(parsed_versions):
     in_macro = False
     in_comment = False
     for line in parsed_versions:
-        if '"""' in line:
-            # If there is a comment marker in the line, check there aren't 2
-            for _ in range(line.count('"""')):
-                in_comment = not in_comment
-        if in_comment:
-            continue
-        if line.startswith("class vn"):
+        if line.startswith("class vn") and not line.startswith(
+            "class vnXX_txxx"
+        ):
             # If the macro string is set, then append to the list. If it's
             # empty then this is the first macro we're looking at, so nothing to
             # append
@@ -249,9 +245,7 @@ class ApplyMacros:
         When Jules Shared from Jules is enabled, self.jules_source will need
         adding here
         """
-        rose_meta_path = (
-            f"{self.root_path}:{self.core_source}"
-        )
+        rose_meta_path = f"{self.root_path}:{self.core_source}"
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
     def parse_application_section(self, meta_dir):
@@ -441,7 +435,7 @@ class ApplyMacros:
                 in_function = True
                 continue
             if (
-                line_stripped.startswith("return")
+                line_stripped.startswith("return config, self.reports")
                 or line_stripped.startswith("# Input your macro commands here")
                 or line_stripped.lower().startswith("# add settings")
                 or not in_function
