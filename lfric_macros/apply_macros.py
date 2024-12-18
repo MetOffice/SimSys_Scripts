@@ -19,7 +19,7 @@ import tempfile
 import subprocess
 
 BLACK_COMMAND = "black --line-length=80"
-CLASS_NAME_REGEX = r"vn\d+(_t\d+(\w+.)?)?"
+CLASS_NAME_REGEX = r"vn\d+(_t\d+(\w+)?)?"
 TAG_REGEX = r"\s*=\s*[\"']\s*(\S+)\s*[\"']"
 
 
