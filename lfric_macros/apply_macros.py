@@ -745,7 +745,7 @@ class ApplyMacros:
                 "        return config, self.reports\n"
             )
 
-        run_black(filepath)
+        run_black(temppath)
 
         os.rename(temppath, filepath)
 
@@ -804,17 +804,7 @@ class ApplyMacros:
 
         # Now reconstruct the macro for all applications which have the newly
         # added macro or import metadata with the new macro
-        # Note, this is only done for applications, not for science sections
         for meta_dir in self.meta_dirs:
-            if not (
-                meta_dir.startswith(
-                    os.path.join(self.root_path, "applications")
-                )
-                or meta_dir.startswith(
-                    os.path.join(self.core_source, "applications")
-                )
-            ):
-                continue
             import_order = self.determine_import_order(meta_dir)
             full_command = self.combine_macros(import_order)
             # If there are commands to write out, do so and record this
