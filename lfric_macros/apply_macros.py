@@ -561,16 +561,22 @@ class ApplyMacros:
         """
 
         core_imp = os.path.join(self.core_source, imp)
-        if os.path.exists(core_imp):
+        if os.path.exists(core_imp) or os.path.exists(
+            os.path.dirname(core_imp)
+        ):
             return core_imp
 
         # Reinstate when using Jules Shared from Jules
         # jules_imp = os.path.join(self.jules_source, imp)
-        # if os.path.exists(jules_imp):
+        # if os.path.exists(jules_imp) or os.path.exists(
+        #     os.path.dirname(jules_imp)
+        # ):
         #     return jules_imp
 
         apps_imp = os.path.join(self.root_path, imp)
-        if os.path.exists(apps_imp):
+        if os.path.exists(apps_imp) or os.path.exists(
+            os.path.dirname(apps_imp)
+        ):
             return apps_imp
 
         raise Exception(
@@ -609,7 +615,7 @@ class ApplyMacros:
                         # Split the import line by '=' then take the rhs
                         # Then remove the trailing '/HEAD'
                         # Then prepend the path to the working copy
-                        imp = line.split("=", 1)[1].strip("/HEAD")
+                        imp = line.split("=", 1)[1].removesuffix("/HEAD")
                         imp = self.get_full_import_path(imp)
                         imports.append(imp)
                     else:
@@ -736,7 +742,7 @@ class ApplyMacros:
                 "        return config, self.reports\n"
             )
 
-        run_black(filepath)
+        run_black(temppath)
 
         os.rename(temppath, filepath)
 
@@ -795,17 +801,7 @@ class ApplyMacros:
 
         # Now reconstruct the macro for all applications which have the newly
         # added macro or import metadata with the new macro
-        # Note, this is only done for applications, not for science sections
         for meta_dir in self.meta_dirs:
-            if not (
-                meta_dir.startswith(
-                    os.path.join(self.root_path, "applications")
-                )
-                or meta_dir.startswith(
-                    os.path.join(self.core_source, "applications")
-                )
-            ):
-                continue
             import_order = self.determine_import_order(meta_dir)
             full_command = self.combine_macros(import_order)
             # If there are commands to write out, do so and record this
