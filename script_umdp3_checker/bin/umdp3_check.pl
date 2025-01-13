@@ -1133,12 +1133,12 @@ sub run_checks {
                     $filename .= ".";
                 }
                 $filename = $log_cylc . "." . $filename . "report";
-                my $fileres = open( FH, '>', $filename );
+                my $fileres = open( my $fh, '>', $filename );
                 if ( !defined $fileres ) {
                     die "ERR: $filename\n";
                 }
-                print FH $failure_text;
-                close(FH);
+                print $fh $failure_text;
+                close($fh);
             }
         }
         $message = '';
