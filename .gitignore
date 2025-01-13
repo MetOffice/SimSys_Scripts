@@ -1,2 +1,6 @@
+*.sublime-workspace
+*.code-workspace
+.vscode
 __pycache__/
-
+*.pyc
+*~
