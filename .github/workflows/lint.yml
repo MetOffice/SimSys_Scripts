@@ -3,44 +3,44 @@
 name: Checks
 
 on:
-    pull_request:
-    branches: [main]
+  pull_request:
+  branches: [main]
 
 permissions: read-all
 
 jobs:
-    check:
-        name: Lint
-        runs-on: ubuntu-latest
-        strategy:
-            max-parallel: 4
-            matrix:
-                python-version: [3.9, 3.10, 3.11, 3.12]
+  check:
+    name: Lint
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.9, 3.10, 3.11, 3.12]
 
-        permissions:
-            contents: read
-            packages: read
-            statuses: write
+    permissions:
+        contents: read
+        packages: read
+        statuses: write
 
-        steps:
-            - name: Checkout current
-                uses: actions/checkout@v4
-                with:
-                    fetch-depth: 0
+    steps:
+      - name: Checkout current
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - name: Super-Linter
-                uses: super-linter/super-linter/slim@v7.2.1
-                env:
-                    FILTER_REGEX_EXCLUDE: (.*[.]conf.py|/_templates/)
-                    IGNORE_GITIGNORED_FILES: true
-                    VALIDATE_BASH_EXEC: false
-                    VALIDATE_JAVASCRIPT_STANDARD: false
-                    VALIDATE_PYTHON_FLAKE8: false
-                    VALIDATE_PYTHON_ISORT: false
-                    VALIDATE_PYTHON_MYPY: false
-                    VALIDATE_SHELL_SHFMT: false
-                    VALIDATE_YAML: false
-                    # PYTHON_BLACK_CONFIG_FILE: .github/workflows/pyproject.toml
-                    # To report GitHub Actions status checks
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Super-Linter
+        uses: super-linter/super-linter/slim@v7.2.1
+        env:
+          FILTER_REGEX_EXCLUDE: (.*[.]conf.py|/_templates/)
+          IGNORE_GITIGNORED_FILES: true
+          VALIDATE_BASH_EXEC: false
+          VALIDATE_JAVASCRIPT_STANDARD: false
+          VALIDATE_PYTHON_FLAKE8: false
+          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_MYPY: false
+          VALIDATE_SHELL_SHFMT: false
+          VALIDATE_YAML: false
+          # PYTHON_BLACK_CONFIG_FILE: .github/workflows/pyproject.toml
+          # To report GitHub Actions status checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ...
