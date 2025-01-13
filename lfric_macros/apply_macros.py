@@ -392,7 +392,7 @@ class ApplyMacros:
             - str, stdout of find command looking for versions.py files
         """
 
-        for dirpath, dirnames, filenames in os.walk(path):
+        for dirpath, dirnames, filenames in os.walk(path, followlinks=True):
             dirnames[:] = [d for d in dirnames if d not in [".svn"]]
             if "versions.py" in filenames:
                 self.meta_dirs.add(dirpath)
@@ -565,13 +565,6 @@ class ApplyMacros:
             - the import statement containing the full path - raises an error if
               not found
         """
-
-        core_imp = os.path.join(self.core_source, "rose-meta", imp)
-        if os.path.exists(core_imp) or os.path.exists(
-            os.path.dirname(core_imp)
-        ):
-            return core_imp
-
         # Reinstate when using Jules Shared from Jules
         # jules_imp = os.path.join(self.jules_source, "rose-meta", imp)
         # if os.path.exists(jules_imp) or os.path.exists(
@@ -579,10 +572,16 @@ class ApplyMacros:
         # ):
         #     return jules_imp
 
+        core_imp = os.path.join(self.core_source, "rose-meta", imp)
         apps_imp = os.path.join(self.root_path, "rose-meta", imp)
-        if os.path.exists(apps_imp) or os.path.exists(
-            os.path.dirname(apps_imp)
-        ):
+
+        if os.path.exists(core_imp):
+            return core_imp
+        if os.path.exists(apps_imp):
+            return apps_imp
+        if os.path.exists(os.path.dirname(core_imp)):
+            return core_imp
+        if os.path.exists(os.path.dirname(apps_imp)):
             return apps_imp
 
         raise Exception(
@@ -707,6 +706,7 @@ class ApplyMacros:
 
         full_command = ""
         for meta_import in import_order:
+            meta_import = self.get_full_import_path(meta_import)
             if (
                 meta_import in self.parsed_macros
                 and self.parsed_macros[meta_import]["commands"]
@@ -811,7 +811,6 @@ class ApplyMacros:
         # added macro or import metadata with the new macro
         for meta_dir in self.meta_dirs:
             import_order = self.determine_import_order(meta_dir)
-            print(import_order)
             full_command = self.combine_macros(import_order)
             # If there are commands to write out, do so and record this
             # application as having the macro
