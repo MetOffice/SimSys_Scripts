@@ -5,6 +5,8 @@ name: Checks
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main, 'releases/**']
 
 permissions: read-all
 
@@ -46,7 +48,6 @@ jobs:
           VALIDATE_SHELL_SHFMT: false
           VALIDATE_YAML_PRETTIER: false
           VALIDATE_YAML: false
-          # PYTHON_BLACK_CONFIG_FILE: .github/workflows/pyproject.toml
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ...
