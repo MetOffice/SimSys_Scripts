@@ -680,7 +680,9 @@ class ApplyMacros:
             - A list of meta imports in the correct order
         """
 
-        import_list = [app]
+        app_name = os.path.basename(app)
+        import_list = [app_name]
+
         try:
             imports = self.parsed_macros[app]["imports"]
         except KeyError:
@@ -764,8 +766,8 @@ class ApplyMacros:
         """
 
         # Get list of versions files to check - in both core and apps
-        self.find_meta_dirs(self.root_path)
-        self.find_meta_dirs(self.core_source)
+        self.find_meta_dirs(os.path.join(self.root_path, "rose-meta"))
+        self.find_meta_dirs(os.path.join(self.core_source, "rose-meta"))
 
         for meta_dir in self.meta_dirs:
             print(
@@ -809,6 +811,7 @@ class ApplyMacros:
         # added macro or import metadata with the new macro
         for meta_dir in self.meta_dirs:
             import_order = self.determine_import_order(meta_dir)
+            print(import_order)
             full_command = self.combine_macros(import_order)
             # If there are commands to write out, do so and record this
             # application as having the macro
