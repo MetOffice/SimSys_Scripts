@@ -4,7 +4,7 @@ name: Checks
 
 on:
   pull_request:
-  branches: [main]
+    branches: [main]
 
 permissions: read-all
 
