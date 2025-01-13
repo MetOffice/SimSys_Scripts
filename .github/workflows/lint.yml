@@ -8,6 +8,10 @@ on:
   push:
     branches: [main, 'releases/**']
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress:  ${{ github.ref != 'refs/heads/main' }}
+
 permissions: read-all
 
 jobs:
