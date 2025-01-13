@@ -245,7 +245,13 @@ class ApplyMacros:
         When Jules Shared from Jules is enabled, self.jules_source will need
         adding here
         """
-        rose_meta_path = f"{self.root_path}:{self.core_source}"
+        if os.path.isdir(os.path.join(self.root_path, "rose-meta")):
+            rose_meta_path = (
+                f"{os.path.join(self.root_path, 'rose-meta')}:"
+                f"{os.path.join(self.core_source, 'rose-meta')}"
+            )
+        else:
+            rose_meta_path = f"{self.root_path}:{self.core_source}"
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
     def parse_application_section(self, meta_dir):
@@ -560,20 +566,20 @@ class ApplyMacros:
               not found
         """
 
-        core_imp = os.path.join(self.core_source, imp)
+        core_imp = os.path.join(self.core_source, "rose-meta", imp)
         if os.path.exists(core_imp) or os.path.exists(
             os.path.dirname(core_imp)
         ):
             return core_imp
 
         # Reinstate when using Jules Shared from Jules
-        # jules_imp = os.path.join(self.jules_source, imp)
+        # jules_imp = os.path.join(self.jules_source, "rose-meta", imp)
         # if os.path.exists(jules_imp) or os.path.exists(
         #     os.path.dirname(jules_imp)
         # ):
         #     return jules_imp
 
-        apps_imp = os.path.join(self.root_path, imp)
+        apps_imp = os.path.join(self.root_path, "rose-meta", imp)
         if os.path.exists(apps_imp) or os.path.exists(
             os.path.dirname(apps_imp)
         ):
