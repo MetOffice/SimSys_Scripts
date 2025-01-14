@@ -236,6 +236,7 @@ class ApplyMacros:
         self.sections_with_macro = []
         self.python_imports = set()
         self.upgraded_core = False
+        self.central_rose_meta = False
 
     def set_rose_meta_path(self):
         """
@@ -246,10 +247,12 @@ class ApplyMacros:
         adding here
         """
         if os.path.isdir(os.path.join(self.root_path, "rose-meta")):
+            # For backwards compatibility with central rose-meta imports
             rose_meta_path = (
                 f"{os.path.join(self.root_path, 'rose-meta')}:"
                 f"{os.path.join(self.core_source, 'rose-meta')}"
             )
+            self.central_rose_meta = True
         else:
             rose_meta_path = f"{self.root_path}:{self.core_source}"
         os.environ["ROSE_META_PATH"] = rose_meta_path
@@ -565,15 +568,16 @@ class ApplyMacros:
             - the import statement containing the full path - raises an error if
               not found
         """
-        # Reinstate when using Jules Shared from Jules
-        # jules_imp = os.path.join(self.jules_source, "rose-meta", imp)
-        # if os.path.exists(jules_imp) or os.path.exists(
-        #     os.path.dirname(jules_imp)
-        # ):
-        #     return jules_imp
 
-        core_imp = os.path.join(self.core_source, "rose-meta", imp)
-        apps_imp = os.path.join(self.root_path, "rose-meta", imp)
+        # TODO: Reinstate Jules checks when using Jules Metadata from Jules
+
+        # For backwards compatibility with central rose-meta imports
+        if self.central_rose_meta:
+            core_imp = os.path.join(self.core_source, "rose-meta", imp)
+            apps_imp = os.path.join(self.root_path, "rose-meta", imp)
+        else:
+            core_imp = os.path.join(self.core_source, imp)
+            apps_imp = os.path.join(self.root_path, imp)
 
         if os.path.exists(core_imp):
             return core_imp
@@ -766,8 +770,13 @@ class ApplyMacros:
         """
 
         # Get list of versions files to check - in both core and apps
-        self.find_meta_dirs(os.path.join(self.root_path, "rose-meta"))
-        self.find_meta_dirs(os.path.join(self.core_source, "rose-meta"))
+        # Duplicated for backwards compatibility with central rose-meta imports
+        if self.central_rose_meta:
+            self.find_meta_dirs(os.path.join(self.root_path, "rose-meta"))
+            self.find_meta_dirs(os.path.join(self.core_source, "rose-meta"))
+        else:
+            self.find_meta_dirs(self.root_path)
+            self.find_meta_dirs(self.core_source)
 
         for meta_dir in self.meta_dirs:
             print(
