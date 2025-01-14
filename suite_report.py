@@ -884,7 +884,7 @@ class SuiteReport(object):
         fname = fname.lstrip("/")
         outname = os.path.expanduser(outname)
 
-        # Try 5 times, if all fail then use working copy version
+        # Try 5 times
         for _ in range(5):
             try:
                 subproc = "fcm export -q {}/{} {} --force".format(
@@ -1147,9 +1147,13 @@ class SuiteReport(object):
                     section = "stash"
             else:
                 # Find area of files in other directories
-                file_path = self.export_file("fcm:um.xm_tr", fpath)
+                file_path = self.export_file(repo_loc, fpath)
                 if file_path is None:
-                    file_path = ""
+                    # Couldn't check out working copy file - deleted?  Use trunk instead
+                    file_path = self.export_file("fcm:um.xm_tr", fpath)
+                    if file_path is None:
+                        print('[WARN] Unable to establish code section for file: ', fle)
+                        file_path = ""
 
                 try:
                     with open(file_path, "r") as inp_file:

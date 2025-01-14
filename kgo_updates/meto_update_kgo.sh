@@ -19,6 +19,19 @@ NC='\033[0m' # No Color
 # Move to the location of the script
 script_loc="$(dirname "$0")"
 
+# Work out if we're running from azspice or old spice
+if [[ $HOSTNAME == "caz"* ]]; then
+    launch_platform=azspice
+    # Check you can sudo in as umadmin
+    sudo -iu umadmin bash -c "echo ''"
+    if [[ $? -ne 0 ]]; then
+        printf "${RED} You were unable to run commands as umadmin - this is required to run this script"
+        printf "This may be because of a password typo or similar"
+    fi
+else
+    launch_platform=spice
+fi
+
 # Check for command line argument to run with new-release mode
 # If only option doesn't match ask if that is what was intended
 new_release=0
@@ -40,15 +53,25 @@ fi
 
 # Prompt user for Update Details
 echo "Enter the platforms requiring a kgo update"
-echo "Enter platforms lowercase and space separated, eg. spice xc40 ex1a"
+echo "Enter platforms lowercase and space separated, eg. spice xc40 ex1a azspice"
 read platforms
-if [[ $platforms == *"spice"* ]] || [[ $platforms == *"xc40"* ]]; then
-    read -p "SPICE/XC40 Suite Username: " suite_user
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platforms == *"xc40"* ]]; then
+    # Check we're not trying to install to spice while on azspice
+    if [[ $launch_platform == "azspice" ]] && [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
+        printf "${RED}Attempting to install spice kgo from azspice - this isn't possible"
+        exit 1
+    fi
+    read -p "spice/xc40 Suite Username: " suite_user
 else
     suite_user=None
 fi
-if [[ $platforms == *"ex1a"* ]]; then
-    read -p "EX1A Suite Username: " suite_user_ex1a
+if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
+    # Check we're not trying to install to azspice while on spice
+    if [[ $launch_platform == "spice" ]] && [[ $platforms == *"azspice"* ]]; then
+        printf "${RED}Attempting to install azspice kgo from spice - this isn't possible"
+        exit 1
+    fi
+    read -p "ex1a/azspice Suite Username: " suite_user_ex1a
 else
     suite_user_ex1a=None
 fi
@@ -80,11 +103,11 @@ fi
 # Get user to double check settings
 clear
 echo "Suite Name: ${suite_name}"
-if [[ $platforms == *"spice"* ]] || [[ $platforms == *"xc40"* ]]; then
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platforms == *"xc40"* ]]; then
     echo "User: ${suite_user}"
 fi
-if [[ $platforms == *"ex1a"* ]]; then
-    echo "EX1A User: ${suite_user_ex1a}"
+if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
+    echo "ex1a User: ${suite_user_ex1a}"
 fi
 echo "Trunk WC Path: ${wc_path}"
 echo "Version Number: ${version_number}"
@@ -101,7 +124,11 @@ if [ $run_script != "y" ]; then
 fi
 
 # Move the kgo_update directory to frum on linux
-scp -rq $script_loc/kgo_update frum@localhost:~
+if [[ $launch_platform == "spice" ]]; then
+    scp -rq $script_loc/kgo_update frum@localhost:~
+else
+    sudo -iu umadmin bash -c "cp -r $script_loc/kgo_update /home/users/umadmin"
+fi
 
 # Define command to run as frum
 command=". /etc/profile ; module load scitools ; cd kgo_update ;
@@ -116,15 +143,20 @@ command=". /etc/profile ; module load scitools ; cd kgo_update ;
          cd ~ ; rm -rf kgo_update"
 
 # Run the command as frum
-ssh -Y frum@localhost $command
+if [[ $launch_platform == "spice" ]]; then
+    ssh -Y frum@localhost $command
+else
+    sudo -iu umadmin bash -c "cd $UMDIR ; $command"
+fi
 
 # Error Checking and rsyncing
 variables_dir=kgo_update_files/vn${version_number}/${new_kgo_dir}
 succeeded_spice=0
+succeeded_azspice=0
 succeeded_xc40=0
 succeeded_ex1a=0
 succeeded_all=1
-if [[ $platforms == *"spice"* ]]; then
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     file=~frum/${variables_dir}/spice_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_spice=1
@@ -142,14 +174,37 @@ if [[ $platforms == *"spice"* ]]; then
         succeeded_all=0
     fi
 fi
+if [[ $platforms == *"azspice"* ]]; then
+    file=~umadmin/${variables_dir}/azspice_update_script.sh
+    if [[ -e "$file" ]]; then
+        succeeded_azspice=1
+        if [[ $new_release -ne 1 ]]; then
+            printf "${GREEN}\n\nCopying the azspice variables file into this working copy.\n${NC}"
+            cp /home/users/umadmin/${variables_dir}/azspice_updated_variables${variables_extension} \
+                                        ${wc_path}/rose-stem/site/meto/variables_azspice${variables_extension}
+            if [[ $? -ne 0 ]]; then
+                printf "${RED}The copy of the azspice variables file into this working copy has failed.\n${NC}"
+                succeeded_azspice=0
+                succeeded_all=0
+            fi
+        fi
+    else
+        succeeded_all=0
+    fi
+fi
 if [[ $platforms == *"xc40"* ]]; then
     file=~frum/${variables_dir}/xc40_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_xc40=1
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the xc40 variables file into this working copy.\n${NC}"
-            scp -q frum@localhost:~/${variables_dir}/xc40_updated_variables${variables_extension} \
+            if [[ $launch_platform == "spice" ]]; then
+                scp -q frum@localhost:~/${variables_dir}/xc40_updated_variables${variables_extension} \
                                         ${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}
+            else
+                cp /home/users/umadmin/${variables_dir}/xc40_updated_variables${variables_extension} \
+                                        ${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}
+            fi
             if [[ $? -ne 0 ]]; then
                 printf "${RED}The copy of the xc40 variables file into this working copy has failed.\n${NC}"
                 succeeded_xc40=0
@@ -166,8 +221,13 @@ if [[ $platforms == *"ex1a"* ]]; then
         succeeded_ex1a=1
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the ex1a variables file into this working copy.\n${NC}"
-            scp -q frum@localhost:~/${variables_dir}/ex1a_updated_variables${variables_extension} \
+            if [[ $launch_platform == "spice" ]]; then
+                scp -q frum@localhost:~/${variables_dir}/ex1a_updated_variables${variables_extension} \
                                         ${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}
+            else
+                cp /home/users/umadmin/${variables_dir}/ex1a_updated_variables${variables_extension} \
+                                        ${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}
+            fi
             if [[ $? -ne 0 ]]; then
                 printf "${RED}The copy of the ex1a variables file into this working copy has failed.\n${NC}"
                 succeeded_ex1a=0
@@ -199,7 +259,11 @@ if [[ $succeeded_xc40 -eq 1 ]]; then
     printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
     host_rsync=$(rose host-select xc)
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
-    ssh -Y frum@localhost $rsync_com
+    if [[ $launch_platform == "spice" ]]; then
+        ssh -Y frum@localhost $rsync_com
+    else
+        sudo -iu umadmin bash -c '$rsync_com'
+    fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the xcs has failed.\n${NC}"
     else
@@ -209,34 +273,42 @@ elif [[ $platforms == *"xc40"* ]]; then
     printf "${RED}\n\nSkipping the rsync to the xcs as the xc40 install failed.\n${NC}"
 fi
 
-##################################################################################
-# WARNING: DURING SIAT NO ACCESS TO QUADS SO COMMENTING OUT ENTIRE SECTION BELOW #
-##################################################################################
-# For EX's currently rsync the generated kgo to the exa from the exz
+# For EX's currently rsync the generated kgo to the exz from the exab
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
-# if [[ $succeeded_ex1a -eq 1 ]]; then
-#     printf "${GREEN}\n\nrsyncing the kgo to exa.\n${NC}"
-#     printf "Warning: Always rsyncing UM KGO on EXZ"
-#     rsync_dir="kgo/"
-#     host_rsync=$(rose host-select exab)
-#     rsync_com="ssh -Y login.exz 'rsync -av /common/umdir/standard_jobs/${rsync_dir} ${host_rsync}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
-#     ssh -Y frum@localhost $rsync_com
-#     if [[ $? -ne 0 ]]; then
-#         printf "${RED}The rsync to the exa has failed.\n${NC}"
-#     else
-#         printf "${Green}The rsync to the exa has succeeded.\n${NC}"
-#     fi
-# elif [[ $platforms == *"ex1a"* ]]; then
-#     printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
-# fi
+if [[ $succeeded_ex1a -eq 1 ]]; then
+    printf "${GREEN}\n\nrsyncing the kgo to exz.\n${NC}"
+    printf "Warning: Always rsyncing UM KGO (not lfricinputs) on ex1a"
+    rsync_dir="kgo/"
+    host_rsync=$(rose host-select exab)
+    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/umdir/standard_jobs/${rsync_dir} login.exz:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+    if [[ $launch_platform == "spice" ]]; then
+        ssh -Y frum@localhost $rsync_com
+    else
+        sudo -iu umadmin bash -c '$rsync_com'
+    fi
+    if [[ $? -ne 0 ]]; then
+        printf "${RED}The rsync to the exz has failed.\n${NC}"
+    else
+        printf "${Green}The rsync to the exz has succeeded.\n${NC}"
+    fi
+elif [[ $platforms == *"ex1a"* ]]; then
+    printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
+fi
 
 printf "\n\nInstallation Summary:\n\n"
-if [[ $platforms == *"spice"* ]]; then
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     if [[ $succeeded_spice -eq 1 ]]; then
         printf "${GREEN}Installation on spice successful.\n${NC}"
     else
         printf "${RED}Installation on spice unsuccessful. Review output for error.\n${NC}"
+    fi
+fi
+if [[ $platforms == *"azspice"* ]]; then
+    if [[ $succeeded_azspice -eq 1 ]]; then
+        printf "${GREEN}Installation on azspice successful.\n${NC}"
+    else
+        printf "${RED}Installation on azspice unsuccessful. Review output for error.\n${NC}"
     fi
 fi
 if [[ $platforms == *"xc40"* ]]; then

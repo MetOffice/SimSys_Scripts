@@ -12,13 +12,14 @@ Warning: Should only be run on a Test branch or by CR on commit to trunk
 
 import os
 import re
+import ast
 import shutil
 import argparse
 import tempfile
 import subprocess
 
 BLACK_COMMAND = "black --line-length=80"
-CLASS_NAME_REGEX = r"vn\d+_t\d+\w."
+CLASS_NAME_REGEX = r"vn\d+(_t\d+\w*)?"
 TAG_REGEX = r"\s*=\s*[\"']\s*(\S+)\s*[\"']"
 
 
@@ -42,24 +43,22 @@ def run_command(command, shell=False):
     )
 
 
-def get_root_path(apps_path):
+def get_root_path(wc_path):
     """
     Given a path to a working copy, ensure the path and working copy are both
     valid and return the path to the working copy root directory
     Inputs:
-        - apps_path, command line argument to the apps working copy
+        - wc_path, command line argument to a working copy
     Outputs:
         - str, path to the top level of the apps working copy
     """
 
     # Run fcm info on the given path to ensure it is
-    command = f"fcm info {apps_path}"
+    command = f"fcm info {wc_path}"
     result = run_command(command)
     if result.returncode:
         raise FileNotFoundError(
-            f"The provided LFRic Apps source, '{apps_path}', was not a valid "
-            "working copy. Please either run this script from within an LFRic "
-            "Apps working copy, or provide a path using the -a argument."
+            f"The provided source, '{wc_path}', was not a valid working copy."
         )
 
     # If no error, then search through output for the working copy root path
@@ -67,6 +66,10 @@ def get_root_path(apps_path):
     for line in result.stdout.split("\n"):
         if line.startswith("Working Copy Root Path"):
             return line.split(":", 1)[1].strip()
+    raise Exception(
+        "Couldn't extract the Working Copy Root path from the output of the "
+        f"command '{command}'"
+    )
 
 
 def run_black(filepath):
@@ -77,7 +80,7 @@ def run_black(filepath):
     """
     result = run_command(f"{BLACK_COMMAND} {filepath}")
     if result.returncode:
-        raise RuntimeError(
+        raise Exception(
             "Running 'black' as a subprocess failed. This may indicate a "
             "syntax error with your macro.\nThe error message produced "
             f"was:\n\n{result.stderr}"
@@ -100,7 +103,7 @@ def read_versions_file(meta_dir):
         file_raw = f.readlines()
     file_parsed = []
     for line in file_raw:
-        if len(line.strip().strip("\n")) > 0:
+        if len(line.strip()) > 0:
             file_parsed.append(line)
 
     return file_parsed
@@ -122,22 +125,40 @@ def split_macros(parsed_versions):
     in_macro = False
     in_comment = False
     for line in parsed_versions:
-        if '"""' in line:
-            for _ in range(line.count('"""')):
-                in_comment = not in_comment
-        if in_comment:
-            continue
-        if line.startswith("class vn"):
+        if line.startswith("class vn") and not line.startswith(
+            "class vnXX_txxx"
+        ):
+            # If the macro string is set, then append to the list. If it's
+            # empty then this is the first macro we're looking at, so nothing to
+            # append
             if macro:
                 macros.append(macro)
             in_macro = True
             macro = ""
         if in_macro:
             macro += line
+    # Make sure to record final macro
     if macro:
         macros.append(macro)
 
     return macros
+
+
+def deduplicate_list(lst):
+    """
+    Remove duplicate items from a list, keeping the first
+    Need to preserve order so not using a set
+    Inputs:
+        - lst, the list to deduplicate
+    Returns:
+        - the deduplicated list
+    """
+    deduplicated = []
+    for item in lst:
+        if item not in deduplicated:
+            deduplicated.append(item)
+
+    return deduplicated
 
 
 def match_python_import(line):
@@ -153,6 +174,34 @@ def match_python_import(line):
     return False
 
 
+def read_python_imports(path):
+    """
+    Given a path to a python file, return a set containing info of all module
+    imports in the file
+    Inputs:
+        - path, path to a python file
+    Returns:
+        - set containing data of python imports in given file
+    """
+
+    with open(path) as fh:
+        root = ast.parse(fh.read(), path)
+
+    imports = set()
+
+    for node in ast.walk(root):
+        if isinstance(node, ast.Import):
+            module = []
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module.split(".")
+        else:
+            continue
+
+        for n in node.names:
+            imports.add((tuple(module), tuple(n.name.split(".")), n.asname))
+    return imports
+
+
 def banner_print(message):
     """Print a simple banner message"""
     print(f"\n{(len(message)+4)*'*'}\n* {message} *\n{(len(message)+4)*'*'}\n")
@@ -163,21 +212,28 @@ class ApplyMacros:
     Object to hold data + methods to apply upgrade macros in lfric_apps
     """
 
-    def __init__(self, tag, apps, core, jules):
+    def __init__(self, tag, cname, apps, core, jules):
         self.tag = tag
-        # The class name is the After Tag with the . removed from the version
-        self.class_name = tag.replace(".", "")
+        if cname:
+            self.class_name = cname
+        else:
+            # The default class name is the After Tag with the '.'
+            #  removed from the version
+            self.class_name = tag.replace(".", "")
         self.temp_dirs = {}
         self.root_path = get_root_path(apps)
         self.core_source = self.get_dependency_paths(core, "lfric_core")
-        self.jules_source = self.get_dependency_paths(jules, "jules")
+        # The Jules source is temporarily ignored as Jules Shared metadata has a
+        # copy in LFRic, rather than using the Jules version. The LFRic build
+        # system needs modifying to enable this
+        # self.jules_source = self.get_dependency_paths(jules, "jules")
         self.set_rose_meta_path()
-        self.version = re.search(r".*vn(\d+\.\d+)_.*", tag).group(1)
+        self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
         self.ticket_number = None
         self.author = None
         self.parsed_macros = {}
-        self.meta_dirs = []
-        self.apps_with_macro = []
+        self.meta_dirs = set()
+        self.sections_with_macro = []
         self.python_imports = set()
         self.upgraded_core = False
 
@@ -185,11 +241,11 @@ class ApplyMacros:
         """
         Set up the ROSE_META_PATH environment variable in order to use the Jules
         and Core metadata. We also add the working copy root path as this should
-        allow the script to be run from anywhere
+        allow the script to be run from anywhere.
+        When Jules Shared from Jules is enabled, self.jules_source will need
+        adding here
         """
-        rose_meta_path = (
-            f"{self.root_path}:{self.core_source}:{self.jules_source}"
-        )
+        rose_meta_path = f"{self.root_path}:{self.core_source}"
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
     def parse_application_section(self, meta_dir):
@@ -202,9 +258,11 @@ class ApplyMacros:
         Returns:
             - path to the metadata directory with the root path removed
         """
-        meta_dir = meta_dir.removeprefix(self.root_path + "/")
-        meta_dir = meta_dir.removeprefix(self.core_source + "/")
-        meta_dir = meta_dir.removeprefix(self.jules_source + "/")
+        meta_dir = meta_dir.removeprefix(self.root_path)
+        meta_dir = meta_dir.removeprefix(self.core_source)
+        # Reinstate when using Jules Shared from Jules
+        # meta_dir = meta_dir.removeprefix(self.jules_source)
+        meta_dir = meta_dir.removeprefix("/")
 
         meta_dir = meta_dir.removesuffix("/HEAD")
         meta_dir = meta_dir.removesuffix("/versions.py")
@@ -245,7 +303,7 @@ class ApplyMacros:
 
         # Check that the source looks like an fcm keyword, raise an error if not
         if "fcm:" not in source:
-            raise RuntimeError(
+            raise Exception(
                 f"The {repo} source: {source}, was not found as a working copy "
                 "and does not look like an fcm url. Please check the source."
                 "If not set on the command then the dependencies.sh file is "
@@ -259,11 +317,11 @@ class ApplyMacros:
     def read_dependencies(self, repo):
         """
         Read through the dependencies.sh file for the source of the repo defined
-        by repo. Assumes this file is in rose-stem/bin and gets the
-        dependencies.sh path from that.
+        by repo. Uses self.root_path to locate the dependencies.sh file.
         Inputs:
             - repo, str, Either "lfric_core" or "jules" depending on which
-                         source is being found
+                         source is being found. The function will work with
+                         other repos, but not intended to within this script.
         Outputs:
             - str, The source as defined by the dependencies.sh file
         """
@@ -309,7 +367,7 @@ class ApplyMacros:
         command = f"fcm co {url} {tempdir}"
         result = run_command(command)
         if result.returncode:
-            raise RuntimeError(
+            raise Exception(
                 f"Failed to checkout from URL {url} into directory {tempdir} "
                 f"with error message:\n\n{result.stderr}"
             )
@@ -322,25 +380,16 @@ class ApplyMacros:
     def find_meta_dirs(self, path):
         """
         Searching from a working copy root path, return a list of paths to all
-        the rose-meta firectories using the "find" command. Search by looking
+        the rose-meta directories using os.walk(). Search by looking
         for versions.py files
         Outputs:
             - str, stdout of find command looking for versions.py files
         """
 
-        command = f"find {path} -name versions.py"
-        result = run_command(command)
-        if result.returncode:
-            raise RuntimeError(
-                "Error while finding versions.py files in the directory "
-                f"{path}. Running command '{command}'\nError:\n\n"
-                f"{result.stderr}\n"
-            )
-        meta_dirs = result.stdout.split("\n")
-        for item in meta_dirs:
-            item = item.removesuffix("/versions.py")
-            if item:
-                self.meta_dirs.append(item)
+        for dirpath, dirnames, filenames in os.walk(path):
+            dirnames[:] = [d for d in dirnames if d not in [".svn"]]
+            if "versions.py" in filenames:
+                self.meta_dirs.add(dirpath)
 
     def parse_macro(self, macro, meta_dir):
         """
@@ -370,8 +419,8 @@ class ApplyMacros:
         try:
             before_tag = re.search(rf"BEFORE_TAG{TAG_REGEX}", macro).group(1)
         except AttributeError as exc:
-            raise RuntimeError(
-                "Couldn't find either a Before tag for the requested "
+            raise Exception(
+                "Couldn't find a Before tag for the requested "
                 f"macro in the file {version_file}"
             ) from exc
 
@@ -386,12 +435,12 @@ class ApplyMacros:
                 in_function = True
                 continue
             if (
-                line_stripped.startswith("return")
+                line_stripped.startswith("return config, self.reports")
                 or line_stripped.startswith("# Input your macro commands here")
                 or line_stripped.lower().startswith("# add settings")
+                or not in_function
+                or line_stripped.startswith("return config")
             ):
-                continue
-            if not in_function or line_stripped.startswith("return config"):
                 continue
             commands += line + "\n"
 
@@ -411,8 +460,9 @@ class ApplyMacros:
         """
 
         filepath = os.path.join(meta_dir, "versions.py")
+        temppath = os.path.join(meta_dir, ".versions.py")
 
-        with open(filepath, "w") as f:
+        with open(temppath, "w") as f:
             in_new_macro = False
             for line in contents:
                 if re.match(r"class vn\d+_t\d+", line):
@@ -423,7 +473,15 @@ class ApplyMacros:
                 if not in_new_macro:
                     f.write(line)
 
-        run_black(filepath)
+        run_black(temppath)
+
+        if not os.path.getsize(temppath) > 0:
+            raise Exception(
+                f"The file modified at {filepath} has zero size, indicating "
+                "something has gone wrong"
+            )
+
+        os.rename(temppath, filepath)
 
     def find_last_macro(self, macros, meta_dir):
         """
@@ -445,16 +503,16 @@ class ApplyMacros:
                         after_tag = re.search(
                             rf"AFTER_TAG{TAG_REGEX}", macro
                         ).group(1)
-                    except AttributeError:
-                        raise RuntimeError(
+                    except AttributeError as exc:
+                        raise Exception(
                             "Couldn't find an after tag in the macro:\n"
                             f"{macro}"
-                        )
+                        ) from exc
                     found_macro = macro
                     macros.remove(found_macro)
                     break
             else:
-                raise RuntimeError(
+                raise Exception(
                     f"Couldn't find the before tag '{after_tag}' in macros in "
                     f"the versions.py file at {meta_dir}"
                 )
@@ -462,8 +520,9 @@ class ApplyMacros:
 
     def find_macro(self, meta_dir, macros):
         """
-        Read through a list of macros, trying to find desired one. If this is
-        present then return true, otherwise false
+        Read through a list of macros, trying to find the macro with a class
+        name that matches the class name supplied (either from the tag or
+        cname option). If this is present then return the macro.
         Inputs:
             - meta_dir, str, The path to the rose metadata directory containing
               these macros
@@ -481,7 +540,7 @@ class ApplyMacros:
                     rf"class ({CLASS_NAME_REGEX})\(", macro
                 ).group(1)
             except AttributeError as exc:
-                raise RuntimeError(
+                raise Exception(
                     "Unable to determine macro class name in "
                     f"{version_file} in macro:\n{macro}"
                 ) from exc
@@ -497,23 +556,30 @@ class ApplyMacros:
         Inputs:
             - imp, the import statement without the full path
         Returns:
-            - the import statement containing the full path - default to using
-              the apps working copy
+            - the import statement containing the full path - raises an error if
+              not found
         """
 
         core_imp = os.path.join(self.core_source, imp)
-        if os.path.exists(core_imp):
+        if os.path.exists(core_imp) or os.path.exists(
+            os.path.dirname(core_imp)
+        ):
             return core_imp
 
-        jules_imp = os.path.join(self.jules_source, imp)
-        if os.path.exists(jules_imp):
-            return jules_imp
+        # Reinstate when using Jules Shared from Jules
+        # jules_imp = os.path.join(self.jules_source, imp)
+        # if os.path.exists(jules_imp) or os.path.exists(
+        #     os.path.dirname(jules_imp)
+        # ):
+        #     return jules_imp
 
         apps_imp = os.path.join(self.root_path, imp)
-        if os.path.exists(apps_imp):
+        if os.path.exists(apps_imp) or os.path.exists(
+            os.path.dirname(apps_imp)
+        ):
             return apps_imp
 
-        raise RuntimeError(
+        raise Exception(
             f"Couldn't find the import '{imp}' in any of the Apps, Core or "
             "Jules sources."
         )
@@ -534,14 +600,6 @@ class ApplyMacros:
         else:
             meta_file = meta_dir
 
-        # First grep for lines starting with import=
-        # No imports if it doesn't return anything
-        result = run_command(f"grep -E '^ *{flag}=' {meta_file}", shell=True)
-        if not result.stdout:
-            if flag == "meta":
-                return ""
-            self.parsed_macros[meta_dir]["imports"] = []
-
         imports = []
         with open(meta_file, "r") as f:
             in_import_list = False
@@ -557,79 +615,51 @@ class ApplyMacros:
                         # Split the import line by '=' then take the rhs
                         # Then remove the trailing '/HEAD'
                         # Then prepend the path to the working copy
-                        imp = line.split("=", 1)[1].strip("/HEAD")
+                        imp = line.split("=", 1)[1].removesuffix("/HEAD")
                         imp = self.get_full_import_path(imp)
                         imports.append(imp)
-                        if flag == "meta":
-                            return imports[0]
                     else:
                         break
-        self.parsed_macros[meta_dir]["imports"] = imports
-
-    def read_python_imports(self, versions):
-        """
-        Read through a python versions.py file for any python module imports.
-        Record this in self.python_imports
-        Inputs:
-            - versions, list of lines in a versions.py file
-        """
-
-        started_imports = False
-        for line in versions:
-            line = line.strip()
-            if match_python_import(line):
-                started_imports = True
-                self.python_imports.add(line)
-            elif started_imports:
-                return
+        return imports
 
     def write_python_imports(self, meta_dir):
         """
         Write out all required python module imports at the top of a versions.py
-        file. Read imports from self.python_imports
+        file. New imports are written at the top of the current import
+        statement section. Read imports from self.python_imports
         Inputs:
             - meta_dir, path to the metadata directory with a versions.py file
         """
 
-        fpath = os.path.join(meta_dir, "versions.py")
+        filepath = os.path.join(meta_dir, "versions.py")
+        temppath = os.path.join(meta_dir, ".versions.py")
 
-        with open(fpath) as f:
+        # Work out where we need to insert the new imports
+        # For simplicity, do this at the beginning of the existing imports
+        # Should be safe as versions.py files always require importing code
+        # from rose
+        with open(filepath) as f:
             versions_file = f.readlines()
-
-        started_imports = False
-        found_imports = set()
         for i, line in enumerate(versions_file):
-            line = line.strip()
             if match_python_import(line):
-                started_imports = True
-                found_imports.add(line)
-            elif started_imports:
                 insertion_index = i
                 break
 
+        found_imports = read_python_imports(filepath)
         missing_imports = self.python_imports.difference(found_imports)
-        for imp in missing_imports:
-            versions_file.insert(insertion_index, imp)
+        for mod, name, alias in missing_imports:
+            imp_str = f"import {','.join(n for n in name)}"
+            if mod:
+                imp_str = f"from {'.'.join(m for m in mod)} {imp_str}"
+            if alias:
+                imp_str += f" as {alias}"
+            versions_file.insert(insertion_index, imp_str)
 
-        with open(fpath, "w") as f:
+        with open(temppath, "w") as f:
             for line in versions_file:
                 f.write(line.strip("\n") + "\n")
 
-    def deduplicate_list(self, lst):
-        """
-        Remove duplicate items from a list, keeping the first
-        Need to preserve order so not using a set
-        Inputs:
-            - lst, the list to deduplicate
-        Returns:
-            - the deduplicated list
-        """
-        deduplicated = []
-        for item in lst:
-            if item not in deduplicated:
-                deduplicated.append(item)
-
-        return deduplicated
+        os.rename(temppath, filepath)
 
     def determine_import_order(self, app):
         """
@@ -650,18 +680,17 @@ class ApplyMacros:
         except KeyError:
             # Jules Shared directories will produce a key error - these are
             # guaranteed to not import anything
-            imports = []
+            return []
         for meta_import in imports:
             import_list = self.determine_import_order(meta_import) + import_list
 
-        return self.deduplicate_list(import_list)
+        return deduplicate_list(import_list)
 
     def combine_macros(self, import_order):
         """
-        For a given application, combine macro commands from imported metadata
-        and itself to get full macro for a particular change.
+        Combine macro commands, adding commands in the order determined by
+        import_order.
         Inputs:
-            - version_file, the path to an applications versions.py file
             - import_order, the metadata import order to match the order of
               marcro commands.
         Returns:
@@ -676,7 +705,8 @@ class ApplyMacros:
             ):
                 # Add a comment labelling where these commands came from
                 full_command += (
-                    f"        # {self.parse_application_section(meta_import)}\n"
+                    "        # Commands From: "
+                    f"{self.parse_application_section(meta_import)}\n"
                 )
                 if self.parsed_macros[meta_import]["commands"].strip("\n"):
                     full_command += (
@@ -696,9 +726,11 @@ class ApplyMacros:
         """
 
         parsed_macro = self.parsed_macros[meta_dir]
-        version_file = os.path.join(meta_dir, "versions.py")
+        filepath = os.path.join(meta_dir, "versions.py")
+        temppath = os.path.join(meta_dir, ".versions.py")
+        shutil.copy(filepath, temppath)
 
-        with open(version_file, "a") as f:
+        with open(temppath, "a") as f:
             f.write(
                 f"class {self.class_name}(MacroUpgrade):\n"
                 f'    """Upgrade macro for ticket {self.ticket_number} '
@@ -710,7 +742,9 @@ class ApplyMacros:
                 "        return config, self.reports\n"
             )
 
-        run_black(version_file)
+        run_black(temppath)
+
+        os.rename(temppath, filepath)
 
     def preprocess_macros(self):
         """
@@ -740,7 +774,9 @@ class ApplyMacros:
             if not found_macro:
                 # If we reach here then the new macro hasn't been added to
                 # this versions file - in this case work out the final after
-                #  tag in the chain and record in parsed macros
+                #  tag in the chain - if we import other commands for this
+                # versions file, this final after tag will be the before tag of
+                # that new macro.
                 last_after_tag = self.find_last_macro(macros, meta_dir)
                 self.parsed_macros[meta_dir] = {
                     "before_tag": last_after_tag,
@@ -754,24 +790,18 @@ class ApplyMacros:
 
             # Read through rose-meta files for import statements
             # of other metadata
-            self.read_meta_imports(meta_dir)
+            self.parsed_macros[meta_dir]["imports"] = self.read_meta_imports(
+                meta_dir
+            )
 
             # Read through the versions.py file for python import statements
-            self.read_python_imports(parsed_versions)
+            self.python_imports.update(
+                read_python_imports(os.path.join(meta_dir, "versions.py"))
+            )
 
         # Now reconstruct the macro for all applications which have the newly
         # added macro or import metadata with the new macro
-        # Note, this is only done for applications, not for science sections
         for meta_dir in self.meta_dirs:
-            if not (
-                meta_dir.startswith(
-                    os.path.join(self.root_path, "applications")
-                )
-                or meta_dir.startswith(
-                    os.path.join(self.core_source, "applications")
-                )
-            ):
-                continue
             import_order = self.determine_import_order(meta_dir)
             full_command = self.combine_macros(import_order)
             # If there are commands to write out, do so and record this
@@ -783,7 +813,7 @@ class ApplyMacros:
                 )
                 self.write_python_imports(meta_dir)
                 self.write_new_macro(meta_dir, full_command)
-                self.apps_with_macro.append(meta_dir)
+                self.sections_with_macro.append(meta_dir)
 
     ############################################################################
     # Upgrade Apps Functions
@@ -818,35 +848,39 @@ class ApplyMacros:
         """
         upgradeable_apps = []
         app_dir_apps = os.path.join(self.root_path, "rose-stem", "app")
-        apps_lstdir = os.listdir(app_dir_apps)
         app_dir_core = os.path.join(self.core_source, "rose-stem", "app")
-        core_lstdir = os.listdir(app_dir_core)
-        for app in apps_lstdir + core_lstdir:
-            if "fcm_make" in app or "lfric_coupled_rivers" in app:
+        apps_list = [
+            os.path.join(app_dir_apps, f) for f in os.listdir(app_dir_apps)
+        ]
+        apps_list += [
+            os.path.join(app_dir_core, f) for f in os.listdir(app_dir_core)
+        ]
+        for app_path in apps_list:
+            # Ignore lfric_coupled_rivers as this is based on Jules-standalone
+            # metadata which is not currently available
+            if "fcm_make" in app_path or "lfric_coupled_rivers" in app_path:
                 continue
-            if app in apps_lstdir:
-                app_path = os.path.join(app_dir_apps, app)
-            else:
-                app_path = os.path.join(app_dir_core, app)
             if not os.path.isdir(app_path):
                 continue
             meta_import = self.read_meta_imports(
                 os.path.join(app_path, "rose-app.conf"), "meta"
             )
-            meta_import = os.path.dirname(meta_import)
-            if meta_import in self.apps_with_macro:
-                upgradeable_apps.append((app, app_path))
+            # If there was a metadata import, it is the first value in the list
+            # It includes the version directory, so remove this to compare with
+            # self.sections_with_macro
+            if meta_import:
+                if os.path.dirname(meta_import[0]) in self.sections_with_macro:
+                    upgradeable_apps.append(app_path)
 
         return upgradeable_apps
 
-    def run_app_upgrade(self, app, app_path):
+    def run_app_upgrade(self, app_path):
         """
         Run 'rose app-upgrade' on a particular rose-stem app
         Inputs:
-            - app, the name of the app being upgraded
             - app_path, the path to this app
         """
-
+        app = os.path.basename(app_path)
         print(f"[INFO] Upgrading the rose-stem app {app}")
         command = f"rose app-upgrade -a -y -C {app_path} {self.tag}"
         result = run_command(command)
@@ -858,14 +892,14 @@ class ApplyMacros:
             )
         print(f"[PASS] Upgraded rose-stem app {app} successfully")
 
-    def run_macro_fix(self, app, app_path):
+    def run_macro_fix(self, app_path):
         """
         Run 'rose macro --fix' on a particular rose-stem app to force metadata
         consistency
         Inputs:
-            - app, the name of the app being upgraded
             - app_path, the path to this app
         """
+        app = os.path.basename(app_path)
         print(f"[INFO] Forcing metadata consistency in app {app}")
         command = f"rose macro --fix -y -C {app_path}"
         result = run_command(command)
@@ -884,8 +918,8 @@ class ApplyMacros:
         First run over all metadata directories and run rose metadata-check on
         each
         Then run over all rose apps. If there is an import statement for an
-        application with the upgrade macro (stored in self.apps_with_macro) then
-        run rose commands on it.
+        application with the upgrade macro (stored in self.sections_with_macro)
+        then run rose commands on it.
         - rose app-upgrade
         - rose macro --fix
         """
@@ -902,11 +936,24 @@ class ApplyMacros:
 
         banner_print("[INFO] Upgrading Apps")
         upgradeable_apps = self.apps_to_upgrade()
-        for app, app_path in upgradeable_apps:
-            self.run_app_upgrade(app, app_path)
-            self.run_macro_fix(app, app_path)
+        for app_path in upgradeable_apps:
+            self.run_app_upgrade(app_path)
+            self.run_macro_fix(app_path)
             if app_path.startswith(self.core_source):
                 self.upgraded_core = True
+
+
+def check_tag(opt):
+    """
+    Check that a command line supplied tag is of a valid format
+    """
+    class_name = opt.replace(".", "")
+    if not re.match(CLASS_NAME_REGEX, class_name):
+        raise argparse.ArgumentTypeError(
+            f"The tag '{opt}' does not conform to the "
+            "'vnXX.Y_tTTTT' naming scheme. Please modify and rerun."
+        )
+    return opt
 
 
 def parse_args():
@@ -915,12 +962,20 @@ def parse_args():
     """
 
     parser = argparse.ArgumentParser(
-        "Pre-process and apply lfric_apps upgrade macros."
+        "Pre-process and apply LFRic Apps upgrade macros."
     )
     parser.add_argument(
         "tag",
+        type=check_tag,
         metavar="after-tag",
         help="The After Tag of the upgrade macro being upgraded to.",
+    )
+    parser.add_argument(
+        "-n",
+        "--cname",
+        default=None,
+        help="The class name of the upgrade macro. This should only be used at "
+        "a new release when the tag and classname differ.",
     )
     parser.add_argument(
         "-a",
@@ -956,16 +1011,9 @@ def main():
 
     args = parse_args()
 
-    # if the class name doesn't conform to the expected vnXX.Y_tTTTT naming
-    # convention raise an error
-    class_name = args.tag.replace(".", "")
-    if not re.match(CLASS_NAME_REGEX, class_name):
-        raise RuntimeError(
-            f"The class name '{class_name}' does not conform to the "
-            "'vnXX.Y_tTTTT' naming scheme. Please modify and rerun."
-        )
-
-    macro_object = ApplyMacros(args.tag, args.apps, args.core, args.jules)
+    macro_object = ApplyMacros(
+        args.tag, args.cname, args.apps, args.core, args.jules
+    )
 
     # Pre-process macros
     banner_print("Pre-Processing Macros")
