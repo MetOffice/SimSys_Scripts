@@ -4,6 +4,9 @@ src/atmosphere/dynamics_solver/include/eg_inner_prod.h
 src/atmosphere/dynamics_solver/include/gmres1.h
 src/atmosphere/dynamics_solver/include/tri_sor_vl.h
 src/atmosphere/dynamics_solver/include/tri_sor.h
+src/atmosphere/free_tracers/include/wtrac_all_phase_chg.h
+src/atmosphere/free_tracers/include/wtrac_calc_ratio_fn.h
+src/atmosphere/free_tracers/include/wtrac_move_phase.h
 src/control/mpp/include/extended_halo_exchange_mod_swap_bounds_ext.h
 src/control/mpp/include/tools_halo_exchange_mod_extended_copy_ns_halo_to_buffer.h
 src/control/mpp/include/tools_halo_exchange_mod_extended_copy_ew_halo_to_buffer.h
