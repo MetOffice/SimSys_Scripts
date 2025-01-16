@@ -78,6 +78,13 @@ def run_black(filepath):
     Inputs:
         - filepath, the path to the file to run black on
     """
+    result = run_command(f"isort {filepath}")
+    if result.returncode:
+        raise Exception(
+            "Running 'isort' as a subprocess failed. This may indicate a "
+            "syntax error with your macro.\nThe error message produced "
+            f"was:\n\n{result.stderr}"
+        )
     result = run_command(f"{BLACK_COMMAND} {filepath}")
     if result.returncode:
         raise Exception(
