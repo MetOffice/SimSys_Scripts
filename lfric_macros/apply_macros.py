@@ -78,6 +78,13 @@ def run_black(filepath):
     Inputs:
         - filepath, the path to the file to run black on
     """
+    result = run_command(f"isort {filepath}")
+    if result.returncode:
+        raise Exception(
+            "Running 'isort' as a subprocess failed. This may indicate a "
+            "syntax error with your macro.\nThe error message produced "
+            f"was:\n\n{result.stderr}"
+        )
     result = run_command(f"{BLACK_COMMAND} {filepath}")
     if result.returncode:
         raise Exception(
@@ -212,7 +219,7 @@ class ApplyMacros:
     Object to hold data + methods to apply upgrade macros in lfric_apps
     """
 
-    def __init__(self, tag, cname, apps, core, jules):
+    def __init__(self, tag, cname, version, apps, core, jules):
         self.tag = tag
         if cname:
             self.class_name = cname
@@ -228,7 +235,10 @@ class ApplyMacros:
         # system needs modifying to enable this
         # self.jules_source = self.get_dependency_paths(jules, "jules")
         self.set_rose_meta_path()
-        self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
+        if version is None:
+            self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
+        else:
+            self.version = version
         self.ticket_number = None
         self.author = None
         self.parsed_macros = {}
@@ -956,6 +966,20 @@ def check_tag(opt):
     return opt
 
 
+def version_number(opt):
+    """
+    Check that the command line supplied version number is of a suitable format
+    """
+    if opt is None:
+        return opt
+    if not re.match(r"\d+.\d+", opt):
+        raise argparse.ArgumentTypeError(
+            f"The version number '{opt}' does not conform to the 'X.Y' format."
+            "Please modify the command line argument and rerun."
+        )
+    return opt
+
+
 def parse_args():
     """
     Read command line args
@@ -976,6 +1000,13 @@ def parse_args():
         default=None,
         help="The class name of the upgrade macro. This should only be used at "
         "a new release when the tag and classname differ.",
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        default=None,
+        type=version_number,
+        help="The new version number we are updating to (format X.Y)",
     )
     parser.add_argument(
         "-a",
@@ -1004,15 +1035,18 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
+def apply_macros_main(args):
     """
     Main function for this program
     """
 
-    args = parse_args()
-
     macro_object = ApplyMacros(
-        args.tag, args.cname, args.apps, args.core, args.jules
+        args["tag"],
+        args["cname"],
+        args["version"],
+        args["apps"],
+        args["core"],
+        args["jules"],
     )
 
     # Pre-process macros
@@ -1043,4 +1077,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    apply_macros_main(vars(args))
