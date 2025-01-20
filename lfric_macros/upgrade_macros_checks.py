@@ -14,8 +14,7 @@ import os
 import re
 import shutil
 import subprocess
-from collections import defaultdict
-from apply_macros import ApplyMacros
+from apply_macros import ApplyMacros, read_versions_file, split_macros
 
 def run_command(command):
     """
@@ -46,7 +45,7 @@ def find_upgradeable_apps(apps_dir):
         - list of app names that can be upgraded
     """
 
-    valid_apps = defaultdict(set)
+    valid_apps = {}
     for app in os.listdir(apps_dir):
         conf_path = os.path.join(apps_dir, app, "rose-app.conf")
         if not os.path.isfile(conf_path):
@@ -127,14 +126,30 @@ def main():
         os.path.join(macro_object.root_path, "applications")
     )
 
+    # Check that the Before/After tags form a valid chain
     for meta_dir in macro_object.meta_dirs:
-
-        # Check that the Before/After tags form a valid chain
         before_tags = find_macro_tags("before", meta_dir)
         after_tags = find_macro_tags("after", meta_dir)
         compare_tags(before_tags, after_tags, meta_dir)
 
+    # Check that rose-stem apps have the correct
+    valid_apps = find_upgradeable_apps(os.path.join(os.environ['CYLC_WORKFLOW_RUN_DIR'], "app"))
+    last_tags = {}
 
+    for app, meta_path in valid_apps.items():
+        meta_tag = os.path.basename(meta_path)
+        meta_path = os.path.dirname(meta_path)
+        if meta_path not in last_tags:
+            macros = read_versions_file(meta_path)
+            macros = split_macros(macros)
+            last_after_tag = macro_object.find_last_macro(macros, meta_dir)
+            last_tags[meta_path] = last_after_tag
+        if meta_tag != last_tags[meta_path]:
+            raise Exception(
+                f"The metadata tag for the rose-stem app {app} is {meta_tag} "
+                "which doesn't match the correct metadata after tag of "
+                f"{last_tags[meta_path]}."
+            )
 
     # Remove temp directories
     for _, directory in macro_object.temp_dirs.items():
