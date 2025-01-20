@@ -53,13 +53,18 @@ def run_command(command, timelimit=120):
     Outputs:
         - result object from subprocess.run
     """
-    return subprocess.run(
+    result = subprocess.run(
         command.split(),
         capture_output=True,
         text=True,
         timeout=timelimit,
         check=False,
     )
+
+    if result.returncode:
+        raise_exception(result, command)
+
+    return result
 
 
 def raise_exception(result, command):
@@ -195,8 +200,6 @@ def copy_head_meta(meta_dirs, args):
         new = os.path.join(meta_dir, args.version)
         command = f"fcm cp {head} {new}"
         result = run_command(command)
-        if result.returncode:
-            raise_exception(result, command)
 
 
 def update_meta_import_path(meta_dirs, args):
@@ -245,8 +248,6 @@ def copy_versions_files(meta_dirs, args):
         upgrade_file = os.path.join(meta_dir, upgrade_name)
         command = f"fcm cp {versions_file} {upgrade_file}"
         result = run_command(command)
-        if result.returncode:
-            raise_exception(result, command)
 
     return upgrade_name
 
