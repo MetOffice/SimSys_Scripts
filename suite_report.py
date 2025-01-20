@@ -1918,12 +1918,9 @@ class SuiteReport:
                         ticket_nos += f"{project}:{url_dict['ticket no']} "
                 except KeyError:
                     pass
+            bg_colour = BACKGROUND_COLOURS[self.primary_project.lower()]
             trac_log.append(
-                # pylint: disable=consider-using-f-string
-                "{{{{{{#!div style='background : {0:s}'".format(
-                    BACKGROUND_COLOURS[self.primary_project.lower()]
-                )
-                # pylint: enable=consider-using-f-string
+                f"{{{{{{#!div style='background : {bg_colour}'"
             )
             if ticket_nos != "":
                 trac_log.append(
