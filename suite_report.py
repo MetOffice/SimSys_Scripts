@@ -2107,7 +2107,7 @@ class SuiteReport:
 
                 raise
 
-        # pylint: disable=broad-exception-caught
+        # pylint: enable=broad-exception-caught
 
 # pylint: enable=too-many-instance-attributes
 # pylint: enable=too-many-locals
