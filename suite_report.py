@@ -8,10 +8,9 @@
 """
    ## NOTE ##
 
-   This module is one of several for which the Master copy is in the
-   UM repository. When making changes, please ensure the changes are
-   made in the UM repository or they will be lost during the release
-   process when the UM copy is copied over.
+   This module is one of several for which the main copy is in the
+   SimSys_Scripts repository. When making changes, please ensure the
+   changes are made in the github repository.
 
    Script to process the results of a suite and write a summary to file. The
    summary is in Trac wiki mark-up. Any projects that do not have a local
