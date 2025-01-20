@@ -2025,14 +2025,11 @@ class SuiteReport:
                 trac_log.append("")
                 trac_log.append("-----")
                 trac_log.append(" = WARNING !!! = ")
-                # pylint: disable=consider-using-f-string
                 trac_log.append(
                     "This rose-stem suite included multiple "
-                    + "branches in {0:d} projects:".format(
-                        len(self.multi_branches.keys())
-                    )
+                    + f"branches in {len(self.multi_branches.keys())}"
+                    + " projects:"
                 )
-                # pylint: enable=consider-using-f-string
                 trac_log.append("")
                 for project, branch_names in self.multi_branches.items():
                     trac_log.append(f"'''{project}'''")
