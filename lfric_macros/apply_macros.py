@@ -207,6 +207,48 @@ def banner_print(message):
     print(f"\n{(len(message)+4)*'*'}\n* {message} *\n{(len(message)+4)*'*'}\n")
 
 
+def read_example_meta_source(path):
+        """
+        Read the metadata source from an 'example_meta_source.txt' file
+        Return:
+            - str, the name of the metadata source
+        """
+
+        with open(os.path.join(path, "example_meta_source.txt")) as f:
+            return f.readlines.strip()
+
+
+def create_temporary_config_file(example_path, meta_name, last_tag):
+    """
+    Create a temporary rose-app.conf file from an example configuration.nml
+    Use the 'rose namelist-dump' command
+    Add a file:configuration.nml section
+    Add a meta= import to the top
+    Returns:
+        - path to this file in a temporary directory
+    """
+    tempdir = tempfile.mkdtemp()
+    tempconf = os.path.join(tempdir, "rose-app.conf")
+    command = f"rose namelist-dump {example_path} -o {tempconf}"
+    result = run_command(command)
+    if result.returncode:
+        raise Exception(
+            f"Failed to run 'rose namelist-dump' on nml file in {example_path}."
+            f"\nThe error message produced was:\n\n{result.stder}"
+        )
+
+    with open(tempconf) as f:
+        lines = f.readlines()
+
+    # Add the metadata import statement
+    # lines = [f"meta={meta_name}/{last_tag}\n\n"] + lines
+
+    with open(tempconf, "w") as f:
+        f.write("".join(x for x in lines))
+
+    return tempdir
+
+
 class ApplyMacros:
     """
     Object to hold data + methods to apply upgrade macros in lfric_apps
@@ -874,6 +916,24 @@ class ApplyMacros:
 
         return upgradeable_apps
 
+    def find_example_dirs(self):
+        """
+        Search through apps and core paths for Example directories with a
+        configuration.nml file in.
+        Returns:
+            - list of paths to configuration.nml files
+        """
+
+        example_paths = set()
+
+        for path in [self.root_path, self.core_source]:
+            for dirpath, dirnames, filenames in os.walk(path):
+                dirnames[:] = [d for d in dirnames if d not in [".svn"]]
+                if "example_meta_source.txt" in filenames:
+                    example_paths.add(dirpath)
+
+        return example_paths
+
     def run_app_upgrade(self, app_path):
         """
         Run 'rose app-upgrade' on a particular rose-stem app
@@ -935,12 +995,35 @@ class ApplyMacros:
         #     self.metadata_check(meta_dir)
 
         banner_print("[INFO] Upgrading Apps")
+
+        # Upgrade Standard Rose-Stem Apps
         upgradeable_apps = self.apps_to_upgrade()
         for app_path in upgradeable_apps:
             self.run_app_upgrade(app_path)
             self.run_macro_fix(app_path)
             if app_path.startswith(self.core_source):
                 self.upgraded_core = True
+
+        # Upgrade Example Directory Apps (configuration.nml files)
+        example_paths = self.find_example_dirs()
+        for example_path in example_paths:
+            meta_name = read_example_meta_source(example_path)
+            if example_path.startswith(self.root_path):
+                start = self.root_path
+            else:
+                start = self.core_source
+            meta_source = os.path.join(start, "rose-meta", meta_name)
+            # Check that this meta source has an upgrade macro
+            if meta_source not in self.sections_with_macro:
+                continue
+            last_tag = self.parsed_macros[meta_source]["before_tag"]
+            # Create temporary rose-app.conf file
+            temp_config_file = create_temporary_config_file(os.path.join(example_path, "configuration.nml"), meta_name, last_tag)
+            # Apply upgrade macros to temporary rose-app.conf
+            self.run_app_upgrade(temp_config_file)
+            self.run_macro_fix(temp_config_file)
+
+
 
 
 def check_tag(opt):
