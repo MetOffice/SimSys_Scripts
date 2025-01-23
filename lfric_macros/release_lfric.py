@@ -114,10 +114,11 @@ def find_meta_dirs(paths):
     dirs = set()
     for path in paths:
         for dirpath, dirnames, filenames in os.walk(path):
+            exclude_dirs = [".svn", "rose-stem", "integration-test"]
             dirnames[:] = [
                 d
                 for d in dirnames
-                if d not in [".svn", "rose-stem", "integration-test"]
+                if d not in exclude_dirs
             ]
             if "rose-meta.conf" in filenames:
                 dirs.add(os.path.dirname(dirpath))
