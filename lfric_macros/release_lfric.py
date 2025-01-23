@@ -303,7 +303,7 @@ def update_versions_file(meta_dirs, upgrade_name):
         versions_file = os.path.join(meta_dir, "versions.py")
         command = f"cp {template_path} {versions_file}"
         result = run_command(command)
-        add_new_import(template_path, upgrade_name)
+        add_new_import(versions_file, upgrade_name)
 
 
 def ticket_number(opt):
