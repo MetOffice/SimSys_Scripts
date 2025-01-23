@@ -72,13 +72,13 @@ def get_root_path(wc_path):
     )
 
 
-def run_black(filepath):
+def apply_styling(filepath):
     """
     Run black on a given file
     Inputs:
         - filepath, the path to the file to run black on
     """
-    result = run_command(f"isort {filepath}")
+    result = run_command(f"isort --profile black {filepath}")
     if result.returncode:
         raise Exception(
             "Running 'isort' as a subprocess failed. This may indicate a "
@@ -483,7 +483,7 @@ class ApplyMacros:
                 if not in_new_macro:
                     f.write(line)
 
-        run_black(temppath)
+        apply_styling(temppath)
 
         if not os.path.getsize(temppath) > 0:
             raise Exception(
@@ -752,7 +752,7 @@ class ApplyMacros:
                 "        return config, self.reports\n"
             )
 
-        run_black(temppath)
+        apply_styling(temppath)
 
         os.rename(temppath, filepath)
 
@@ -1035,19 +1035,14 @@ def parse_args():
     return parser.parse_args()
 
 
-def apply_macros_main(args):
+def apply_macros_main(
+    tag, cname=None, version=None, apps=".", core=None, jules=None
+):
     """
     Main function for this program
     """
 
-    macro_object = ApplyMacros(
-        args["tag"],
-        args["cname"],
-        args["version"],
-        args["apps"],
-        args["core"],
-        args["jules"],
-    )
+    macro_object = ApplyMacros(tag, cname, version, apps, core, jules)
 
     # Pre-process macros
     banner_print("Pre-Processing Macros")
@@ -1078,4 +1073,6 @@ def apply_macros_main(args):
 
 if __name__ == "__main__":
     args = parse_args()
-    apply_macros_main(vars(args))
+    apply_macros_main(
+        args.tag, args.cname, args.version, args.apps, args.core, args.jules
+    )

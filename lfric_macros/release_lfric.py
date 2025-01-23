@@ -28,7 +28,7 @@ from apply_macros import (
     apply_macros_main,
     get_root_path,
     read_versions_file,
-    run_black,
+    apply_styling,
     split_macros,
     version_number,
 )
@@ -282,52 +282,28 @@ def add_new_import(versions_file, upgrade_name):
         for line in lines:
             f.write(line)
 
-    run_black(versions_file)
-
-
-def remove_macro_classes(versions_file):
-    """
-    Delete all macro classes from the versions.py file
-    Do this by removing all lines below the start of the first macro
-    """
-
-    with open(versions_file, "r") as f:
-        lines = f.readlines()
-
-    in_comment = False
-    end_line = len(lines)
-    for i, line in enumerate(lines):
-        # Skip docstring comments
-        if '"""' in line:
-            for _ in range(line.count('"""')):
-                in_comment = not in_comment
-        if in_comment:
-            continue
-        # If we match the pattern of an upgrade macro, break here
-        if re.search(r"vn\d+(_t\d+\w*)?", line):
-            end_line = i
-            break
-
-    lines = lines[:end_line]
-
-    with open(versions_file, "w") as f:
-        for line in lines:
-            f.write(line)
+    apply_styling(versions_file)
 
 
 def update_versions_file(meta_dirs, upgrade_name):
     """
-    Reset the versions.py files so they appear as they should during a release
-    - Add import of versionAB_XY.py file
-    - Remove macros
+    - Add import of versionAB_XY.py file to the template_versions.py
+    - Replace old versions.py files with that file
     """
 
     print("[INFO] Updating versions.py files")
 
+    template_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "files",
+        "template_versions.py",
+    )
+    add_new_import(template_path, upgrade_name)
+
     for meta_dir in meta_dirs:
         versions_file = os.path.join(meta_dir, "versions.py")
-        add_new_import(versions_file, upgrade_name)
-        remove_macro_classes(versions_file)
+        command = f"cp {template_path} {versions_file}"
+        result = run_command(command)
 
 
 def ticket_number(opt):
@@ -336,7 +312,7 @@ def ticket_number(opt):
     """
     if not re.match(r"\d+", opt):
         raise argparse.ArgumentTypeError(
-            f"The ticket number '{opt}' does not conform to the 'X.Y' format."
+            f"The ticket number '{opt}' does not conform to the 'TTT' format."
             "Please modify the command line argument and rerun."
         )
     return opt
@@ -417,17 +393,15 @@ def main():
 
     add_new_upgrade_macro(meta_dirs, args, macro_object)
 
-    # Create dictinary of arguments expected by apply_macros_main
-    # Then run the apply_macros script with those arguments
-    macro_args = {
-        "tag": args.version,
-        "cname": f"{args.old_version.replace('.', '')}_t{args.ticket}",
-        "version": args.old_version,
-        "apps": args.apps,
-        "core": args.core,
-        "jules": None,
-    }
-    apply_macros_main(macro_args)
+    # Run the apply_macros script
+    apply_macros_main(
+        args.version,
+        f"{args.old_version.replace('.', '')}_t{args.ticket}",
+        args.old_version,
+        args.apps,
+        args.core,
+        None,
+    )
     print("\n[INFO] Successfully upgraded apps")
 
     copy_head_meta(meta_dirs, args)
