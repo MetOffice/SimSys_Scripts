@@ -72,6 +72,7 @@ if result.returncode:
 am = ApplyMacros(
     "vn0.0_t001",
     None,
+    None,
     appsdir,
     "/tmp",
     "/tmp"
