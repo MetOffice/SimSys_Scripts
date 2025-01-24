@@ -1,5 +1,4 @@
 import pytest
-
 from fcm_bdiff import *
 
 # Use Case Testing for get_branch_diff_filenames
