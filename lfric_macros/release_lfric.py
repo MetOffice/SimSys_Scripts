@@ -283,6 +283,8 @@ def add_new_import(versions_file, upgrade_name):
         for line in lines:
             f.write(line)
 
+    # Run isort (part of apply_styling) to move the newly added import to the
+    # correct place in the import list
     apply_styling(versions_file)
 
 
