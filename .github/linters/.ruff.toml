@@ -1,13 +1,6 @@
 cache-dir = "/tmp/.ruff_cache"
 line-length = 80
 
-[lint]
-# C0116: Missing function or method docstring (missing-function-docstring)
-# C0103: Constant name doesn't conform to UPPER_CASE naming style (invalid-name)
-# C0209: Formatting a regular string which could be an f-string (consider-using-f-string)
-# W0622: Redefining built-in 'copyright' (redefined-builtin)
-# R0801: Similar lines in 2 files
-ignore = ["C0116","C0103","C0209","W0622","R0801",]
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
