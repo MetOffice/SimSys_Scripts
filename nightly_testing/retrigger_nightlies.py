@@ -17,12 +17,12 @@ Syntax:
 """
 
 import os
-import sys
 import re
-import subprocess
 import sqlite3
-from time import sleep
+import subprocess
+import sys
 from datetime import datetime, timedelta
+from time import sleep
 
 
 def run_command(command):
@@ -82,7 +82,7 @@ def ask_yn(message):
     rval = ""
     while rval.lower().strip() not in ["y", "n"]:
         rval = input(f"{message}? (y/n) ")
-    return rval.lower().strip()=="y"
+    return rval.lower().strip() == "y"
 
 
 def restart_suite(suite):

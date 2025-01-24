@@ -9,8 +9,8 @@ This module provides the functionality to return a list of local files to
 run tests on based on the branch-difference (to allow checking of only files
 which a developer has actually modified on their branch)
 """
-import re
 import os
+import re
 import subprocess
 import time
 
@@ -20,10 +20,11 @@ class FCMError(Exception):
     """
     Exception class for FCM commands
     """
+
     def __str__(self):
-        return ("\nFCM command: \"{0:s}\""
-                "\nFailed with error: \"{1:s}\""
-                .format(" ".join(self.args[0]), self.args[1].strip()))
+        return '\nFCM command: "{0:s}"' '\nFailed with error: "{1:s}"'.format(
+            " ".join(self.args[0]), self.args[1].strip()
+        )
 
 
 # ------------------------------------------------------------------------------
@@ -32,16 +33,20 @@ def is_trunk(url):
     Given an FCM url, returns True if it appears to be pointing to the
     UM main trunk
     """
-    search = re.search(r"""
+    search = re.search(
+        r"""
                        (svn://fcm\d+/\w+_svn/\w+/trunk|
                        .*/svn/[\w\.]+/\w+/trunk|
                        ..*_svn/\w+/trunk)
-                       """, url, flags=re.VERBOSE)
+                       """,
+        url,
+        flags=re.VERBOSE,
+    )
     return search is not None
 
 
 # ------------------------------------------------------------------------------
-def text_decoder(bytes_type_string, codecs=['utf8', 'cp1252']):
+def text_decoder(bytes_type_string, codecs=["utf8", "cp1252"]):
     """
     Given a bytes type string variable, attempt to decode it using the codecs
     listed.
@@ -127,18 +132,20 @@ def get_branch_diff_filenames(branch=".", path_override=None):
     # Strip whitespace, and remove blank lines while turning the output into
     # a list of strings.
     bdiff_files = [x.strip() for x in bdiff.split("\n") if x.strip()]
-    bdiff_files = [bfile.split()[1] for bfile in bdiff_files
-                   if bfile.split()[0].strip() == "M" or
-                   bfile.split()[0].strip() == "A"]
+    bdiff_files = [
+        bfile.split()[1]
+        for bfile in bdiff_files
+        if bfile.split()[0].strip() == "M" or bfile.split()[0].strip() == "A"
+    ]
 
     # Convert the file paths to be relative to the current URL; to do this
     # construct the base path of the trunk URL and compare it to the results
     # of the bdiff command above
     repos_root = get_repository_root(info)
-    relative_paths = [os.path.relpath(bfile,
-                                      os.path.join(repos_root,
-                                                   "main", "trunk"))
-                      for bfile in bdiff_files]
+    relative_paths = [
+        os.path.relpath(bfile, os.path.join(repos_root, "main", "trunk"))
+        for bfile in bdiff_files
+    ]
 
     # These relative paths can be joined to an appropriate base to complete
     # the filenames to return
@@ -169,9 +176,9 @@ def run_fcm_command(command, max_retries, snooze):
     """
     retries = 0
     while True:
-        output = subprocess.Popen(command,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
+        output = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         _ = output.wait()
         if output.returncode == 0:
             return text_decoder(output.stdout.read())
@@ -198,8 +205,11 @@ def use_mirror(branch):
     if mirror_key in os.environ:
         branch = os.environ[mirror_key]
         retries = 2
-        print("[INFO] Switching branch used for fcm command to : {0:}".format(
-            branch))
+        print(
+            "[INFO] Switching branch used for fcm command to : {0:}".format(
+                branch
+            )
+        )
     else:
         retries = 0
     return branch, retries
@@ -211,8 +221,9 @@ def get_repository_root(branch_info):
     Given the raw output from an fcm binfo command - which can be retrieved by
     calling get_branch_info() - returns the Repository Root field
     """
-    repos_root = re.search(r"^Repository Root:\s*(?P<url>.*)\s*$",
-                           branch_info, flags=re.MULTILINE)
+    repos_root = re.search(
+        r"^Repository Root:\s*(?P<url>.*)\s*$", branch_info, flags=re.MULTILINE
+    )
     if repos_root:
         repos_root = repos_root.group("url")
     else:
@@ -226,8 +237,9 @@ def get_branch_parent(branch_info):
     Given the raw output from an fcm binfo command - which can be retrieved by
     calling get_branch_info() - returns the Branch Parent Field
     """
-    parent = re.search(r"^Branch Parent:\s*(?P<parent>.*)$", branch_info,
-                       flags=re.MULTILINE)
+    parent = re.search(
+        r"^Branch Parent:\s*(?P<parent>.*)$", branch_info, flags=re.MULTILINE
+    )
     if parent:
         parent = parent.group("parent")
     else:

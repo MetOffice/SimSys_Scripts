@@ -23,15 +23,9 @@ import re
 import socket
 import subprocess
 
-from apply_macros import (
-    ApplyMacros,
-    apply_macros_main,
-    get_root_path,
-    read_versions_file,
-    apply_styling,
-    split_macros,
-    version_number,
-)
+from apply_macros import (ApplyMacros, apply_macros_main, apply_styling,
+                          get_root_path, read_versions_file, split_macros,
+                          version_number)
 
 MACRO_TEMPLATE = """
 class CLASS_NAME(MacroUpgrade):
@@ -115,11 +109,7 @@ def find_meta_dirs(paths):
     for path in paths:
         for dirpath, dirnames, filenames in os.walk(path):
             exclude_dirs = [".svn", "rose-stem", "integration-test"]
-            dirnames[:] = [
-                d
-                for d in dirnames
-                if d not in exclude_dirs
-            ]
+            dirnames[:] = [d for d in dirnames if d not in exclude_dirs]
             if "rose-meta.conf" in filenames:
                 dirs.add(os.path.dirname(dirpath))
     return dirs

@@ -8,21 +8,15 @@
 Script which tests code files within the UM repository to ensure they contain a
 recognised copyright notice.
 """
-import re
-import os
-import sys
-import subprocess
-
-from fcm_bdiff import (
-    get_branch_diff_filenames,
-    text_decoder,
-    is_trunk,
-    use_mirror,
-    get_branch_info,
-    get_url,
-)
 import argparse
+import os
+import re
+import subprocess
+import sys
 from textwrap import wrap
+
+from fcm_bdiff import (get_branch_diff_filenames, get_branch_info, get_url,
+                       is_trunk, text_decoder, use_mirror)
 
 # Desired maximum column width for output - we make an exception
 # for filenames, which are always printed on a single line to aid

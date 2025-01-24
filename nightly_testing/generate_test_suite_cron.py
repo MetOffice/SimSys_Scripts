@@ -32,12 +32,13 @@ Optional:
                 works.
 """
 
-import os
-import sys
-import re
-import yaml
 import argparse
+import os
+import re
 import subprocess
+import sys
+
+import yaml
 
 DEFAULT_CYLC_VERSION = "8"
 DEPENDENCIES = {

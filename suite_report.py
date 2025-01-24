@@ -26,18 +26,18 @@
 from __future__ import print_function
 
 import glob
+import json
 import os
 import re
 import sqlite3
-import sys
-import traceback
-import time
 import subprocess
-import json
-from optparse import OptionParser, OptionGroup
+import sys
+import time
+import traceback
 from collections import defaultdict
-from fcm_bdiff import get_branch_diff_filenames
+from optparse import OptionGroup, OptionParser
 
+from fcm_bdiff import get_branch_diff_filenames
 
 CYLC_SUITE_ENV_FILE = "cylc-suite-env"
 PROCESSED_SUITE_RC = "suite.rc.processed"
@@ -160,6 +160,7 @@ COMMON_GROUPS = {
     "psc": [],
     "Unknown": [],
 }
+
 
 def _read_file(filename):
     """Takes filename (str)
@@ -370,15 +371,16 @@ class SuiteReport(object):
         try:
             # Resolve "runN" soft link - Required for Cylc8 cylc-review path
             link_target = os.readlink(self.suite_path)
-            suitename = os.path.join(os.path.dirname(self.suite_path), link_target)
+            suitename = os.path.join(
+                os.path.dirname(self.suite_path), link_target
+            )
         except OSError:
             suitename = self.suite_path
 
         suite_dir, self.suitename = suitename.split("cylc-run/")
         # Default to userID from suite path unless CYLC_SUITE_OWNER is present
         self.suite_owner = os.environ.get(
-            "CYLC_SUITE_OWNER",
-            os.path.basename(suite_dir.rstrip("/"))
+            "CYLC_SUITE_OWNER", os.path.basename(suite_dir.rstrip("/"))
         )
 
         self.parse_rose_suite_run()
@@ -622,13 +624,13 @@ class SuiteReport(object):
                     sources[result.group(1)] = {}
                     if " " in result.group(3):
                         multiple_branches[(result.group(1))] = result.group(3)
-                        sources[result.group(1)][
-                            "tested source"
-                        ] = result.group(3).split()[0]
+                        sources[result.group(1)]["tested source"] = (
+                            result.group(3).split()[0]
+                        )
                     else:
-                        sources[result.group(1)][
-                            "tested source"
-                        ] = result.group(3)
+                        sources[result.group(1)]["tested source"] = (
+                            result.group(3)
+                        )
 
         self.rose_orig_host = rose_orig_host
         self.job_sources = sources
@@ -1152,7 +1154,10 @@ class SuiteReport(object):
                     # Couldn't check out working copy file - deleted?  Use trunk instead
                     file_path = self.export_file("fcm:um.xm_tr", fpath)
                     if file_path is None:
-                        print('[WARN] Unable to establish code section for file: ', fle)
+                        print(
+                            "[WARN] Unable to establish code section for file: ",
+                            fle,
+                        )
                         file_path = ""
 
                 try:
@@ -1467,7 +1472,10 @@ class SuiteReport(object):
         # Check whether lfric shared files have been touched
         # Not needed if lfric the suite source
         lfric_testing_message = [""]
-        if "LFRIC" not in self.primary_project and self.primary_project != "UNKNOWN":
+        if (
+            "LFRIC" not in self.primary_project
+            and self.primary_project != "UNKNOWN"
+        ):
             lfric_testing_message = self.check_lfric_extract_list()
 
         # Generate table for required config and code owners
@@ -2231,7 +2239,7 @@ def parse_options():
             # Cylc7 environment variable
             "CYLC_SUITE_RUN_DIR",
             # Default to Cylc8 environment variable
-            os.environ.get("CYLC_WORKFLOW_RUN_DIR")
+            os.environ.get("CYLC_WORKFLOW_RUN_DIR"),
         )
         if opts.suite_path is None:
             print("Available Environment Variables:")
