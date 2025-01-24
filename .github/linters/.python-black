@@ -1,5 +1,2 @@
-- uses: psf/black@stable
-  with:
-    options: "--line-length=80 --check --verbose"
-    src: "."
-    version: "24.8.0"
+line_length = 88
+check = True
