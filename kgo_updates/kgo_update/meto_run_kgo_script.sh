@@ -97,7 +97,7 @@ if [[ $platforms == *"xc40"* ]]; then
     host_xc40=$(rose host-select xc)
 
     # SCP the python script to the xc40
-    scp -q kgo_update.py frum@$host_xc40:~
+    scp -q kgo_update.py "frum@${host_xc40}":~
 
     # Define the commands to run on xc40
     command=". /etc/profile ; module load scitools ;
@@ -115,7 +115,7 @@ if [[ $platforms == *"xc40"* ]]; then
                 "${variables_dir}/xc40_updated_variables${variables_extension}"
         fi
         rsync --remove-source-files -avz \
-            "frum@$host_xc40:~/kgo_update_${new_kgo_dir}.sh" \
+            "frum@${host_xc40}:~/kgo_update_${new_kgo_dir}.sh" \
             "${variables_dir}/xc40_update_script.sh"
     else
         printf "%s\nThe installation script has failed on xc40.\n%s" "${RED}" "${NC}"

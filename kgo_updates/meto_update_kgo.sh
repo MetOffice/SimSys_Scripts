@@ -179,12 +179,11 @@ if [[ $platforms == *"azspice"* ]]; then
         if [[ $new_release -ne 1 ]]; then
             printf "%s\n\nCopying the azspice variables file into this working copy.\n%s" "${GREEN}" "${NC}"
             cp "/home/users/umadmin/${variables_dir}/azspice_updated_variables${variables_extension}" \
-                "${wc_path}/rose-stem/site/meto/variables_azspice${variables_extension}"
-            if [[ $? -ne 0 ]]; then
+                "${wc_path}/rose-stem/site/meto/variables_azspice${variables_extension}" || {
                 printf "%sThe copy of the azspice variables file into this working copy has failed.\n%s" "${RED}" "${NC}"
                 succeeded_azspice=0
                 succeeded_all=0
-            fi
+            }
         fi
     else
         succeeded_all=0
@@ -199,15 +198,18 @@ if [[ $platforms == *"xc40"* ]]; then
             if [[ $launch_platform == "spice" ]]; then
                 scp -q "frum@localhost:~/${variables_dir}/xc40_updated_variables${variables_extension}" \
                     "${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}"
+                rc=$?
             else
                 cp "/home/users/umadmin/${variables_dir}/xc40_updated_variables${variables_extension}" \
                     "${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}"
+                rc=$?
             fi
-            if [[ $? -ne 0 ]]; then
+            if [[ $rc -ne 0 ]]; then
                 printf "%sThe copy of the xc40 variables file into this working copy has failed.\n%s" "${RED}" "${NC}"
                 succeeded_xc40=0
                 succeeded_all=0
             fi
+            rc=
         fi
     else
         succeeded_all=0
@@ -222,15 +224,18 @@ if [[ $platforms == *"ex1a"* ]]; then
             if [[ $launch_platform == "spice" ]]; then
                 scp -q "frum@localhost:~/${variables_dir}/ex1a_updated_variables${variables_extension}" \
                     "${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}"
+                rc=$?
             else
                 cp "/home/users/umadmin/${variables_dir}/ex1a_updated_variables${variables_extension}" \
                     "${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}"
+                rc=$?
             fi
-            if [[ $? -ne 0 ]]; then
+            if [[ $rc -ne 0 ]]; then
                 printf "%sThe copy of the ex1a variables file into this working copy has failed.\n%s" "${RED}" "${NC}"
                 succeeded_ex1a=0
                 succeeded_all=0
             fi
+            rc=
         fi
     else
         succeeded_all=0
@@ -259,14 +264,17 @@ if [[ $succeeded_xc40 -eq 1 ]]; then
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y frum@localhost "$rsync_com"
+        rc=$?
     else
         sudo -iu umadmin bash -c '$rsync_com'
+        rc=$?
     fi
-    if [[ $? -ne 0 ]]; then
+    if [[ $rc -ne 0 ]]; then
         printf "%sThe rsync to the xcs has failed.\n%s" "${RED}" "${NC}"
     else
         printf "%sThe rsync to the xcs has succeeded.\n%s" "${GREEN}" "${NC}"
     fi
+    rc=
 elif [[ $platforms == *"xc40"* ]]; then
     printf "%s\n\nSkipping the rsync to the xcs as the xc40 install failed.\n%s" "${RED}" "${NC}"
 fi
@@ -282,14 +290,17 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/umdir/standard_jobs/${rsync_dir} login.exz:/common/internal/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y frum@localhost "$rsync_com"
+        rc=$?
     else
         sudo -iu umadmin bash -c '$rsync_com'
+        rc=$?
     fi
-    if [[ $? -ne 0 ]]; then
+    if [[ $rc -ne 0 ]]; then
         printf "%sThe rsync to the exz has failed.\n%s" "${RED}" "${NC}"
     else
         printf "%sThe rsync to the exz has succeeded.\n%s" "${GREEN}" "${NC}"
     fi
+    rc=
 elif [[ $platforms == *"ex1a"* ]]; then
     printf "%s\n\nSkipping the rsync to the exa as the exz install failed.\n%s" "${RED}" "${NC}"
 fi
