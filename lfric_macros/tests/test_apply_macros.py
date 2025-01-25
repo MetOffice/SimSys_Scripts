@@ -117,9 +117,7 @@ def test_read_meta_imports():
         os.path.join(am.root_path, "science", "gungho"),
         os.path.join(am.root_path, "applications", "lfric_atm"),
     ]
-    assert (
-        am.parsed_macros["tests/test_meta_dir"]["imports"] == expected_imports
-    )
+    assert am.parsed_macros["tests/test_meta_dir"]["imports"] == expected_imports
     expected_meta = [os.path.join(am.root_path, "applications", "lfric_atm")]
     assert (
         am.read_meta_imports("tests/test_meta_dir/rose-app.conf", "meta")
@@ -153,12 +151,8 @@ def test_combine_macros():
 def test_parse_application_section():
     assert am.parse_application_section("meta_dir/HEAD") == "meta_dir"
     assert am.parse_application_section("meta_dir/versions.py") == "meta_dir"
-    assert (
-        am.parse_application_section(f"{am.root_path}/meta_dir") == "meta_dir"
-    )
-    assert (
-        am.parse_application_section(f"{am.core_source}/meta_dir") == "meta_dir"
-    )
+    assert am.parse_application_section(f"{am.root_path}/meta_dir") == "meta_dir"
+    assert am.parse_application_section(f"{am.core_source}/meta_dir") == "meta_dir"
 
 
 def test_deduplicate_list():

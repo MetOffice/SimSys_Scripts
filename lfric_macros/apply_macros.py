@@ -132,9 +132,7 @@ def split_macros(parsed_versions):
     in_macro = False
     in_comment = False
     for line in parsed_versions:
-        if line.startswith("class vn") and not line.startswith(
-            "class vnXX_txxx"
-        ):
+        if line.startswith("class vn") and not line.startswith("class vnXX_txxx"):
             # If the macro string is set, then append to the list. If it's
             # empty then this is the first macro we're looking at, so nothing to
             # append
@@ -174,9 +172,7 @@ def match_python_import(line):
     Inputs:
         - line, str to match
     """
-    if re.match(r"import \w+", line) or re.match(
-        r"from [\.\w]+ import [\.\w]+", line
-    ):
+    if re.match(r"import \w+", line) or re.match(r"from [\.\w]+ import [\.\w]+", line):
         return True
     return False
 
@@ -510,13 +506,10 @@ class ApplyMacros:
                 regexp = re.compile(rf"BEFORE_TAG\s*=\s*[\"']{after_tag}[\"']")
                 if regexp.search(macro):
                     try:
-                        after_tag = re.search(
-                            rf"AFTER_TAG{TAG_REGEX}", macro
-                        ).group(1)
+                        after_tag = re.search(rf"AFTER_TAG{TAG_REGEX}", macro).group(1)
                     except AttributeError as exc:
                         raise Exception(
-                            "Couldn't find an after tag in the macro:\n"
-                            f"{macro}"
+                            "Couldn't find an after tag in the macro:\n" f"{macro}"
                         ) from exc
                     found_macro = macro
                     macros.remove(found_macro)
@@ -546,9 +539,7 @@ class ApplyMacros:
         # Find the macro we're interested in
         for macro in macros:
             try:
-                macro_name = re.search(
-                    rf"class ({CLASS_NAME_REGEX})\(", macro
-                ).group(1)
+                macro_name = re.search(rf"class ({CLASS_NAME_REGEX})\(", macro).group(1)
             except AttributeError as exc:
                 raise Exception(
                     "Unable to determine macro class name in "
@@ -571,9 +562,7 @@ class ApplyMacros:
         """
 
         core_imp = os.path.join(self.core_source, imp)
-        if os.path.exists(core_imp) or os.path.exists(
-            os.path.dirname(core_imp)
-        ):
+        if os.path.exists(core_imp) or os.path.exists(os.path.dirname(core_imp)):
             return core_imp
 
         # Reinstate when using Jules Shared from Jules
@@ -584,9 +573,7 @@ class ApplyMacros:
         #     return jules_imp
 
         apps_imp = os.path.join(self.root_path, imp)
-        if os.path.exists(apps_imp) or os.path.exists(
-            os.path.dirname(apps_imp)
-        ):
+        if os.path.exists(apps_imp) or os.path.exists(os.path.dirname(apps_imp)):
             return apps_imp
 
         raise Exception(
@@ -719,9 +706,7 @@ class ApplyMacros:
                     f"{self.parse_application_section(meta_import)}\n"
                 )
                 if self.parsed_macros[meta_import]["commands"].strip("\n"):
-                    full_command += (
-                        self.parsed_macros[meta_import]["commands"] + "\n"
-                    )
+                    full_command += self.parsed_macros[meta_import]["commands"] + "\n"
                 else:
                     full_command += "        # Blank Upgrade Macro\n"
         return full_command
@@ -800,9 +785,7 @@ class ApplyMacros:
 
             # Read through rose-meta files for import statements
             # of other metadata
-            self.parsed_macros[meta_dir]["imports"] = self.read_meta_imports(
-                meta_dir
-            )
+            self.parsed_macros[meta_dir]["imports"] = self.read_meta_imports(meta_dir)
 
             # Read through the versions.py file for python import statements
             self.python_imports.update(
@@ -859,12 +842,8 @@ class ApplyMacros:
         upgradeable_apps = []
         app_dir_apps = os.path.join(self.root_path, "rose-stem", "app")
         app_dir_core = os.path.join(self.core_source, "rose-stem", "app")
-        apps_list = [
-            os.path.join(app_dir_apps, f) for f in os.listdir(app_dir_apps)
-        ]
-        apps_list += [
-            os.path.join(app_dir_core, f) for f in os.listdir(app_dir_core)
-        ]
+        apps_list = [os.path.join(app_dir_apps, f) for f in os.listdir(app_dir_apps)]
+        apps_list += [os.path.join(app_dir_core, f) for f in os.listdir(app_dir_core)]
         for app_path in apps_list:
             # Ignore lfric_coupled_rivers as this is based on Jules-standalone
             # metadata which is not currently available
@@ -985,9 +964,7 @@ def parse_args():
     Read command line args
     """
 
-    parser = argparse.ArgumentParser(
-        "Pre-process and apply LFRic Apps upgrade macros."
-    )
+    parser = argparse.ArgumentParser("Pre-process and apply LFRic Apps upgrade macros.")
     parser.add_argument(
         "tag",
         type=check_tag,
@@ -1035,9 +1012,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def apply_macros_main(
-    tag, cname=None, version=None, apps=".", core=None, jules=None
-):
+def apply_macros_main(tag, cname=None, version=None, apps=".", core=None, jules=None):
     """
     Main function for this program
     """

@@ -141,13 +141,8 @@ data_generate_rose_stem_command = [
     ("suite", "wc_path", "cylc_version", "name", "expected"),
     [test_data for test_data in data_generate_rose_stem_command],
 )
-def test_generate_rose_stem_command(
-    suite, wc_path, cylc_version, name, expected
-):
-    assert (
-        generate_rose_stem_command(suite, wc_path, cylc_version, name)
-        == expected
-    )
+def test_generate_rose_stem_command(suite, wc_path, cylc_version, name, expected):
+    assert generate_rose_stem_command(suite, wc_path, cylc_version, name) == expected
 
 
 # Test populate_heads_sources

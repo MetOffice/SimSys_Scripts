@@ -9,6 +9,7 @@ This module provides the functionality to return a list of local files to
 run tests on based on the branch-difference (to allow checking of only files
 which a developer has actually modified on their branch)
 """
+
 import os
 import re
 import subprocess
@@ -22,7 +23,7 @@ class FCMError(Exception):
     """
 
     def __str__(self):
-        return '\nFCM command: "{0:s}"' '\nFailed with error: "{1:s}"'.format(
+        return '\nFCM command: "{0:s}"\nFailed with error: "{1:s}"'.format(
             " ".join(self.args[0]), self.args[1].strip()
         )
 
@@ -205,11 +206,7 @@ def use_mirror(branch):
     if mirror_key in os.environ:
         branch = os.environ[mirror_key]
         retries = 2
-        print(
-            "[INFO] Switching branch used for fcm command to : {0:}".format(
-                branch
-            )
-        )
+        print(f"[INFO] Switching branch used for fcm command to: {branch}")
     else:
         retries = 0
     return branch, retries

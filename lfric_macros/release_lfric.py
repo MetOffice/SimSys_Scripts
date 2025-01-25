@@ -72,9 +72,7 @@ def raise_exception(result, command):
     Raise an exception if a subprocess command has failed
     """
 
-    raise Exception(
-        f"[FAIL] Error running command: '{command}'\n" f"{result.stderr}"
-    )
+    raise Exception(f"[FAIL] Error running command: '{command}'\n" f"{result.stderr}")
 
 
 def set_dependency_path(args):
@@ -322,9 +320,7 @@ def parse_args():
     Read command line args
     """
 
-    parser = argparse.ArgumentParser(
-        "Move and edit files for lfric_apps release"
-    )
+    parser = argparse.ArgumentParser("Move and edit files for lfric_apps release")
     parser.add_argument(
         "-o",
         "--old_version",

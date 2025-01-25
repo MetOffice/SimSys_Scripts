@@ -11,8 +11,6 @@ recognised copyright notice.
 import argparse
 import os
 import re
-import subprocess
-import sys
 from textwrap import wrap
 
 from fcm_bdiff import (
@@ -20,7 +18,6 @@ from fcm_bdiff import (
     get_branch_info,
     get_url,
     is_trunk,
-    text_decoder,
     use_mirror,
 )
 
@@ -56,13 +53,9 @@ def load_templates(filter_pattern):
 
     template_path = "."
     if "CYLC_TASK_WORK_PATH" in os.environ:
-        template_path = os.path.join(
-            os.environ["CYLC_TASK_WORK_PATH"], "file", ""
-        )
+        template_path = os.path.join(os.environ["CYLC_TASK_WORK_PATH"], "file", "")
 
-    template_files = files_to_process(
-        template_path, [], filter_pattern=filter_pattern
-    )
+    template_files = files_to_process(template_path, [], filter_pattern=filter_pattern)
 
     for filename in template_files:
         with open(filename) as file:
@@ -143,9 +136,7 @@ def main(inputs, ignore_list):
     regex_templates_raw.extend(load_templates(filter_pattern=filter_tmp))
 
     for filename, template_lines in regex_templates_raw:
-        regex_templates.append(
-            (filename, re.compile(r"\n".join(template_lines)))
-        )
+        regex_templates.append((filename, re.compile(r"\n".join(template_lines))))
 
     files_to_check = []
     for file_input in inputs:
@@ -212,9 +203,7 @@ def parse_options():
         action="store",
         dest="ignore",
         default=None,
-        help=(
-            "ignore filename/s containing (comma separated list of patterns)"
-        ),
+        help=("ignore filename/s containing (comma separated list of patterns)"),
     )
     parser.add_argument(
         "--base_path",
@@ -228,8 +217,7 @@ def parse_options():
         action="store_true",
         default=False,
         help=(
-            "run on use the full file list when trunk, "
-            "else run on fcm branch-diff"
+            "run on use the full file list when trunk, " "else run on fcm branch-diff"
         ),
     )
     excl_group.add_argument(

@@ -843,10 +843,7 @@ def replace_patterns(line, str_continuation):
                     blank_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print(
-                        "{0:s} Line simplification has failed for:"
-                        "".format(e.msg)
-                    )
+                    print("{0:s} Line simplification has failed for:" "".format(e.msg))
                     print(line)
                     exit(1)
 
@@ -912,10 +909,7 @@ def replace_comment_patterns(line, str_continuation):
                     match_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print(
-                        "{0:s} Line simplification has failed for:"
-                        "".format(e.msg)
-                    )
+                    print("{0:s} Line simplification has failed for:" "".format(e.msg))
                     print(line)
                     exit(1)
 
@@ -1014,9 +1008,7 @@ def declaration_double_colon(iline, lines, pp_line_previous, line_previous):
         # Pre-process the line to pull in any continuation lines
         simple_line = simplify_line(xlines)
 
-        if not re.search(
-            r"\s+FUNCTION(,|\s|\()", simple_line, flags=re.IGNORECASE
-        ):
+        if not re.search(r"\s+FUNCTION(,|\s|\()", simple_line, flags=re.IGNORECASE):
             # The presence of declaration attributes (ALLOCATABLE,
             # PUBLIC, POINTER, etc) are only valid when used with
             # the double-colon.  Therefore after allowing for the
@@ -1024,9 +1016,7 @@ def declaration_double_colon(iline, lines, pp_line_previous, line_previous):
             # older "*INT" declaration the first character should
             # not be a comma
             search = re.search(
-                r"^(\s*{0:s}\s*?(\(.*?\)|\*\s*[0-9]+|))\s+(\w+)".format(
-                    found_dec_type
-                ),
+                r"^(\s*{0:s}\s*?(\(.*?\)|\*\s*[0-9]+|))\s+(\w+)".format(found_dec_type),
                 simple_line,
                 flags=re.IGNORECASE,
             )
@@ -1054,9 +1044,7 @@ def declaration_double_colon(iline, lines, pp_line_previous, line_previous):
                     )
                     line = re.sub(
                         r"^{0:s}\s*"
-                        r"((?<!\s\s\s\s)(\w|\\|&))".format(
-                            re.escape(statement)
-                        ),
+                        r"((?<!\s\s\s\s)(\w|\\|&))".format(re.escape(statement)),
                         r"{0:s} :: \g<1>".format(statement),
                         line,
                         count=1,
@@ -1081,9 +1069,7 @@ def apply_styling(lines):
     line_previous = ""
 
     for iline, line in enumerate(lines):
-        line = declaration_double_colon(
-            iline, lines, pp_line_previous, line_previous
-        )
+        line = declaration_double_colon(iline, lines, pp_line_previous, line_previous)
 
         if pp_continuation:
             if not pseudo_comment:
@@ -1131,13 +1117,9 @@ def apply_styling(lines):
             )
             line_previous = ""
             pseudo_line = re.sub(r"\\\s*$", "&", pp_line_previous)
-            pseudo_str_continuation = is_str_continuation(
-                pseudo_line, str_continuation
-            )
+            pseudo_str_continuation = is_str_continuation(pseudo_line, str_continuation)
             if not pseudo_comment:
-                pseudo_line = partial_blank_fstring(
-                    pseudo_line, str_continuation
-                )
+                pseudo_line = partial_blank_fstring(pseudo_line, str_continuation)
                 if pseudo_line.strip()[0] == "#":
                     pseudo_comment = True
                 if pseudo_line.find("!") != -1:

@@ -68,8 +68,7 @@ def check_for_failed_tasks(conn):
         "SELECT name, status FROM task_states WHERE status LIKE '%failed%'"
     ).fetchall()
     res_subfail = conn.execute(
-        "SELECT name, status FROM task_states "
-        "WHERE status LIKE '%submit-failed%'"
+        "SELECT name, status FROM task_states WHERE status LIKE '%submit-failed%'"
     ).fetchall()
     return res_failed + res_subfail
 

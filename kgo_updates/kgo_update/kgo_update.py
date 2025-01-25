@@ -146,9 +146,7 @@ def write_update_script(kgo_dirs, new_dirname, script):
                 # Files from the suite should be copied from the suite
                 copy_description.append("#    * {0}".format(kgo_file))
                 new_file = os.path.join(new_kgo_dir, kgo_file)
-                copy_commands.append(
-                    "echo 'cp {0} {1}'".format(source, new_file)
-                )
+                copy_commands.append("echo 'cp {0} {1}'".format(source, new_file))
                 copy_commands.append("cp {0} {1}".format(source, new_file))
                 # In this case more disk-space is needed, so update
                 # the running total for reporting later
@@ -187,9 +185,7 @@ def report_space_required(total_filesize, skip=False):
             )
         )
     )
-    if not confirm(
-        "Please confirm this much space is available (y/n)? ", skip=skip
-    ):
+    if not confirm("Please confirm this much space is available (y/n)? ", skip=skip):
         sys.exit("Aborting...")
 
 
@@ -198,9 +194,7 @@ def add_untested_kgo_files(kgo_dirs):
     for kgo_dir, update_dict in kgo_dirs.items():
         for path, _, filenames in os.walk(kgo_dir):
             for filename in filenames:
-                kgo_file = os.path.relpath(
-                    os.path.join(path, filename), kgo_dir
-                )
+                kgo_file = os.path.relpath(os.path.join(path, filename), kgo_dir)
                 if kgo_file not in update_dict:
                     kgo_dirs[kgo_dir][kgo_file] = None
     return kgo_dirs
@@ -273,8 +267,7 @@ def group_comparisons_by_dir(comparisons, skip=False):
 def get_all_kgo_comparisons(conn):
     "Retrieve all comparisons related to KGO tasks"
     res = conn.execute(
-        "SELECT comp_task, kgo_file, suite_file, "
-        "status, comparison FROM comparisons"
+        "SELECT comp_task, kgo_file, suite_file, status, comparison FROM comparisons"
     )
     return res.fetchall()
 
@@ -323,18 +316,14 @@ def get_site():
     Function to return the site this is being run at using rose config
     """
     command = ["rose", "config", "rose-stem", "automatic-options"]
-    cmd = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
+    cmd = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = cmd.communicate()
     retcode = cmd.returncode
     if retcode == 0:
         site = stdout.decode("utf-8").split("=")[1].strip()
         print("Found site via rose-config: {0}\n".format(site))
     else:
-        sys.exit(
-            "No site was detected via rose config - this setting is required"
-        )
+        sys.exit("No site was detected via rose config - this setting is required")
     return site
 
 
@@ -394,9 +383,7 @@ def update_variables_rc(
             "WARNING: New variables.rc file for this update already exists "
             "at {0} and will be overwritten".format(variables_rc_new)
         )
-        if not confirm(
-            "Okay to overwrite variables.rc file (y/n)? ", skip=skip
-        ):
+        if not confirm("Okay to overwrite variables.rc file (y/n)? ", skip=skip):
             sys.exit("Aborting...")
 
     # Get the KGO variable names that need updating
@@ -440,9 +427,7 @@ def main():
         "Formatter which adds blank lines between options"
 
         def _split_lines(self, text, width):
-            return super(BlankLinesHelpFormatter, self)._split_lines(
-                text, width
-            ) + [""]
+            return super(BlankLinesHelpFormatter, self)._split_lines(text, width) + [""]
 
     parser = argparse.ArgumentParser(
         usage="%(prog)s [--new-release]",
@@ -598,9 +583,7 @@ def main():
             "WARNING: Script file for this update already exists at {0} "
             "and will be overwritten".format(script_path)
         )
-        if not confirm(
-            "Okay to overwrite script file (y/n)? ", skip=confirm_skip
-        ):
+        if not confirm("Okay to overwrite script file (y/n)? ", skip=confirm_skip):
             sys.exit("Aborting...")
 
     # Write the script file
@@ -651,9 +634,7 @@ def main():
 
     # Final confirmation before running
     print("WARNING: Once launched the script will make permanent changes")
-    if not confirm(
-        "Are you sure you want to continue (y/n)? ", skip=confirm_skip
-    ):
+    if not confirm("Are you sure you want to continue (y/n)? ", skip=confirm_skip):
         sys.exit("Aborting...")
 
     print(
