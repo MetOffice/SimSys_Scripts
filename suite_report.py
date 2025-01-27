@@ -981,7 +981,8 @@ class SuiteReport:
 
         return owners_dict
 
-    def create_approval_table(self, needed_approvals, mode):
+    @staticmethod
+    def create_approval_table(needed_approvals, mode):
         """
         Function to write out the trac.log table for config and CO approvals
         Input: needed_approvals - dictionary with keys as owners and values,
@@ -1023,7 +1024,8 @@ class SuiteReport:
 
         return table
 
-    def get_config_owners(self, failed_configs, config_owners):
+    @staticmethod
+    def get_config_owners(failed_configs, config_owners):
         """
          Function that reads through a list of failed rose-ana jobs and records
          owners for each job thathas failed.
@@ -1316,6 +1318,7 @@ class SuiteReport:
             "build/extract/extract.cfg",
             exported_extract_file,
         )
+        extract_list_dict = {}
 
         if extract_list_path:
             try:
@@ -1963,17 +1966,12 @@ class SuiteReport:
                 f" || Report Generated: || {self.creation_time} || "
             )
 
-            # pylint: disable=consider-using-f-string
+            review_url = os.path.join(CYLC_REVIEW_URL[self.site],
+                                      "taskjobs",
+                                      self.suite_owner)
             trac_log.append(
-                " || Cylc-Review: || {0:s}/{1:s}/{2:s}/?suite={3:s} || "
-                .format(
-                    CYLC_REVIEW_URL[self.site],
-                    "taskjobs",
-                    self.suite_owner,
-                    self.suitename,
-                )
+                f" || Cylc-Review: || {review_url}/?suite={self.suitename} || "
             )
-            # pylint: enable=consider-using-f-string
 
             trac_log.append(f" || Site: || {self.site} || ")
             trac_log.append(
