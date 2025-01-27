@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash --login
 # *****************************COPYRIGHT*******************************
 # (C) Crown copyright Met Office. All rights reserved.
 # For further details please refer to the file COPYRIGHT.txt
@@ -15,9 +15,9 @@
 # This script is NOT intended to be run independently of '../meto_update_kgo.sh'
 
 # Set colour codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m' # No Color
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+NC=$(tput sgr0)
 
 # Read in command line arguments
 while getopts S:U:E:N:R:P:V:F: flag; do
@@ -58,7 +58,7 @@ run_update_script() {
 
     if [ -n "$_host" ]; then
         scp -q kgo_update.py "${_user}@${_host}:~"
-        _command="ssh -Y $_host \"$_command\""
+        _command="ssh $_host \"module load scitools; $_command\""
     fi
 
     if eval "$_command"; then
@@ -76,12 +76,12 @@ run_update_script() {
         echo "${RED}The installation script has failed on ${_platform}.${NC}"
     fi
 
-    [ -n "$_host" ] && ssh -Yq "$_host" "rm kgo_update.py"
+    [ -n "$_host" ] && ssh -q "$_host" "rm kgo_update.py"
 }
 
 if [ "${platforms#*spice}" != "$platforms" ] && [ "${platforms#*azspice}" = "$platforms" ]; then
-    run_update_script "spice" "$kgo_command_spice" "frum"
+    run_update_script "spice" "$kgo_command_spice" "frum" "localhost"
 fi
-[ "${platforms#*azspice}" != "$platforms" ] && run_update_script "azspice" "$kgo_command_azspice" "frum"
+[ "${platforms#*azspice}" != "$platforms" ] && run_update_script "azspice" "$kgo_command_azspice" "umadmin" "localhost"
 [ "${platforms#*xc40}" != "$platforms" ] && run_update_script "xc40" "$kgo_command_xc40" "frum" "$(rose host-select xc)"
 [ "${platforms#*ex1a}" != "$platforms" ] && run_update_script "ex1a" "$kgo_command_ex1a" "umadmin" "$(rose host-select exab)"
