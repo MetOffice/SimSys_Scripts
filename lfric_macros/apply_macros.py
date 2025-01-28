@@ -234,6 +234,7 @@ class ApplyMacros:
         # copy in LFRic, rather than using the Jules version. The LFRic build
         # system needs modifying to enable this
         # self.jules_source = self.get_dependency_paths(jules, "jules")
+        self.central_rose_meta = False
         self.set_rose_meta_path()
         if version is None:
             self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
@@ -246,7 +247,6 @@ class ApplyMacros:
         self.sections_with_macro = []
         self.python_imports = set()
         self.upgraded_core = False
-        self.central_rose_meta = False
 
     def set_rose_meta_path(self):
         """
@@ -693,7 +693,12 @@ class ApplyMacros:
             - A list of meta imports in the correct order
         """
 
-        app_name = os.path.basename(app)
+        # If using central metadata, use the basename, otherwise the full path
+        if self.central_rose_meta:
+            app_name = os.path.basename(app)
+        else:
+            app_name = app
+
         import_list = [app_name]
 
         try:
