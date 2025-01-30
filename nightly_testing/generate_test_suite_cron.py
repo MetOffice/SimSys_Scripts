@@ -32,12 +32,13 @@ Optional:
                 works.
 """
 
-import os
-import sys
-import re
-import yaml
 import argparse
+import os
+import re
 import subprocess
+import sys
+
+import yaml
 
 DEFAULT_CYLC_VERSION = "8"
 DEPENDENCIES = {
@@ -130,9 +131,7 @@ def lfric_heads_sed(wc_path):
     dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
     rstr = f"cp -rf {wc_path} {wc_path_new} ; "
-    rstr += (
-        f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
-    )
+    rstr += f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
     rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
     return rstr
 
@@ -414,9 +413,7 @@ if __name__ == "__main__":
             main_crontab += f"# {repo.upper()} SUITES\n"
             main_crontab += 80 * "#" + 2 * "\n"
             last_repo = repo
-        main_crontab += generate_cron_job(
-            suite_name, suites[suite_name], args.cron_log
-        )
+        main_crontab += generate_cron_job(suite_name, suites[suite_name], args.cron_log)
         main_crontab += 3 * "\n"
 
     with open(args.cron_file, "w") as outfile:

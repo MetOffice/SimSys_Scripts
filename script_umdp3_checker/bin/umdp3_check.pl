@@ -1010,13 +1010,13 @@ sub run_checks {
             }
 
             # read in data from file to $data, then
-            my $io_array = new IO::ScalarArray \@file_lines;
+            my $io_array = IO::ScalarArray->new(\@file_lines);
             my $mimetype = mimetype($io_array);
 
             # if we can't detect a mime type, try some tricks to aid detection
             if ( $mimetype =~ /text\/plain/sxm ) {
                 my @mime_file_lines = grep !/^\s*\#/sxm, @file_lines;
-                $io_array = new IO::ScalarArray \@mime_file_lines;
+                $io_array = IO::ScalarArray->new(\@mime_file_lines);
                 $mimetype = mimetype($io_array);
             }
 
@@ -1133,12 +1133,12 @@ sub run_checks {
                     $filename .= ".";
                 }
                 $filename = $log_cylc . "." . $filename . "report";
-                my $fileres = open( FH, '>', $filename );
+                my $fileres = open( my $fh, '>', $filename );
                 if ( !defined $fileres ) {
                     die "ERR: $filename\n";
                 }
-                print FH $failure_text;
-                close(FH);
+                print $fh $failure_text;
+                close($fh);
             }
         }
         $message = '';
