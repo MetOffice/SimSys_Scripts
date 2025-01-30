@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/usr/bin/env bash
 # *****************************COPYRIGHT*******************************
 # (C) Crown copyright Met Office. All rights reserved.
 # For further details please refer to the file COPYRIGHT.txt
@@ -15,73 +15,147 @@
 # This script is NOT intended to be run independently of '../meto_update_kgo.sh'
 
 # Set colour codes
-RED=$(tput setaf 1)
-GREEN=$(tput setaf 2)
-NC=$(tput sgr0)
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
 # Read in command line arguments
-while getopts S:U:E:N:R:P:V:F: flag; do
+while getopts S:U:E:N:R:P:V:F: flag
+do
     case "${flag}" in
-        S) suite_name=${OPTARG} ;;
-        U) suite_user=${OPTARG} ;;
-        E) suite_user_ex1a=${OPTARG} ;;
-        N) new_kgo_dir=${OPTARG} ;;
-        R) new_release=${OPTARG} ;;
-        P) platforms=${OPTARG} ;;
-        F) variables_extension=${OPTARG} ;;
-        V) version_number=${OPTARG} ;;
-        *) echo "Invalid option: -$flag" >&2; exit 1 ;;
+        S) suite_name=${OPTARG};;
+        U) suite_user=${OPTARG};;
+        E) suite_user_ex1a=${OPTARG};;
+        N) new_kgo_dir=${OPTARG};;
+        R) new_release=${OPTARG};;
+        P) platforms=${OPTARG};;
+        F) variables_extension=${OPTARG};;
+        V) version_number=${OPTARG};;
+        *) echo "Invalid option: -$flag" >&2; exit 1;;
     esac
 done
-shift "$((OPTIND-1))"
 
 # Create command to run python script
 kgo_command="./kgo_update.py"
-[ "$new_release" -eq 1 ] && kgo_command="${kgo_command} --new-release"
+if [[ $new_release -eq 1 ]]; then
+    kgo_command="${kgo_command} --new-release"
+fi
 kgo_command="${kgo_command} -S $suite_name -N $new_kgo_dir -E $variables_extension"
 kgo_command_spice="$kgo_command -U $suite_user -P spice"
 kgo_command_azspice="$kgo_command -U $suite_user_ex1a -P azspice"
 kgo_command_xc40="$kgo_command -U $suite_user -P xc40"
 kgo_command_ex1a="$kgo_command -U $suite_user_ex1a -P ex1a"
 
-# Make a directory to store the script and variables file in
+# Make a directory to store the script and variables file file in
 variables_dir=~/kgo_update_files/vn$version_number/$new_kgo_dir
 mkdir -p "$variables_dir"
 
-run_update_script() {
-    _platform="$1"
-    _command="$2"
-    _user="$3"
-    _host="$4"
+# If spice has kgo updates
+if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
+    printf "%s\n\nRunning KGO Update Script on spice.\n%s" "${GREEN}" "${NC}"
 
-    echo;echo "${GREEN}Running KGO Update Script on ${_platform}.${NC}"
-
-    if [ -n "$_host" ]; then
-        scp -q kgo_update.py "${_user}@${_host}:~"
-        _command="ssh $_host \"module load scitools; $_command\""
+    # Run the Update Script
+    if $kgo_command_spice; then
+        # Move the updated variables file and script into the ticket folder
+        printf "%s\n\nSuccessfully installed on spice.\n%s" "${GREEN}" "${NC}"
+        printf "%sMoving the generated files into spice %s.%s\n" "${GREEN}" "${variables_dir}" "${NC}"
+        if [[ $new_release -ne 1 ]]; then
+            mv ~/"variables${variables_extension}_${new_kgo_dir}" \
+                "${variables_dir}/spice_updated_variables${variables_extension}"
+        fi
+        mv ~/"kgo_update_${new_kgo_dir}.sh" \
+            "${variables_dir}/spice_update_script.sh"
+    else
+        printf "%s\nThe installation script has failed on spice.\n%s" "${RED}" "${NC}"
     fi
+fi
 
-    if eval "$_command"; then
-        echo;echo "${GREEN}Successfully installed on ${_platform}.${NC}"
-        echo "${GREEN}Moving the generated files into ${_platform} ${variables_dir}.${NC}"
-        if [ "$new_release" -ne 1 ]; then
+# If azspice has kgo updates
+if [[ $platforms == *"azspice"* ]]; then
+    printf "%s\n\nRunning KGO Update Script on azspice.\n%s" "${GREEN}" "${NC}"
+
+    # Run the Update Script
+    if $kgo_command_azspice; then
+        # Move the updated variables file and script into the ticket folder
+        printf "%s\n\nSuccessfully installed on azspice.\n%s" "${GREEN}" "${NC}"
+        printf "%sMoving the generated files into azspice %s.%s\n" "${GREEN}" "${variables_dir}" "${NC}"
+        if [[ $new_release -ne 1 ]]; then
+            mv ~/"variables${variables_extension}_${new_kgo_dir}" \
+                "${variables_dir}/azspice_updated_variables${variables_extension}"
+        fi
+        mv ~/"kgo_update_${new_kgo_dir}.sh" \
+            "${variables_dir}/azspice_update_script.sh"
+    else
+        printf "%s\nThe installation script has failed on azspice.\n%s" "${RED}" "${NC}"
+    fi
+fi
+
+# If xc40 has kgo updates
+if [[ $platforms == *"xc40"* ]]; then
+    printf "%s\n\nRunning KGO Update Script on xc40.\n%s" "${GREEN}" "${NC}"
+
+    host_xc40=$(rose host-select xc)
+
+    # SCP the python script to the xc40
+    scp -q kgo_update.py "frum@${host_xc40}":~
+
+    # Define the commands to run on xc40
+    command=". /etc/profile ; module load scitools ;
+             ${kgo_command_xc40}"
+
+    # SSH to the xc40 with the run command
+    if ssh -Y "$host_xc40" "$command"; then
+        # rsync the generated variables file and script back to frum on linux
+        # This cleans up the original files
+        printf "%s\n\nSuccessfully installed on xc40.\n%s" "${GREEN}" "${NC}"
+        printf "%sSyncing the generated files into spice %s.\n%s" "${GREEN}" "${variables_dir}" "${NC}"
+        if [[ $new_release -ne 1 ]]; then
             rsync --remove-source-files -avz \
-                "${_user}@${_host}:~/variables${variables_extension}_${new_kgo_dir}" \
-                "${variables_dir}/${_platform}_updated_variables${variables_extension}"
+                "frum@$host_xc40:~/variables${variables_extension}_${new_kgo_dir}" \
+                "${variables_dir}/xc40_updated_variables${variables_extension}"
         fi
         rsync --remove-source-files -avz \
-            "${_user}@${_host}:~/kgo_update_${new_kgo_dir}.sh" \
-            "${variables_dir}/${_platform}_update_script.sh"
+            "frum@${host_xc40}:~/kgo_update_${new_kgo_dir}.sh" \
+            "${variables_dir}/xc40_update_script.sh"
     else
-        echo "${RED}The installation script has failed on ${_platform}.${NC}"
+        printf "%s\nThe installation script has failed on xc40.\n%s" "${RED}" "${NC}"
     fi
 
-    [ -n "$_host" ] && ssh -q "$_host" "rm kgo_update.py"
-}
-
-if [ "${platforms#*spice}" != "$platforms" ] && [ "${platforms#*azspice}" = "$platforms" ]; then
-    run_update_script "spice" "$kgo_command_spice" "frum" "localhost"
+    # Clean up kgo_update.py on xc40
+    ssh -Yq "$host_xc40" "rm kgo_update.py"
 fi
-[ "${platforms#*azspice}" != "$platforms" ] && run_update_script "azspice" "$kgo_command_azspice" "umadmin" "localhost"
-[ "${platforms#*xc40}" != "$platforms" ] && run_update_script "xc40" "$kgo_command_xc40" "frum" "$(rose host-select xc)"
-[ "${platforms#*ex1a}" != "$platforms" ] && run_update_script "ex1a" "$kgo_command_ex1a" "umadmin" "$(rose host-select exab)"
+
+# If ex1a has kgo updates
+if [[ $platforms == *"ex1a"* ]]; then
+    printf "%s\n\nRunning KGO Update Script on ex1a.\n%s" "${GREEN}" "${NC}"
+
+    host_ex=$(rose host-select exab)
+
+    # SCP the python script to the ex1a
+    scp -q kgo_update.py "umadmin@$host_ex":~
+
+    # Define the commands to run on ex1a
+    command="module load scitools ;
+             ${kgo_command_ex1a}"
+
+    # SSH to the ex1a with the run command
+    if ssh -Y "$host_ex" "$command"; then
+        # rsync the generated variables file and script back to frum on linux
+        # This cleans up the original files
+        printf "%s\n\nSuccessfully installed on ex1a.\n%s" "$GREEN" "$NC"
+        printf "%sRsyncing the generated files into azspice %s.\n%s" "$GREEN" "$variables_dir" "$NC"
+        if [[ $new_release -ne 1 ]]; then
+            rsync --remove-source-files -avz \
+                "umadmin@$host_ex:~/variables${variables_extension}_${new_kgo_dir}" \
+                "${variables_dir}/ex1a_updated_variables${variables_extension}"
+        fi
+        rsync --remove-source-files -avz \
+            "umadmin@$host_ex:~/kgo_update_${new_kgo_dir}.sh" \
+            "${variables_dir}/ex1a_update_script.sh"
+    else
+        printf "%s\nThe installation script has failed on ex1a.\n%s" "${RED}" "${NC}"
+    fi
+
+    # Clean up kgo_update.py on ex1a
+    ssh -Yq "$host_ex" "rm kgo_update.py"
+fi
