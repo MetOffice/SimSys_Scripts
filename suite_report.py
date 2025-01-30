@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 # *****************************COPYRIGHT*******************************
 # (C) Crown copyright Met Office. All rights reserved.
 # For further details please refer to the file COPYRIGHT.txt
@@ -6,10 +7,10 @@
 # *****************************COPYRIGHT*******************************
 """
    ## NOTE ##
-   This module is one of several for which the Master copy is in the
-   UM repository. When making changes, please ensure the changes are made in
-   the UM repository or they will be lost during the release process when the UM
-   copy is copied over.
+
+   This module is one of several for which the main copy is in the
+   SimSys_Scripts repository. When making changes, please ensure the
+   changes are made in the github repository.
 
    Script to process the results of a suite and write a summary to file. The
    summary is in Trac wiki mark-up. Any projects that do not have a local
@@ -21,7 +22,10 @@
    Cylc Suite Syntax: shutdown handler = "suite_report.py"
    Command Line syntax:
        suite_report.py -S <suite_dir> [-v] [-q] [-N] [-L <log_dir>]
+
 """
+
+# pylint: disable=too-many-lines
 
 from __future__ import print_function
 
@@ -34,9 +38,16 @@ import traceback
 import time
 import subprocess
 import json
-from optparse import OptionParser, OptionGroup
+from argparse import ArgumentParser, ArgumentTypeError, \
+    RawDescriptionHelpFormatter
 from collections import defaultdict
 from fcm_bdiff import get_branch_diff_filenames
+
+try:
+    import argcomplete
+    COMPLETION = True
+except ModuleNotFoundError:
+    COMPLETION = False
 
 
 CYLC_SUITE_ENV_FILE = "cylc-suite-env"
@@ -161,16 +172,17 @@ COMMON_GROUPS = {
     "Unknown": [],
 }
 
+
 def _read_file(filename):
     """Takes filename (str)
     Return contents of a file, as list of strings."""
     if os.path.exists(filename):
-        with open(filename, "r") as filehandle:
+        with open(filename, "r", encoding="utf-8") as filehandle:
             lines = filehandle.readlines()
     else:
-        print('[ERROR] Unable to find file :\n    "{0:s}"'.format(filename))
+        print(f'[ERROR] Unable to find file :\n    "{filename}"')
         raise IOError(
-            '_read_file got invalid filename : "{0:s}"'.format(filename)
+            f'_read_file got invalid filename : "{filename}"'
         )
     return lines
 
@@ -182,9 +194,9 @@ def _write_file(filename, lines, newline=False):
     element of the list.
     Returns None"""
     retn = "\n" if newline else ""
-    with open(filename, "w") as filehandle:
+    with open(filename, "w", encoding="utf-8") as filehandle:
         for line in lines:
-            filehandle.write("{0:s}{1:s}".format(line, retn))
+            filehandle.write(f"{line}{retn}")
 
 
 def _run_command(command, ignore_fail=False):
@@ -192,20 +204,21 @@ def _run_command(command, ignore_fail=False):
     Runs the command with subprocess.Popen.
     Returns the exit code, standard out and standard error as list.
     """
-    pobj = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    pobj.wait()
-    retcode, stdout, stderr = (
-        pobj.returncode,
-        pobj.stdout.read().decode("utf-8"),
-        pobj.stderr.read().decode("utf-8"),
-    )
+    with subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            encoding="utf-8",
+    ) as pobj:
+        pobj.wait()
+        retcode, stdout, stderr = (
+            pobj.returncode,
+            pobj.stdout.read(),
+            pobj.stderr.read(),
+        )
     if retcode != 0 and not ignore_fail:
-        print("[ERROR] running {0:s}".format(command))
-        print("[INFO] RC: {0:}".format(retcode))
-        print("[INFO] Stdout: {0:s}".format(stdout))
-        print("[INFO] Stderr: {0:s}".format(stderr))
+        print(f"[ERROR] running {command}")
+        print(f"[INFO] RC: {retcode}")
+        print(f"[INFO] Stdout: {stdout}")
+        print(f"[INFO] Stderr: {stderr}")
         raise IOError("run_command")
     # Reformat stdout into a list
     stdout = "".join(stdout)
@@ -309,7 +322,7 @@ def _parse_string(
 ):
     """Given a variable name in the rose-suite-run.conf file, return its
     value."""
-    find_var = re.compile(r"{0}\s*=\s*(.*)".format(varname))
+    find_var = re.compile(rf"{varname}\s*=\s*(.*)")
     if split_on_comma:
         value = [None]
     elif default_unknown:
@@ -330,7 +343,13 @@ def _parse_string(
     return value
 
 
-class SuiteReport(object):
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-public-methods
+
+class SuiteReport:
     """Object to hold data and methods required to produce a suite report
     from a rose-stem suite output."""
 
@@ -368,14 +387,17 @@ class SuiteReport(object):
         self.status_counts["failed"] = 0
 
         try:
-            # Resolve "runN" soft link - Required for Cylc8 cylc-review path
+            # Resolve "runN" soft link - Required for Cylc8
+            # cylc-review path
             link_target = os.readlink(self.suite_path)
-            suitename = os.path.join(os.path.dirname(self.suite_path), link_target)
+            suitename = os.path.join(os.path.dirname(self.suite_path),
+                                     link_target)
         except OSError:
             suitename = self.suite_path
 
         suite_dir, self.suitename = suitename.split("cylc-run/")
-        # Default to userID from suite path unless CYLC_SUITE_OWNER is present
+        # Default to userID from suite path unless CYLC_SUITE_OWNER is
+        # present
         self.suite_owner = os.environ.get(
             "CYLC_SUITE_OWNER",
             os.path.basename(suite_dir.rstrip("/"))
@@ -488,17 +510,15 @@ class SuiteReport(object):
                 proj_dict["repo mirror"]
             )
 
-        # Check to see if ALL the groups being run fall into the "common groups"
-        # category. This is used to control automatic hiding of successful tasks
-        # later.
+        # Check to see if ALL the groups being run fall into the
+        # "common groups" category. This is used to control automatic
+        # hiding of successful tasks later.
         if self.site == "meto" and "all" in self.groups:
             self.only_common_groups = True
         else:
             self.only_common_groups = all(
-                [
                     group.strip() in COMMON_GROUPS[self.site]
                     for group in self.groups
-                ]
             )
 
         # Finally, remove any projects which were deemed invalid.
@@ -508,20 +528,15 @@ class SuiteReport(object):
     def debug_print_obj(self):
         """Debug print method.
         Prints everything in the SuiteReport object."""
-        print("-" * 80 + "\nSet up SuiteReport object\n" + "-" * 80 + "\n\n")
+        print("-" * 80 + "\nSet up SuiteReport object\n"
+              + "-" * 80 + "\n\n")
         for key, value in self.__dict__.items():
             if key == "projects":
-                print('{0:s} contains "{1:d}" entries.'.format(key, len(value)))
+                print(f'{key} contains "{len(value)}" entries.')
             elif key == "sort_by_name":
-                if value:
-                    print('{0:s} is :"True"'.format(key))
-                else:
-                    print('{0:s} is :"False"'.format(key))
+                print(f'{key} is :"{key == "sort_by_name"}"')
             elif key == "only_common_groups":
-                if value:
-                    print('{0:s} is :"True"'.format(key))
-                else:
-                    print('{0:s} is :"False"'.format(key))
+                print(f'{key} is :"{value}"')
             elif key == "verbosity":
                 text = "Verbosity level is set to : "
                 if value >= 4:
@@ -532,8 +547,9 @@ class SuiteReport(object):
                 elif value >= 3:
                     print(
                         text
-                        + "Hide Housekeeping, Gatekeeping and if all groups run"
-                        'were "common" groups also hide Successful tasks'
+                        + "Hide Housekeeping, Gatekeeping and if all "
+                        + "groups run were \"common\" groups also hide "
+                        + "Successful tasks"
                     )
                 elif value >= 2:
                     print(text + "Hide Housekeeping and Gatekeeping tasks")
@@ -544,7 +560,7 @@ class SuiteReport(object):
             elif key == "job_sources":
                 self.print_job_sources(value)
             else:
-                print('{0:s} is :"{1:}"'.format(key, value))
+                print(f'{key} is :"{value}"')
         print(
             "\n" + "-" * 80 + "\nEnd of SuiteReport object\n" + "-" * 80 + "\n"
         )
@@ -554,15 +570,9 @@ class SuiteReport(object):
         """Debug print method.
         Prints everything in projects dictionary."""
         for key, value in job_srcs_dict.items():
-            print("    {0:s} :".format(key))
+            print(f"    {key} :")
             for sub_key, sub_value in value.items():
-                if isinstance(sub_value, bool):
-                    if sub_value:
-                        print('        {0:s} is :"True"'.format(sub_key))
-                    else:
-                        print('        {0:s} is :"False"'.format(sub_key))
-                else:
-                    print('        {0:s} is :"{1:}"'.format(sub_key, sub_value))
+                print(f'        {sub_key} is :"{sub_value}"')
 
     def parse_processed_config_file(self):
         """Parse the suite.rc.processed file.
@@ -633,7 +643,6 @@ class SuiteReport(object):
         self.rose_orig_host = rose_orig_host
         self.job_sources = sources
         self.multi_branches = multiple_branches
-        return
 
     def parse_rose_suite_run(self):
         """Parse rose-suite-run.conf file.
@@ -641,15 +650,13 @@ class SuiteReport(object):
         Sets class variables"""
 
         suite_dir = self.suite_path
+        log_dir = os.path.join(suite_dir, "log")
         rsr_file = ""
         if self.is_cylc8:
-            glob_format = "{0:s}/*{1:s}".format(
-                os.path.join(suite_dir, "log", "config"),
-                ROSE_SUITE_RUN_CONF_CYLC8,
-            )
+            glob_format = f"{log_dir}/config/*{ROSE_SUITE_RUN_CONF_CYLC8}"
             rsr_file = glob.glob(glob_format)[0]
         else:
-            rsr_file = os.path.join(suite_dir, "log", ROSE_SUITE_RUN_CONF)
+            rsr_file = os.path.join(log_dir, ROSE_SUITE_RUN_CONF)
         lines = _read_file(rsr_file)
         self.site = _parse_string("SITE", lines, default_unknown=True)
         self.groups = _parse_string(
@@ -661,10 +668,11 @@ class SuiteReport(object):
             self.cylc = "8" if self.is_cylc8 is True else "7"
         self.rose = _parse_string("ROSE_VERSION", lines)
 
-        # This test is a little problematic when running this script on a JULES
-        # rose-stem suite as JULES has no 'need' of the two compare variables
-        # and to prevent the warning their absence would produce from occuring
-        # unnecessarily in JULES they have been added to rose-suite.conf for now
+        # This test is a little problematic when running this script
+        # on a JULES rose-stem suite as JULES has no 'need' of the two
+        # compare variables and to prevent the warning their absence
+        # would produce from occuring unnecessarily in JULES they have
+        # been added to rose-suite.conf for now
         compare_output = _parse_string("COMPARE_OUTPUT", lines)
         compare_wallclock = _parse_string("COMPARE_WALLCLOCK", lines)
         self.required_comparisons = (
@@ -678,7 +686,6 @@ class SuiteReport(object):
             for line in lines:
                 if "HOST_XC40='xcsr'" in line:
                     self.host_xcs = True
-        return
 
     def initialise_projects(self):
         """Uses fcm kp to initialise a directory containing project keywords
@@ -714,7 +721,6 @@ class SuiteReport(object):
                 ):
                     projects[project] = url
         self.projects = projects
-        return
 
     def cylc7_check_versions_file(self, projects):
         """
@@ -724,7 +730,7 @@ class SuiteReport(object):
         find_proj_name = re.compile(r"/(\w+)-\d+.version")
         version_files = []
         version_files = glob.glob(
-            "{0:s}/*.version".format(os.path.join(self.suite_path, "log"))
+            f"{self.suite_path}/log/*.version"
         )
 
         for vfile in version_files:
@@ -763,7 +769,7 @@ class SuiteReport(object):
             return self.cylc7_check_versions_file(projects)
 
         vcs_path = os.path.join(self.suite_path, "log", "version", "vcs.json")
-        with open(vcs_path) as vcs_file:
+        with open(vcs_path, encoding="utf-8") as vcs_file:
             vcs_data = json.load(vcs_file)
 
         if (
@@ -786,9 +792,9 @@ class SuiteReport(object):
             prefix = "https://code.metoffice.gov.uk/svn/"
             prefix_svn = "svn://fcm1/"
             if project.startswith(prefix):
-                project = project[len(prefix) :]
+                project = project[len(prefix):]
             if project.startswith(prefix_svn):
-                project = project[len(prefix_svn) :]
+                project = project[len(prefix_svn):]
             project = re.split("[/.]", project)[0].upper()
             projects[project] = {}
 
@@ -804,7 +810,8 @@ class SuiteReport(object):
             start_url += f"/{splitter}/"
             end_url = end_url.split("/")
             if splitter == "branches":
-                # For branches, format is "/[dev|test]/<username>/<branch-name>"
+                # For branches, format is
+                # "/[dev|test]/<username>/<branch-name>"
                 end_url = f"{end_url[0]}/{end_url[1]}/{end_url[2]}"
             else:
                 # For trunk, format is just "/trunk/"
@@ -887,15 +894,13 @@ class SuiteReport(object):
         # Try 5 times
         for _ in range(5):
             try:
-                subproc = "fcm export -q {}/{} {} --force".format(
-                    repo_url, fname, outname
-                )
+                subproc = f"fcm export -q {repo_url}/{fname} {outname} --force"
                 subprocess.check_output(subproc, shell=True)
                 return outname
             except subprocess.CalledProcessError as error:
                 print(error)
-        else:
-            return None
+
+        return None
 
     @staticmethod
     def clean_tempfile(fname="~/temp.txt"):
@@ -941,7 +946,7 @@ class SuiteReport(object):
 
         # Read through file and generate dictionary
         try:
-            with open(file_path, "r") as inp_file:
+            with open(file_path, "r", encoding="utf-8") as inp_file:
                 owners_dict = {}
                 inside_listing = False
                 for line in inp_file:
@@ -976,13 +981,14 @@ class SuiteReport(object):
 
         return owners_dict
 
-    def create_approval_table(self, needed_approvals, mode):
+    @staticmethod
+    def create_approval_table(needed_approvals, mode):
         """
         Function to write out the trac.log table for config and CO approvals
         Input: needed_approvals - dictionary with keys as owners and values,
                                   a list of configs or code sections
-               mode - either "config" or "code" depending on which type of table
-                      is being created
+               mode - either "config" or "code" depending on
+                      which type of table is being created
         """
 
         table = ["'''Required " + mode.capitalize() + " Owner Approvals'''"]
@@ -1018,7 +1024,8 @@ class SuiteReport(object):
 
         return table
 
-    def get_config_owners(self, failed_configs, config_owners):
+    @staticmethod
+    def get_config_owners(failed_configs, config_owners):
         """
          Function that reads through a list of failed rose-ana jobs and records
          owners for each job thathas failed.
@@ -1073,7 +1080,8 @@ class SuiteReport(object):
         if config_owners is None:
             return None
 
-        config_approvals = self.get_config_owners(failed_configs, config_owners)
+        config_approvals = self.get_config_owners(failed_configs,
+                                                  config_owners)
 
         if len(config_approvals.keys()) == 0:
             config_approvals = None
@@ -1087,11 +1095,11 @@ class SuiteReport(object):
         Function to get required code owner approvals based on fcm_bdiff
         - code_owners - dict returning code owners for a given code section
         """
-
         # Get list of altered files and exit if no files changed
-        # 'UM' used here and just below as this function is currently only valid
-        # for the UM. Hopefully lfric_apps will be able to use similar in the
-        # future - at this point we can change 'UM' to self.primary_project
+        # 'UM' used here and just below as this function is
+        # currently only valid for the UM. Hopefully lfric_apps
+        # will be able to use similar in the future - at this
+        # point we can change 'UM' to self.primary_project
         bdiff_files = self.job_sources["UM"]["bdiff_files"]
         if len(bdiff_files) == 0:
             return None
@@ -1156,7 +1164,7 @@ class SuiteReport(object):
                         file_path = ""
 
                 try:
-                    with open(file_path, "r") as inp_file:
+                    with open(file_path, "r", encoding="utf-8") as inp_file:
                         for line in inp_file:
                             if "file belongs in" in line:
                                 section = line.strip("\n")
@@ -1222,7 +1230,7 @@ class SuiteReport(object):
         # Jules also depends on the shared metadata files so add those manually
         dirs.append("rose-meta/jules-shared")
 
-        with open(os.path.expanduser(fpath)) as input_file:
+        with open(os.path.expanduser(fpath), encoding="utf-8") as input_file:
             for line in input_file:
                 line = line.strip()
                 if in_include_section:
@@ -1278,7 +1286,7 @@ class SuiteReport(object):
 
         if num_interactions > 0:
             if num_interactions > 1:
-                message += ["There were {} projects ".format(num_interactions)]
+                message += [f"There were {num_interactions} projects "]
             else:
                 message += ["There was 1 project "]
             message += [
@@ -1287,7 +1295,8 @@ class SuiteReport(object):
             ]
         else:
             message += [
-                "No files shared with LFRic Apps have been modified.[[br]]LFRic"
+                "No files shared with LFRic Apps have been "
+                + "modified.[[br]]LFRic"
                 + " Apps testing is not required for this ticket."
             ]
 
@@ -1296,9 +1305,11 @@ class SuiteReport(object):
 
     def check_lfric_extract_list(self):
         """
-        Determine whether any files modified in source branches are extracted by
-        lfric.
-        Return a trac formatted string stating whether LFRic testing is required
+        Determine whether any files modified in source branches are
+        extracted by lfric.
+
+        Return a trac formatted string stating whether LFRic testing
+        is required
         """
 
         return_message = ["'''LFRic Testing Requirements'''"]
@@ -1311,6 +1322,7 @@ class SuiteReport(object):
             "build/extract/extract.cfg",
             exported_extract_file,
         )
+        extract_list_dict = {}
 
         if extract_list_path:
             try:
@@ -1339,13 +1351,15 @@ class SuiteReport(object):
 
         return return_message
 
+    # pylint: disable=too-many-arguments
+
     def generate_task_table(
         self,
         data,
         common_groups=False,
         verbosity=DEFAULT_VERBOSITY,
         sort_by_name=False,
-        status_counts=defaultdict(int),
+        status_counts=None,
     ):
         """Returns a trac-formatted table of the tasks run in this suite.
         Tasks are provided in a dictionary of format {"task" : "status",...}
@@ -1358,6 +1372,8 @@ class SuiteReport(object):
         number of tasks found with each status type. The 2nd is only present
         if not empty and indicates how many tasks of the relevant types have
         been hidden"""
+
+        status_counts = status_counts or defaultdict(int)
 
         def key_by_name_or_status(task_item):
             """A key generating function for use by sorted.
@@ -1431,9 +1447,7 @@ class SuiteReport(object):
                     failed_configs.append(task)
 
             lines.append(
-                " || {0:s} || {2:s}{1:s}{3:s} || ".format(
-                    task, state, highlight_start, highlight_end
-                )
+                f" || {task} || {highlight_start}{state}{highlight_end} || "
             )
         if len(lines) == 1:
             lines.append(
@@ -1450,7 +1464,7 @@ class SuiteReport(object):
             status_counts.items(), key=forced_status_sort
         ):
             status_summary.append(
-                " || {0:s} || {1:6d} || ".format(status, count)
+                f" || {status} ||   {count} || "
             )
         status_summary.append("")
         if len(hidden_counts) > 0:
@@ -1460,14 +1474,15 @@ class SuiteReport(object):
             )
             for task_type, count in hidden_counts.items():
                 status_summary.append(
-                    " || {0:s} || {1:6d} || ".format(task_type, count)
+                    f" || {task_type} ||   {count} || "
                 )
             status_summary.append("")
 
         # Check whether lfric shared files have been touched
         # Not needed if lfric the suite source
         lfric_testing_message = [""]
-        if "LFRIC" not in self.primary_project and self.primary_project != "UNKNOWN":
+        if ("LFRIC" not in self.primary_project
+            and self.primary_project != "UNKNOWN"):
             lfric_testing_message = self.check_lfric_extract_list()
 
         # Generate table for required config and code owners
@@ -1483,6 +1498,8 @@ class SuiteReport(object):
             if config_approval_table:
                 return_list += config_approval_table
         return lfric_testing_message + return_list + status_summary + lines
+
+    # pylint: enable=too-many-arguments
 
     @staticmethod
     def convert_to_mirror(url, projects_dict):
@@ -1558,7 +1575,8 @@ class SuiteReport(object):
                             )
                         # maintain keyword style, but convert to srs.
                         else:
-                            srs_url = re.sub(proj, shared_project, url, count=1)
+                            srs_url = re.sub(proj, shared_project, url,
+                                             count=1)
                         break
         return srs_url
 
@@ -1575,7 +1593,7 @@ class SuiteReport(object):
         for proj, proj_url in projects.items():
             if proj_url in url:
                 old_proj_url = projects[proj]
-                new_proj_url = "fcm:{0:s}".format(proj)
+                new_proj_url = f"fcm:{proj}"
                 keyword_url = re.sub(old_proj_url, new_proj_url, url, count=1)
                 keyword_url = re.sub(r"/trunk", "_tr", keyword_url, count=1)
                 keyword_url = re.sub(r"/branches", "_br", keyword_url, count=1)
@@ -1635,7 +1653,7 @@ class SuiteReport(object):
                 elements.insert(elements.index("trac") + 2, "browser")
                 url = "/".join(elements)
                 if revision is not None:
-                    link = url + "?rev={0:s}".format(revision)
+                    link = url + f"?rev={revision}"
                 else:
                     link = url
         return link
@@ -1677,13 +1695,9 @@ class SuiteReport(object):
             text = _select_preferred(text_list)
             highlight = "'''" if bold else ""
             if text is not None and link is not None:
-                element = " {2:s}[{0:s} {1:s}]{2:s} || ".format(
-                    link, text, highlight
-                )
+                element = f" {highlight}[{link} {text}]{highlight} || "
             elif text is not None:
-                element = " {1:s}{0:s}{1:s} || ".format(
-                    _escape_svn(text), highlight
-                )
+                element = f" {highlight}{_escape_svn(text)}{highlight} || "
             else:
                 element = " || "
             return element
@@ -1691,7 +1705,7 @@ class SuiteReport(object):
         for project in sorted(self.job_sources):
             proj_dict = self.job_sources[project]
 
-            line = " || {0:s} || ".format(project)
+            line = f" || {project} || "
             line += gen_table_element([proj_dict["tested source"]], None)
             line += gen_table_element(
                 [proj_dict["human repo loc"], proj_dict["repo loc"]],
@@ -1704,7 +1718,7 @@ class SuiteReport(object):
             if "ticket no" in proj_dict:
                 if proj_dict["ticket no"] is not None:
                     project_ticket_link = [
-                        "{0:s}:{1:s}".format(project, proj_dict["ticket no"])
+                        f"{project}:{proj_dict['ticket no']}"
                     ]
                 else:
                     project_ticket_link = [None]
@@ -1716,6 +1730,7 @@ class SuiteReport(object):
             if "working copy changes" in proj_dict:
                 if proj_dict["working copy changes"]:
                     wc_text = "YES"
+                    # pylint: disable=consider-using-f-string
                     wc_link = r"{0:s}/{1:s}/{2:s}/{3:s}?path=log/{4:s}".format(
                         CYLC_REVIEW_URL[self.site],
                         "view",
@@ -1723,6 +1738,7 @@ class SuiteReport(object):
                         self.suitename,
                         proj_dict["version file"],
                     )
+                    # pylint: enable=consider-using-f-string
             line += gen_table_element([wc_text], wc_link, bold=True)
             lines.append(line)
         return lines
@@ -1748,9 +1764,7 @@ class SuiteReport(object):
                         ]
                         found_nothing = False
                     lines.append(
-                        " || {0:s} || {1:} || {2:} || ".format(
-                            job, wallclock, memory
-                        )
+                        f" || {job} || {wallclock} || {memory} || "
                     )
         lines.append("")
         return lines
@@ -1770,6 +1784,9 @@ class SuiteReport(object):
         find_mem_n_units = re.compile(
             r"(?P<num>[0-9]*\.[0-9]*)(?P<unit>[A-Za-z])"
         )
+
+        # pylint: disable=broad-exception-caught
+
         try:
             for line in _read_file(filename):
                 result = find_wallclock.search(line)
@@ -1794,12 +1811,13 @@ class SuiteReport(object):
             memory = "Failure processing EOJ"
             stacktr = traceback.format_exc()
             print(
-                "[ERROR] Processing wallclock and memory use :\n{0:s}".format(
-                    stacktr
-                )
+                f"[ERROR] Processing wallclock and memory use :\n{stacktr}"
             )
-            print("Error type : {0:s}".format(type(err)))
+            print(f"Error type : {type(err)}")
             print(err)
+
+        # pylint: enable=broad-exception-caught
+
         return wallclock, memory
 
     @staticmethod
@@ -1843,6 +1861,8 @@ class SuiteReport(object):
         """
 
         for attempt in range(5):
+            # pylint: disable=broad-exception-caught
+
             try:
                 # Get a list of altered files from the fcm mirror url
                 bdiff_files = get_branch_diff_filenames(
@@ -1858,8 +1878,8 @@ class SuiteReport(object):
                     )
                     bdiff_files = []
                     break
-                else:
-                    pass
+
+            # pylint: enable=broad-exception-caught
 
         # If '.' is in the files list remove it
         try:
@@ -1884,12 +1904,15 @@ class SuiteReport(object):
         """Convert the list of groups run into a trac-formatted string."""
         output = ""
         for group in grouplist[:-1]:
-            output += "{0:s} [[br]]".format(_remove_quotes(group))
-        output += "{0:s}".format(_remove_quotes(grouplist[-1]))
+            output += f"{_remove_quotes(group)} [[br]]"
+        output += _remove_quotes(grouplist[-1])
         return output
 
     def print_report(self):
         """'Prints a Trac formatted report of the suite_report object"""
+
+        # pylint: disable=broad-exception-caught
+
         try:
             trac_log = []
             ticket_nos = ""
@@ -1899,19 +1922,16 @@ class SuiteReport(object):
             for project, url_dict in self.job_sources.items():
                 try:
                     if url_dict["ticket no"] is not None:
-                        ticket_nos += "{0:s}:{1:s} ".format(
-                            project, url_dict["ticket no"]
-                        )
+                        ticket_nos += f"{project}:{url_dict['ticket no']} "
                 except KeyError:
                     pass
+            bg_colour = BACKGROUND_COLOURS[self.primary_project.lower()]
             trac_log.append(
-                "{{{{{{#!div style='background : {0:s}'".format(
-                    BACKGROUND_COLOURS[self.primary_project.lower()]
-                )
+                f"{{{{{{#!div style='background : {bg_colour}'"
             )
             if ticket_nos != "":
                 trac_log.append(
-                    " = Ticket {0:s} ".format(ticket_nos)
+                    f" = Ticket {ticket_nos} "
                     + "Testing Results - rose-stem output = "
                 )
             else:
@@ -1919,57 +1939,51 @@ class SuiteReport(object):
             trac_log.append("")
 
             trac_log.append(
-                " || Suite Name: || {0:s} || ".format(self.suitename)
+                f" || Suite Name: || {self.suitename} || "
             )
 
             trac_log.append(
-                " || Suite Owner: || {0:s} || ".format(self.suite_owner)
+                f" || Suite Owner: || {self.suite_owner} || "
             )
 
             if self.trustzone:
                 trac_log.append(
-                    " || Trustzone: || {0:s} || ".format(self.trustzone)
+                    f" || Trustzone: || {self.trustzone} || "
                 )
 
             if self.fcm:
                 trac_log.append(
-                    " || FCM version: || {0:s} || ".format(self.fcm)
+                    f" || FCM version: || {self.fcm} || "
                 )
 
             if self.rose:
                 trac_log.append(
-                    " || Rose version: || {0:s} || ".format(self.rose)
+                    f" || Rose version: || {self.rose} || "
                 )
 
             if self.cylc:
                 trac_log.append(
-                    " || Cylc version: || {0:s} || ".format(self.cylc)
+                    f" || Cylc version: || {self.cylc} || "
                 )
 
             trac_log.append(
-                " || Report Generated: || {0:s} || ".format(self.creation_time)
+                f" || Report Generated: || {self.creation_time} || "
             )
 
+            review_url = os.path.join(CYLC_REVIEW_URL[self.site],
+                                      "taskjobs",
+                                      self.suite_owner)
             trac_log.append(
-                " || Cylc-Review: || {0:s}/{1:s}/{2:s}/?suite={3:s} || ".format(
-                    CYLC_REVIEW_URL[self.site],
-                    "taskjobs",
-                    self.suite_owner,
-                    self.suitename,
-                )
+                f" || Cylc-Review: || {review_url}/?suite={self.suitename} || "
             )
 
-            trac_log.append(" || Site: || {0:s} || ".format(self.site))
+            trac_log.append(f" || Site: || {self.site} || ")
             trac_log.append(
-                " || Groups Run: || {0:s} || ".format(
-                    self.generate_groups(self.groups)
-                )
+                f" || Groups Run: || {self.generate_groups(self.groups)} || "
             )
             if self.rose_orig_host is not None:
                 trac_log.append(
-                    " || ''ROSE_ORIG_HOST:'' || {0:s} || ".format(
-                        self.rose_orig_host
-                    )
+                    f" || ''ROSE_ORIG_HOST:'' || {self.rose_orig_host} || "
                 )
             if self.host_xcs:
                 trac_log.append(" || HOST_XCS || True || ")
@@ -1985,8 +1999,8 @@ class SuiteReport(object):
                     word = "change"
                 trac_log.append(
                     "This rose-stem suite included "
-                    + "{0:d} uncommitted".format(self.uncommitted_changes)
-                    + " project {0:s} and is therefore ".format(word)
+                    + f"{self.uncommitted_changes} uncommitted"
+                    + f" project {word} and is therefore "
                     + "'''not valid''' for review"
                 )
                 trac_log.append("-----")
@@ -2015,15 +2029,14 @@ class SuiteReport(object):
                 trac_log.append(" = WARNING !!! = ")
                 trac_log.append(
                     "This rose-stem suite included multiple "
-                    + "branches in {0:d} projects:".format(
-                        len(self.multi_branches.keys())
-                    )
+                    + f"branches in {len(self.multi_branches.keys())}"
+                    + " projects:"
                 )
                 trac_log.append("")
                 for project, branch_names in self.multi_branches.items():
-                    trac_log.append("'''{0}'''".format(project))
+                    trac_log.append(f"'''{project}'''")
                     for branch_name in "".join(branch_names).split():
-                        trac_log.append(" * {0}".format(branch_name))
+                        trac_log.append(f" * {branch_name}")
                 trac_log.append("")
                 trac_log.append("-----")
                 trac_log.append("")
@@ -2057,7 +2070,7 @@ class SuiteReport(object):
             print(err)
             try:
                 suite_dir = self.suite_path
-            except:
+            except Exception:
                 suite_dir = "--cylc_suite_dir--"
             trac_log.extend(
                 [
@@ -2065,7 +2078,7 @@ class SuiteReport(object):
                     + "SuiteReport.print_report()",
                     "See output for more information",
                     "rose-stem suite output will be in the files :\n",
-                    "~/cylc-run/{0:s}/log/suite/log".format(suite_dir),
+                    f"~/cylc-run/{suite_dir}/log/suite/log",
                 ]
             )
         finally:
@@ -2083,22 +2096,26 @@ class SuiteReport(object):
                 _write_file(trac_log_path, trac_log, newline=True)
             except IOError:
                 print(
-                    "[ERROR] Writing to {0:s} file : {1:s}".format(
-                        TRAC_LOG_FILE, trac_log_path
-                    )
+                    f"[ERROR] Writing to {TRAC_LOG_FILE} file : {trac_log_path}"
                 )
                 print(
-                    "{0:s} to this point ".format(TRAC_LOG_FILE)
+                    f"{TRAC_LOG_FILE} to this point "
                     + "would have read as follows :\n"
                 )
-                print("----- Start of {0:s}.log -----".format(TRAC_LOG_FILE))
+                print(f"----- Start of {TRAC_LOG_FILE}.log -----")
                 for line in trac_log:
                     print(line)
-                print(
-                    "\n----- End of {0:s}.log -----\n\n".format(TRAC_LOG_FILE)
-                )
+                print(f"\n----- End of {TRAC_LOG_FILE}.log -----\n\n")
+
                 raise
 
+        # pylint: enable=broad-exception-caught
+
+# pylint: enable=too-many-instance-attributes
+# pylint: enable=too-many-locals
+# pylint: enable=too-many-statements
+# pylint: enable=too-many-branches
+# pylint: enable=too-many-public-methods
 
 # ==============================================================================
 #    End of   "class.SuiteReport()"
@@ -2123,97 +2140,76 @@ def get_working_copy_path(path):
     return path
 
 
-def parse_options():
-    """Use OptionParser to parse options from command line.
-    Would prefer ArgParse but currently unavailable in default site
-    Python installation at meto."""
-    expected_args = 0
-    parser = OptionParser()
-    parser.add_option(
-        "--increase-verbosity",
-        "-v",
-        dest="increase_verbosity",
-        action="count",
-        default=0,
-        help="Increases Verbosity level. Default = "
-        "{0:2d}".format(DEFAULT_VERBOSITY),
-    )
-    parser.add_option(
-        "--decrease-verbosity",
-        "-q",
-        dest="decrease_verbosity",
-        action="count",
-        default=0,
-        help="Decreases Verbosity level.                         "
-        "  Levels are as follows :                          "
-        "0: print everything.                               "
-        "1: print except Housekeeping tasks.                "
-        "2: print except above and Gatekeeping tasks.       "
-        "3: print except above and Successful tasks if only "
-        '.  running "common" groups.    [Default]         '
-        "4: print except above and all Successful tasks     "
-        ".  for all groups/tasks.                           ",
-    )
-    parser.add_option(
-        "--name-sort",
-        "-N",
-        dest="sort_by_name",
-        default=False,
-        action="store_true",
-        help="Sort task table by task names",
-    )
-    parser.add_option(
-        "--suite-path",
-        "-S",
-        dest="suite_path",
-        action="store",
-        help="Path to suite",
-    )
-    parser.add_option(
-        "--log_path",
-        "-L",
-        dest="log_path",
-        action="store",
-        default=None,
-        help="Output dir for {0:s}".format(TRAC_LOG_FILE),
-    )
-    # Deprecated options - the options below have been deprecated and should no
-    # longer be used or have any effect.
-    # "sort by status" is now the default action - "-N" sort by name re-instates
-    # the original default sorting mechanism
-    # "-H" to "include" the housekeeping tasks has been removed and is now
-    # handled by the verbosity flags "-v" and "-q". As is including/excluding
-    # the gatekeeper tasks which is new with the version that deprecated these
-    # options.
-    group = OptionGroup(
-        parser,
-        "Deprecated Options",
-        "The following options have been deprecated and no "
-        "longer have any effect.  "
-        "Please stop using them as they will cause a fatal "
-        "unknown option error in the near future",
-    )
-    group.add_option(
-        "--include-housekeeping",
-        "-H",
-        dest="include_housekeep",
-        action="store_true",
-        default=False,
-        help="Include housekeeping tasks",
-    )
-    group.add_option(
-        "--status-sort",
-        "-s",
-        dest="sort_by_status",
-        default=False,
-        action="store_true",
-        help="Sort by task status is now default and this option"
-        + " is deprecated",
-    )
-    parser.add_option_group(group)
-    # -- End of deprecated options -- block to be removed around Dec 2023
+def directory_type(opt):
 
-    (opts, args) = parser.parse_args()
+    """Check location exists and is a directory."""
+
+    if not os.path.exists(opt):
+        raise ArgumentTypeError(f"location {repr(opt)} does not exist")
+
+    if not os.path.isdir(opt):
+        raise ArgumentTypeError(f"location {repr(opt)} is not a directory")
+
+    # Return canonical directory with symlinks fully resolved
+    return os.path.realpath(opt)
+
+
+def parse_arguments():
+
+    """Process command line arguments."""
+
+    suite_path = os.environ.get(
+        # Cylc7 environment variable
+        "CYLC_SUITE_RUN_DIR",
+        # Default to Cylc8 environment variable
+        os.environ.get("CYLC_WORKFLOW_RUN_DIR", None)
+    )
+
+    parser = ArgumentParser(usage="%(prog)s [options] [args]",
+                            description="Generate a suite report",
+                            formatter_class=RawDescriptionHelpFormatter)
+
+    paths = parser.add_argument_group("location arguments")
+
+    item = paths.add_argument("-S", "--suite-path",
+                              type=directory_type,
+                              dest="suite_path",
+                              metavar="DIR",
+                              default=suite_path,
+                              help="path to suite")
+    if COMPLETION:
+        item.completer = argcomplete.DirectoriesCompleter()
+
+    item = paths.add_argument("-L", "--log_path", type=directory_type,
+                              dest="log_path",
+                              metavar="DIR",
+                              help=f"output dir for {TRAC_LOG_FILE}")
+    if COMPLETION:
+        item.completer = argcomplete.DirectoriesCompleter()
+
+    verbose = parser.add_argument_group("diagnostic arguments")
+
+    verbose.add_argument("-v", "--increase-verbosity",
+                         dest="increase_verbosity",
+                         action="count",
+                         default=0,
+                         help="increases Verbosity level. "
+                         f"(default: {DEFAULT_VERBOSITY})")
+
+    verbose.add_argument("-q", "--decrease-verbosity",
+                         dest="decrease_verbosity",
+                         action="count",
+                         default=0,
+                         help="decreases Verbosity level.")
+
+    misc = parser.add_argument_group("misc arguments")
+
+    misc.add_argument("-N", "--name-sort",
+                      dest="sort_by_name",
+                      action="store_true",
+                      help="sort task table by task names")
+
+    opts, rest = parser.parse_known_args()
 
     # The calculation below seems counter-intuative. Lower 'verbosity' score
     # actually means a higher verbosity. So SUBTRACT the count for
@@ -2222,73 +2218,17 @@ def parse_options():
         DEFAULT_VERBOSITY - opts.increase_verbosity + opts.decrease_verbosity
     )
 
-    # Find the suite database file
+    if len(rest) not in (0, 3):
+        # If running interactively, there should be zero positional
+        # arguments.  If running from a suite's shutdown handler,
+        # there should be three arguments.  Anything else should
+        # trigger an error.
+        parser.error("expected exactly zero or three positional arguments")
+
     if opts.suite_path is None:
-        # Running online as a shutdown handler in a suite.
-        # cylc provides 3 args to the shutdown handler - so allow for them.
-        expected_args = 3
-        opts.suite_path = os.environ.get(
-            # Cylc7 environment variable
-            "CYLC_SUITE_RUN_DIR",
-            # Default to Cylc8 environment variable
-            os.environ.get("CYLC_WORKFLOW_RUN_DIR")
-        )
-        if opts.suite_path is None:
-            print("Available Environment Variables:")
-            for key, val in os.environ.items():
-                print(f"  {key}: {val}")
-            sys.exit("[ERROR] Path to suite not provided.")
-
-    if len(args) != expected_args:
-        parser.print_help()
-        message = "got {0:d} extra arguments, expected {1:d}\n".format(
-            len(args), expected_args
-        )
-        message += "Extra arguments are :\n{0:}".format(args)
-        print(message)
-        sys.exit(message)
-
-    if opts.sort_by_status or opts.include_housekeep:
-        message = []
-        message.append("")
-        message.append(
-            "       ---------------------------------------------"
-            "----------------"
-        )
-        message.append(
-            """                            ###  WARNING !!!  ###
-                       suite_report.py was called using a deprecated option.
-                       Please remove this option from wherever the call was made
-                       before this option becomes invalid and this warning
-                       becomes a fatal error"""
-        )
-        message.append(
-            "       ---------------------------------------------"
-            "----------------"
-        )
-        message.append("")
-        if opts.sort_by_status:
-            message.append(
-                """
-         -s, --status-sort   Sort by task status is now default
-                             Use -N to sort by task name (previous default)
-            """
-            )
-        if opts.include_housekeep:
-            message.append(
-                """
-         -H, --include-housekeeping         Include housekeeping tasks
-            This is now handled by setting the verbosity level using -[qv]
-            """
-            )
-        message.append(
-            """
-         Please use "suite_report.py -h" to see full help on options.
-        """
-        )
-        message.append("")
-        for line in message:
-            print(line)
+        # Should only happen if environment variables are not set and
+        # option has been ommitted
+        parser.error("path to suite not provided")
 
     return opts
 
@@ -2296,7 +2236,7 @@ def parse_options():
 def main():
     """Main program.
     Sets up a SuiteReport object and calls it's print_report method."""
-    opts = parse_options()
+    opts = parse_arguments()
 
     suite_report_obj = SuiteReport(
         suite_path=opts.suite_path,
