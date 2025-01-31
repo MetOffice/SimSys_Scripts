@@ -11,6 +11,8 @@
 # The kgo_update.py script can be run with the --new-release option by providing
 # 'new-release' as a command line option to this script
 
+# shellcheck disable=SC2059
+
 # Set colour codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -24,7 +26,7 @@ if [[ $HOSTNAME == "caz"* ]]; then
     launch_platform=azspice
     # Check you can sudo in as umadmin
     sudo -iu umadmin bash -c "echo ''" || {
-        printf "%s You were unable to run commands as umadmin - this is required to run this script" "${RED}"
+        printf "${RED} You were unable to run commands as umadmin - this is required to run this script"
         printf "This may be because of a password typo or similar"
     }
 else
@@ -38,14 +40,14 @@ if [ $# -ne 0 ]; then
     if [[ $1 == *"new-release"* ]]; then
         new_release=1
     else
-        printf "%s'%s' is not a recognised command line argument.\n" "${RED}" "${1}"
+        printf "${RED}'%s' is not a recognised command line argument.\n" "${1}"
         printf "The only command line option available is --new-release.\n"
         read -rp "Would you like to run in new-release mode (default n)? " answer
         answer=${answer:-"n"}
         if [[ $answer == "y" ]]; then
             new_release=1
         fi
-        printf "%s" "${NC}"
+        printf "${NC}"
         clear
     fi
 fi
@@ -57,7 +59,7 @@ read -r platforms
 if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platforms == *"xc40"* ]]; then
     # Check we're not trying to install to spice while on azspice
     if [[ $launch_platform == "azspice" ]] && [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
-        printf "%sAttempting to install spice kgo from azspice - this isn't possible" "${RED}"
+        printf "${RED}Attempting to install spice kgo from azspice - this isn't possible"
         exit 1
     fi
     read -rp "spice/xc40 Suite Username: " suite_user
@@ -67,7 +69,7 @@ fi
 if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
     # Check we're not trying to install to azspice while on spice
     if [[ $launch_platform == "spice" ]] && [[ $platforms == *"azspice"* ]]; then
-        printf "%sAttempting to install azspice kgo from spice - this isn't possible" "${RED}"
+        printf "${RED}Attempting to install azspice kgo from spice - this isn't possible"
         exit 1
     fi
     read -rp "ex1a/azspice Suite Username: " suite_user_ex1a
@@ -79,7 +81,7 @@ read -rp "Enter the path to the merged trunk WC (top directory): " wc_path
 # Trim any trailing / from the end of the path
 wc_path=${wc_path%/}
 if [ ! -d "${wc_path}" ]; then
-    printf "%s%s is not a valid path%s\n" "${RED}" "${wc_path}" "${NC}"
+    printf "${RED}${wc_path} is not a valid path${NC}\n"
     exit 1
 fi
 read -rp "Version Number (VV.V): " version_number
@@ -95,7 +97,7 @@ if [ -f "${wc_path}/rose-stem/suite.rc" ]; then
 elif [ -f "${wc_path}/rose-stem/suite.cylc" ] || [ -f "${wc_path}/rose-stem/flow.cylc" ]; then
     variables_extension=".cylc"
 else
-    printf "%sCouldn't detect a flow.cylc or suite.rc at %s/rose-stem/%s\n" "${RED}" "${wc_path}" "${NC}"
+    printf "${RED}Couldn't detect a flow.cylc or suite.rc at ${wc_path}/rose-stem/\n${NC}"
     exit 1
 fi
 
@@ -114,7 +116,7 @@ echo "Ticket Number: ${ticket_number}"
 echo "Variables Extension: ${variables_extension}"
 echo "New KGO Dir: ${new_kgo_dir}"
 if [ $new_release -eq 1 ]; then
-    printf "%sWARNING: Running with --new-release enabled%s\n" "${RED}" "${NC}"
+    printf "${RED}WARNING: Running with --new-release enabled${NC}\n"
 fi
 read -rp "Run with the above settings y/n (default n): " run_script
 run_script=${run_script:-n}
@@ -160,10 +162,10 @@ if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     if [[ -e "$file" ]]; then
         succeeded_spice=1
         if [[ $new_release -ne 1 ]]; then
-            printf "%s\n\nCopying the spice variables file into this working copy.\n%s" "${GREEN}" "${NC}"
+            printf "${GREEN}\n\nCopying the spice variables file into this working copy.\n${NC}"
             scp -q frum@localhost:~/"${variables_dir}/spice_updated_variables${variables_extension}" \
                 "${wc_path}/rose-stem/site/meto/variables_spice${variables_extension}" || {
-                printf "%sThe copy of the spice variables file into this working copy has failed.%s\n" "${RED}" "${NC}"
+                printf "${RED}The copy of the spice variables file into this working copy has failed.\n${NC}"
                 succeeded_spice=0
                 succeeded_all=0
             }
@@ -177,10 +179,10 @@ if [[ $platforms == *"azspice"* ]]; then
     if [[ -e "$file" ]]; then
         succeeded_azspice=1
         if [[ $new_release -ne 1 ]]; then
-            printf "%s\n\nCopying the azspice variables file into this working copy.\n%s" "${GREEN}" "${NC}"
+            printf "${GREEN}\n\nCopying the azspice variables file into this working copy.\n${NC}"
             cp "/home/users/umadmin/${variables_dir}/azspice_updated_variables${variables_extension}" \
                 "${wc_path}/rose-stem/site/meto/variables_azspice${variables_extension}" || {
-                printf "%sThe copy of the azspice variables file into this working copy has failed.\n%s" "${RED}" "${NC}"
+                printf "${RED}The copy of the azspice variables file into this working copy has failed.\n${NC}"
                 succeeded_azspice=0
                 succeeded_all=0
             }
@@ -194,7 +196,7 @@ if [[ $platforms == *"xc40"* ]]; then
     if [[ -e "$file" ]]; then
         succeeded_xc40=1
         if [[ $new_release -ne 1 ]]; then
-            printf "%s\n\nCopying the xc40 variables file into this working copy.\n" "${GREEN}" "${NC}"
+            printf "${GREEN}\n\nCopying the xc40 variables file into this working copy.\n${NC}"
             if [[ $launch_platform == "spice" ]]; then
                 scp -q "frum@localhost:~/${variables_dir}/xc40_updated_variables${variables_extension}" \
                     "${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}"
@@ -205,7 +207,7 @@ if [[ $platforms == *"xc40"* ]]; then
                 rc=$?
             fi
             if [[ $rc -ne 0 ]]; then
-                printf "%sThe copy of the xc40 variables file into this working copy has failed.\n%s" "${RED}" "${NC}"
+                printf "${RED}The copy of the xc40 variables file into this working copy has failed.\n${NC}"
                 succeeded_xc40=0
                 succeeded_all=0
             fi
@@ -220,7 +222,7 @@ if [[ $platforms == *"ex1a"* ]]; then
     if [[ -e "$file" ]]; then
         succeeded_ex1a=1
         if [[ $new_release -ne 1 ]]; then
-
+            printf "${GREEN}\n\nCopying the ex1a variables file into this working copy.\n${NC}"
             if [[ $launch_platform == "spice" ]]; then
                 scp -q "frum@localhost:~/${variables_dir}/ex1a_updated_variables${variables_extension}" \
                     "${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}"
@@ -231,7 +233,7 @@ if [[ $platforms == *"ex1a"* ]]; then
                 rc=$?
             fi
             if [[ $rc -ne 0 ]]; then
-                printf "%sThe copy of the ex1a variables file into this working copy has failed.\n%s" "${RED}" "${NC}"
+                printf "${RED}The copy of the ex1a variables file into this working copy has failed.\n${NC}"
                 succeeded_ex1a=0
                 succeeded_all=0
             fi
@@ -243,9 +245,9 @@ if [[ $platforms == *"ex1a"* ]]; then
 fi
 
 if [[ $succeeded_all -eq 1 ]]; then
-    printf "%sAll kgo has been successfully installed.%s\n" "${GREEN}" "${NC}"
+    printf "${GREEN}All kgo has been successfully installed.\n${NC}"
 else
-    printf "%s\n\nAt least 1 platform suffered an error during installation.%s\n" "${RED}" "${NC}"
+    printf "${RED}\n\nAt least 1 platform suffered an error during installation.\n${NC}"
 fi
 
 if [[ $platforms == *"xc40"* ]] || [[ $platforms == *"ex1a"* ]]; then
@@ -259,7 +261,7 @@ fi
 
 # For the xc40s rsync the generated kgo to the xcs
 if [[ $succeeded_xc40 -eq 1 ]]; then
-    printf "%s\n\nrsyncing the kgo to xcs.\n%s" "${GREEN}" "${NC}"
+    printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
     host_rsync=$(rose host-select xc)
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
@@ -270,21 +272,21 @@ if [[ $succeeded_xc40 -eq 1 ]]; then
         rc=$?
     fi
     if [[ $rc -ne 0 ]]; then
-        printf "%sThe rsync to the xcs has failed.\n%s" "${RED}" "${NC}"
+        printf "${RED}The rsync to the xcs has failed.\n${NC}"
     else
-        printf "%sThe rsync to the xcs has succeeded.\n%s" "${GREEN}" "${NC}"
+        printf "${GREEN}The rsync to the xcs has succeeded.\n${NC}"
     fi
     rc=
 elif [[ $platforms == *"xc40"* ]]; then
-    printf "%s\n\nSkipping the rsync to the xcs as the xc40 install failed.\n%s" "${RED}" "${NC}"
+    printf "${RED}\n\nSkipping the rsync to the xcs as the xc40 install failed.\n${NC}"
 fi
 
 # For EX's currently rsync the generated kgo to the exz from the exab
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
 if [[ $succeeded_ex1a -eq 1 ]]; then
-    printf "%s\n\nRsyncing the KGO to exz.\n%s" "${GREEN}" "${NC}"
-    printf "Warning: Always using rsync for UM KGO (not lfric inputs) on ex1a"
+    printf "${GREEN}\n\nrsyncing the kgo to exz + excd.\n${NC}"
+    printf "Warning: Always rsyncing UM KGO (not lfricinputs) on ex1a"
     rsync_dir="kgo/"
     host_rsync=$(rose host-select exab)
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/umdir/standard_jobs/${rsync_dir} login.exz:/common/internal/umdir/standard_jobs/${rsync_dir}'"
@@ -296,41 +298,41 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
         rc=$?
     fi
     if [[ $rc -ne 0 ]]; then
-        printf "%sThe rsync to the exz has failed.\n%s" "${RED}" "${NC}"
+        printf "${RED}The rsync to the exz has failed.\n${NC}"
     else
-        printf "%sThe rsync to the exz has succeeded.\n%s" "${GREEN}" "${NC}"
+        printf "${GREEN}The rsync to the exz has succeeded.\n${NC}"
     fi
     rc=
 elif [[ $platforms == *"ex1a"* ]]; then
-    printf "%s\n\nSkipping the rsync to the exa as the exz install failed.\n%s" "${RED}" "${NC}"
+    printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
 fi
 
 printf "\n\nInstallation Summary:\n\n"
 if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     if [[ $succeeded_spice -eq 1 ]]; then
-        printf "%sInstallation on spice successful.\n%s" "${GREEN}" "${NC}"
+        printf "${GREEN}Installation on spice successful.\n${NC}"
     else
-        printf "%sInstallation on spice unsuccessful. Review output for error.\n%s" "${RED}" "${NC}"
+        printf "${RED}Installation on spice unsuccessful. Review output for error.\n${NC}"
     fi
 fi
 if [[ $platforms == *"azspice"* ]]; then
     if [[ $succeeded_azspice -eq 1 ]]; then
-        printf "%sInstallation on azspice successful.\n%s" "${GREEN}" "${NC}"
+        printf "${GREEN}Installation on azspice successful.\n${NC}"
     else
-        printf "%sInstallation on azspice unsuccessful. Review output for error.\n%s" "${RED}" "${NC}"
+        printf "${RED}Installation on azspice unsuccessful. Review output for error.\n${NC}"
     fi
 fi
 if [[ $platforms == *"xc40"* ]]; then
     if [[ $succeeded_xc40 -eq 1 ]]; then
-        printf "%sInstallation on xc40 successful.\n%s" "${GREEN}" "${NC}"
+        printf "${GREEN}Installation on xc40 successful.\n${NC}"
     else
-        printf "%sInstallation on xc40 unsuccessful. Review output for error.\n%s" "${RED}" "${NC}"
+        printf "${RED}Installation on xc40 unsuccessful. Review output for error.\n${NC}"
     fi
 fi
 if [[ $platforms == *"ex1a"* ]]; then
     if [[ $succeeded_ex1a -eq 1 ]]; then
-        printf "%sInstallation on ex1a successful.\n%s" "${GREEN}" "${NC}"
+        printf "${GREEN}Installation on ex1a successful.\n${NC}"
     else
-        printf "%sInstallation on ex1a unsuccessful. Review output for error.\n%s" "${RED}" "${NC}"
+        printf "${RED}Installation on ex1a unsuccessful. Review output for error.\n${NC}"
     fi
 fi
