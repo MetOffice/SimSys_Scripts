@@ -145,8 +145,10 @@ command=". /etc/profile ; module load scitools ; cd kgo_update ;
 # Run the command as frum
 if [[ $launch_platform == "spice" ]]; then
     ssh -Y frum@localhost $command
+    root_user="frum"
 else
     sudo -iu umadmin bash -c "cd $UMDIR ; $command"
+    root_user="umadmin"
 fi
 
 # Error Checking and rsyncing
@@ -193,7 +195,7 @@ if [[ $platforms == *"azspice"* ]]; then
     fi
 fi
 if [[ $platforms == *"xc40"* ]]; then
-    file=~frum/${variables_dir}/xc40_update_script.sh
+    file=~${root_user}/${variables_dir}/xc40_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_xc40=1
         if [[ $new_release -ne 1 ]]; then
@@ -216,7 +218,7 @@ if [[ $platforms == *"xc40"* ]]; then
     fi
 fi
 if [[ $platforms == *"ex1a"* ]]; then
-    file=~frum/${variables_dir}/ex1a_update_script.sh
+    file=~${root_user}/${variables_dir}/ex1a_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_ex1a=1
         if [[ $new_release -ne 1 ]]; then
