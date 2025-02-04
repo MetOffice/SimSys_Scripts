@@ -149,6 +149,31 @@ def update_version_number(args):
             f.write(line)
 
 
+def update_variables_files(apps):
+    """
+    Edit meto variables_platforms.cylc files to remove any ticket updates
+    """
+
+    meto_path = os.path.join(apps, "rose-stem", "site", "meto")
+    variables_files = set()
+    for filename in os.listdir(meto_path):
+        if filename.startswith("variables_"):
+            variables_files.add(os.path.join(meto_path, filename))
+
+    for fpath in variables_files:
+        with open(fpath, "r") as f:
+            lines = f.readlines()
+
+        for i, line in enumerate(lines):
+            if "BASE~" in line:
+                line = line.split("BASE~")[0] + "BASE,"
+                lines[i] = line
+
+        with open(fpath, "w") as f:
+            for line in lines:
+                f.write(line)
+
+
 def get_user():
     """
     Return a str of username with .'s replaced by ' '
@@ -393,6 +418,8 @@ def main():
     meta_dirs = find_meta_dirs([args.apps, args.core])
 
     update_version_number(args)
+
+    update_variables_files(args.apps)
 
     add_new_upgrade_macro(meta_dirs, args, macro_object)
 
