@@ -774,7 +774,7 @@ class ApplyMacros:
 
     def preprocess_macros(self):
         """
-        Overraching function to pre-process added macros
+        Overarching function to pre-process added macros
         Run before running any rose macro upgrade commands"
         Search through versions.py files for macros with the correct after-tag
         Save info and then delete the macro when found
