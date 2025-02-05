@@ -130,7 +130,6 @@ def split_macros(parsed_versions):
     macros = []
     macro = ""
     in_macro = False
-    in_comment = False
     for line in parsed_versions:
         if line.startswith("class vn") and not line.startswith(
             "class vnXX_txxx"
@@ -234,6 +233,7 @@ class ApplyMacros:
         # copy in LFRic, rather than using the Jules version. The LFRic build
         # system needs modifying to enable this
         # self.jules_source = self.get_dependency_paths(jules, "jules")
+        self.central_rose_meta = False
         self.set_rose_meta_path()
         if version is None:
             self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
@@ -255,7 +255,15 @@ class ApplyMacros:
         When Jules Shared from Jules is enabled, self.jules_source will need
         adding here
         """
-        rose_meta_path = f"{self.root_path}:{self.core_source}"
+        if os.path.isdir(os.path.join(self.root_path, "rose-meta")):
+            # For backwards compatibility with central rose-meta imports
+            rose_meta_path = (
+                f"{os.path.join(self.root_path, 'rose-meta')}:"
+                f"{os.path.join(self.core_source, 'rose-meta')}"
+            )
+            self.central_rose_meta = True
+        else:
+            rose_meta_path = f"{self.root_path}:{self.core_source}"
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
     def parse_application_section(self, meta_dir):
@@ -396,7 +404,7 @@ class ApplyMacros:
             - str, stdout of find command looking for versions.py files
         """
 
-        for dirpath, dirnames, filenames in os.walk(path):
+        for dirpath, dirnames, filenames in os.walk(path, followlinks=True):
             dirnames[:] = [d for d in dirnames if d not in [".svn"]]
             if "versions.py" in filenames:
                 self.meta_dirs.add(dirpath)
@@ -570,23 +578,23 @@ class ApplyMacros:
               not found
         """
 
-        core_imp = os.path.join(self.core_source, imp)
-        if os.path.exists(core_imp) or os.path.exists(
-            os.path.dirname(core_imp)
-        ):
+        # TODO: Reinstate Jules checks when using Jules Metadata from Jules
+
+        # For backwards compatibility with central rose-meta imports
+        if self.central_rose_meta:
+            core_imp = os.path.join(self.core_source, "rose-meta", imp)
+            apps_imp = os.path.join(self.root_path, "rose-meta", imp)
+        else:
+            core_imp = os.path.join(self.core_source, imp)
+            apps_imp = os.path.join(self.root_path, imp)
+
+        if os.path.exists(core_imp):
             return core_imp
-
-        # Reinstate when using Jules Shared from Jules
-        # jules_imp = os.path.join(self.jules_source, imp)
-        # if os.path.exists(jules_imp) or os.path.exists(
-        #     os.path.dirname(jules_imp)
-        # ):
-        #     return jules_imp
-
-        apps_imp = os.path.join(self.root_path, imp)
-        if os.path.exists(apps_imp) or os.path.exists(
-            os.path.dirname(apps_imp)
-        ):
+        if os.path.exists(apps_imp):
+            return apps_imp
+        if os.path.exists(os.path.dirname(core_imp)):
+            return core_imp
+        if os.path.exists(os.path.dirname(apps_imp)):
             return apps_imp
 
         raise Exception(
@@ -684,7 +692,14 @@ class ApplyMacros:
             - A list of meta imports in the correct order
         """
 
-        import_list = [app]
+        # If using central metadata, use the basename, otherwise the full path
+        if self.central_rose_meta:
+            app_name = os.path.basename(app)
+        else:
+            app_name = app
+
+        import_list = [app_name]
+
         try:
             imports = self.parsed_macros[app]["imports"]
         except KeyError:
@@ -709,6 +724,7 @@ class ApplyMacros:
 
         full_command = ""
         for meta_import in import_order:
+            meta_import = self.get_full_import_path(meta_import)
             if (
                 meta_import in self.parsed_macros
                 and self.parsed_macros[meta_import]["commands"]
@@ -758,7 +774,7 @@ class ApplyMacros:
 
     def preprocess_macros(self):
         """
-        Overraching function to pre-process added macros
+        Overarching function to pre-process added macros
         Run before running any rose macro upgrade commands"
         Search through versions.py files for macros with the correct after-tag
         Save info and then delete the macro when found
@@ -768,8 +784,13 @@ class ApplyMacros:
         """
 
         # Get list of versions files to check - in both core and apps
-        self.find_meta_dirs(self.root_path)
-        self.find_meta_dirs(self.core_source)
+        # Duplicated for backwards compatibility with central rose-meta imports
+        if self.central_rose_meta:
+            self.find_meta_dirs(os.path.join(self.root_path, "rose-meta"))
+            self.find_meta_dirs(os.path.join(self.core_source, "rose-meta"))
+        else:
+            self.find_meta_dirs(self.root_path)
+            self.find_meta_dirs(self.core_source)
 
         for meta_dir in self.meta_dirs:
             print(
