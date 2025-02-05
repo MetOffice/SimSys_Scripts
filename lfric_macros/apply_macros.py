@@ -130,7 +130,6 @@ def split_macros(parsed_versions):
     macros = []
     macro = ""
     in_macro = False
-    in_comment = False
     for line in parsed_versions:
         if line.startswith("class vn") and not line.startswith(
             "class vnXX_txxx"
