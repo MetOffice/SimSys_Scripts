@@ -277,11 +277,13 @@ fi
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
 if [[ $succeeded_ex1a -eq 1 ]]; then
-    printf "${GREEN}\n\nrsyncing the kgo to exz.\n${NC}"
+    printf "${GREEN}\n\nrsyncing the kgo to exz + excd.\n${NC}"
     printf "Warning: Always rsyncing UM KGO (not lfricinputs) on ex1a"
     rsync_dir="kgo/"
     host_rsync=$(rose host-select exab)
-    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/umdir/standard_jobs/${rsync_dir} login.exz:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+
+    # rsync to EXZ
+    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y frum@localhost $rsync_com
     else
@@ -291,6 +293,20 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
         printf "${RED}The rsync to the exz has failed.\n${NC}"
     else
         printf "${Green}The rsync to the exz has succeeded.\n${NC}"
+    fi
+
+    # rsync to EXCD
+    excd_host=$(rose host-select excd)
+    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${excd_host}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+    if [[ $launch_platform == "spice" ]]; then
+        ssh -Y frum@localhost $rsync_com
+    else
+        sudo -iu umadmin bash -c '$rsync_com'
+    fi
+    if [[ $? -ne 0 ]]; then
+        printf "${RED}The rsync to the excd has failed.\n${NC}"
+    else
+        printf "${Green}The rsync to the excd has succeeded.\n${NC}"
     fi
 elif [[ $platforms == *"ex1a"* ]]; then
     printf "${RED}\n\nSkipping the rsync to the exa as the exz install failed.\n${NC}"
