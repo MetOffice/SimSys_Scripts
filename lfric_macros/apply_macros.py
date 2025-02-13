@@ -953,6 +953,9 @@ class ApplyMacros:
                 self.upgraded_core = True
 
 
+        banner_print("[INFO] Upgrading Example Configurations")
+
+
 def check_tag(opt):
     """
     Check that a command line supplied tag is of a valid format
