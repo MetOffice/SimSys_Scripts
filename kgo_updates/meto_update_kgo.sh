@@ -6,7 +6,7 @@
 # *****************************COPYRIGHT*******************************
 
 # This script will ask for kgo update information then moves the directory kgo_update
-# to ~frum. It then calls `run_kgo_script.sh` as frum which itself calls the update
+# to ~${root_user}. It then calls `run_kgo_script.sh` as ${root_user} which itself calls the update
 # script. It then moves the generated variables files back into the working copy.
 # The kgo_update.py script can be run with the --new-release option by providing
 # 'new-release' as a command line option to this script
@@ -21,14 +21,17 @@ script_loc="$(dirname "$0")"
 
 # Work out if we're running from azspice or old spice
 if [[ $HOSTNAME == "caz"* ]]; then
+    root_user="umadmin"
+    root_home=/home/users/${root_user}
     launch_platform=azspice
     # Check you can sudo in as umadmin
-    sudo -iu umadmin bash -c "echo ''"
+    sudo -iu ${root_user} bash -c "echo ''"
     if [[ $? -ne 0 ]]; then
         printf "${RED} You were unable to run commands as umadmin - this is required to run this script"
         printf "This may be because of a password typo or similar"
     fi
 else
+    root_user="frum"
     launch_platform=spice
 fi
 
@@ -125,9 +128,9 @@ fi
 
 # Move the kgo_update directory to frum on linux
 if [[ $launch_platform == "spice" ]]; then
-    scp -rq $script_loc/kgo_update frum@localhost:~
+    scp -rq $script_loc/kgo_update ${root_user}@localhost:~
 else
-    sudo -iu umadmin bash -c "cp -r $script_loc/kgo_update /home/users/umadmin"
+    sudo -iu ${root_user} bash -c "cp -r $script_loc/kgo_update ${root_home}"
 fi
 
 # Define command to run as frum
@@ -144,11 +147,9 @@ command=". /etc/profile ; module load scitools ; cd kgo_update ;
 
 # Run the command as frum
 if [[ $launch_platform == "spice" ]]; then
-    ssh -Y frum@localhost $command
-    root_user="frum"
+    ssh -Y ${root_user}@localhost $command
 else
-    sudo -iu umadmin bash -c "cd $UMDIR ; $command"
-    root_user="umadmin"
+    sudo -iu ${root_user} bash -c "cd $UMDIR ; $command"
 fi
 
 # Error Checking and rsyncing
@@ -159,12 +160,12 @@ succeeded_xc40=0
 succeeded_ex1a=0
 succeeded_all=1
 if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
-    file=~frum/${variables_dir}/spice_update_script.sh
+    file=~${root_user}/${variables_dir}/spice_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_spice=1
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the spice variables file into this working copy.\n${NC}"
-            scp -q frum@localhost:~/${variables_dir}/spice_updated_variables${variables_extension} \
+            scp -q ${root_user}@localhost:~/${variables_dir}/spice_updated_variables${variables_extension} \
                                         ${wc_path}/rose-stem/site/meto/variables_spice${variables_extension}
             if [[ $? -ne 0 ]]; then
                 printf "${RED}The copy of the spice variables file into this working copy has failed.\n${NC}"
@@ -177,12 +178,12 @@ if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     fi
 fi
 if [[ $platforms == *"azspice"* ]]; then
-    file=~umadmin/${variables_dir}/azspice_update_script.sh
+    file=~${root_user}/${variables_dir}/azspice_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_azspice=1
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the azspice variables file into this working copy.\n${NC}"
-            cp /home/users/umadmin/${variables_dir}/azspice_updated_variables${variables_extension} \
+            cp ${root_home}/${variables_dir}/azspice_updated_variables${variables_extension} \
                                         ${wc_path}/rose-stem/site/meto/variables_azspice${variables_extension}
             if [[ $? -ne 0 ]]; then
                 printf "${RED}The copy of the azspice variables file into this working copy has failed.\n${NC}"
@@ -201,10 +202,10 @@ if [[ $platforms == *"xc40"* ]]; then
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the xc40 variables file into this working copy.\n${NC}"
             if [[ $launch_platform == "spice" ]]; then
-                scp -q frum@localhost:~/${variables_dir}/xc40_updated_variables${variables_extension} \
+                scp -q ${root_user}@localhost:~/${variables_dir}/xc40_updated_variables${variables_extension} \
                                         ${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}
             else
-                cp /home/users/umadmin/${variables_dir}/xc40_updated_variables${variables_extension} \
+                cp ${root_home}/${variables_dir}/xc40_updated_variables${variables_extension} \
                                         ${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}
             fi
             if [[ $? -ne 0 ]]; then
@@ -224,10 +225,10 @@ if [[ $platforms == *"ex1a"* ]]; then
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the ex1a variables file into this working copy.\n${NC}"
             if [[ $launch_platform == "spice" ]]; then
-                scp -q frum@localhost:~/${variables_dir}/ex1a_updated_variables${variables_extension} \
+                scp -q ${root_user}@localhost:~/${variables_dir}/ex1a_updated_variables${variables_extension} \
                                         ${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}
             else
-                cp /home/users/umadmin/${variables_dir}/ex1a_updated_variables${variables_extension} \
+                cp ${root_home}/${variables_dir}/ex1a_updated_variables${variables_extension} \
                                         ${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}
             fi
             if [[ $? -ne 0 ]]; then
@@ -262,9 +263,9 @@ if [[ $succeeded_xc40 -eq 1 ]]; then
     host_rsync=$(rose host-select xc)
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
-        ssh -Y frum@localhost $rsync_com
+        ssh -Y ${root_user}@localhost $rsync_com
     else
-        sudo -iu umadmin bash -c '$rsync_com'
+        sudo -iu ${root_user} bash -c '$rsync_com'
     fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the xcs has failed.\n${NC}"
@@ -287,9 +288,9 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     # rsync to EXZ
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
-        ssh -Y frum@localhost $rsync_com
+        ssh -Y ${root_user}@localhost $rsync_com
     else
-        sudo -iu umadmin bash -c '$rsync_com'
+        sudo -iu ${root_user} bash -c '$rsync_com'
     fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the exz has failed.\n${NC}"
@@ -301,9 +302,9 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     excd_host=$(rose host-select excd)
     rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${excd_host}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
-        ssh -Y frum@localhost $rsync_com
+        ssh -Y ${root_user}@localhost $rsync_com
     else
-        sudo -iu umadmin bash -c '$rsync_com'
+        sudo -iu ${root_user} bash -c '$rsync_com'
     fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the excd has failed.\n${NC}"
