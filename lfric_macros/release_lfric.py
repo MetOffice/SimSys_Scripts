@@ -166,7 +166,7 @@ def update_variables_files(apps):
 
         for i, line in enumerate(lines):
             if "BASE~" in line:
-                line = line.split("BASE~")[0] + "BASE,"
+                line = line.split("BASE~")[0] + "BASE,\n"
                 lines[i] = line
 
         with open(fpath, "w") as f:
