@@ -22,7 +22,7 @@ script_loc="$(dirname "$0")"
 # Work out if we're running from azspice or old spice
 if [[ $HOSTNAME == "caz"* ]]; then
     root_user="umadmin"
-    root_home=/home/users/${root_user}
+    root_home="/home/users/umadmin"
     launch_platform=azspice
     # Check you can sudo in as umadmin
     sudo -iu ${root_user} bash -c "echo ''"
@@ -32,6 +32,7 @@ if [[ $HOSTNAME == "caz"* ]]; then
     fi
 else
     root_user="frum"
+    root_home="/home/h01/frum"
     launch_platform=spice
 fi
 
@@ -145,7 +146,7 @@ command=". /etc/profile ; module load scitools ; cd kgo_update ;
                                   -V ${version_number} ;
          cd ~ ; rm -rf kgo_update"
 
-# Run the command as frum
+Run the command as frum
 if [[ $launch_platform == "spice" ]]; then
     ssh -Y ${root_user}@localhost $command
 else
@@ -160,7 +161,7 @@ succeeded_xc40=0
 succeeded_ex1a=0
 succeeded_all=1
 if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
-    file=~${root_user}/${variables_dir}/spice_update_script.sh
+    file=${root_home}/${variables_dir}/spice_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_spice=1
         if [[ $new_release -ne 1 ]]; then
@@ -178,7 +179,7 @@ if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
     fi
 fi
 if [[ $platforms == *"azspice"* ]]; then
-    file=~${root_user}/${variables_dir}/azspice_update_script.sh
+    file=${root_home}/${variables_dir}/azspice_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_azspice=1
         if [[ $new_release -ne 1 ]]; then
@@ -192,11 +193,12 @@ if [[ $platforms == *"azspice"* ]]; then
             fi
         fi
     else
+        echo $file
         succeeded_all=0
     fi
 fi
 if [[ $platforms == *"xc40"* ]]; then
-    file=~${root_user}/${variables_dir}/xc40_update_script.sh
+    file=${root_home}/${variables_dir}/xc40_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_xc40=1
         if [[ $new_release -ne 1 ]]; then
@@ -219,7 +221,7 @@ if [[ $platforms == *"xc40"* ]]; then
     fi
 fi
 if [[ $platforms == *"ex1a"* ]]; then
-    file=~${root_user}/${variables_dir}/ex1a_update_script.sh
+    file=${root_home}/${variables_dir}/ex1a_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_ex1a=1
         if [[ $new_release -ne 1 ]]; then
