@@ -51,6 +51,7 @@ DEPENDENCIES = {
         "um",
     ],
     "um": ["casim", "jules", "mule", "shumlib", "socrates", "ukca"],
+    "lfric": [],
     "jules": [],
     "ukca": [],
 }

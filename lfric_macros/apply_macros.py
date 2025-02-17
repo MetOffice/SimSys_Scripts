@@ -72,12 +72,19 @@ def get_root_path(wc_path):
     )
 
 
-def run_black(filepath):
+def apply_styling(filepath):
     """
     Run black on a given file
     Inputs:
         - filepath, the path to the file to run black on
     """
+    result = run_command(f"isort --profile black {filepath}")
+    if result.returncode:
+        raise Exception(
+            "Running 'isort' as a subprocess failed. This may indicate a "
+            "syntax error with your macro.\nThe error message produced "
+            f"was:\n\n{result.stderr}"
+        )
     result = run_command(f"{BLACK_COMMAND} {filepath}")
     if result.returncode:
         raise Exception(
@@ -123,7 +130,6 @@ def split_macros(parsed_versions):
     macros = []
     macro = ""
     in_macro = False
-    in_comment = False
     for line in parsed_versions:
         if line.startswith("class vn") and not line.startswith(
             "class vnXX_txxx"
@@ -212,7 +218,7 @@ class ApplyMacros:
     Object to hold data + methods to apply upgrade macros in lfric_apps
     """
 
-    def __init__(self, tag, cname, apps, core, jules):
+    def __init__(self, tag, cname, version, apps, core, jules):
         self.tag = tag
         if cname:
             self.class_name = cname
@@ -227,8 +233,12 @@ class ApplyMacros:
         # copy in LFRic, rather than using the Jules version. The LFRic build
         # system needs modifying to enable this
         # self.jules_source = self.get_dependency_paths(jules, "jules")
+        self.central_rose_meta = False
         self.set_rose_meta_path()
-        self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
+        if version is None:
+            self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
+        else:
+            self.version = version
         self.ticket_number = None
         self.author = None
         self.parsed_macros = {}
@@ -245,7 +255,15 @@ class ApplyMacros:
         When Jules Shared from Jules is enabled, self.jules_source will need
         adding here
         """
-        rose_meta_path = f"{self.root_path}:{self.core_source}"
+        if os.path.isdir(os.path.join(self.root_path, "rose-meta")):
+            # For backwards compatibility with central rose-meta imports
+            rose_meta_path = (
+                f"{os.path.join(self.root_path, 'rose-meta')}:"
+                f"{os.path.join(self.core_source, 'rose-meta')}"
+            )
+            self.central_rose_meta = True
+        else:
+            rose_meta_path = f"{self.root_path}:{self.core_source}"
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
     def parse_application_section(self, meta_dir):
@@ -386,7 +404,7 @@ class ApplyMacros:
             - str, stdout of find command looking for versions.py files
         """
 
-        for dirpath, dirnames, filenames in os.walk(path):
+        for dirpath, dirnames, filenames in os.walk(path, followlinks=True):
             dirnames[:] = [d for d in dirnames if d not in [".svn"]]
             if "versions.py" in filenames:
                 self.meta_dirs.add(dirpath)
@@ -473,7 +491,7 @@ class ApplyMacros:
                 if not in_new_macro:
                     f.write(line)
 
-        run_black(temppath)
+        apply_styling(temppath)
 
         if not os.path.getsize(temppath) > 0:
             raise Exception(
@@ -560,23 +578,23 @@ class ApplyMacros:
               not found
         """
 
-        core_imp = os.path.join(self.core_source, imp)
-        if os.path.exists(core_imp) or os.path.exists(
-            os.path.dirname(core_imp)
-        ):
+        # TODO: Reinstate Jules checks when using Jules Metadata from Jules
+
+        # For backwards compatibility with central rose-meta imports
+        if self.central_rose_meta:
+            core_imp = os.path.join(self.core_source, "rose-meta", imp)
+            apps_imp = os.path.join(self.root_path, "rose-meta", imp)
+        else:
+            core_imp = os.path.join(self.core_source, imp)
+            apps_imp = os.path.join(self.root_path, imp)
+
+        if os.path.exists(core_imp):
             return core_imp
-
-        # Reinstate when using Jules Shared from Jules
-        # jules_imp = os.path.join(self.jules_source, imp)
-        # if os.path.exists(jules_imp) or os.path.exists(
-        #     os.path.dirname(jules_imp)
-        # ):
-        #     return jules_imp
-
-        apps_imp = os.path.join(self.root_path, imp)
-        if os.path.exists(apps_imp) or os.path.exists(
-            os.path.dirname(apps_imp)
-        ):
+        if os.path.exists(apps_imp):
+            return apps_imp
+        if os.path.exists(os.path.dirname(core_imp)):
+            return core_imp
+        if os.path.exists(os.path.dirname(apps_imp)):
             return apps_imp
 
         raise Exception(
@@ -674,7 +692,14 @@ class ApplyMacros:
             - A list of meta imports in the correct order
         """
 
-        import_list = [app]
+        # If using central metadata, use the basename, otherwise the full path
+        if self.central_rose_meta:
+            app_name = os.path.basename(app)
+        else:
+            app_name = app
+
+        import_list = [app_name]
+
         try:
             imports = self.parsed_macros[app]["imports"]
         except KeyError:
@@ -699,6 +724,7 @@ class ApplyMacros:
 
         full_command = ""
         for meta_import in import_order:
+            meta_import = self.get_full_import_path(meta_import)
             if (
                 meta_import in self.parsed_macros
                 and self.parsed_macros[meta_import]["commands"]
@@ -742,13 +768,13 @@ class ApplyMacros:
                 "        return config, self.reports\n"
             )
 
-        run_black(temppath)
+        apply_styling(temppath)
 
         os.rename(temppath, filepath)
 
     def preprocess_macros(self):
         """
-        Overraching function to pre-process added macros
+        Overarching function to pre-process added macros
         Run before running any rose macro upgrade commands"
         Search through versions.py files for macros with the correct after-tag
         Save info and then delete the macro when found
@@ -758,8 +784,13 @@ class ApplyMacros:
         """
 
         # Get list of versions files to check - in both core and apps
-        self.find_meta_dirs(self.root_path)
-        self.find_meta_dirs(self.core_source)
+        # Duplicated for backwards compatibility with central rose-meta imports
+        if self.central_rose_meta:
+            self.find_meta_dirs(os.path.join(self.root_path, "rose-meta"))
+            self.find_meta_dirs(os.path.join(self.core_source, "rose-meta"))
+        else:
+            self.find_meta_dirs(self.root_path)
+            self.find_meta_dirs(self.core_source)
 
         for meta_dir in self.meta_dirs:
             print(
@@ -956,6 +987,20 @@ def check_tag(opt):
     return opt
 
 
+def version_number(opt):
+    """
+    Check that the command line supplied version number is of a suitable format
+    """
+    if opt is None:
+        return opt
+    if not re.match(r"\d+.\d+", opt):
+        raise argparse.ArgumentTypeError(
+            f"The version number '{opt}' does not conform to the 'X.Y' format."
+            "Please modify the command line argument and rerun."
+        )
+    return opt
+
+
 def parse_args():
     """
     Read command line args
@@ -976,6 +1021,13 @@ def parse_args():
         default=None,
         help="The class name of the upgrade macro. This should only be used at "
         "a new release when the tag and classname differ.",
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        default=None,
+        type=version_number,
+        help="The new version number we are updating to (format X.Y)",
     )
     parser.add_argument(
         "-a",
@@ -1004,16 +1056,14 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
+def apply_macros_main(
+    tag, cname=None, version=None, apps=".", core=None, jules=None
+):
     """
     Main function for this program
     """
 
-    args = parse_args()
-
-    macro_object = ApplyMacros(
-        args.tag, args.cname, args.apps, args.core, args.jules
-    )
+    macro_object = ApplyMacros(tag, cname, version, apps, core, jules)
 
     # Pre-process macros
     banner_print("Pre-Processing Macros")
@@ -1043,4 +1093,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    apply_macros_main(
+        args.tag, args.cname, args.version, args.apps, args.core, args.jules
+    )
