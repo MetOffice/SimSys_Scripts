@@ -267,7 +267,7 @@ if [[ $succeeded_xc40 -eq 1 ]]; then
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost $rsync_com
     else
-        sudo -iu ${root_user} bash -c '$rsync_com'
+        sudo -iu ${root_user} bash -c "$rsync_com"
     fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the xcs has failed.\n${NC}"
@@ -292,7 +292,7 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost $rsync_com
     else
-        sudo -iu ${root_user} bash -c '$rsync_com'
+        sudo -iu ${root_user} bash -c "$rsync_com"
     fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the exz has failed.\n${NC}"
@@ -306,7 +306,7 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost $rsync_com
     else
-        sudo -iu ${root_user} bash -c '$rsync_com'
+        sudo -iu ${root_user} bash -c "$rsync_com"
     fi
     if [[ $? -ne 0 ]]; then
         printf "${RED}The rsync to the excd has failed.\n${NC}"
