@@ -146,7 +146,7 @@ command=". /etc/profile ; module load scitools ; cd kgo_update ;
                                   -V ${version_number} ;
          cd ~ ; rm -rf kgo_update"
 
-# Run the command as frum
+# Run the command as admin user
 if [[ $launch_platform == "spice" ]]; then
     ssh -Y ${root_user}@localhost $command
 else
