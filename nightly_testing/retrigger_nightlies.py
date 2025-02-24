@@ -91,6 +91,8 @@ def restart_suite(suite):
     """
     print(f"Restarting {suite}")
     play_command = f"cylc play -q {suite}"
+    if "next-cylc" in suite:
+        play_command = f"export CYLC_VERSION=8-next ; {play_command}"
     _ = run_command(play_command)
 
 
@@ -103,6 +105,8 @@ def retrigger_suite(suite, tasks):
     for i, task in enumerate(tasks):
         print(f"\rTask {i+1}/{ntasks}", end="", flush=True)
         failed_command = f"cylc trigger {suite}//*/{task[0]}"
+        if "next-cylc" in suite:
+            failed_command = f"export CYLC_VERSION=8-next ; {failed_command}"
         _ = run_command(failed_command)
     print()
 
@@ -185,9 +189,12 @@ if __name__ == "__main__":
     # Restart failed suites
     run_all = ask_yn("Do you want to restart all failed suites")
     restarted_suites = []
+    to_restart = []
     for suite in failed_suites:
         if not run_all and not ask_yn(f"Do you want to restart {suite}"):
             continue
+        to_restart.append(suite)
+    for suite in to_restart:
         restart_suite(suite)
         restarted_suites.append(suite)
 

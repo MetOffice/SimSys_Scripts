@@ -71,6 +71,7 @@ UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
 MONITORING_TIME = "00 06"
+CYLC_INSTALL = "~metomi/apps"
 
 
 def run_command(command):
@@ -121,7 +122,11 @@ def fetch_working_copy_cron():
 
 def lfric_heads_sed(wc_path):
     """
-    Add sed commands to setup dependencies.sh for heads testing
+    Add 2 sed commands to setup dependencies.sh for heads testing
+    One command replaces all revisions with HEAD
+    The other removes all sources - in the event a branch/working copy is left in at
+    commit, this means that the Heads testing should still run. The set-revisions
+    testing would show the wrong source.
     As this edits the working copy it copies the original copy with _heads added
     and returns this new wc path
     """
@@ -130,10 +135,8 @@ def lfric_heads_sed(wc_path):
     dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
     rstr = f"cp -rf {wc_path} {wc_path_new} ; "
-    rstr += (
-        f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
-    )
-    rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
+    rstr += f'sed -i -e "s/^\\(export .*_rev=\\).*/\\1HEAD/" {dep_path} ; '
+    rstr += f'sed -i -e "s/^\\(export .*_sources=\\).*/\\1/" {dep_path} ; '
     return rstr
 
 
@@ -307,6 +310,15 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     # Set up the timing for this job
     cron_job = generate_cron_timing_str(suite, "main")
 
+    # If this is a cylc-8-next job, check that the 8-next symlink in metomi points
+    # elsewhere than the cylc-8 symlink
+    if cylc_version == "8-next":
+        next_link = os.path.join(CYLC_INSTALL, "cylc-8-next")
+        def_link = os.path.join(CYLC_INSTALL, "cylc-8")
+        cron_job += (
+            f'[ "$(readlink -- "{next_link}")" != "$(readlink -- "{def_link}")" ] && ('
+        )
+
     cron_job += f"{PROFILE} ; "
 
     # LFRic Apps heads uses a different working copy
@@ -326,6 +338,10 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
 
     if major_cylc_version(cylc_version) == "8":
         cron_job += f" ; cylc play {name} >> {log_file} 2>&1"
+
+    # Close bracket if using next-cylc
+    if cylc_version == "8-next":
+        cron_job += ")"
 
     return cron_job + "\n"
 
