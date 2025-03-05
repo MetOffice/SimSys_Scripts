@@ -69,10 +69,15 @@ def find_macro_tags(tag, path):
     """
 
     found_tags = set()
-
+    in_comment = False
     with open(os.path.join(path, "versions.py")) as f:
         for line in f:
             line = line.strip()
+            # Check whether this is a comment
+            for _ in range(line.count('"""')):
+                in_comment = not in_comment
+            if in_comment:
+                continue
             result = re.search(
                 rf'^\s*{tag.upper()}_TAG\s*=\s*["\'](\S+)["\']', line
             )
@@ -104,11 +109,11 @@ def compare_tags(before, after, path):
     if len(single_tags) != 2:
         raise Exception(
             f"Found {len(single_tags)} unique before or after tags in "
-            f"{os.path.join(path, "versions.py")} that were ONLY a before or "
+            f"{os.path.join(path, 'versions.py')} that were ONLY a before or "
             "after tag. There should be 2 of these - the beginning of the "
-            "chain and the end of the chain. This is likely a typo in the "
-            "versions.py file. The identified tags were:"
-            f"\n{'\n'.join(x for x in single_tags)}"
+            "chain and the end of the chain. This is likely a typo in the tags in "
+            "the versions.py file. The identified tags were:\n"
+            f"{'\n'.join(x for x in single_tags)}"
         )
 
 
@@ -119,7 +124,10 @@ def main():
     Main function of the program
     """
 
-    macro_object = ApplyMacros("vn0.0_t0", ".", None, None)
+    source_apps = os.path.join(os.environ["SOURCE_ROOT"], "apps")
+    source_core = os.path.join(os.environ["SOURCE_ROOT"], "core")
+
+    macro_object = ApplyMacros("vn0.0_t0", None, "vn0.0", source_apps, source_core, None)
     macro_object.find_meta_dirs(
         os.path.join(macro_object.root_path, "applications")
     )
@@ -137,6 +145,7 @@ def main():
     for _, directory in macro_object.temp_dirs.items():
         shutil.rmtree(directory)
 
+    print("[PASS] - Successfully checked all macro chains")
 
 if __name__ == "__main__":
     main()
