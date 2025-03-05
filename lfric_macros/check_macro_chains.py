@@ -14,6 +14,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from apply_macros import ApplyMacros
 
 
@@ -59,7 +60,7 @@ def find_upgradeable_apps(apps_dir):
     return valid_apps
 
 
-def find_macro_tags(tag, path):
+def find_macro_tags(tag, path, errors):
     """
     Find tags with format BEFORE_TAG= or AFTER_TAG= in a versions.py file.
     Inputs:
@@ -82,7 +83,7 @@ def find_macro_tags(tag, path):
             result = re.search(rf'^\s*{tag.upper()}_TAG\s*=\s*["\'](\S+)["\']', line)
             if result:
                 if result.group(1) in found_tags:
-                    raise Exception(
+                    errors.append(
                         f"[ERROR]: Found 2 instances of the {tag.capitalize()}"
                         f"tag {result.group(1)} in versions.py file located "
                         f"at {path}"
@@ -92,7 +93,7 @@ def find_macro_tags(tag, path):
     return found_tags
 
 
-def compare_tags(before, after, path):
+def compare_tags(before, after, path, errors):
     """
     Check that the before and after tags form a continuous chain. This is done
     by ensuring that only the initial before tag (the version number) and the
@@ -106,7 +107,7 @@ def compare_tags(before, after, path):
 
     # There should be 2 single tags
     if len(single_tags) != 2:
-        raise Exception(
+        errors.append(
             f"Found {len(single_tags)} unique before or after tags in "
             f"{os.path.join(path, 'versions.py')} that were ONLY a before or "
             "after tag. There should be 2 of these - the beginning of the "
@@ -130,16 +131,23 @@ def main():
     macro_object.find_meta_dirs(os.path.join(macro_object.root_path, "applications"))
     macro_object.meta_dirs
 
+    errors = []
     for meta_dir in macro_object.meta_dirs:
 
-        before_tags = find_macro_tags("before", meta_dir)
-        after_tags = find_macro_tags("after", meta_dir)
+        before_tags = find_macro_tags("before", meta_dir, errors)
+        after_tags = find_macro_tags("after", meta_dir, errors)
 
-        compare_tags(before_tags, after_tags, meta_dir)
+        compare_tags(before_tags, after_tags, meta_dir, errors)
 
     # Remove temp directories
     for _, directory in macro_object.temp_dirs.items():
         shutil.rmtree(directory)
+
+    if errors:
+        for item in errors:
+            print(f"{item}\n\n\n\n", file=sys.stderr)
+        print("Found errors in macro chains - please check the job.err")
+        exit(1)
 
     print("[PASS] - Successfully checked all macro chains")
 
