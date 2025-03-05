@@ -84,7 +84,7 @@ def find_macro_tags(tag, path, errors):
             if result:
                 if result.group(1) in found_tags:
                     errors.append(
-                        f"[ERROR]: Found 2 instances of the {tag.capitalize()}"
+                        f"[ERROR] - Found 2 instances of the {tag.capitalize()}"
                         f"tag {result.group(1)} in versions.py file located "
                         f"at {path}"
                     )
@@ -108,7 +108,7 @@ def compare_tags(before, after, path, errors):
     # There should be 2 single tags
     if len(single_tags) != 2:
         errors.append(
-            f"Found {len(single_tags)} unique before or after tags in "
+            f"[ERROR] - Found {len(single_tags)} unique before or after tags in "
             f"{os.path.join(path, 'versions.py')} that were ONLY a before or "
             "after tag.\nThere should be 2 of these - the beginning of the "
             "chain and the end of the chain.\nThis is likely a typo in the tags in "
