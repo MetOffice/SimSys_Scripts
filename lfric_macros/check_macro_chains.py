@@ -110,8 +110,8 @@ def compare_tags(before, after, path, errors):
         errors.append(
             f"Found {len(single_tags)} unique before or after tags in "
             f"{os.path.join(path, 'versions.py')} that were ONLY a before or "
-            "after tag. There should be 2 of these - the beginning of the "
-            "chain and the end of the chain. This is likely a typo in the tags in "
+            "after tag.\nThere should be 2 of these - the beginning of the "
+            "chain and the end of the chain.\nThis is likely a typo in the tags in "
             "the versions.py file. The identified tags were:\n"
             f"{'\n'.join(x for x in single_tags)}"
         )
