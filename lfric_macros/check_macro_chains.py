@@ -16,6 +16,7 @@ import shutil
 import subprocess
 from apply_macros import ApplyMacros
 
+
 def run_command(command):
     """
     Run a subprocess command and return the result object
@@ -78,9 +79,7 @@ def find_macro_tags(tag, path):
                 in_comment = not in_comment
             if in_comment:
                 continue
-            result = re.search(
-                rf'^\s*{tag.upper()}_TAG\s*=\s*["\'](\S+)["\']', line
-            )
+            result = re.search(rf'^\s*{tag.upper()}_TAG\s*=\s*["\'](\S+)["\']', line)
             if result:
                 if result.group(1) in found_tags:
                     raise Exception(
@@ -117,8 +116,6 @@ def compare_tags(before, after, path):
         )
 
 
-
-
 def main():
     """
     Main function of the program
@@ -127,10 +124,10 @@ def main():
     source_apps = os.path.join(os.environ["SOURCE_ROOT"], "apps")
     source_core = os.path.join(os.environ["SOURCE_ROOT"], "core")
 
-    macro_object = ApplyMacros("vn0.0_t0", None, "vn0.0", source_apps, source_core, None)
-    macro_object.find_meta_dirs(
-        os.path.join(macro_object.root_path, "applications")
+    macro_object = ApplyMacros(
+        "vn0.0_t0", None, "vn0.0", source_apps, source_core, None
     )
+    macro_object.find_meta_dirs(os.path.join(macro_object.root_path, "applications"))
     macro_object.meta_dirs
 
     for meta_dir in macro_object.meta_dirs:
@@ -140,12 +137,12 @@ def main():
 
         compare_tags(before_tags, after_tags, meta_dir)
 
-
     # Remove temp directories
     for _, directory in macro_object.temp_dirs.items():
         shutil.rmtree(directory)
 
     print("[PASS] - Successfully checked all macro chains")
+
 
 if __name__ == "__main__":
     main()
