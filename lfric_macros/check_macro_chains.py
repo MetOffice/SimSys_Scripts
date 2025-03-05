@@ -146,7 +146,7 @@ def main():
     if errors:
         for item in errors:
             print(f"{item}\n\n\n\n", file=sys.stderr)
-        print("Found errors in macro chains - please check the job.err")
+        print("[FAIL] - Found errors in macro chains - please check the job.err")
         exit(1)
 
     print("[PASS] - Successfully checked all macro chains")
