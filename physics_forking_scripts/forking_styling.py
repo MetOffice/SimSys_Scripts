@@ -202,15 +202,15 @@ def apply_styling(lines):
             line_previous = ""
             pseudo_line = re.sub(r"\\\s*$", "&", pp_line_previous)
             pseudo_str_continuation = fstring_parse.is_str_continuation(pseudo_line,
-                                                          str_continuation)
+                                                                        str_continuation)
             if not pseudo_comment:
                 pseudo_line = fstring_parse.partial_blank_fstring(pseudo_line,
-                                                    str_continuation)
+                                                                  str_continuation)
                 if pseudo_line.strip()[0] == "#":
                     pseudo_comment = True
                 if pseudo_line.find("!") != -1:
                     pseudo_line = fstring_parse.blank_fcomments(pseudo_line,
-                                                  str_continuation)
+                                                                str_continuation)
                     if pseudo_line.find("!") == -1:
                         pseudo_comment = True
         elif continuation:
