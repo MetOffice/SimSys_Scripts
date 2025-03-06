@@ -1,6 +1,7 @@
 import re
 import sys
-from fstring_parse import *
+import fstring_parse
+
 
 KEYWORDS = {"abort", "abs", "abstract", "access", "achar", "acos", "acosd", "acosh", "action", "adjustl", "adjustr",
             "advance", "aimag", "aint", "alarm", "algama", "all", "allocatable", "allocate", "allocated", "alog",
@@ -83,7 +84,7 @@ def upcase_keywords(line, str_continuation):
     '''Upper-case any Fortran keywords on the given line, and down-case any
     all capital words which aren't keywords, returning the result'''
 
-    workline = clean_str_continuation(line, str_continuation)
+    workline = fstring_parse.clean_str_continuation(line, str_continuation)
 
     stripline = workline.strip()
 
@@ -93,12 +94,12 @@ def upcase_keywords(line, str_continuation):
     nloop = len(line)
 
     try:
-        simple_line = blank_fstring(workline)
+        simple_line = fstring_parse.blank_fstring(workline)
     except ParsingError as e:
-        str_cont_test = is_str_continuation(workline)
+        str_cont_test = fstring_parse.is_str_continuation(workline)
         check_quote = str_cont_test[SQUOTE] or str_cont_test[DQUOTE]
         if check_quote is True:
-            simple_line = partial_blank_fstring(workline)
+            simple_line = fstring_parse.partial_blank_fstring(workline)
         else:
             print("keyword split simplify line has failed.")
             print("{0:s} Line simplification has failed for:".format(e.msg))
@@ -106,7 +107,7 @@ def upcase_keywords(line, str_continuation):
             exit(1)
 
     # remove comments
-    simple_line = blank_fcomments(simple_line)
+    simple_line = fstring_parse.blank_fcomments(simple_line)
 
     # Split the line of code into a set of words
     line_words = set(re.findall(r"[\w]+", simple_line))
@@ -160,33 +161,27 @@ def apply_styling(lines):
     line_previous = ""
 
     for iline, line in enumerate(lines):
-        line = declaration_double_colon(iline, lines, pp_line_previous,
-                                        line_previous)
 
         if pp_continuation:
             if not pseudo_comment:
-                line = replace_patterns(line, pseudo_str_continuation)
-                line = replace_comment_patterns(line, pseudo_str_continuation)
                 line = upcase_keywords(line, pseudo_str_continuation)
         else:
-            line = replace_patterns(line, str_continuation)
-            line = replace_comment_patterns(line, str_continuation)
             line = upcase_keywords(line, str_continuation)
 
         # Check for the start of new pre-processor continuation
-        if is_pp_continuation(line) and not pp_continuation:
+        if fstring_parse.is_pp_continuation(line) and not pp_continuation:
             pp_continuation = True
 
         # test the line continuation properties of this line
         if pp_continuation:
-            if not is_pp_continuation(line):
+            if not fstring_parse.is_pp_continuation(line):
                 pp_continuation = False
                 pp_line_previous = ""
                 pseudo_comment = False
         elif continuation:
-            if is_continuation(line, str_continuation):
+            if fstring_parse.is_continuation(line, str_continuation):
                 # check if still string continuation
-                str_continuation = is_str_continuation(line, str_continuation)
+                str_continuation = fstring_parse.is_str_continuation(line, str_continuation)
             else:
                 continuation = False
                 line_previous = ""
@@ -194,9 +189,9 @@ def apply_styling(lines):
         else:
             # Finally, detect if the following line is a continuation
             # of this one (and therefore requires no indentation)
-            if is_continuation(line, str_continuation):
+            if fstring_parse.is_continuation(line, str_continuation):
                 continuation = True
-                str_continuation = is_str_continuation(line, str_continuation)
+                str_continuation = fstring_parse.is_str_continuation(line, str_continuation)
 
         # if we are a (pp) continuation, save the partial line
         if pp_continuation:
@@ -206,21 +201,21 @@ def apply_styling(lines):
                                         line])
             line_previous = ""
             pseudo_line = re.sub(r"\\\s*$", "&", pp_line_previous)
-            pseudo_str_continuation = is_str_continuation(pseudo_line,
+            pseudo_str_continuation = fstring_parse.is_str_continuation(pseudo_line,
                                                           str_continuation)
             if not pseudo_comment:
-                pseudo_line = partial_blank_fstring(pseudo_line,
+                pseudo_line = fstring_parse.partial_blank_fstring(pseudo_line,
                                                     str_continuation)
                 if pseudo_line.strip()[0] == "#":
                     pseudo_comment = True
                 if pseudo_line.find("!") != -1:
-                    pseudo_line = blank_fcomments(pseudo_line,
+                    pseudo_line = fstring_parse.blank_fcomments(pseudo_line,
                                                   str_continuation)
                     if pseudo_line.find("!") == -1:
                         pseudo_comment = True
         elif continuation:
             line_previous = re.sub(r"&\s*$", "", line_previous)
-            line_previous += blank_fcomments(line, str_continuation)
+            line_previous += fstring_parse.blank_fcomments(line, str_continuation)
 
         output_lines.append(line)
 
