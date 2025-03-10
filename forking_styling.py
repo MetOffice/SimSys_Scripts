@@ -1,3 +1,20 @@
+# *****************************COPYRIGHT*******************************
+# (C) Crown copyright Met Office. All rights reserved.
+# For further details please refer to the file LICENSE
+# which you should have received as part of this distribution.
+# *****************************COPYRIGHT*******************************
+
+'''
+Python script to apply LFRic styling to .F90/.f90 files, given a path/directory.
+
+Current implementation takes a valid path and traverses from the top level file
+structure identifying fortran files, and applying styling.
+
+Styling currently being applied:
+    -lowercasing keywords
+
+'''
+
 import re
 import sys
 import argparse
@@ -36,10 +53,11 @@ if __name__ == '__main__':
     )
 
     arguments = parser.parse_args()
-
-    for root, dirs, files in os.walk(arguments.directory):
-        for file in files:
-            if file.endswith((".f90", ".F90")):
-                cur_path = os.path.join(root, file)
-                lowercase_keywords(cur_path)
-
+    if os.path.exists(arguments.directory):
+        for root, dirs, files in os.walk(arguments.directory):
+            for file in files:
+                if file.endswith((".f90", ".F90")):
+                    cur_path = os.path.join(root, file)
+                    lowercase_keywords(cur_path)
+    else:
+        print("ERROR: Path supplied does not exist or is incorrect.")
