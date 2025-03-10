@@ -310,38 +310,37 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     # Set up the timing for this job
     cron_job = generate_cron_timing_str(suite, "main")
 
-    # If this is a cylc-8-next job, check that the 8-next symlink in metomi points
-    # elsewhere than the cylc-8 symlink
-    if cylc_version == "8-next":
-        next_link = os.path.join(CYLC_INSTALL, "cylc-8-next")
-        def_link = os.path.join(CYLC_INSTALL, "cylc-8")
-        cron_job += (
-            f'[ "$(readlink -- "{next_link}")" != "$(readlink -- "{def_link}")" ] && ('
-        )
-
-    cron_job += f"{PROFILE} ; "
+    job_command = f"{PROFILE} ; "
 
     # LFRic Apps heads uses a different working copy
     if suite["repo"] == "lfric_apps" and suite["revisions"] == "heads":
         wc_path = wc_path + "_heads"
 
     # Begin rose-stem command
-    cron_job += generate_rose_stem_command(suite, wc_path, cylc_version, name)
+    job_command += generate_rose_stem_command(suite, wc_path, cylc_version, name)
 
     # Add Heads Sources if required
-    cron_job += populate_heads_sources(suite)
+    job_command += populate_heads_sources(suite)
 
     # Add any -S vars defined
-    cron_job += populate_cl_variables(suite)
+    job_command += populate_cl_variables(suite)
 
-    cron_job += f">> {log_file} 2>&1"
+    job_command += f">> {log_file} 2>&1"
 
     if major_cylc_version(cylc_version) == "8":
-        cron_job += f" ; cylc play {name} >> {log_file} 2>&1"
+        job_command += f" ; cylc play {name} >> {log_file} 2>&1"
 
-    # Close bracket if using next-cylc
+    # If this is a cylc-8-next job, check that the 8-next symlink in metomi points
+    # elsewhere than the cylc-8 symlink
     if cylc_version == "8-next":
-        cron_job += ")"
+        next_link = os.path.join(CYLC_INSTALL, "cylc-8-next")
+        def_link = os.path.join(CYLC_INSTALL, "cylc-8")
+        cron_job += (
+            f'[ "$(readlink -- "{next_link}")" != "$(readlink -- "{def_link}")" ] '
+            f'&& ({job_command})'
+        )
+    else:
+        cron_job += job_command
 
     return cron_job + "\n"
 
