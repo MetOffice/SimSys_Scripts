@@ -28,7 +28,6 @@ def lowercase_keywords(file):
     with open(file, 'r') as fp:
         lines = fp.read()
         for keyword in KEYWORDS:
-            print(keyword)
             pattern = rf"\b{re.escape(keyword.upper())}\b"
             lines = re.sub(pattern, convert_to_lower, lines)
     with open(file, 'w') as fp:
