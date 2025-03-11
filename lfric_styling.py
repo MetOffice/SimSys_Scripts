@@ -39,8 +39,7 @@ def convert_to_lower(match_obj):
     if match_obj.group() is not None:
         return match_obj.group().lower()
 
-
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -60,3 +59,6 @@ if __name__ == '__main__':
                     lowercase_keywords(cur_path)
     else:
         print("ERROR: Path supplied does not exist or is incorrect.")
+
+if __name__ == '__main__':
+    main()
