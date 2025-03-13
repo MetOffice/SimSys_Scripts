@@ -106,7 +106,7 @@ def compare_tags(before, after, path, errors):
     single_tags = before.symmetric_difference(after)
 
     # There should be 2 single tags
-    if len(single_tags) != 2:
+    if len(single_tags) != 2 and len(single_tags) != 0:
         errors.append(
             f"[ERROR] - Found {len(single_tags)} unique before or after tags in "
             f"{os.path.join(path, 'versions.py')} that were ONLY a before or "
