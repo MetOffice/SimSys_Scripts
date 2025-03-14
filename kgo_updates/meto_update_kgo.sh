@@ -283,8 +283,6 @@ fi
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
 if [[ $succeeded_ex1a -eq 1 ]]; then
     printf "${GREEN}\n\nrsyncing the kgo to exz + excd.\n${NC}"
-    printf "Warning: Always rsyncing UM KGO (not lfricinputs) on ex1a"
-    rsync_dir="kgo/"
     host_rsync=$(rose host-select exab)
 
     # rsync to EXZ
