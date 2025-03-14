@@ -1,2 +1,8 @@
-__pycache__/
-
+*.code-workspace
+*.pyc
+*.sublime-workspace
+*.swp
+.conda
+.idea
+.vscode
+__pycache__
