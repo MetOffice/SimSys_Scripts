@@ -6,4 +6,3 @@
 .idea
 .vscode
 __pycache__
-/fortran_test_lowercase.F90

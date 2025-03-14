@@ -66,7 +66,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "-directory",
+        "-d", "--directory",
         metavar="home/user/etc",
         type=Path,
         default=Path(),
