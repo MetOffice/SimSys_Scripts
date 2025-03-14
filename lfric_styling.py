@@ -26,6 +26,9 @@ from styling_keywords import KEYWORDS
 
 
 def lowercase_keywords(file):
+    """
+    Lowercase words in a file when they match a word in the keywords set.
+    """
     print("Lowercasing keywords in", file)
     with open(file, 'r') as fp:
         lines = fp.read()
@@ -38,11 +41,17 @@ def lowercase_keywords(file):
 
 
 def convert_to_lower(match_obj):
+    """Checks if match is true and lowercases string."""
     if match_obj.group() is not None:
         return match_obj.group().lower()
 
 
 def apply_styling(path_to_dir):
+    """
+    Take a path to a directory containing fortran files.
+    Applying styling from other functions.
+    Identifying fortran files by extension.
+    """
     if os.path.exists(path_to_dir):
         for root, dirs, files in os.walk(path_to_dir):
             for file in files:
