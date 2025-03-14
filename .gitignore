@@ -1,2 +1,9 @@
-__pycache__/
-
+*.code-workspace
+*.pyc
+*.sublime-workspace
+*.swp
+.conda
+.idea
+.vscode
+__pycache__
+/fortran_test_lowercase.F90

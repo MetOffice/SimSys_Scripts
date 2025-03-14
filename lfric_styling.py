@@ -2,6 +2,8 @@
 # (C) Crown copyright Met Office. All rights reserved.
 # For further details please refer to the file LICENSE
 # which you should have received as part of this distribution.
+# Created date: 10/03/2025
+# Modified date: 14/03/2025
 # *****************************COPYRIGHT*******************************
 
 '''
@@ -20,7 +22,7 @@ import sys
 import argparse
 import os
 from pathlib import Path
-from styling import KEYWORDS
+from styling_keywords import KEYWORDS
 
 
 def lowercase_keywords(file):
@@ -39,6 +41,18 @@ def convert_to_lower(match_obj):
     if match_obj.group() is not None:
         return match_obj.group().lower()
 
+
+def apply_styling(path_to_dir):
+    if os.path.exists(path_to_dir):
+        for root, dirs, files in os.walk(path_to_dir):
+            for file in files:
+                if file.endswith((".f90", ".F90")):
+                    cur_path = os.path.join(root, file)
+                    lowercase_keywords(cur_path)
+    else:
+        print("ERROR: Path supplied does not exist or is incorrect.")
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -51,14 +65,8 @@ def main():
     )
 
     arguments = parser.parse_args()
-    if os.path.exists(arguments.directory):
-        for root, dirs, files in os.walk(arguments.directory):
-            for file in files:
-                if file.endswith((".f90", ".F90")):
-                    cur_path = os.path.join(root, file)
-                    lowercase_keywords(cur_path)
-    else:
-        print("ERROR: Path supplied does not exist or is incorrect.")
+    apply_styling(arguments.directory)
+
 
 if __name__ == '__main__':
     main()
