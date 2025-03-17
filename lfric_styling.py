@@ -24,20 +24,31 @@ import os
 from pathlib import Path
 from styling_keywords import KEYWORDS
 
+"""regex pattern for fortran comments"""
+COMMENTS_RE_PATTERN = r"!.*?\b(\w+)\b.*"
+
 
 def lowercase_keywords(file):
     """
     Lowercase words in a file when they match a word in the keywords set.
     """
     print("Lowercasing keywords in", file)
-    with open(file, 'r') as fp:
-        lines = fp.read()
-        for keyword in KEYWORDS:
-            pattern = rf"\b{re.escape(keyword.upper())}\b"
-            lines = re.sub(pattern, convert_to_lower, lines)
-    with open(file, 'w') as fp:
-        for line in lines:
-            fp.write(line)
+    with open(file, 'r+') as fp:
+        lines = fp.readlines()
+        for idx, line in enumerate(lines):
+            for keyword in KEYWORDS:
+                pattern = rf"\b{re.escape(keyword.upper())}\b"
+
+                if re.match(COMMENTS_RE_PATTERN, line) is None:
+                    line = re.sub(pattern, convert_to_lower, line)
+                    lines[idx] = line
+        fp.seek(0)
+        fp.write("".join(lines))
+        fp.truncate()
+
+    # with open(file, 'w') as fp:
+    #     for line in lines:
+    #         fp.write(line)
 
 
 def convert_to_lower(match_obj):
