@@ -22,7 +22,7 @@ import sys
 import argparse
 import os
 from pathlib import Path
-from styling_keywords import KEYWORDS
+from styling_keywords import NEW_KEYWORDS
 
 
 def lowercase_keywords(file):
@@ -32,7 +32,7 @@ def lowercase_keywords(file):
     print("Lowercasing keywords in", file)
     with open(file, 'r') as fp:
         lines = fp.read()
-        for keyword in KEYWORDS:
+        for keyword in NEW_KEYWORDS:
             pattern = rf"\b{re.escape(keyword.upper())}\b"
             lines = re.sub(pattern, convert_to_lower, lines)
     with open(file, 'w') as fp:
