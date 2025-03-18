@@ -71,8 +71,6 @@ UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
 MONITORING_TIME = "00 06"
-CYLC_INSTALL = "~metomi/apps"
-
 
 def run_command(command):
     """
@@ -392,6 +390,13 @@ def parse_cl_args():
         help="The file any stdout or stderr will be piped to.",
     )
     parser.add_argument(
+        "-p",
+        "--cylc_path",
+        default="~metomi",
+        help="The location of the cylc installation required for testing `next-cylc`"
+        "configs."
+    )
+    parser.add_argument(
         "--install",
         action="store_true",
         help="If True, will install the generated crontab.",
@@ -399,6 +404,8 @@ def parse_cl_args():
     args = parser.parse_args()
     args.cron_file = os.path.expanduser(args.cron_file)
     args.cron_log = os.path.expanduser(args.cron_log)
+    global CYLC_INSTALL
+    CYLC_INSTALL = args.cylc_path
     return args
 
 
