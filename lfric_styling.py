@@ -14,13 +14,13 @@ structure identifying fortran files, and applying styling.
 
 Styling currently being applied:
     -lowercasing keywords
-
 '''
 
 import re
 import sys
 import argparse
 import os
+import threading
 from pathlib import Path
 from styling_keywords import KEYWORDS
 
@@ -33,28 +33,23 @@ def lowercase_keywords(file):
     Lowercase words in a file when they match a word in the keywords set.
     """
     print("Lowercasing keywords in", file)
-    with open(file, 'r+') as fp:
-        lines = fp.readlines()
-        for idx, line in enumerate(lines):
-            for keyword in KEYWORDS:
-                pattern = rf"\b{re.escape(keyword.upper())}\b"
+    with open(file, 'r') as fp:
+        lines = fp.read()
+        for keyword in KEYWORDS:
+            pattern = rf"((?:(?<=!)).*(\b{re.escape(keyword.upper())}\b)|(\b{re.escape(keyword.upper())}\b))"
+            lines = re.sub(pattern, convert_to_lower, lines, flags=re.MULTILINE)
 
-                if re.match(COMMENTS_RE_PATTERN, line) is None:
-                    line = re.sub(pattern, convert_to_lower, line)
-                    lines[idx] = line
-        fp.seek(0)
-        fp.write("".join(lines))
-        fp.truncate()
-
-    # with open(file, 'w') as fp:
-    #     for line in lines:
-    #         fp.write(line)
+    with open(file, 'w') as fp:
+        for line in lines:
+            fp.write(line)
 
 
 def convert_to_lower(match_obj):
     """Checks if match is true and lowercases string."""
-    if match_obj.group() is not None:
-        return match_obj.group().lower()
+    if match_obj.group(3) is not None:
+        return match_obj.group(3).lower()
+    else:
+        return match_obj.group()
 
 
 def apply_styling(path_to_dir):
