@@ -13,13 +13,8 @@ import os
 import re
 from textwrap import wrap
 
-from fcm_bdiff import (
-    get_branch_diff_filenames,
-    get_branch_info,
-    get_url,
-    is_trunk,
-    use_mirror,
-)
+from fcm_bdiff import (get_branch_diff_filenames, get_branch_info, get_url,
+                       is_trunk, use_mirror)
 
 # Desired maximum column width for output - we make an exception
 # for filenames, which are always printed on a single line to aid
