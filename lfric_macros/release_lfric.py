@@ -23,9 +23,15 @@ import re
 import socket
 import subprocess
 
-from apply_macros import (ApplyMacros, apply_macros_main, apply_styling,
-                          get_root_path, read_versions_file, split_macros,
-                          version_number)
+from apply_macros import (
+    ApplyMacros,
+    apply_macros_main,
+    apply_styling,
+    get_root_path,
+    read_versions_file,
+    split_macros,
+    version_number,
+)
 
 MACRO_TEMPLATE = """
 class CLASS_NAME(MacroUpgrade):

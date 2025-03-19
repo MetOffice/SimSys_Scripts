@@ -21,8 +21,12 @@ import sys
 
 from fstring_parse import *
 
-from styling_keywords import (CODE_REPLACEMENTS, COMMENT_REPLACEMENTS,
-                              FORTRAN_TYPES, KEYWORDS)
+from styling_keywords import (
+    CODE_REPLACEMENTS,
+    COMMENT_REPLACEMENTS,
+    FORTRAN_TYPES,
+    KEYWORDS,
+)
 
 
 def replace_patterns(line, str_continuation):
