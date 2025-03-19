@@ -267,7 +267,7 @@ fi
 if [[ $succeeded_xc40 -eq 1 ]]; then
     printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
     host_rsync=$(rose host-select xc)
-    rsync_com="ssh -Y ${host_rsync} "rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}""
+    rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost "$rsync_com"
         rc=$?
@@ -293,7 +293,7 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     host_rsync=$(rose host-select exab)
 
     # rsync to EXZ
-    rsync_com="ssh -Y ${host_rsync} "rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}""
+    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost "$rsync_com"
         rc=$?
@@ -310,7 +310,7 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
 
     # rsync to EXCD
     excd_host=$(rose host-select excd)
-    rsync_com="ssh -Y ${host_rsync} "rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${excd_host}:/common/internal/umdir/standard_jobs/${rsync_dir}""
+    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${excd_host}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost "$rsync_com"
         rc=$?
