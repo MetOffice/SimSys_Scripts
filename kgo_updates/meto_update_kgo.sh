@@ -19,8 +19,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 # Move to the location of the script
-script_loc="$(dirname $(realpath "$0"))"
-echo $script_loc
+script_loc="$(dirname "$(realpath "$0")")"
 
 # Work out if we're running from azspice or old spice
 if [[ $HOSTNAME == "caz"* ]]; then
@@ -131,7 +130,7 @@ fi
 
 # Move the kgo_update directory to frum on linux
 if [[ $launch_platform == "spice" ]]; then
-    scp -rq ${script_loc}/kgo_update ${root_user}@localhost:~
+    scp -rq "${script_loc}"/kgo_update ${root_user}@localhost:~
 else
     sudo -iu ${root_user} bash -c "cp -r ${script_loc}/kgo_update ${root_home}"
 fi
@@ -193,7 +192,6 @@ if [[ $platforms == *"azspice"* ]]; then
             }
         fi
     else
-        echo $file
         succeeded_all=0
     fi
 fi
@@ -269,7 +267,7 @@ fi
 if [[ $succeeded_xc40 -eq 1 ]]; then
     printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
     host_rsync=$(rose host-select xc)
-    rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
+    rsync_com="ssh -Y ${host_rsync} "rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}""
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost "$rsync_com"
         rc=$?
@@ -295,7 +293,7 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     host_rsync=$(rose host-select exab)
 
     # rsync to EXZ
-    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
+    rsync_com="ssh -Y ${host_rsync} "rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}""
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost "$rsync_com"
         rc=$?
@@ -308,12 +306,13 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     else
         printf "${GREEN}The rsync to the exz has succeeded.\n${NC}"
     fi
+    rc=
 
     # rsync to EXCD
     excd_host=$(rose host-select excd)
-    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${excd_host}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+    rsync_com="ssh -Y ${host_rsync} "rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${excd_host}:/common/internal/umdir/standard_jobs/${rsync_dir}""
     if [[ $launch_platform == "spice" ]]; then
-        ssh -Y ${root_user}@localhost $rsync_com
+        ssh -Y ${root_user}@localhost "$rsync_com"
         rc=$?
     else
         sudo -iu ${root_user} bash -c "$rsync_com"
@@ -322,8 +321,9 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     if [[ $rc -ne 0 ]]; then
         printf "${RED}The rsync to the excd has failed.\n${NC}"
     else
-        printf "${Green}The rsync to the excd has succeeded.\n${NC}"
+        printf "${GREEN}The rsync to the excd has succeeded.\n${NC}"
     fi
+    rc=
 elif [[ $platforms == *"ex1a"* ]]; then
     printf "${RED}\n\nSkipping the rsync to the exz/cd as the exab install failed.\n${NC}"
 fi
