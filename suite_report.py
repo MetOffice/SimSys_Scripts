@@ -1976,7 +1976,7 @@ class SuiteReport(object):
                 suite_dir = "--cylc_suite_dir--"
             trac_log.extend(
                 [
-                    "There has been an exception in " + "SuiteReport.print_report()",
+                    "There has been an exception in SuiteReport.print_report()",
                     "See output for more information",
                     "rose-stem suite output will be in the files :\n",
                     "~/cylc-run/{0:s}/log/suite/log".format(suite_dir),
