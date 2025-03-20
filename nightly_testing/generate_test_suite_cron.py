@@ -73,7 +73,6 @@ PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
 MONITORING_TIME = "00 06"
 
-
 def run_command(command):
     """
     Run a subprocess command and return the result object
@@ -122,7 +121,11 @@ def fetch_working_copy_cron():
 
 def lfric_heads_sed(wc_path):
     """
-    Add sed commands to setup dependencies.sh for heads testing
+    Add 2 sed commands to setup dependencies.sh for heads testing
+    One command replaces all revisions with HEAD
+    The other removes all sources - in the event a branch/working copy is left in at
+    commit, this means that the Heads testing should still run. The set-revisions
+    testing would show the wrong source.
     As this edits the working copy it copies the original copy with _heads added
     and returns this new wc path
     """
@@ -131,8 +134,8 @@ def lfric_heads_sed(wc_path):
     dep_path = os.path.join(wc_path_new, "dependencies.sh")
 
     rstr = f"cp -rf {wc_path} {wc_path_new} ; "
-    rstr += f"sed -i -e 's/^\\(export .*_revision=@\\).*/\\1HEAD/' {dep_path} ; "
-    rstr += f"sed -i -e 's/^\\(export .*_rev=\\).*/\\1HEAD/' {dep_path} ; "
+    rstr += f'sed -i -e "s/^\\(export .*_rev=\\).*/\\1HEAD/" {dep_path} ; '
+    rstr += f'sed -i -e "s/^\\(export .*_sources=\\).*/\\1/" {dep_path} ; '
     return rstr
 
 
@@ -306,25 +309,37 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     # Set up the timing for this job
     cron_job = generate_cron_timing_str(suite, "main")
 
-    cron_job += f"{PROFILE} ; "
+    job_command = f"{PROFILE} ; "
 
     # LFRic Apps heads uses a different working copy
     if suite["repo"] == "lfric_apps" and suite["revisions"] == "heads":
         wc_path = wc_path + "_heads"
 
     # Begin rose-stem command
-    cron_job += generate_rose_stem_command(suite, wc_path, cylc_version, name)
+    job_command += generate_rose_stem_command(suite, wc_path, cylc_version, name)
 
     # Add Heads Sources if required
-    cron_job += populate_heads_sources(suite)
+    job_command += populate_heads_sources(suite)
 
     # Add any -S vars defined
-    cron_job += populate_cl_variables(suite)
+    job_command += populate_cl_variables(suite)
 
-    cron_job += f">> {log_file} 2>&1"
+    job_command += f">> {log_file} 2>&1"
 
     if major_cylc_version(cylc_version) == "8":
-        cron_job += f" ; cylc play {name} >> {log_file} 2>&1"
+        job_command += f" ; cylc play {name} >> {log_file} 2>&1"
+
+    # If this is a cylc-8-next job, check that the 8-next symlink in metomi points
+    # elsewhere than the cylc-8 symlink
+    if cylc_version == "8-next":
+        next_link = os.path.join(CYLC_INSTALL, "cylc-8-next")
+        def_link = os.path.join(CYLC_INSTALL, "cylc-8")
+        cron_job += (
+            f'[ "$(readlink -- "{next_link}")" != "$(readlink -- "{def_link}")" ] '
+            f'&& ({job_command})'
+        )
+    else:
+        cron_job += job_command
 
     return cron_job + "\n"
 
@@ -376,6 +391,13 @@ def parse_cl_args():
         help="The file any stdout or stderr will be piped to.",
     )
     parser.add_argument(
+        "-p",
+        "--cylc_path",
+        default="~metomi",
+        help="The location of the cylc installation required for testing `next-cylc`"
+        "configs."
+    )
+    parser.add_argument(
         "--install",
         action="store_true",
         help="If True, will install the generated crontab.",
@@ -383,6 +405,8 @@ def parse_cl_args():
     args = parser.parse_args()
     args.cron_file = os.path.expanduser(args.cron_file)
     args.cron_log = os.path.expanduser(args.cron_log)
+    global CYLC_INSTALL
+    CYLC_INSTALL = args.cylc_path
     return args
 
 
