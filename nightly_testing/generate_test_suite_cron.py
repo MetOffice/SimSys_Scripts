@@ -73,6 +73,7 @@ PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
 MONITORING_TIME = "00 06"
 
+
 def run_command(command):
     """
     Run a subprocess command and return the result object
@@ -336,7 +337,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
         def_link = os.path.join(CYLC_INSTALL, "cylc-8")
         cron_job += (
             f'[ "$(readlink -- "{next_link}")" != "$(readlink -- "{def_link}")" ] '
-            f'&& ({job_command})'
+            f"&& ({job_command})"
         )
     else:
         cron_job += job_command
@@ -395,7 +396,7 @@ def parse_cl_args():
         "--cylc_path",
         default="~metomi",
         help="The location of the cylc installation required for testing `next-cylc`"
-        "configs."
+        "configs.",
     )
     parser.add_argument(
         "--install",
