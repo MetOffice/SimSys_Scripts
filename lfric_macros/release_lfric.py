@@ -72,7 +72,7 @@ def raise_exception(result, command):
     Raise an exception if a subprocess command has failed
     """
 
-    raise Exception(f"[FAIL] Error running command: '{command}'\n" f"{result.stderr}")
+    raise Exception(f"[FAIL] Error running command: '{command}'\n{result.stderr}")
 
 
 def set_dependency_path(args):
