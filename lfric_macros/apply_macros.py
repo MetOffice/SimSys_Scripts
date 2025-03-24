@@ -517,7 +517,7 @@ class ApplyMacros:
                         after_tag = re.search(rf"AFTER_TAG{TAG_REGEX}", macro).group(1)
                     except AttributeError as exc:
                         raise Exception(
-                            "Couldn't find an after tag in the macro:\n" f"{macro}"
+                            f"Couldn't find an after tag in the macro:\n{macro}"
                         ) from exc
                     found_macro = macro
                     macros.remove(found_macro)
