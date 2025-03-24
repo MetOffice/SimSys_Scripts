@@ -37,7 +37,7 @@ jobs:
           fetch-depth: 0
 
       - name: Super-Linter
-        uses: super-linter/super-linter/slim@v7.2.1
+        uses: super-linter/super-linter/slim@85f7611e0f7b53c8573cca84aa0ed4344f6f6a4d  # v7.2.1
         env:
           FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md|/linters/)
           IGNORE_GITIGNORED_FILES: true
