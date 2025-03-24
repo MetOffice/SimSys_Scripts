@@ -22,7 +22,7 @@ import argparse
 import os
 import threading
 from pathlib import Path
-from styling_keywords import KEYWORDS
+from styling_keywords import NEW_KEYWORDS
 
 """regex pattern for fortran comments"""
 COMMENTS_RE_PATTERN = r"!.*?\b(\w+)\b.*"
