@@ -13,27 +13,9 @@ Only intended to be run from rose-stem
 import os
 import re
 import shutil
-import subprocess
 import sys
-from apply_macros import ApplyMacros
 
-
-def run_command(command):
-    """
-    Run a subprocess command and return the result object
-    Inputs:
-        - command, str with command to run
-    Outputs:
-        - result object from subprocess.run
-    """
-    return subprocess.run(
-        command.split(),
-        capture_output=True,
-        text=True,
-        timeout=120,
-        shell=False,
-        check=False,
-    )
+from apply_macros import ApplyMacros, run_command
 
 
 def find_upgradeable_apps(apps_dir):
