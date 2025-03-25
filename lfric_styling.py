@@ -17,10 +17,8 @@ Styling currently being applied:
 '''
 
 import re
-import sys
 import argparse
 import os
-import threading
 from pathlib import Path
 from styling_keywords import NEW_KEYWORDS
 
