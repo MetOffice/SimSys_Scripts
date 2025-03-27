@@ -95,8 +95,7 @@ def compare_tags(before, after, path, errors):
             "after tag.\nThere should be 2 of these - the beginning of the "
             "chain and the end of the chain.\nThis is likely a typo in the tags in "
             "the versions.py file. The identified tags were:\n"
-            # f"{'\n'.join(x for x in single_tags)}"
-        )
+        ) + "\n".join(x for x in single_tags)
 
 
 def main():
