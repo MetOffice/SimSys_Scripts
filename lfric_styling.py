@@ -14,15 +14,16 @@ structure identifying fortran files, and applying styling.
 
 Styling currently being applied:
     -lowercasing keywords
-
 '''
 
 import re
-import sys
 import argparse
 import os
 from pathlib import Path
 from styling_keywords import NEW_KEYWORDS
+
+"""regex pattern for fortran comments"""
+COMMENTS_RE_PATTERN = r"!.*?\b(\w+)\b.*"
 
 
 def lowercase_keywords(file):
@@ -32,9 +33,11 @@ def lowercase_keywords(file):
     print("Lowercasing keywords in", file)
     with open(file, 'r') as fp:
         lines = fp.read()
-        for keyword in NEW_KEYWORDS:
-            pattern = rf"\b{re.escape(keyword.upper())}\b"
-            lines = re.sub(pattern, convert_to_lower, lines)
+        for keyword in KEYWORDS:
+            # regex to check if a keyword is preceded with a '!' symbol or it matches a keyword and group each.
+            pattern = rf"((?:(?<=!)).*(\b{re.escape(keyword.upper())}\b)|(\b{re.escape(keyword.upper())}\b))"
+            lines = re.sub(pattern, convert_to_lower, lines, flags=re.MULTILINE)
+
     with open(file, 'w') as fp:
         for line in lines:
             fp.write(line)
@@ -42,8 +45,10 @@ def lowercase_keywords(file):
 
 def convert_to_lower(match_obj):
     """Checks if match is true and lowercases string."""
-    if match_obj.group() is not None:
-        return match_obj.group().lower()
+    if match_obj.group(3) is not None:
+        return match_obj.group(3).lower()
+    else:
+        return match_obj.group()
 
 
 def apply_styling(path_to_dir):
