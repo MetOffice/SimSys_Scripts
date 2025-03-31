@@ -68,7 +68,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 <details>
 <summary>How long it takes to convert svn repo to git</summary>
 
-The listing below shows the time taken to convert trunk-only branches and 
+The listing below shows the time taken to convert trunk-only branches and
 attach svn tags to the Git repository locally using `ssd_svn2git,sh` script.
 
     $ tail -n1 *.log
