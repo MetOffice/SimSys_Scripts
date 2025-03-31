@@ -7,7 +7,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 ### Pre-requisites to run the migration script
 
 - Read access to the Met Office Science Repository [MOSRS](https://code.metoffice.gov.uk/trac/home).
-- Write access to the [Met Office GitHub organisation](https://github.com/MetOffice).
+- Optional Write access to the [Met Office GitHub organisation](https://github.com/MetOffice) for push to remote (usually, an admin).
 - Tools: [`fcm`](https://metomi.github.io/fcm/doc/user_guide/introduction.html), [`git`](https://git-scm.com), [`gitlify`](https://github.com/MetOffice/gitlify), [`jq`](https://jqlang.org), and [`gh`](https://cli.github.com) available on the system.
 
 ## Checklist
@@ -57,6 +57,63 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [ ] Allow limited number of developers to test their workflows
    - [ ] Add/update Templates
 
-5. Update communication plan
-   
+5. During SRS freeze
+  - [ ] Merge `trunk` in _future_ default (`main` or `develop`) and delete `trunk`
+  - [ ] Make sure tags/releases are still functional
 
+6. Update communication plan
+
+
+## FAQ 
+
+<details>
+<summary>How long it takes to convert svn repo to git</summary>
+
+The listing below shows the time taken to convert trunk-only branches and 
+attach svn tags to the git repo locally using `ssd_svn2git,sh` script.
+
+```
+$ tail -n1 *.log
+==> 20250330T025505_casim.log <==
+2025-03-30 02:56:25 Done: casim in 00:01:20
+
+==> 20250330T025625_moci.log <==
+2025-03-30 02:59:42 Done: moci in 00:03:17
+
+==> 20250330T025942_jules.log <==
+2025-03-30 03:14:50 Done: jules in 00:15:08
+
+==> 20250330T031450_socrates.log <==
+2025-03-30 03:17:04 Done: socrates in 00:02:14
+
+==> 20250330T031704_ukca.log <==
+2025-03-30 03:18:06 Done: ukca in 00:01:02
+
+==> 20250330T031806_shumlib.log <==
+2025-03-30 03:19:40 Done: shumlib in 00:01:34
+
+==> 20250330T031940_mule.log <==
+2025-03-30 03:24:19 Done: mule in 00:04:39
+
+==> 20250330T032419_um_aux.log <==
+2025-03-30 03:29:52 Done: um_aux in 00:05:33
+
+==> 20250330T032952_um_doc.log <==
+2025-03-30 03:42:31 Done: um_doc in 00:12:39
+
+==> 20250330T034231_um_meta.log <==
+2025-03-30 03:46:47 Done: um_meta in 00:04:16
+
+==> 20250330T034647_um.log <==
+2025-03-30 05:04:04 Done: um in 01:17:17
+
+==> 20250330T050404_gcom.log <==
+2025-03-30 05:06:17 Done: gcom in 00:02:13
+
+==> 20250330T050617_lfric_apps.log <==
+2025-03-30 05:11:44 Done: lfric_apps in 00:05:27
+
+==> 20250330T051145_lfric_core.log <==
+2025-03-30 05:48:32 Done: lfric_core in 00:36:48
+```
+</details>
