@@ -1,6 +1,8 @@
-import pytest
-import subprocess
 import shutil
+import subprocess
+
+import pytest
+
 from ..apply_macros import *
 
 # A macro that we want to find for these tests
@@ -44,10 +46,7 @@ test_versions_file += f"\n{desired_macro}\n{existing_macro}"
 test_versions_file = [f"{x}\n" for x in test_versions_file.split("\n")]
 
 # The expected result from split_macros for the versions
-expected_split_macros = [
-    desired_macro,
-    existing_macro
-]
+expected_split_macros = [desired_macro, existing_macro]
 
 # ApplyMacros below requires an LFRic Apps working copy to work - check out the
 # head of the lfric_apps trunk for this purpose. The actual contents of the
@@ -58,25 +57,19 @@ result = subprocess.run(
     check=False,
     capture_output=True,
     text=True,
-    timeout=120
+    timeout=120,
 )
 if result.returncode:
     raise RuntimeError(
         "Failed to checkout required LFRic Apps Working Copy with error ",
-        result.stderr
+        result.stderr,
     )
 
 # Create an instance of the apply_macros class
 # Pass a known directory in as the Jules and Core sources as these are not
 # required for testing
-am = ApplyMacros(
-    "vn0.0_t001",
-    None,
-    None,
-    appsdir,
-    "/tmp",
-    "/tmp"
-)
+am = ApplyMacros("vn0.0_t001", None, None, appsdir, "/tmp", "/tmp")
+
 
 def test_split_macros():
     m = split_macros(test_versions_file)
@@ -103,10 +96,10 @@ def test_parse_macro():
     expected_dict = {
         "before_tag": "vn0.0_t000",
         "commands": (
-        '        self.add_setting(\n'
-        '            config, ["namelist:namelist1", "opt1"], "value1"\n'
-        '        )\n'
-        )
+            "        self.add_setting(\n"
+            '            config, ["namelist:namelist1", "opt1"], "value1"\n'
+            "        )\n"
+        ),
     }
     assert am.parsed_macros["meta_dir"] == expected_dict
     assert am.ticket_number == "#001"
@@ -117,14 +110,19 @@ def test_parse_macro():
 
 def test_read_meta_imports():
     am.parsed_macros["tests/test_meta_dir"] = {}
-    am.parsed_macros["tests/test_meta_dir"]["imports"] = am.read_meta_imports("tests/test_meta_dir")
+    am.parsed_macros["tests/test_meta_dir"]["imports"] = am.read_meta_imports(
+        "tests/test_meta_dir"
+    )
     expected_imports = [
         os.path.join(am.root_path, "science", "gungho"),
-        os.path.join(am.root_path, "applications", "lfric_atm")
+        os.path.join(am.root_path, "applications", "lfric_atm"),
     ]
     assert am.parsed_macros["tests/test_meta_dir"]["imports"] == expected_imports
     expected_meta = [os.path.join(am.root_path, "applications", "lfric_atm")]
-    assert am.read_meta_imports("tests/test_meta_dir/rose-app.conf", "meta") == expected_meta
+    assert (
+        am.read_meta_imports("tests/test_meta_dir/rose-app.conf", "meta")
+        == expected_meta
+    )
 
 
 def test_determine_import_order():
@@ -136,22 +134,13 @@ def test_determine_import_order():
     am.parsed_macros["import3"]["imports"] = ["import4"]
     am.parsed_macros["import4"]["imports"] = []
     am.parsed_macros["import2"]["imports"] = []
-    expected_order = [
-        "import2",
-        "import4",
-        "import3",
-        "import1"
-    ]
+    expected_order = ["import2", "import4", "import3", "import1"]
     assert am.determine_import_order("import1") == expected_order
 
 
 def test_combine_macros():
-    am.parsed_macros["importA"] = {
-        "commands": "        importA command"
-    }
-    am.parsed_macros["importB"] = {
-        "commands": "        importB command"
-    }
+    am.parsed_macros["importA"] = {"commands": "        importA command"}
+    am.parsed_macros["importB"] = {"commands": "        importB command"}
     expected_combined = (
         "        # Commands From: importA\n        importA command\n"
         "        # Commands From: importB\n        importB command\n"
@@ -167,9 +156,18 @@ def test_parse_application_section():
 
 
 def test_deduplicate_list():
-    assert deduplicate_list([1,2,3]) == [1,2,3]
-    assert deduplicate_list([1,2,2,3,3,3,]) == [1,2,3]
-    assert deduplicate_list([1,2,1,3,2]) == [1,2,3]
+    assert deduplicate_list([1, 2, 3]) == [1, 2, 3]
+    assert deduplicate_list(
+        [
+            1,
+            2,
+            2,
+            3,
+            3,
+            3,
+        ]
+    ) == [1, 2, 3]
+    assert deduplicate_list([1, 2, 1, 3, 2]) == [1, 2, 3]
 
 
 def test_match_python_imports():
@@ -179,8 +177,9 @@ def test_match_python_imports():
     assert match_python_import("import m as n") == True
     assert match_python_import("false") == False
 
+
 # Remove appsdir
-@pytest.fixture(scope='session', autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def remove_tempdir():
     yield
     shutil.rmtree(appsdir)

@@ -10,13 +10,13 @@ them to rose-stem apps.
 Warning: Should only be run on a Test branch or by CR on commit to trunk
 """
 
+import argparse
+import ast
 import os
 import re
-import ast
 import shutil
-import argparse
-import tempfile
 import subprocess
+import tempfile
 
 BLACK_COMMAND = "black --line-length=80"
 CLASS_NAME_REGEX = r"vn\d+(_t\d+\w*)?"
@@ -544,7 +544,7 @@ class ApplyMacros:
                         after_tag = re.search(rf"AFTER_TAG{TAG_REGEX}", macro).group(1)
                     except AttributeError as exc:
                         raise Exception(
-                            "Couldn't find an after tag in the macro:\n" f"{macro}"
+                            f"Couldn't find an after tag in the macro:\n{macro}"
                         ) from exc
                     found_macro = macro
                     macros.remove(found_macro)
