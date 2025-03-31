@@ -43,6 +43,31 @@ def run_command(command, shell=False):
     )
 
 
+def check_environment():
+    """
+    Check that required dependencies are loaded in the current environment
+    Cylc >= 8.0
+    Black
+    Isort
+    """
+
+    result = run_command("cylc --version")
+    major = result.stdout.split(".")[0]
+    if int(major) < 8:
+        raise Exception(
+            "The current cylc environment must be at least Cylc 8. Currently loaded is "
+            f"version {result.stdout}"
+        )
+
+    result = run_command("black --version")
+    if result.returncode:
+        raise Exception("'black' must be available to run this script")
+
+    result = run_command("isort --version")
+    if result.returncode:
+        raise Exception("'isort' must be available to run this script")
+
+
 def get_root_path(wc_path):
     """
     Given a path to a working copy, ensure the path and working copy are both
@@ -57,9 +82,11 @@ def get_root_path(wc_path):
     command = f"fcm info {wc_path}"
     result = run_command(command)
     if result.returncode:
-        raise FileNotFoundError(
-            f"The provided source, '{wc_path}', was not a valid working copy."
+        print(
+            "[WARN] - Could not find the fcm root path for the apps working copy. "
+            "Defaulting to assuming the provided path in the root path."
         )
+        return wc_path
 
     # If no error, then search through output for the working copy root path
     # return the found path
@@ -1041,6 +1068,8 @@ def apply_macros_main(tag, cname=None, version=None, apps=".", core=None, jules=
     """
     Main function for this program
     """
+
+    check_environment()
 
     macro_object = ApplyMacros(tag, cname, version, apps, core, jules)
 
