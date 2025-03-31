@@ -10,13 +10,13 @@ them to rose-stem apps.
 Warning: Should only be run on a Test branch or by CR on commit to trunk
 """
 
+import argparse
+import ast
 import os
 import re
-import ast
 import shutil
-import argparse
-import tempfile
 import subprocess
+import tempfile
 
 BLACK_COMMAND = "black --line-length=80"
 CLASS_NAME_REGEX = r"vn\d+(_t\d+\w*)?"
@@ -43,6 +43,31 @@ def run_command(command, shell=False):
     )
 
 
+def check_environment():
+    """
+    Check that required dependencies are loaded in the current environment
+    Cylc >= 8.0
+    Black
+    Isort
+    """
+
+    result = run_command("cylc --version")
+    major = result.stdout.split(".")[0]
+    if int(major) < 8:
+        raise Exception(
+            "The current cylc environment must be at least Cylc 8. Currently loaded is "
+            f"version {result.stdout}"
+        )
+
+    result = run_command("black --version")
+    if result.returncode:
+        raise Exception("'black' must be available to run this script")
+
+    result = run_command("isort --version")
+    if result.returncode:
+        raise Exception("'isort' must be available to run this script")
+
+
 def get_root_path(wc_path):
     """
     Given a path to a working copy, ensure the path and working copy are both
@@ -57,9 +82,11 @@ def get_root_path(wc_path):
     command = f"fcm info {wc_path}"
     result = run_command(command)
     if result.returncode:
-        raise FileNotFoundError(
-            f"The provided source, '{wc_path}', was not a valid working copy."
+        print(
+            "[WARN] - Could not find the fcm root path for the apps working copy. "
+            "Defaulting to assuming the provided path in the root path."
         )
+        return wc_path
 
     # If no error, then search through output for the working copy root path
     # return the found path
@@ -131,9 +158,7 @@ def split_macros(parsed_versions):
     macro = ""
     in_macro = False
     for line in parsed_versions:
-        if line.startswith("class vn") and not line.startswith(
-            "class vnXX_txxx"
-        ):
+        if line.startswith("class vn") and not line.startswith("class vnXX_txxx"):
             # If the macro string is set, then append to the list. If it's
             # empty then this is the first macro we're looking at, so nothing to
             # append
@@ -173,9 +198,7 @@ def match_python_import(line):
     Inputs:
         - line, str to match
     """
-    if re.match(r"import \w+", line) or re.match(
-        r"from [\.\w]+ import [\.\w]+", line
-    ):
+    if re.match(r"import \w+", line) or re.match(r"from [\.\w]+ import [\.\w]+", line):
         return True
     return False
 
@@ -518,13 +541,10 @@ class ApplyMacros:
                 regexp = re.compile(rf"BEFORE_TAG\s*=\s*[\"']{after_tag}[\"']")
                 if regexp.search(macro):
                     try:
-                        after_tag = re.search(
-                            rf"AFTER_TAG{TAG_REGEX}", macro
-                        ).group(1)
+                        after_tag = re.search(rf"AFTER_TAG{TAG_REGEX}", macro).group(1)
                     except AttributeError as exc:
                         raise Exception(
-                            "Couldn't find an after tag in the macro:\n"
-                            f"{macro}"
+                            f"Couldn't find an after tag in the macro:\n{macro}"
                         ) from exc
                     found_macro = macro
                     macros.remove(found_macro)
@@ -554,9 +574,7 @@ class ApplyMacros:
         # Find the macro we're interested in
         for macro in macros:
             try:
-                macro_name = re.search(
-                    rf"class ({CLASS_NAME_REGEX})\(", macro
-                ).group(1)
+                macro_name = re.search(rf"class ({CLASS_NAME_REGEX})\(", macro).group(1)
             except AttributeError as exc:
                 raise Exception(
                     "Unable to determine macro class name in "
@@ -735,9 +753,7 @@ class ApplyMacros:
                     f"{self.parse_application_section(meta_import)}\n"
                 )
                 if self.parsed_macros[meta_import]["commands"].strip("\n"):
-                    full_command += (
-                        self.parsed_macros[meta_import]["commands"] + "\n"
-                    )
+                    full_command += self.parsed_macros[meta_import]["commands"] + "\n"
                 else:
                     full_command += "        # Blank Upgrade Macro\n"
         return full_command
@@ -821,9 +837,7 @@ class ApplyMacros:
 
             # Read through rose-meta files for import statements
             # of other metadata
-            self.parsed_macros[meta_dir]["imports"] = self.read_meta_imports(
-                meta_dir
-            )
+            self.parsed_macros[meta_dir]["imports"] = self.read_meta_imports(meta_dir)
 
             # Read through the versions.py file for python import statements
             self.python_imports.update(
@@ -880,12 +894,8 @@ class ApplyMacros:
         upgradeable_apps = []
         app_dir_apps = os.path.join(self.root_path, "rose-stem", "app")
         app_dir_core = os.path.join(self.core_source, "rose-stem", "app")
-        apps_list = [
-            os.path.join(app_dir_apps, f) for f in os.listdir(app_dir_apps)
-        ]
-        apps_list += [
-            os.path.join(app_dir_core, f) for f in os.listdir(app_dir_core)
-        ]
+        apps_list = [os.path.join(app_dir_apps, f) for f in os.listdir(app_dir_apps)]
+        apps_list += [os.path.join(app_dir_core, f) for f in os.listdir(app_dir_core)]
         for app_path in apps_list:
             # Ignore lfric_coupled_rivers as this is based on Jules-standalone
             # metadata which is not currently available
@@ -1006,9 +1016,7 @@ def parse_args():
     Read command line args
     """
 
-    parser = argparse.ArgumentParser(
-        "Pre-process and apply LFRic Apps upgrade macros."
-    )
+    parser = argparse.ArgumentParser("Pre-process and apply LFRic Apps upgrade macros.")
     parser.add_argument(
         "tag",
         type=check_tag,
@@ -1056,12 +1064,12 @@ def parse_args():
     return parser.parse_args()
 
 
-def apply_macros_main(
-    tag, cname=None, version=None, apps=".", core=None, jules=None
-):
+def apply_macros_main(tag, cname=None, version=None, apps=".", core=None, jules=None):
     """
     Main function for this program
     """
+
+    check_environment()
 
     macro_object = ApplyMacros(tag, cname, version, apps, core, jules)
 
