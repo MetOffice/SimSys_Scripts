@@ -6,7 +6,7 @@
 # Modified date: 14/03/2025
 # *****************************COPYRIGHT*******************************
 
-'''
+"""
 Python script to apply LFRic styling to .F90/.f90 files, given a path/directory.
 
 Current implementation takes a valid path and traverses from the top level file
@@ -15,13 +15,14 @@ structure identifying fortran files, and applying styling.
 Styling currently being applied:
     -lowercasing keywords
 
-'''
+"""
 
-import re
-import sys
 import argparse
 import os
+import re
+import sys
 from pathlib import Path
+
 from styling_keywords import NEW_KEYWORDS
 
 
@@ -30,12 +31,12 @@ def lowercase_keywords(file):
     Lowercase words in a file when they match a word in the keywords set.
     """
     print("Lowercasing keywords in", file)
-    with open(file, 'r') as fp:
+    with open(file, "r") as fp:
         lines = fp.read()
         for keyword in NEW_KEYWORDS:
             pattern = rf"\b{re.escape(keyword.upper())}\b"
             lines = re.sub(pattern, convert_to_lower, lines)
-    with open(file, 'w') as fp:
+    with open(file, "w") as fp:
         for line in lines:
             fp.write(line)
 
@@ -66,16 +67,17 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "-d", "--directory",
+        "-d",
+        "--directory",
         metavar="home/user/etc",
         type=Path,
         default=Path(),
-        help="path to a directory of files."
+        help="path to a directory of files.",
     )
 
     arguments = parser.parse_args()
     apply_styling(arguments.directory)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,0 +1,59 @@
+---
+# Lint/analyse code with Super-Linter.
+name: Checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'releases/**']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress:  ${{ github.ref != 'refs/heads/main' }}
+
+permissions: read-all
+
+jobs:
+  check:
+    name: Lint
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    permissions:
+        contents: read
+        packages: read
+        statuses: write
+
+    steps:
+      - name: Checkout current
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Super-Linter
+        uses: super-linter/super-linter/slim@85f7611e0f7b53c8573cca84aa0ed4344f6f6a4d  # v7.2.1
+        env:
+          FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md|/linters/)
+          IGNORE_GITIGNORED_FILES: true
+          VALIDATE_BASH_EXEC: false
+          VALIDATE_JAVASCRIPT_STANDARD: false
+          VALIDATE_JSCPD: false
+          VALIDATE_MARKDOWN_PRETTIER: false
+          VALIDATE_PYTHON_FLAKE8: false
+          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_MYPY: false
+          VALIDATE_PYTHON_PYINK: false
+          VALIDATE_PYTHON_PYLINT: false
+          VALIDATE_PYTHON_RUFF: false
+          VALIDATE_SHELL_SHFMT: false
+          VALIDATE_YAML_PRETTIER: false
+          VALIDATE_YAML: false
+          # To report GitHub Actions status checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+...

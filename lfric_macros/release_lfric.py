@@ -26,9 +26,9 @@ import subprocess
 from apply_macros import (
     ApplyMacros,
     apply_macros_main,
+    apply_styling,
     get_root_path,
     read_versions_file,
-    apply_styling,
     split_macros,
     version_number,
 )
@@ -72,7 +72,7 @@ def raise_exception(result, command):
     Raise an exception if a subprocess command has failed
     """
 
-    raise Exception(f"[FAIL] Error running command: '{command}'\n" f"{result.stderr}")
+    raise Exception(f"[FAIL] Error running command: '{command}'\n{result.stderr}")
 
 
 def set_dependency_path(args):
