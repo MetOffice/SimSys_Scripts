@@ -66,7 +66,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 ## FAQ
 
 <details>
-<summary>How long it takes to convert svn repo to git</summary>
+<summary><b>How long it takes to convert svn repo to Git?</b></summary>
 
 The listing below shows the time taken to convert trunk-only branches and
 attach svn tags to the Git repository locally using `ssd_svn2git,sh` script.
@@ -113,5 +113,9 @@ attach svn tags to the Git repository locally using `ssd_svn2git,sh` script.
 
     ==> 20250330T051145_lfric_core.log <==
     2025-03-30 05:48:32 Done: lfric_core in 00:36:48
-
+</details>
+<details>
+<summary><b>What happens to a tag if the corresponding branch gets deleted?</b></summary>
+A branch is simply a way to track a collection of commits. The tag and commit
+would stull exist if the branch is deleted. Ref: https://github.com/orgs/community/discussions/23918.
 </details>
