@@ -33,20 +33,20 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [ ] `svn:socrates/main` (@trunk) → [socrates](https://github.com/MetOffice/socrates) (@trunk)
    - [ ] `svn:utils/shumlib` (@trunk) → [shumlib](https://github.com/MetOffice/shumlib) (@trunk)
      - [ ] - [ ] Contact [metomi](https://github.com/metomi/shumlib) owner to deprecate their repository.
-   - [ ] `svn:ukca/main` (@trunk) → [shumlib](https://github.com/MetOffice/ukca) (@trunk)
+   - [ ] `svn:ukca/main` (@trunk) → [ukca](https://github.com/MetOffice/ukca) (@trunk)
    - [ ] `svn:monc/casim` (@trunk) → [casim](https://github.com/MetOffice/casim) (@trunk)
    - [ ] `svn:moci/main` (@trunk) → [moci](https://github.com/MetOffice/moci) (@trunk)
    - [ ] `svn:lfric/LFRic` (@trunk) → [lfric_core](https://github.com/MetOffice/lfric_core) (@trunk)
      - [ ] Repository already exists: ask for admin access to the repository.
-   - [ ] `svn:lfric_apps/main` (@trunk) → [lfric_core](https://github.com/MetOffice/lfric_apps) (@trunk)
+   - [ ] `svn:lfric_apps/main` (@trunk) → [lfric_apps](https://github.com/MetOffice/lfric_apps) (@trunk)
      - [ ] Propose `lfric_core` as a submodule in this repository?
    - [ ] Check `config.json` is correct and up-to-date with MOSRS revisions.
 
 3. General updated for all repositories
    - [ ] All _private_ with specific team access only.
-   - [ ] `README` and Repository Description.
+   - [ ] `README.md` and Repository Description.
    - [ ] `LICENCE`
-   - [ ] `CLA`
+   - [ ] `CONTRIBUTING.md` (CLA) 
    - [ ] Correct Copyright statements, particularly in planned open-source repositories.
 
 4. Testbed

@@ -376,7 +376,7 @@
     },
     {
       "name": "um_meta",
-      "description": "Met Office Unified Model (UM) metadata",
+      "description": "Metadata for the Met Office Unified Model (UM)",
       "trunk": "um/meta",
       "tags": []
     },
@@ -471,7 +471,7 @@
     },
     {
       "name": "lfric_apps",
-      "description": "LFRic-based science applications (e.g., lfric_atm)  and code (e.g., GungHo dynamical core)",
+      "description": "LFRic-based science applications for Momentum",
       "trunk": "lfric_apps/main",
       "tags": [
         { "um13.5": 782 },
