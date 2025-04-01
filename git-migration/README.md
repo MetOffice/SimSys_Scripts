@@ -46,7 +46,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [ ] All _private_ with specific team access only.
    - [ ] `README.md` and Repository Description.
    - [ ] `LICENCE`
-   - [ ] `CONTRIBUTING.md` (CLA) 
+   - [ ] `CONTRIBUTING.md` (CLA)
    - [ ] Correct Copyright statements, particularly in planned open-source repositories.
 
 4. Testbed
