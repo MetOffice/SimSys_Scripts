@@ -1287,21 +1287,33 @@ class SuiteReport:
         return_message = ["'''LFRic Testing Requirements'''"]
         return_message.append("")
 
-        # Export the extract list from the lfric trunk
-        exported_extract_file = "~/tmp_extract.txt"
-        extract_list_path = self.export_file(
-            "fcm:lfric_apps.xm_tr",
-            "build/extract/extract.cfg",
-            exported_extract_file,
-        )
         extract_list_dict = {}
+        extract_files = [
+            "build/extract/extract.cfg",
+            "interfaces/jules_interface/build/extract.cfg",
+            "interfaces/socrates_interface/build/extract.cfg",
+        ]
 
-        if extract_list_path:
-            try:
-                extract_list_dict = self.parse_lfric_extract_list(extract_list_path)
-            except (EnvironmentError, TypeError, AttributeError):
-                # Potential error here changed type between python2 and 3
-                extract_list_path = None
+        for extract_file in extract_files:
+            # Export the extract list from the lfric trunk
+            exported_extract_file = "~/tmp_extract.txt"
+            extract_list_path = self.export_file(
+                "fcm:lfric_apps.xm_tr",
+                extract_file,
+                exported_extract_file,
+            )
+
+            if extract_list_path:
+                try:
+                    temp_dict = self.parse_lfric_extract_list(extract_list_path)
+                    for item in temp_dict:
+                        if item in extract_list_dict:
+                            extract_list_dict[item] += temp_dict[item]
+                        else:
+                            extract_list_dict[item] = temp_dict[item]
+                except (EnvironmentError, TypeError, AttributeError):
+                    # Potential error here changed type between python2 and 3
+                    extract_list_path = None
 
         # If the path returned is None, the extract list failed, most likely as
         # the user doesn't have lfric access. In this case return a warning.
