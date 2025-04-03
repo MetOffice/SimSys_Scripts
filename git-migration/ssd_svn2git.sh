@@ -1,158 +1,219 @@
 #!/bin/bash --login
 set -euo pipefail
-# This script
-# - Reads config file
-# - For each repository
-#   - Convert svn trunk to git repository in WORKDIR
-#   - Attach trunk release tags to git repository
-#   - Create remote repository (github.com/MetOffice/REPO_NAME), if necessary
-#   - Push local branch to remote
-#   - Push tags to remote
 
-usage(){
-  printf "%-s\n" "Usage: ${0##*/} [OPTION]
+# ----------------------------------------------------------------------------
+# Script Metadata
+# ----------------------------------------------------------------------------
+# This script is a parallel version of git-migration/ssd_svn2git.sh
+# It migrates Met Office Science Repositories from SVN to GitHub.
 
-  ${0##*/} Migrates the Met Office Science Repositories to GitHub.
+# ----------------------------------------------------------------------------
+# Functions
+# ----------------------------------------------------------------------------
 
-  Options:
-    -h, --help              Display this help and exit
-    -d, --debug             Enable command trace (debug mode)
-    -u, --update            Update GitHub repository.
-                            Please let the admin deal with this option.
-    -c, --config[=VALUE]    Path to config.json file (default: config.json)
-    -w, --workdir[=VALUE]   Working directory (default: ${DATADIR}/git-migration)
+usage() {
+  cat <<EOF
+Usage: ${0##*/} [OPTION]
 
-  Examples:
-    ${0##*/} -c config.json -w ${DATADIR}/git-migration
-    ${0##*/} --config=config.json --workdir=${DATADIR}/git-migration
+${0##*/} Migrates the Met Office Science Repositories to GitHub.
 
-  Report bugs to <yaswant.pradhan@metoffice.gov.uk>" | sed 's/^  //g'
+Options:
+  -h, --help               Display this help and exit
+  -d, --debug              Enable command trace (debug mode)
+  -m, --from-mirror        Use the Met Office internal mirror as SVN repository.
+                           Useful when SRS cannot be accessible (e.g., in batch jobs).
+  -n, --list-repos         List repositories to be migrated (dry run)
+  -u, --update             Update GitHub repository.
+                           Please let the admin deal with this option.
+  -j, --parallel[=VALUE]   Number of repositories to process in parallel (default: number of CPU cores)
+  -r, --repository[=VALUE] Name of a single repository to migrate
+                           (default: all repositories defined in config.json)
+  -c, --config[=VALUE]     Path to config.json file (default: config.json)
+  -w, --workdir[=VALUE]    Working directory (default: ${DATADIR}/git-migration)
+
+Examples:
+  ${0##*/} -c /path/to/config.json -w ${DATADIR}/git-migration
+  ${0##*/} --config=/path/to/config.json --workdir=${DATADIR}/git-migration
+
+Report bugs to <yaswant.pradhan@metoffice.gov.uk>
+EOF
 }
 
-OPTS=$(getopt \
-    -o hduc:w: \
-    -l help,debug,update,config:,workdir: \
-    -n "${0##*/}" -- "$@") || { usage; exit 1; }
-eval set -- "$OPTS"
+check_apps() {
+  local status=0
+  echo "--------------------------------------------------------------------"
+  for app in "$@"; do
+    if ! command -V "$app" 2>/dev/null; then
+      echo "** $app is not installed. Please install $app to run this script."
+      ((status++))
+    fi
+  done
+  echo "--------------------------------------------------------------------"
+  if ((status > 0)); then return 127; fi
+}
+
+validate_repo() {
+  local repo_name=$1
+  if ! jq -e ".repo[] | select(.name == \"$repo_name\")" "$CONFIG_FILE" >/dev/null; then
+    echo "Repository: '$repo_name' not found in $CONFIG_FILE"
+    exit 1
+  fi
+}
+
+process_repo() {
+  local repo_name=$1
+  local svn_url=$2
+  local repo_metadata=$3
+  SECONDS=0  # start timer
+
+  echo "$(date +'%F %T') Processing: $repo_name"
+
+  if [[ -d $repo_name ]]; then
+    echo "-- Sync commits from head of trunk"
+    pushd "$repo_name" >/dev/null
+    gitlify resync -t
+    popd >/dev/null
+  else
+    echo "-- Convert SVN to Git"
+    gitlify migrate -d enquiries@metoffice.gov.uk -x -t -y "$svn_url" "$repo_name"
+  fi
+
+  pushd "$repo_name" >/dev/null
+  attach_tags "$repo_metadata"
+  update_github "$repo_name" "$repo_metadata"
+  deltaT=$(TZ=UTC0 printf '%(%H:%M:%S)T\n' $SECONDS)
+  echo "$(date +'%F %T') Done: $repo_name in $deltaT"
+  popd >/dev/null
+}
+
+attach_tags() {
+  local repo_metadata=$1
+  echo "-- Attach tags"
+  local tags
+  tags=$(echo "$repo_metadata" | jq -c '.tags[]')
+  for tag in $tags; do
+    local tag_name tag_value
+    tag_name=$(echo "$tag" | jq -r 'keys[]')
+    tag_value=$(echo "$tag" | jq -r '.[keys[]]')
+    echo "  Tag: $tag_name, Revision: $tag_value"
+    git tag "$tag_name" -f "$(git svn find-rev "r${tag_value}")"
+  done
+}
+
+update_github() {
+  local repo_name=$1
+  local repo_metadata=$2
+
+  if ((UPDATE_GITHUB == 0)); then
+    return
+  fi
+
+  echo "-- Create remote GitHub repository, if necessary"
+  git ls-remote -h "${GH_PREFIX}/${repo_name}" || {
+    local description
+    description=$(echo "$repo_metadata" | jq -r '.description')
+    gh repo create "${GH_ORG}/${repo_name}" --description="$description" --private --source=.
+  }
+
+  echo "-- Push local branch to GitHub"
+  git config --get remote.origin.url || git remote add origin "${GH_PREFIX}/${repo_name}.git"
+  git push --set-upstream origin trunk
+
+  echo "-- Push tags to GitHub"
+  git push --tags
+}
+
+initialize_environment() {
+  mkdir -p "${WORKDIR}/logs"
+  pushd "$WORKDIR"
+
+  git -C gitlify pull 2>/dev/null || gh repo clone MetOffice/gitlify
+  export PATH="$PATH:${WORKDIR}/gitlify"
+
+  check_apps gitlify jq gh
+  printf "WORKDIR: %s\nCONFIG_FILE: %s\nUPDATE_GITHUB: %s\n" \
+        "$WORKDIR" "$CONFIG_FILE" "$UPDATE_GITHUB"
+  echo "--------------------------------------------------------------------"
+}
+
+process_repositories() {
+  local process_ids=()
+  local max_jobs
+  max_jobs=${BATCH:-$(nproc)}
+  TIMESTAMP=$(date +'%Y%m%dT%H%M%S')
+  while read -r repo; do
+    local repo_name trunk svn_url
+    repo_name=$(jq -r '.name' <<<"$repo")
+    [[ -z "$REPO_NAME" || "$REPO_NAME" == "$repo_name" ]] || continue
+    trunk=$(jq -r '.trunk' <<<"$repo")
+    svn_url="${SVN_PREFIX}/${trunk}"
+    if (( FROM_MIRROR )); then
+      svn_url="svn://fcm1/${trunk/$repo_name/$repo_name.xm_svn}"
+    fi
+    if (( DRY_RUN )); then
+      printf "%-.52s %s\n" \
+        "$svn_url ....................................." \
+        "${GH_PREFIX}/${GH_ORG}/${repo_name}"
+      continue
+    fi
+    echo "$(date +'%F %T') Processing: $repo_name"
+    process_repo "$repo_name" "$svn_url" "$repo" \
+      &> "${WORKDIR}/logs/${TIMESTAMP}_${repo_name}.log" &
+    process_ids+=("$!")
+
+    # Wait for background jobs if max_jobs are running
+    if (( ${#process_ids[@]} >= max_jobs )); then
+      for pid in "${process_ids[@]}"; do
+        wait "$pid"
+      done
+      process_ids=()
+    fi
+  done < <(jq -c '.repo[]' "$CONFIG_FILE")
+
+  # Wait for any remaining background jobs
+  for pid in "${process_ids[@]}"; do
+    wait "$pid"
+  done
+}
+
 # ----------------------------------------------------------------------------
+# Main Script
+# ----------------------------------------------------------------------------
+
+OPTS=$(getopt \
+  -o hdmnuj:c:r:w: \
+  -l help,debug,from-mirror,list-repos,update,parallel:,config:,repository:,workdir: \
+  -n "${0##*/}" -- "$@") || { usage; exit 1; }
+eval set -- "$OPTS"
+
 SCRIPT_DIR=$(dirname -- "$(readlink -fe -- "$0")")
 export CONFIG_FILE="${SCRIPT_DIR}/config.json"
 export WORKDIR="${DATADIR}/git-migration"
 UPDATE_GITHUB=0
-# ----------------------------------------------------------------------------
+FROM_MIRROR=0
+REPO_NAME=
+DRY_RUN=
+
 while true; do
   case "$1" in
-    -h |--help) usage; exit 0 ;;
-    -d |--debug) PS4='L${LINENO}: '; set -x; shift 1 ;;
-    -u |--update) UPDATE_GITHUB=1; shift 1 ;;
-    -c |--config) CONFIG_FILE=$(readlink -fe "$2"); shift 2 ;;
-    -w |--workdir) WORKDIR=$(readlink -fe "$2"); shift 2 ;;
-    --)  shift; break ;;
-    *)   break ;;
+  -h | --help) usage; exit 0 ;;
+  -d | --debug) PS4='L${LINENO}: '; set -x; shift ;;
+  -m | --from-mirror) FROM_MIRROR=1; shift ;;
+  -n | --list-repos) DRY_RUN=1; echo "$(date +'%F %T') Dry run"; shift ;;
+  -u | --update) UPDATE_GITHUB=1; shift ;;
+  -j | --parallel) export BATCH="$2"; shift 2 ;;
+  -c | --config) CONFIG_FILE=$(readlink -fe "$2"); shift 2 ;;
+  -r | --repository) REPO_NAME="$2"; validate_repo "$REPO_NAME"; shift 2 ;;
+  -w | --workdir) WORKDIR=$(readlink -fe "$2"); shift 2 ;;
+  --) shift; break ;;
+  *) break ;;
   esac
 done
-# ----------------------------------------------------------------------------
 
-check_apps() {
-    status=0
-    echo "--------------------------------------------------------------------"
-    for i in "$@"; do
-        if ! command -V "$i" 2> /dev/null; then
-            echo "** $i is not installed. Please install $i to run this script."
-            ((status++))
-        fi
-    done
-    echo "--------------------------------------------------------------------"
-    if (( status > 0 )); then return 127; fi
-}
-
-# -- Create working directory
-mkdir -p "$WORKDIR"
-pushd "$WORKDIR"
-
-# -- Add gitlify to PATH
-git -C gitlify pull 2>/dev/null || gh repo clone MetOffice/gitlify
-export PATH="$PATH:${WORKDIR}/gitlify"
-
-# -- Display some diagnostics
-check_apps gitlify jq gh
-echo "WORKDIR: $WORKDIR
-CONFIG_FILE: $CONFIG_FILE
-UPDATE_GITHUB: $UPDATE_GITHUB
---------------------------------------------------------------------"
-
-# -- Iterate through each repository and its tags
+initialize_environment
 SVN_PREFIX=$(jq -r '.svn_prefix' "$CONFIG_FILE")
 GH_ORG=$(jq -r '.gh_org' "$CONFIG_FILE")
 GH_PREFIX="git@github.com:${GH_ORG}"
-jq -c '.repo[]' "$CONFIG_FILE" | while read -r repo; do
-    SECONDS=0  # reset timer
-    # -- Extract git repository name from configuration file
-    repo_name=$(jq -r '.name' <<< "$repo")
-    svn_url=${SVN_PREFIX}/$(jq -r '.trunk' <<< "$repo")
-    echo "$(date +'%F %T') Processing: $repo_name"
-    {
-        printf "%-.65s [%s]\n" \
-            "$(date +'%F %T') Repository: $svn_url ........................." \
-            "$repo_name"
 
-        if [[ -d ${repo_name} ]]; then
-            echo "-- Sync commits from head of trunk"
-            pushd "${repo_name}" >/dev/null
-            gitlify resync -t
-            popd >/dev/null
-        else
-            echo "-- Convert svn to git"
-            gitlify migrate -d enquiries@metoffice.gov.uk \
-                -x -t -y "${svn_url}" "${repo_name}"
-        fi
-
-        pushd "${repo_name}" >/dev/null
-        echo "-- Attach tags"
-        tags=$(echo "$repo" | jq -c '.tags[]')
-        for tag in $tags; do
-            tag_name=$(echo "$tag" | jq -r 'keys[]')
-            tag_value=$(echo "$tag" | jq -r '.[keys[]]')
-
-            echo "  Tag: $tag_name, Revision: $tag_value"
-            git tag "$tag_name" -f \
-                "$(git svn find-rev "r${tag_value}")"
-        done
-
-        if (( UPDATE_GITHUB == 0 )); then
-            deltaT=$(TZ=UTC0 printf '%(%H:%M:%S)T\n' $SECONDS)
-            echo "$(date +'%F %T') Done: $repo_name in $deltaT"
-            popd >/dev/null
-            continue
-        fi
-
-        # -- Update GitHub repository
-        echo "-- Create remote GitHub repository, if necessary"
-        git ls-remote -h "${GH_PREFIX}/${repo_name}" || {
-            DESCRIPTION=$(jq -r '.description' <<< "$repo")
-            gh repo create "${GH_ORG}/${repo_name}" \
-                --description="${DESCRIPTION}" \
-                --private \
-                --source=.
-        }
-
-        echo "-- Push local branch to GitHub"
-        git config --get remote.origin.url || {
-            git remote add origin "${GH_PREFIX}/${repo_name}.git"
-        }
-        git push --set-upstream origin trunk
-
-        echo "-- Push tags to GitHub"
-        # remove tags already created in remote?
-        # git tag -l | xargs -n 1 git push --delete origin
-        git push --tags
-
-        deltaT=$(TZ=UTC0 printf '%(%H:%M:%S)T\n' $SECONDS)
-        echo "$(date +'%F %T') Done: $repo_name in $deltaT"
-        popd >/dev/null
-    } > "${WORKDIR}/$(date +'%Y%m%dT%H%M%S')_${repo_name}.log" 2>&1
-    # output to console and log file?
-    # &> >(tee -a "${WORKDIR}/$(date +'%Y%m%dT%H%M%S')_${repo_name}.log")
-
-done
+process_repositories
 echo "$(date +'%F %T') Done."

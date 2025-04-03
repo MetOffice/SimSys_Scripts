@@ -5,7 +5,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 
 
 > [!IMPORTANT] Pre-requisites to run the migration script
-> - Read access to the Met Office Science Repository [MOSRS](https://code.metoffice.gov.uk/trac/home).
+> - Read access to the Met Office Science Repository [MOSRS](https://code.metoffice.gov.uk/trac/home) or the Met Office internal mirror (`svn://fcm1`).
 > - Optional Write access to the [Met Office GitHub organisation](https://github.com/MetOffice) for push to remote (usually, an admin).
 > - Tools: [`fcm`](https://metomi.github.io/fcm/doc/user_guide/introduction.html), [`git`](https://git-scm.com), [`gitlify`](https://github.com/MetOffice/gitlify), [`jq`](https://jqlang.org), and [`gh`](https://cli.github.com) available on the system.
 
@@ -15,7 +15,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [x] Able to convert only svn trunk to Git.
    - [x] Able to map svn revisions to Git tag.
    - [x] Synchronise trunk updates locally in Git repositories.
-     - [ ] Set-up a (`scron`) job to update code/tags routinely.
+     - [x] Set-up a (`scron`) job to update code/tags routinely.
 
 2. Create/update GitHub repositories under [MetOffice](https://github.com/MetOffice)
    - [ ] `svn:um/main` (@trunk) → [um](https://github.com/MetOffice/um) (@trunk)
