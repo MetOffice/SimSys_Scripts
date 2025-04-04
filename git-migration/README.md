@@ -59,7 +59,6 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 
 5. During SRS freeze
    - [ ] Merge `trunk` in _future_ default (`main`) and delete `trunk`
-   
 
 6. Update communication plan
    - [ ] Update [Simulation Systems Discussion](https://github.com/MetOffice/simulation-systems/discussions/337)
