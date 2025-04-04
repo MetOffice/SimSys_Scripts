@@ -4,8 +4,8 @@ set -euo pipefail
 # ----------------------------------------------------------------------------
 # Script Metadata
 # ----------------------------------------------------------------------------
-# This script is a parallel version of git-migration/ssd_svn2git.sh
-# It migrates Met Office Science Repositories from SVN to GitHub.
+# This script is designed to migrates Met Office Simulation Systems SVN
+# repositories to GitHub.
 
 # ----------------------------------------------------------------------------
 # Functions
@@ -28,7 +28,7 @@ Options:
   -j, --parallel[=VALUE]   Number of repositories to process in parallel (default: number of CPU cores)
   -r, --repository[=VALUE] Name of a single repository to migrate
                            (default: all repositories defined in config.json)
-  -c, --config[=VALUE]     Path to config.json file (default: config.json)
+  -c, --config[=VALUE]     Path to config.json file (default: config.json in the parent directory)
   -w, --workdir[=VALUE]    Working directory (default: ${DATADIR}/git-migration)
 
 Examples:
@@ -153,7 +153,7 @@ process_repositories() {
     if (( DRY_RUN )); then
       printf "%-.52s %s\n" \
         "$svn_url ....................................." \
-        "${GH_PREFIX}/${GH_ORG}/${repo_name}"
+        "${GH_PREFIX}/${repo_name}"
       continue
     fi
     echo "$(date +'%F %T') Processing: $repo_name"

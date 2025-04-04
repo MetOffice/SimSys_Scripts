@@ -50,17 +50,20 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [ ] Correct Copyright statements, particularly in planned open-source repositories.
 
 4. Testbed
-   - [ ] Create additional `main` or `develop` branches
+   - [ ] Create additional `main` branches
    - [ ] Test Simulation System workflows with GitHub
+   - [ ] Make sure tags/releases are still functional
    - [ ] Update Working practices
    - [ ] Allow limited number of developers to test their workflows
    - [ ] Add/update Templates
 
 5. During SRS freeze
-   - [ ] Merge `trunk` in _future_ default (`main` or `develop`) and delete `trunk`
-   - [ ] Make sure tags/releases are still functional
+   - [ ] Merge `trunk` in _future_ default (`main`) and delete `trunk`
+   
 
 6. Update communication plan
+   - [ ] Update [Simulation Systems Discussion](https://github.com/MetOffice/simulation-systems/discussions/337)
+   - [ ] Engage in [Simulation Systems Q&A](https://github.com/MetOffice/simulation-systems/discussions/categories/questions-and-answers)
 
 
 ## FAQ
@@ -114,8 +117,15 @@ attach svn tags to the Git repository locally using `ssd_svn2git,sh` script.
     ==> 20250330T051145_lfric_core.log <==
     2025-03-30 05:48:32 Done: lfric_core in 00:36:48
 </details>
+
 <details>
 <summary><b>What happens to a tag if the corresponding branch gets deleted?</b></summary>
 A branch is simply a way to track a collection of commits. The tag and commit
 would stull exist if the branch is deleted. Ref: https://github.com/orgs/community/discussions/23918.
+</details>
+
+<details>
+<summary><b>When will the developers get access to the GitHub repositories</b></summary>
+Please refer to the timeline in [Simulation Systems Discussion](https://github.com/MetOffice/simulation-systems/discussions/337).
+We will announce the opportunity to participate during the later part of migration testbed.
 </details>
