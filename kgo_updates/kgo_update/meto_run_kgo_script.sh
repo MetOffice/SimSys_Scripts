@@ -22,12 +22,13 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 # Read in command line arguments
-while getopts S:U:E:N:R:P:V:F: flag
+while getopts S:U:E:Z:N:R:P:V:F: flag
 do
     case "${flag}" in
         S) suite_name=${OPTARG};;
         U) suite_user=${OPTARG};;
         E) suite_user_ex1a=${OPTARG};;
+        Z) ex_kgo_host=${OPTARG};;
         N) new_kgo_dir=${OPTARG};;
         R) new_release=${OPTARG};;
         P) platforms=${OPTARG};;
@@ -131,7 +132,7 @@ fi
 if [[ $platforms == *"ex1a"* ]]; then
     printf "${GREEN}\n\nRunning KGO Update Script on ex1a.\n${NC}"
 
-    host_ex=$(rose host-select exab)
+    host_ex=$(rose host-select "$ex_kgo_host")
 
     # SCP the python script to the ex1a
     scp -q kgo_update.py "umadmin@$host_ex":~

@@ -80,6 +80,23 @@ if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
 else
     suite_user_ex1a=None
 fi
+if [[ $platforms == *"ex1a"* ]]; then
+    while :
+    do
+        echo "Choose the EX1A Host Zone"
+        read -rp "1 for AB or 2 for CD: " ex_opt
+        if [[ $ex_opt == "1" ]]; then
+            ex_kgo_host="exab"
+            ex_rsync_host="excd"
+            break
+        fi
+        if [[ $ex_opt == "2" ]]; then
+            ex_kgo_host="excd"
+            ex_rsync_host="exab"
+            break
+        fi
+    done
+fi
 read -rp "Suite Name: " suite_name
 read -rp "Enter the path to the merged trunk WC (top directory): " wc_path
 # Trim any trailing / from the end of the path
@@ -114,6 +131,9 @@ fi
 if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
     echo "ex1a User: ${suite_user_ex1a}"
 fi
+if [[ $platforms == *"ex1a"* ]]; then
+    echo "EX Host Zone: ${ex_kgo_host}"
+fi
 echo "Trunk WC Path: ${wc_path}"
 echo "Version Number: ${version_number}"
 echo "Ticket Number: ${ticket_number}"
@@ -140,6 +160,7 @@ command=". /etc/profile ; module load scitools ; cd kgo_update ;
          ./meto_run_kgo_script.sh -S ${suite_name}
                                   -U ${suite_user}
                                   -E ${suite_user_ex1a}
+                                  -Z ${ex_kgo_host}
                                   -N ${new_kgo_dir}
                                   -R ${new_release}
                                   -P '${platforms}'
@@ -289,11 +310,11 @@ fi
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
 if [[ $succeeded_ex1a -eq 1 ]]; then
-    printf "${GREEN}\n\nrsyncing the kgo to exz + excd.\n${NC}"
-    host_rsync=$(rose host-select exab)
+    printf "${GREEN}\n\nrsyncing the kgo to exz + 2nd Host Zone.\n${NC}"
+    host_from=$(rose host-select "$ex_kgo_host")
 
     # rsync to EXZ
-    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
+    rsync_com="ssh -Y ${host_from} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost "$rsync_com"
         rc=$?
@@ -308,9 +329,9 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     fi
     rc=
 
-    # rsync to EXCD
-    excd_host=$(rose host-select excd)
-    rsync_com="ssh -Y ${host_rsync} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${excd_host}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
+    # rsync to 2nd Host Zone
+    host_to=$(rose host-select "$ex_rsync_host")
+    rsync_com="ssh -Y ${host_from} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${host_to}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
         ssh -Y ${root_user}@localhost "$rsync_com"
         rc=$?
@@ -319,9 +340,9 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
         rc=$?
     fi
     if [[ $rc -ne 0 ]]; then
-        printf "${RED}The rsync to the excd has failed.\n${NC}"
+        printf "${RED}The rsync to the ${host_to} has failed.\n${NC}"
     else
-        printf "${GREEN}The rsync to the excd has succeeded.\n${NC}"
+        printf "${GREEN}The rsync to the ${host_to} has succeeded.\n${NC}"
     fi
     rc=
 elif [[ $platforms == *"ex1a"* ]]; then
