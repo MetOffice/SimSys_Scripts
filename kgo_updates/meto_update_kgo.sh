@@ -310,7 +310,7 @@ fi
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
 if [[ $succeeded_ex1a -eq 1 ]]; then
-    printf "${GREEN}\n\nrsyncing the kgo to exz + excd.\n${NC}"
+    printf "${GREEN}\n\nrsyncing the kgo to exz + 2nd Host Zone.\n${NC}"
     host_from=$(rose host-select "$ex_kgo_host")
 
     # rsync to EXZ
@@ -340,9 +340,9 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
         rc=$?
     fi
     if [[ $rc -ne 0 ]]; then
-        printf "${RED}The rsync to the excd has failed.\n${NC}"
+        printf "${RED}The rsync to the ${host_to} has failed.\n${NC}"
     else
-        printf "${GREEN}The rsync to the excd has succeeded.\n${NC}"
+        printf "${GREEN}The rsync to the ${host_to} has succeeded.\n${NC}"
     fi
     rc=
 elif [[ $platforms == *"ex1a"* ]]; then
