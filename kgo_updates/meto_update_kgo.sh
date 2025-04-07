@@ -84,7 +84,7 @@ if [[ $platforms == *"ex1a"* ]]; then
     while :
     do
         echo "Choose the EX1A Host Zone"
-        read -rp "1 for AB or 2 for CD" ex_opt
+        read -rp "1 for AB or 2 for CD: " ex_opt
         if [[ $ex_opt == "1" ]]; then
             ex_kgo_host="exab"
             ex_rsync_host="excd"
@@ -130,6 +130,9 @@ if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platf
 fi
 if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
     echo "ex1a User: ${suite_user_ex1a}"
+fi
+if [[ $platforms == *"ex1a"* ]]; then
+    echo "EX Host Zone: ${ex_kgo_host}"
 fi
 echo "Trunk WC Path: ${wc_path}"
 echo "Version Number: ${version_number}"
