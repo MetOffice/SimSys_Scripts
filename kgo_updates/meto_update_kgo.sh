@@ -329,7 +329,7 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     fi
     rc=
 
-    # rsync to EXCD
+    # rsync to 2nd Host Zone
     host_to=$(rose host-select "$ex_rsync_host")
     rsync_com="ssh -Y ${host_from} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${host_to}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
     if [[ $launch_platform == "spice" ]]; then
