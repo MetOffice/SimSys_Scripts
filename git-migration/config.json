@@ -237,7 +237,7 @@
     },
     {
       "name": "shumlib",
-      "description": "Set of libraries used by the Met Office Unified Model (UM)",
+      "description": "Shared UM Libraries from the Met Office Unified Model",
       "trunk": "utils/shumlib",
       "tags": [
         { "apps2.1": 7655 },
