@@ -336,7 +336,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
         next_link = os.path.join(CYLC_INSTALL, "cylc-8-next")
         def_link = os.path.join(CYLC_INSTALL, "cylc-8")
         cron_job += (
-            f'[ "$(readlink -- "{next_link}")" != "$(readlink -- "{def_link}")" ] '
+            f'[ "$(readlink -- {next_link})" != "$(readlink -- {def_link})" ] '
             f"&& ({job_command})"
         )
     else:
@@ -394,7 +394,7 @@ def parse_cl_args():
     parser.add_argument(
         "-p",
         "--cylc_path",
-        default="~metomi",
+        default="~/apps",
         help="The location of the cylc installation required for testing `next-cylc`"
         "configs.",
     )
