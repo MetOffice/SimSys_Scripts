@@ -22,10 +22,6 @@ import os
 from pathlib import Path
 from styling_keywords import NEW_KEYWORDS
 
-"""regex pattern for fortran comments"""
-COMMENTS_RE_PATTERN = r"!.*?\b(\w+)\b.*"
-
-
 def lowercase_keywords(file):
     """
     Lowercase words in a file when they match a word in the keywords set.
@@ -33,9 +29,9 @@ def lowercase_keywords(file):
     print("Lowercasing keywords in", file)
     with open(file, 'r') as fp:
         lines = fp.read()
-        for keyword in KEYWORDS:
+        for keyword in NEW_KEYWORDS:
             # regex to check if a keyword is preceded with a '!' symbol or it matches a keyword and group each.
-            pattern = rf"((?:(?<=!)).*(\b{re.escape(keyword.upper())}\b)|(\b{re.escape(keyword.upper())}\b))"
+            pattern = rf"((?:(?<=!)).*|(\b{re.escape(keyword.upper())}\b))"
             lines = re.sub(pattern, convert_to_lower, lines, flags=re.MULTILINE)
 
     with open(file, 'w') as fp:
@@ -45,8 +41,8 @@ def lowercase_keywords(file):
 
 def convert_to_lower(match_obj):
     """Checks if match is true and lowercases string."""
-    if match_obj.group(3) is not None:
-        return match_obj.group(3).lower()
+    if match_obj.group(2) is not None:
+        return match_obj.group(2).lower()
     else:
         return match_obj.group()
 
