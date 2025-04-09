@@ -394,7 +394,7 @@ def parse_cl_args():
     parser.add_argument(
         "-p",
         "--cylc_path",
-        default="~/apps",
+        default="~metomi/apps",
         help="The location of the cylc installation required for testing `next-cylc`"
         "configs.",
     )
