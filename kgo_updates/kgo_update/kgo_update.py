@@ -554,12 +554,8 @@ def main():
         hostname = os.uname()[1]
         if hostname == "uan01":
             platform = "ex1a"
-        elif hostname.startswith("xc"):
-            platform = "xc40"
         elif hostname.startswith("caz"):
             platform = "azspice"
-        else:
-            platform = "spice"
 
     # Make a connection to the database
     conn = connect_to_kgo_database(suite_dir)
@@ -669,7 +665,7 @@ def main():
         print(
             f"\nThe kgo update for {platform} is complete.\n\nIf this was "
             "run from 'meto_update_kgo.sh' in the UM, the generated files "
-            "will be moved to UMDIR on spice and the process will continue "
+            "will be moved to UMDIR on vdi and the process will continue "
             "for other platforms requested.\n\nOtherwise, eg. for "
             "lfric_inputs, you will need to merge the generated variables "
             "file with the one in your working copy and run the script "
