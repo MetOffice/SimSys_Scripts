@@ -10,7 +10,7 @@
 # assumes is in the same directory. It takes suite name, suite user, version
 # number, ticket number and required platforms as inputs. It runs the script on
 # each platform as required and then moves the generated variables file to
-# ~$UMDIR/kgo_updated_variables/vnVV.V_tTTTT/
+# $UMDIR/kgo_updated_variables/vnVV.V_tTTTT/
 # This script is NOT intended to be run independently of '../meto_update_kgo.sh'
 
 # shellcheck disable=SC2059
