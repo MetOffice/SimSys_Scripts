@@ -21,7 +21,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 # Read in command line arguments
-while getopts S:U:E:Z:N:R:P:V:F: flag
+while getopts S:U:Z:N:R:P:V:F: flag
 do
     case "${flag}" in
         S) suite_name=${OPTARG};;
