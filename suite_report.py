@@ -110,7 +110,7 @@ RESOURCE_MONITORING_JOBS = {
     "Unknown": [],
 }
 CYLC_REVIEW_URL = {
-    "meto": "http://fcm1/cylc-review",
+    "meto": "https://cylchub/services/cylc-review",
     "ecmwf": "Unavailable",
     "nci": "http://accessdev.nci.org.au/cylc-review",
     "bom": "http://scs-watchdog-dev/rose-bush",
