@@ -38,7 +38,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [x] `svn:moci/main` (@trunk) → [moci](https://github.com/MetOffice/moci) (@trunk)
    - [x] `svn:lfric/LFRic` (@trunk) → [lfric_core](https://github.com/MetOffice/lfric_core) (@trunk)
      - [x] Repository already exists: ask for admin access to the repository.
-   - [x] `svn:lfric/GPL-utilities` (@trunk) → [lfri_gpl_utils](https://github.com/MetOffice/lfri_gpl_utils) (@trunk)     
+   - [x] `svn:lfric/GPL-utilities` (@trunk) → [lfri_gpl_utils](https://github.com/MetOffice/lfri_gpl_utils) (@trunk)
    - [x] `svn:lfric_apps/main` (@trunk) → [lfric_apps](https://github.com/MetOffice/lfric_apps) (@trunk)
      - [ ] Propose `lfric_core` as a submodule in this repository?
    - [x] Check `config.json` is correct and up-to-date with MOSRS revisions.
@@ -54,7 +54,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 
 4. Testbed
    - [ ] Create additional `main` branches.
-   - [ ] Test Fab integration as a build system. (_in progress..._)
+   - [ ] Test Fab (build tool) integration. (_in progress..._)
    - [ ] Test Simulation System workflows with GitHub.
    - [ ] Make sure tags/releases are still functional.
    - [ ] Update Working practices.
