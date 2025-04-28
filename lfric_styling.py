@@ -67,7 +67,9 @@ def apply_styling(path_to_dir):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("directory", type=Path, default=Path(), help="path to a directory of files.")
+    parser.add_argument(
+        "directory", type=Path, default=Path(), help="path to a directory of files."
+    )
 
     arguments = parser.parse_args()
     apply_styling(arguments.directory)
