@@ -14,15 +14,12 @@ structure identifying fortran files, and applying styling.
 
 Styling currently being applied:
     -lowercasing keywords
-
 """
 
+import re
 import argparse
 import os
-import re
-import sys
 from pathlib import Path
-
 from styling_keywords import NEW_KEYWORDS
 
 
@@ -34,8 +31,10 @@ def lowercase_keywords(file):
     with open(file, "r") as fp:
         lines = fp.read()
         for keyword in NEW_KEYWORDS:
-            pattern = rf"\b{re.escape(keyword.upper())}\b"
-            lines = re.sub(pattern, convert_to_lower, lines)
+            # regex to check if a keyword is preceded with a '!' symbol or it matches a keyword and group each.
+            pattern = rf"((?:(?<=!)).*|(\b{re.escape(keyword.upper())}\b))"
+            lines = re.sub(pattern, convert_to_lower, lines, flags=re.MULTILINE)
+
     with open(file, "w") as fp:
         for line in lines:
             fp.write(line)
@@ -43,8 +42,10 @@ def lowercase_keywords(file):
 
 def convert_to_lower(match_obj):
     """Checks if match is true and lowercases string."""
-    if match_obj.group() is not None:
-        return match_obj.group().lower()
+    if match_obj.group(2) is not None:
+        return match_obj.group(2).lower()
+    else:
+        return match_obj.group()
 
 
 def apply_styling(path_to_dir):
@@ -67,12 +68,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "-d",
-        "--directory",
-        metavar="home/user/etc",
-        type=Path,
-        default=Path(),
-        help="path to a directory of files.",
+        "directory", type=Path, default=Path(), help="path to a directory of files."
     )
 
     arguments = parser.parse_args()
