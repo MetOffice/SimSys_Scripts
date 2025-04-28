@@ -28,14 +28,14 @@ def lowercase_keywords(file):
     Lowercase words in a file when they match a word in the keywords set.
     """
     print("Lowercasing keywords in", file)
-    with open(file, 'r') as fp:
+    with open(file, "r") as fp:
         lines = fp.read()
         for keyword in NEW_KEYWORDS:
             # regex to check if a keyword is preceded with a '!' symbol or it matches a keyword and group each.
             pattern = rf"((?:(?<=!)).*|(\b{re.escape(keyword.upper())}\b))"
             lines = re.sub(pattern, convert_to_lower, lines, flags=re.MULTILINE)
 
-    with open(file, 'w') as fp:
+    with open(file, "w") as fp:
         for line in lines:
             fp.write(line)
 
@@ -67,12 +67,7 @@ def apply_styling(path_to_dir):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        "directory",
-        type=Path,
-        default=Path(),
-        help="path to a directory of files."
-    )
+    parser.add_argument("directory", type=Path, default=Path(), help="path to a directory of files.")
 
     arguments = parser.parse_args()
     apply_styling(arguments.directory)
