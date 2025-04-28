@@ -2,6 +2,7 @@ import sys
 
 from metomi.rose.upgrade import MacroUpgrade
 
+
 class UpgradeError(Exception):
     """Exception created when an upgrade fails."""
 

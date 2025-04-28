@@ -6,7 +6,7 @@
 # Modified date: 14/03/2025
 # *****************************COPYRIGHT*******************************
 
-'''
+"""
 Python script to apply LFRic styling to .F90/.f90 files, given a path/directory.
 
 Current implementation takes a valid path and traverses from the top level file
@@ -14,7 +14,7 @@ structure identifying fortran files, and applying styling.
 
 Styling currently being applied:
     -lowercasing keywords
-'''
+"""
 
 import re
 import argparse
@@ -78,5 +78,5 @@ def main():
     apply_styling(arguments.directory)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

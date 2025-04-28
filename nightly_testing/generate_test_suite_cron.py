@@ -32,12 +32,13 @@ Optional:
                 works.
 """
 
-import os
-import sys
-import re
-import yaml
 import argparse
+import os
+import re
 import subprocess
+import sys
+
+import yaml
 
 DEFAULT_CYLC_VERSION = "8"
 DEPENDENCIES = {
@@ -71,6 +72,7 @@ UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
 MONITORING_TIME = "00 06"
+
 
 def run_command(command):
     """
@@ -334,8 +336,8 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
         next_link = os.path.join(CYLC_INSTALL, "cylc-8-next")
         def_link = os.path.join(CYLC_INSTALL, "cylc-8")
         cron_job += (
-            f'[ "$(readlink -- "{next_link}")" != "$(readlink -- "{def_link}")" ] '
-            f'&& ({job_command})'
+            f'[ "$(readlink -- {next_link})" != "$(readlink -- {def_link})" ] '
+            f"&& ({job_command})"
         )
     else:
         cron_job += job_command
@@ -392,9 +394,9 @@ def parse_cl_args():
     parser.add_argument(
         "-p",
         "--cylc_path",
-        default="~metomi",
+        default="~metomi/apps",
         help="The location of the cylc installation required for testing `next-cylc`"
-        "configs."
+        "configs.",
     )
     parser.add_argument(
         "--install",
@@ -436,9 +438,7 @@ if __name__ == "__main__":
             main_crontab += f"# {repo.upper()} SUITES\n"
             main_crontab += 80 * "#" + 2 * "\n"
             last_repo = repo
-        main_crontab += generate_cron_job(
-            suite_name, suites[suite_name], args.cron_log
-        )
+        main_crontab += generate_cron_job(suite_name, suites[suite_name], args.cron_log)
         main_crontab += 3 * "\n"
 
     with open(args.cron_file, "w") as outfile:

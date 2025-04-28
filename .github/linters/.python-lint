@@ -1,0 +1,20 @@
+[MASTER]
+# Use multiple processes to speed up Pylint.
+jobs=2
+
+[MESSAGES CONTROL]
+# C0114: Missing module docstring (missing-module-docstring)
+# C0116: Missing function or method docstring (missing-function-docstring)
+# C0103: Constant name doesn't conform to UPPER_CASE naming style (invalid-name)
+# C0209: Formatting a regular string which could be an f-string (consider-using-f-string)
+# E0401: Unable to import module (import-error)
+# W0611: Unused import sphinx_rtd_theme (unused-import)
+# W0622: Redefining built-in 'copyright' (redefined-builtin)
+# R0801: Similar lines in 2 files
+disable=C0114,C0116,C0103,C0209,E0401,W0611,W0622,R0801,
+
+[SIMILARITIES]
+# Minimum lines number of a similarity.
+min-similarity-lines=4
+ignore-comments=yes
+ignore-docstrings=yes
