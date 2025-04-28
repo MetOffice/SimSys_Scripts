@@ -22,6 +22,7 @@ import os
 from pathlib import Path
 from styling_keywords import NEW_KEYWORDS
 
+
 def lowercase_keywords(file):
     """
     Lowercase words in a file when they match a word in the keywords set.
@@ -67,8 +68,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "-d", "--directory",
-        metavar="home/user/etc",
+        "directory",
         type=Path,
         default=Path(),
         help="path to a directory of files."
