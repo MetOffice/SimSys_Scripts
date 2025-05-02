@@ -508,6 +508,12 @@
         { "core2.0": 51632 },
         { "core2.1": 52315 }
       ]
+    },
+    {
+      "name": "lfric_gpl_utils",
+      "description": "LFRic GPL Tools",
+      "trunk": "lfric/GPL-utilities",
+      "tags": []
     }
   ]
 }

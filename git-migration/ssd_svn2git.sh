@@ -124,7 +124,7 @@ update_github() {
 }
 
 initialize_environment() {
-  mkdir -p "${WORKDIR}/logs"
+  mkdir -p "${WORKDIR}"
   pushd "$WORKDIR"
 
   git -C gitlify pull 2>/dev/null || gh repo clone MetOffice/gitlify
@@ -141,6 +141,8 @@ process_repositories() {
   local max_jobs
   max_jobs=${BATCH:-$(nproc)}
   TIMESTAMP=$(date +'%Y%m%dT%H%M%S')
+  LOG_DIR="${WORKDIR}/logs/${TIMESTAMP}"
+  mkdir -p "$LOG_DIR"
   while read -r repo; do
     local repo_name trunk svn_url
     repo_name=$(jq -r '.name' <<<"$repo")
@@ -148,17 +150,17 @@ process_repositories() {
     trunk=$(jq -r '.trunk' <<<"$repo")
     svn_url="${SVN_PREFIX}/${trunk}"
     if (( FROM_MIRROR )); then
-      svn_url="svn://fcm1/${trunk/$repo_name/$repo_name.xm_svn}"
+      svn_url="svn://fcm1/${trunk////.xm_svn/}"
     fi
     if (( DRY_RUN )); then
-      printf "%-.52s %s\n" \
-        "$svn_url ....................................." \
+      printf "%-.56s %s\n" \
+        "$svn_url ......................................" \
         "${GH_PREFIX}/${repo_name}"
       continue
     fi
     echo "$(date +'%F %T') Processing: $repo_name"
     process_repo "$repo_name" "$svn_url" "$repo" \
-      &> "${WORKDIR}/logs/${TIMESTAMP}_${repo_name}.log" &
+      &> "${LOG_DIR}/${repo_name}.log" &
     process_ids+=("$!")
 
     # Wait for background jobs if max_jobs are running
@@ -204,7 +206,7 @@ while true; do
   -j | --parallel) export BATCH="$2"; shift 2 ;;
   -c | --config) CONFIG_FILE=$(readlink -fe "$2"); shift 2 ;;
   -r | --repository) REPO_NAME="$2"; validate_repo "$REPO_NAME"; shift 2 ;;
-  -w | --workdir) WORKDIR=$(readlink -fe "$2"); shift 2 ;;
+  -w | --workdir) WORKDIR=$(readlink -f "$2"); shift 2 ;;
   --) shift; break ;;
   *) break ;;
   esac
