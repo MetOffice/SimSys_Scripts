@@ -177,16 +177,20 @@ def run_fcm_command(command, max_retries, snooze):
     """
     retries = 0
     while True:
-        output = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            shell=False,
+            check=False,
         )
-        _ = output.wait()
-        if output.returncode == 0:
-            return text_decoder(output.stdout.read())
+        if result.returncode == 0:
+            return result.stdout
         else:
             retries += 1
             if retries > max_retries:
-                raise FCMError(command, text_decoder(output.stderr.read()))
+                raise FCMError(command, result.stderr)
             else:
                 time.sleep(snooze)
 
