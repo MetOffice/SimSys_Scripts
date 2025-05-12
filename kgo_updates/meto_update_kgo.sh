@@ -22,7 +22,8 @@ NC='\033[0m' # No Color
 script_loc="$(dirname "$(realpath "$0")")"
 
 root_user="umadmin"
-root_home=$(echo $(getent passwd $root_user) | cut -d ":" -f 6)
+root_home=$(getent passwd $root_user | cut -d ":" -f 6)
+echo $root_home
 # Check you can sudo in as umadmin
 sudo -iu ${root_user} bash -c "echo ''" || {
     printf "${RED} You were unable to run commands as umadmin - this is required to run this script"
