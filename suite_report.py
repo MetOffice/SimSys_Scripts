@@ -261,7 +261,7 @@ def _dict_merge(main_dict, addon_dict, force=False):
 def _select_preferred(option_list):
     """Takes a list of strings, returns the fist one that is not None.
     If the strings are report text in preffered order it essentially
-    ensures you get the preffered option from a list of choices."""
+    ensures you get the prefered option from a list of choices."""
     pref_opt = None
     for choice in option_list:
         if choice is not None:
@@ -403,7 +403,7 @@ class SuiteReport:
         projects = self.check_versions_files()
         self.job_sources = _dict_merge(self.job_sources, projects)
 
-        # Work out which project this suite is run as - heirarchical structure
+        # Work out which project this suite is run as - hierarchical structure
         # with lfric_apps at the top, then UM, then the rest
         if "LFRIC_APPS" in self.job_sources.keys():
             self.primary_project = "LFRIC_APPS"
