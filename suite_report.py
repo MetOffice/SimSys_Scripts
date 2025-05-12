@@ -426,6 +426,7 @@ class SuiteReport:
         fcm_exec = FCM[self.site]
         invalid = []
         for project in self.job_sources:
+            print(project)
             proj_dict = self.job_sources[project]
             proj_dict["tested source"] = _remove_quotes(proj_dict["tested source"])
             if "repo loc" in proj_dict:
@@ -496,6 +497,7 @@ class SuiteReport:
             proj_dict["human parent"] = self.convert_to_keyword(
                 proj_dict["parent loc"], self.projects
             )
+            print(proj_dict["repo mirror"])
             proj_dict["ticket no"] = self.ascertain_ticket_number(
                 proj_dict["repo mirror"], fcm_exec
             )
@@ -1477,7 +1479,9 @@ class SuiteReport:
         if url is None:
             return None
         mirror_url = url
+        print(mirror_url)
         for proj, proj_url in projects_dict.items():
+            print(proj,proj_url)
             # checking given url against urls in the projects_dict
             if proj_url in url:
                 new_proj = proj + "m"
