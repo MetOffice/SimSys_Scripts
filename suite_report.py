@@ -426,7 +426,6 @@ class SuiteReport:
         fcm_exec = FCM[self.site]
         invalid = []
         for project in self.job_sources:
-            print(project)
             proj_dict = self.job_sources[project]
             proj_dict["tested source"] = _remove_quotes(proj_dict["tested source"])
             if "repo loc" in proj_dict:
@@ -498,12 +497,12 @@ class SuiteReport:
                 proj_dict["parent loc"], self.projects
             )
             proj_dict["ticket no"] = self.ascertain_ticket_number(
-               proj_dict["repo mirror"], fcm_exec
+                proj_dict["repo mirror"], fcm_exec
             )
             proj_dict["bdiff_files"] = self.get_altered_files_list(
                 proj_dict["repo mirror"]
             )
-        self.debug_print_obj()
+
         # Check to see if ALL the groups being run fall into the
         # "common groups" category. This is used to control automatic
         # hiding of successful tasks later.
@@ -848,9 +847,7 @@ class SuiteReport:
         Returns True if the repository exists, False otherwise."""
         retcode = 0
         command = [fcm_exec, "info", url]
-        print(command)
-        retcode, stdout, _ = _run_command(command, ignore_fail=True)
-        print(stdout)
+        retcode, _, _ = _run_command(command, ignore_fail=True)
         if retcode == 0:
             return True
         return False
@@ -1805,9 +1802,6 @@ class SuiteReport:
         practices for commit says "start with ticket number"
         Returns ticket number as string or None."""
         ticket_number = None
-        if mirror_url is None:
-            return ticket_number
-
         if re.search("/trunk[/@$]", mirror_url) or re.search(
             r"[fs][cv][mn]:\w+(.xm|.x|)_tr[/@$]", mirror_url
         ):
