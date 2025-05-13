@@ -1540,7 +1540,6 @@ class SuiteReport:
                             srs_url = re.sub(proj, shared_project, url, count=1)
                         break
         else:
-            print("Get SRS location from 'fcm info'")
             command = [fcm_exec, "info", url]
             _, stdout, _ = _run_command(command, ignore_fail=True)
             find_url = re.compile(r"URL:\s*(.*)")
