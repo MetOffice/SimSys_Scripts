@@ -497,9 +497,9 @@ class SuiteReport:
             proj_dict["human parent"] = self.convert_to_keyword(
                 proj_dict["parent loc"], self.projects
             )
-            print(proj_dict["repo mirror"])
+            self.debug_print_obj()
             proj_dict["ticket no"] = self.ascertain_ticket_number(
-                proj_dict["repo mirror"], fcm_exec
+               proj_dict["repo mirror"], fcm_exec
             )
             proj_dict["bdiff_files"] = self.get_altered_files_list(
                 proj_dict["repo mirror"]
@@ -1796,15 +1796,15 @@ class SuiteReport:
         practices for commit says "start with ticket number"
         Returns ticket number as string or None."""
         ticket_number = None
-        if re.search("/trunk[/@$]", mirror_url) or re.search(
-            r"[fs][cv][mn]:\w+(.xm|.x|)_tr[/@$]", mirror_url
-        ):
-            return ticket_number
-        _, stdout, _ = _run_command([fcm_exec, "log", "-l", "1", mirror_url])
-        for line in stdout:
-            result = re.search(r"^\s*(#\d+)", line)
-            if result:
-                ticket_number = result.group(1)
+        # if re.search("/trunk[/@$]", mirror_url) or re.search(
+        #     r"[fs][cv][mn]:\w+(.xm|.x|)_tr[/@$]", mirror_url
+        # ):
+        #     return ticket_number
+        # _, stdout, _ = _run_command([fcm_exec, "log", "-l", "1", mirror_url])
+        # for line in stdout:
+        #     result = re.search(r"^\s*(#\d+)", line)
+        #     if result:
+        #         ticket_number = result.group(1)
         return ticket_number
 
     @staticmethod
