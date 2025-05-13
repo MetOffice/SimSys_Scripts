@@ -431,11 +431,11 @@ class SuiteReport:
             proj_dict["tested source"] = _remove_quotes(proj_dict["tested source"])
             if "repo loc" in proj_dict:
                 proj_dict["repo loc"] = self.convert_to_srs(
-                    proj_dict["repo loc"], self.projects
+                    proj_dict["repo loc"], self.projects, fcm_exec
                 )
             else:
                 proj_dict["repo loc"] = self.convert_to_srs(
-                    proj_dict["tested source"], self.projects
+                    proj_dict["tested source"], self.projects, fcm_exec
                 )
 
             proj_dict["repo mirror"] = self.convert_to_mirror(
@@ -451,7 +451,7 @@ class SuiteReport:
             )
 
             proj_dict["parent loc"] = self.convert_to_srs(
-                proj_dict["parent mirror"], self.projects
+                proj_dict["parent mirror"], self.projects, fcm_exec
             )
             # Check "repo loc" and "parent loc" have revisions,
             # and if not, try to get a head of 'trunk' one for them.
@@ -848,10 +848,8 @@ class SuiteReport:
         Returns True if the repository exists, False otherwise."""
         retcode = 0
         command = [fcm_exec, "info", url]
-        print(command)
         retcode, stdout, _ = _run_command(command, ignore_fail=True)
         if retcode == 0:
-            print(stdout)
             return True
         return False
 
@@ -1498,7 +1496,7 @@ class SuiteReport:
         return mirror_url
 
     @staticmethod
-    def convert_to_srs(url, projects_dict):
+    def convert_to_srs(url, projects_dict, fcm_exec):
         """Take a URL as a string, and a dictionary of {project : url, ...}
         If url is a mirror repository URL in the projects dictionary convert
         to an SRS URL if also availble.
@@ -1541,6 +1539,17 @@ class SuiteReport:
                         # maintain keyword style, but convert to srs.
                         else:
                             srs_url = re.sub(proj, shared_project, url, count=1)
+                        break
+        else:
+            print("Get SRS location from 'fcm info'")
+            retcode = 0
+            command = [fcm_exec, "info", url]
+            retcode, stdout, _ = _run_command(command, ignore_fail=True)
+            if retcode == 0:
+                for line in stdout:
+                    key, item = line.split(":", 1)
+                    if key == "URL":
+                        srs_url = item
                         break
         return srs_url
 
@@ -1795,15 +1804,18 @@ class SuiteReport:
         practices for commit says "start with ticket number"
         Returns ticket number as string or None."""
         ticket_number = None
-        # if re.search("/trunk[/@$]", mirror_url) or re.search(
-        #     r"[fs][cv][mn]:\w+(.xm|.x|)_tr[/@$]", mirror_url
-        # ):
-        #     return ticket_number
-        # _, stdout, _ = _run_command([fcm_exec, "log", "-l", "1", mirror_url])
-        # for line in stdout:
-        #     result = re.search(r"^\s*(#\d+)", line)
-        #     if result:
-        #         ticket_number = result.group(1)
+        if mirror_url is None:
+            return ticket_number
+
+        if re.search("/trunk[/@$]", mirror_url) or re.search(
+            r"[fs][cv][mn]:\w+(.xm|.x|)_tr[/@$]", mirror_url
+        ):
+            return ticket_number
+        _, stdout, _ = _run_command([fcm_exec, "log", "-l", "1", mirror_url])
+        for line in stdout:
+            result = re.search(r"^\s*(#\d+)", line)
+            if result:
+                ticket_number = result.group(1)
         return ticket_number
 
     @staticmethod
