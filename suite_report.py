@@ -497,14 +497,13 @@ class SuiteReport:
             proj_dict["human parent"] = self.convert_to_keyword(
                 proj_dict["parent loc"], self.projects
             )
-            self.debug_print_obj()
             proj_dict["ticket no"] = self.ascertain_ticket_number(
                proj_dict["repo mirror"], fcm_exec
             )
             proj_dict["bdiff_files"] = self.get_altered_files_list(
                 proj_dict["repo mirror"]
             )
-
+        self.debug_print_obj()
         # Check to see if ALL the groups being run fall into the
         # "common groups" category. This is used to control automatic
         # hiding of successful tasks later.
@@ -1479,9 +1478,7 @@ class SuiteReport:
         if url is None:
             return None
         mirror_url = url
-        print(mirror_url)
         for proj, proj_url in projects_dict.items():
-            print(proj,proj_url)
             # checking given url against urls in the projects_dict
             if proj_url in url:
                 new_proj = proj + "m"
