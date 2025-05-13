@@ -21,21 +21,13 @@ NC='\033[0m' # No Color
 # Move to the location of the script
 script_loc="$(dirname "$(realpath "$0")")"
 
-# Work out if we're running from azspice or old spice
-if [[ $HOSTNAME == "caz"* ]]; then
-    root_user="umadmin"
-    root_home="/home/users/umadmin"
-    launch_platform=azspice
-    # Check you can sudo in as umadmin
-    sudo -iu ${root_user} bash -c "echo ''" || {
-        printf "${RED} You were unable to run commands as umadmin - this is required to run this script"
-        printf "This may be because of a password typo or similar"
-    }
-else
-    root_user="frum"
-    root_home="/home/h01/frum"
-    launch_platform=spice
-fi
+root_user="umadmin"
+root_home=$(getent passwd $root_user | cut -d ":" -f 6)
+# Check you can sudo in as umadmin
+sudo -iu ${root_user} bash -c "echo ''" || {
+    printf "${RED} You were unable to run commands as umadmin - this is required to run this script"
+    printf "This may be because of a password typo or similar"
+}
 
 # Check for command line argument to run with new-release mode
 # If only option doesn't match ask if that is what was intended
@@ -58,28 +50,9 @@ fi
 
 # Prompt user for Update Details
 echo "Enter the platforms requiring a kgo update"
-echo "Enter platforms lowercase and space separated, eg. spice xc40 ex1a azspice"
+echo "Enter platforms lowercase and space separated, eg. ex1a azspice"
 read -r platforms
-if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platforms == *"xc40"* ]]; then
-    # Check we're not trying to install to spice while on azspice
-    if [[ $launch_platform == "azspice" ]] && [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
-        printf "${RED}Attempting to install spice kgo from azspice - this isn't possible"
-        exit 1
-    fi
-    read -rp "spice/xc40 Suite Username: " suite_user
-else
-    suite_user=None
-fi
-if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
-    # Check we're not trying to install to azspice while on spice
-    if [[ $launch_platform == "spice" ]] && [[ $platforms == *"azspice"* ]]; then
-        printf "${RED}Attempting to install azspice kgo from spice - this isn't possible"
-        exit 1
-    fi
-    read -rp "ex1a/azspice Suite Username: " suite_user_ex1a
-else
-    suite_user_ex1a=None
-fi
+read -rp "Suite Username: " suite_user
 if [[ $platforms == *"ex1a"* ]]; then
     while :
     do
@@ -125,12 +98,7 @@ fi
 # Get user to double check settings
 clear
 echo "Suite Name: ${suite_name}"
-if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]] || [[ $platforms == *"xc40"* ]]; then
-    echo "User: ${suite_user}"
-fi
-if [[ $platforms == *"ex1a"* ]] || [[ $platforms == *"azspice"* ]]; then
-    echo "ex1a User: ${suite_user_ex1a}"
-fi
+echo "ex1a User: ${suite_user}"
 if [[ $platforms == *"ex1a"* ]]; then
     echo "EX Host Zone: ${ex_kgo_host}"
 fi
@@ -148,18 +116,13 @@ if [[ $run_script != "y" ]]; then
     exit 0
 fi
 
-# Move the kgo_update directory to frum on linux
-if [[ $launch_platform == "spice" ]]; then
-    scp -rq "${script_loc}"/kgo_update ${root_user}@localhost:~
-else
-    sudo -iu ${root_user} bash -c "cp -r ${script_loc}/kgo_update ${root_home}"
-fi
+# Move the kgo_update directory to admin user on vdi
+sudo -iu ${root_user} bash -c "cp -r ${script_loc}/kgo_update ${root_home}"
 
-# Define command to run as frum
+# Define command to run as admin user
 command=". /etc/profile ; module load scitools ; cd kgo_update ;
          ./meto_run_kgo_script.sh -S ${suite_name}
                                   -U ${suite_user}
-                                  -E ${suite_user_ex1a}
                                   -Z ${ex_kgo_host}
                                   -N ${new_kgo_dir}
                                   -R ${new_release}
@@ -169,36 +132,13 @@ command=". /etc/profile ; module load scitools ; cd kgo_update ;
          cd ~ ; rm -rf kgo_update"
 
 # Run the command as admin user
-if [[ $launch_platform == "spice" ]]; then
-    ssh -Y ${root_user}@localhost "$command"
-else
-    sudo -iu ${root_user} bash -c "cd $UMDIR ; $command"
-fi
+sudo -iu ${root_user} bash -c "cd $UMDIR ; $command"
 
 # Error Checking and rsyncing
 variables_dir="kgo_update_files/vn${version_number}/${new_kgo_dir}"
-succeeded_spice=0
 succeeded_azspice=0
-succeeded_xc40=0
 succeeded_ex1a=0
 succeeded_all=1
-if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
-    file=${root_home}/${variables_dir}/spice_update_script.sh
-    if [[ -e "$file" ]]; then
-        succeeded_spice=1
-        if [[ $new_release -ne 1 ]]; then
-            printf "${GREEN}\n\nCopying the spice variables file into this working copy.\n${NC}"
-            scp -q ${root_user}@localhost:~/"${variables_dir}/spice_updated_variables${variables_extension}" \
-                            "${wc_path}/rose-stem/site/meto/variables_spice${variables_extension}" || {
-                printf "${RED}The copy of the spice variables file into this working copy has failed.\n${NC}"
-                succeeded_spice=0
-                succeeded_all=0
-            }
-        fi
-    else
-        succeeded_all=0
-    fi
-fi
 if [[ $platforms == *"azspice"* ]]; then
     file=${root_home}/${variables_dir}/azspice_update_script.sh
     if [[ -e "$file" ]]; then
@@ -216,47 +156,15 @@ if [[ $platforms == *"azspice"* ]]; then
         succeeded_all=0
     fi
 fi
-if [[ $platforms == *"xc40"* ]]; then
-    file=${root_home}/${variables_dir}/xc40_update_script.sh
-    if [[ -e "$file" ]]; then
-        succeeded_xc40=1
-        if [[ $new_release -ne 1 ]]; then
-            printf "${GREEN}\n\nCopying the xc40 variables file into this working copy.\n${NC}"
-            if [[ $launch_platform == "spice" ]]; then
-                scp -q "${root_user}@localhost:~/${variables_dir}/xc40_updated_variables${variables_extension}" \
-                    "${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}"
-                rc=$?
-            else
-                cp "${root_home}/${variables_dir}/xc40_updated_variables${variables_extension}" \
-                    "${wc_path}/rose-stem/site/meto/variables_xc40${variables_extension}"
-                rc=$?
-            fi
-            if [[ $rc -ne 0 ]]; then
-                printf "${RED}The copy of the xc40 variables file into this working copy has failed.\n${NC}"
-                succeeded_xc40=0
-                succeeded_all=0
-            fi
-            rc=
-        fi
-    else
-        succeeded_all=0
-    fi
-fi
 if [[ $platforms == *"ex1a"* ]]; then
     file=${root_home}/${variables_dir}/ex1a_update_script.sh
     if [[ -e "$file" ]]; then
         succeeded_ex1a=1
         if [[ $new_release -ne 1 ]]; then
             printf "${GREEN}\n\nCopying the ex1a variables file into this working copy.\n${NC}"
-            if [[ $launch_platform == "spice" ]]; then
-                scp -q "${root_user}@localhost:~/${variables_dir}/ex1a_updated_variables${variables_extension}" \
-                    "${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}"
-                rc=$?
-            else
-                cp "${root_home}/${variables_dir}/ex1a_updated_variables${variables_extension}" \
-                    "${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}"
-                rc=$?
-            fi
+            cp "${root_home}/${variables_dir}/ex1a_updated_variables${variables_extension}" \
+                "${wc_path}/rose-stem/site/meto/variables_ex1a${variables_extension}"
+            rc=$?
             if [[ $rc -ne 0 ]]; then
                 printf "${RED}The copy of the ex1a variables file into this working copy has failed.\n${NC}"
                 succeeded_ex1a=0
@@ -275,35 +183,13 @@ else
     printf "${RED}\n\nAt least 1 platform suffered an error during installation.\n${NC}"
 fi
 
-if [[ $platforms == *"xc40"* ]] || [[ $platforms == *"ex1a"* ]]; then
+if [[ $platforms == *"ex1a"* ]]; then
     read -rp "Enter 1 to rsync UM KGO, 2 to rsync lfricinputs KGO (default 1): " rsync_type
     if [[ $rsync_type == "2" ]]; then
         rsync_dir="lfricinputs/kgo/"
     else
         rsync_dir="kgo/"
     fi
-fi
-
-# For the xc40s rsync the generated kgo to the xcs
-if [[ $succeeded_xc40 -eq 1 ]]; then
-    printf "${GREEN}\n\nrsyncing the kgo to xcs.\n${NC}"
-    host_rsync=$(rose host-select xc)
-    rsync_com="ssh -Y ${host_rsync} 'rsync -av /projects/um1/standard_jobs/${rsync_dir} xcslr0:/common/um1/standard_jobs/${rsync_dir}'"
-    if [[ $launch_platform == "spice" ]]; then
-        ssh -Y ${root_user}@localhost "$rsync_com"
-        rc=$?
-    else
-        sudo -iu ${root_user} bash -c "$rsync_com"
-        rc=$?
-    fi
-    if [[ $rc -ne 0 ]]; then
-        printf "${RED}The rsync to the xcs has failed.\n${NC}"
-    else
-        printf "${GREEN}The rsync to the xcs has succeeded.\n${NC}"
-    fi
-    rc=
-elif [[ $platforms == *"xc40"* ]]; then
-    printf "${RED}\n\nSkipping the rsync to the xcs as the xc40 install failed.\n${NC}"
 fi
 
 # For EX's currently rsync the generated kgo to the exz from the exab
@@ -315,13 +201,8 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
 
     # rsync to EXZ
     rsync_com="ssh -Y ${host_from} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
-    if [[ $launch_platform == "spice" ]]; then
-        ssh -Y ${root_user}@localhost "$rsync_com"
-        rc=$?
-    else
-        sudo -iu ${root_user} bash -c "$rsync_com"
-        rc=$?
-    fi
+    sudo -iu ${root_user} bash -c "$rsync_com"
+    rc=$?
     if [[ $rc -ne 0 ]]; then
         printf "${RED}The rsync to the exz has failed.\n${NC}"
     else
@@ -332,13 +213,8 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
     # rsync to 2nd Host Zone
     host_to=$(rose host-select "$ex_rsync_host")
     rsync_com="ssh -Y ${host_from} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} ${host_to}:/common/internal/umdir/standard_jobs/${rsync_dir}'"
-    if [[ $launch_platform == "spice" ]]; then
-        ssh -Y ${root_user}@localhost "$rsync_com"
-        rc=$?
-    else
-        sudo -iu ${root_user} bash -c "$rsync_com"
-        rc=$?
-    fi
+    sudo -iu ${root_user} bash -c "$rsync_com"
+    rc=$?
     if [[ $rc -ne 0 ]]; then
         printf "${RED}The rsync to the ${host_to} has failed.\n${NC}"
     else
@@ -350,25 +226,11 @@ elif [[ $platforms == *"ex1a"* ]]; then
 fi
 
 printf "\n\nInstallation Summary:\n\n"
-if [[ $platforms == *"spice"* ]] && [[ $platforms != *"azspice"* ]]; then
-    if [[ $succeeded_spice -eq 1 ]]; then
-        printf "${GREEN}Installation on spice successful.\n${NC}"
-    else
-        printf "${RED}Installation on spice unsuccessful. Review output for error.\n${NC}"
-    fi
-fi
 if [[ $platforms == *"azspice"* ]]; then
     if [[ $succeeded_azspice -eq 1 ]]; then
         printf "${GREEN}Installation on azspice successful.\n${NC}"
     else
         printf "${RED}Installation on azspice unsuccessful. Review output for error.\n${NC}"
-    fi
-fi
-if [[ $platforms == *"xc40"* ]]; then
-    if [[ $succeeded_xc40 -eq 1 ]]; then
-        printf "${GREEN}Installation on xc40 successful.\n${NC}"
-    else
-        printf "${RED}Installation on xc40 unsuccessful. Review output for error.\n${NC}"
     fi
 fi
 if [[ $platforms == *"ex1a"* ]]; then
