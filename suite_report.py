@@ -848,7 +848,9 @@ class SuiteReport:
         Returns True if the repository exists, False otherwise."""
         retcode = 0
         command = [fcm_exec, "info", url]
+        print(command)
         retcode, stdout, _ = _run_command(command, ignore_fail=True)
+        print(stdout)
         if retcode == 0:
             return True
         return False
@@ -1542,15 +1544,14 @@ class SuiteReport:
                         break
         else:
             print("Get SRS location from 'fcm info'")
-            retcode = 0
             command = [fcm_exec, "info", url]
-            retcode, stdout, _ = _run_command(command, ignore_fail=True)
-            if retcode == 0:
-                for line in stdout:
-                    key, item = line.split(":", 1)
-                    if key == "URL":
-                        srs_url = item
-                        break
+            _, stdout, _ = _run_command(command, ignore_fail=True)
+            find_url = re.compile(r"URL:\s*(.*)")
+            for line in stdout:
+                result = find_url.search(line)
+                if result:
+                    srs_url = result.group(1).rstrip()
+                    break
         return srs_url
 
     @staticmethod
