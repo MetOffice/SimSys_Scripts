@@ -848,8 +848,10 @@ class SuiteReport:
         Returns True if the repository exists, False otherwise."""
         retcode = 0
         command = [fcm_exec, "info", url]
-        retcode, _, _ = _run_command(command, ignore_fail=True)
+        print(command)
+        retcode, stdout, _ = _run_command(command, ignore_fail=True)
         if retcode == 0:
+            print(stdout)
             return True
         return False
 
