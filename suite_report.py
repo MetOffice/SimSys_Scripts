@@ -1499,6 +1499,8 @@ class SuiteReport:
         """Take a URL as a string, and a dictionary of {project : url, ...}
         If url is a mirror repository URL in the projects dictionary convert
         to an SRS URL if also availble.
+        If this doesn't look like an "fcm" link then try running "fcm info"
+        to get the repo location.
         Otherwise return the original URL
         """
         if url is None:
@@ -1539,15 +1541,15 @@ class SuiteReport:
                         else:
                             srs_url = re.sub(proj, shared_project, url, count=1)
                         break
-        else:
-            command = [fcm_exec, "info", url]
-            _, stdout, _ = _run_command(command, ignore_fail=True)
-            find_url = re.compile(r"URL:\s*(.*)")
-            for line in stdout:
-                result = find_url.search(line)
-                if result:
-                    srs_url = result.group(1).rstrip()
-                    break
+            else:
+                command = [fcm_exec, "info", url]
+                _, stdout, _ = _run_command(command, ignore_fail=True)
+                find_url = re.compile(r"URL:\s*(.*)")
+                for line in stdout:
+                    result = find_url.search(line)
+                    if result:
+                        srs_url = result.group(1).rstrip()
+                        break
         return srs_url
 
     @staticmethod
