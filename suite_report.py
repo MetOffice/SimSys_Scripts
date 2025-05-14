@@ -425,11 +425,11 @@ class SuiteReport:
             proj_dict["tested source"] = _remove_quotes(proj_dict["tested source"])
             if "repo loc" in proj_dict:
                 proj_dict["repo loc"] = self.convert_to_srs(
-                    proj_dict["repo loc"], self.projects
+                    proj_dict["repo loc"], self.projects, fcm_exec
                 )
             else:
                 proj_dict["repo loc"] = self.convert_to_srs(
-                    proj_dict["tested source"], self.projects
+                    proj_dict["tested source"], self.projects, fcm_exec
                 )
 
             proj_dict["repo mirror"] = self.convert_to_mirror(
@@ -445,7 +445,7 @@ class SuiteReport:
             )
 
             proj_dict["parent loc"] = self.convert_to_srs(
-                proj_dict["parent mirror"], self.projects
+                proj_dict["parent mirror"], self.projects, fcm_exec
             )
             # Check "repo loc" and "parent loc" have revisions,
             # and if not, try to get a head of 'trunk' one for them.
@@ -1484,10 +1484,12 @@ class SuiteReport:
         return mirror_url
 
     @staticmethod
-    def convert_to_srs(url, projects_dict):
+    def convert_to_srs(url, projects_dict, fcm_exec):
         """Take a URL as a string, and a dictionary of {project : url, ...}
         If url is a mirror repository URL in the projects dictionary convert
         to an SRS URL if also availble.
+        If this doesn't look like an "fcm" link then try running "fcm info"
+        to get the repo location.
         Otherwise return the original URL
         """
         if url is None:
@@ -1527,6 +1529,15 @@ class SuiteReport:
                         # maintain keyword style, but convert to srs.
                         else:
                             srs_url = re.sub(proj, shared_project, url, count=1)
+                        break
+            else:
+                command = [fcm_exec, "info", url]
+                _, stdout, _ = _run_command(command, ignore_fail=True)
+                find_url = re.compile(r"URL:\s*(.*)")
+                for line in stdout:
+                    result = find_url.search(line)
+                    if result:
+                        srs_url = result.group(1).rstrip()
                         break
         return srs_url
 
