@@ -92,7 +92,7 @@ FCM = {
 }
 RESOURCE_MONITORING_JOBS = {
     "meto": [
-        "atmos-xc40_cce_um_fast_omp-seukv-4x9-noios-2t",
+        "atmos-ex1a_cce_um_safe_omp-seukv-4x9-noios-2t",
     ],
     "ecmwf": [],
     "nci": [],
@@ -110,7 +110,7 @@ RESOURCE_MONITORING_JOBS = {
     "Unknown": [],
 }
 CYLC_REVIEW_URL = {
-    "meto": "http://fcm1/cylc-review",
+    "meto": "https://cylchub/services/cylc-review",
     "ecmwf": "Unavailable",
     "nci": "http://accessdev.nci.org.au/cylc-review",
     "bom": "http://scs-watchdog-dev/rose-bush",
@@ -140,24 +140,19 @@ COMMON_GROUPS = {
         "all",
         "nightly",
         "developer",
-        "xc40",
-        "ex1a",
-        "spice",
-        "xc40_nightly",
-        "ex1a_nightly",
-        "spice_nightly",
-        "xc40_developer",
-        "ex1a_developer",
-        "spice_developer",
         "ukca",
         "recon",
         "jules",
-        "xc40_ukca",
+        "ex1a",
+        "ex1a_nightly",
+        "ex1a_developer",
         "ex1a_ukca",
-        "spice_ukca",
-        "xc40_jules",
         "ex1a_jules",
-        "spice_jules",
+        "azspice",
+        "azspice_nightly",
+        "azspice_developer",
+        "azspice_ukca",
+        "azspice_jules",
     ],
     "ecmwf": [],
     "nci": [],
@@ -266,7 +261,7 @@ def _dict_merge(main_dict, addon_dict, force=False):
 def _select_preferred(option_list):
     """Takes a list of strings, returns the fist one that is not None.
     If the strings are report text in preffered order it essentially
-    ensures you get the preffered option from a list of choices."""
+    ensures you get the prefered option from a list of choices."""
     pref_opt = None
     for choice in option_list:
         if choice is not None:
@@ -408,7 +403,7 @@ class SuiteReport:
         projects = self.check_versions_files()
         self.job_sources = _dict_merge(self.job_sources, projects)
 
-        # Work out which project this suite is run as - heirarchical structure
+        # Work out which project this suite is run as - hierarchical structure
         # with lfric_apps at the top, then UM, then the rest
         if "LFRIC_APPS" in self.job_sources.keys():
             self.primary_project = "LFRIC_APPS"
@@ -661,12 +656,6 @@ class SuiteReport:
         )
 
         self.trustzone = os.environ.get("TRUSTZONE", None)
-
-        self.host_xcs = False
-        if self.site == "meto":
-            for line in lines:
-                if "HOST_XC40='xcsr'" in line:
-                    self.host_xcs = True
 
     def initialise_projects(self):
         """Uses fcm kp to initialise a directory containing project keywords
@@ -1923,8 +1912,6 @@ class SuiteReport:
             )
             if self.rose_orig_host is not None:
                 trac_log.append(f" || ''ROSE_ORIG_HOST:'' || {self.rose_orig_host} || ")
-            if self.host_xcs:
-                trac_log.append(" || HOST_XCS || True || ")
             trac_log.append("")
 
             if self.uncommitted_changes:
