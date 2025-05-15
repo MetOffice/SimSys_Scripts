@@ -1498,7 +1498,7 @@ class SuiteReport:
         srs_url = url
         for proj, proj_url in projects_dict.items():
             # Only check for keywords which correspond to mirror or SRS format
-            print("I am here")
+            print(proj, proj_url)
             if re.search(r".x(|m)$", proj):
                 if re.search(proj_url, url):
                     print("and here")
@@ -1534,17 +1534,16 @@ class SuiteReport:
                         else:
                             srs_url = re.sub(proj, shared_project, url, count=1)
                         break
-        print(srs_url)
-        if srs_url is None:
-            print ("using fcm info")
-            command = [fcm_exec, "info", url]
-            _, stdout, _ = _run_command(command, ignore_fail=True)
-            find_url = re.compile(r"URL:\s*(.*)")
-            for line in stdout:
-                result = find_url.search(line)
-                if result:
-                    srs_url = result.group(1).rstrip()
-                    break
+            else:
+                print ("using fcm info")
+                command = [fcm_exec, "info", url]
+                _, stdout, _ = _run_command(command, ignore_fail=True)
+                find_url = re.compile(r"URL:\s*(.*)")
+                for line in stdout:
+                    result = find_url.search(line)
+                    if result:
+                        srs_url = result.group(1).rstrip()
+                        break
         return srs_url
 
     @staticmethod
