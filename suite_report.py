@@ -491,13 +491,14 @@ class SuiteReport:
             proj_dict["human parent"] = self.convert_to_keyword(
                 proj_dict["parent loc"], self.projects
             )
-            proj_dict["ticket no"] = self.ascertain_ticket_number(
-                proj_dict["repo mirror"], fcm_exec
-            )
-            proj_dict["bdiff_files"] = self.get_altered_files_list(
-                proj_dict["repo mirror"]
-            )
+            # proj_dict["ticket no"] = self.ascertain_ticket_number(
+            #     proj_dict["repo mirror"], fcm_exec
+            # )
+            # proj_dict["bdiff_files"] = self.get_altered_files_list(
+            #     proj_dict["repo mirror"]
+            # )
 
+        self.debug_print_obj()
         # Check to see if ALL the groups being run fall into the
         # "common groups" category. This is used to control automatic
         # hiding of successful tasks later.
@@ -1531,6 +1532,7 @@ class SuiteReport:
                             srs_url = re.sub(proj, shared_project, url, count=1)
                         break
             else:
+                print ("using fcm info")
                 command = [fcm_exec, "info", url]
                 _, stdout, _ = _run_command(command, ignore_fail=True)
                 find_url = re.compile(r"URL:\s*(.*)")
