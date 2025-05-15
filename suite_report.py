@@ -1498,8 +1498,10 @@ class SuiteReport:
         srs_url = url
         for proj, proj_url in projects_dict.items():
             # Only check for keywords which correspond to mirror or SRS format
+            print("I am here")
             if re.search(r".x(|m)$", proj):
                 if re.search(proj_url, url):
+                    print("and here")
                     # checking given url against urls in the projects_dict
                     shared_project = re.sub(r"m$", r"", proj)
                     if shared_project in projects_dict:
@@ -1508,6 +1510,7 @@ class SuiteReport:
                         srs_url = re.sub(mirror_url, shared_url, url, count=1)
                         break
                 elif re.search("fcm:" + proj + r"[^m]", url):
+                    print("actually here")
                     # Looking for an fcm: shorthand notation based on keyword.
                     shared_project = re.sub(r"m$", r"", proj)
                     if shared_project in projects_dict:
@@ -1531,6 +1534,7 @@ class SuiteReport:
                         else:
                             srs_url = re.sub(proj, shared_project, url, count=1)
                         break
+        print(srs_url)
         if srs_url is None:
             print ("using fcm info")
             command = [fcm_exec, "info", url]
