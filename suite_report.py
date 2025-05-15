@@ -1535,16 +1535,16 @@ class SuiteReport:
                         else:
                             srs_url = re.sub(proj, shared_project, url, count=1)
                         break
-            else:
-                print ("using fcm info")
-                command = [fcm_exec, "info", url]
-                _, stdout, _ = _run_command(command, ignore_fail=True)
-                find_url = re.compile(r"URL:\s*(.*)")
-                for line in stdout:
-                    result = find_url.search(line)
-                    if result:
-                        srs_url = result.group(1).rstrip()
-                        break
+                else:
+                    print ("using fcm info")
+                    command = [fcm_exec, "info", url]
+                    _, stdout, _ = _run_command(command, ignore_fail=True)
+                    find_url = re.compile(r"URL:\s*(.*)")
+                    for line in stdout:
+                        result = find_url.search(line)
+                        if result:
+                            srs_url = result.group(1).rstrip()
+                            break
         return srs_url
 
     @staticmethod
