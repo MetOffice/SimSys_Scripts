@@ -1496,10 +1496,11 @@ class SuiteReport:
         if url is None:
             return None
         srs_url = url
+        print(srs_url)
         for proj, proj_url in projects_dict.items():
             # Only check for keywords which correspond to mirror or SRS format
-            print(proj, proj_url)
             if re.search(r".x(|m)$", proj):
+                print("do I go here?")
                 if re.search(proj_url, url):
                     print("and here")
                     # checking given url against urls in the projects_dict
