@@ -1496,10 +1496,14 @@ class SuiteReport:
         if url is None:
             return None
         srs_url = url
+        if url.startswith("/home"):
+            extraprint=True
         for proj, proj_url in projects_dict.items():
             # Only check for keywords which correspond to mirror or SRS format
             if re.search(r".x(|m)$", proj):
                 if re.search(proj_url, url):
+                    if extraprint:
+                        print("proj_url is ", proj_url)
                     # checking given url against urls in the projects_dict
                     shared_project = re.sub(r"m$", r"", proj)
                     if shared_project in projects_dict:
@@ -1508,6 +1512,8 @@ class SuiteReport:
                         srs_url = re.sub(mirror_url, shared_url, url, count=1)
                         break
                 elif re.search("fcm:" + proj + r"[^m]", url):
+                    if extraprint:
+                        print("proj is", proj)
                     # Looking for an fcm: shorthand notation based on keyword.
                     shared_project = re.sub(r"m$", r"", proj)
                     if shared_project in projects_dict:
@@ -1532,6 +1538,7 @@ class SuiteReport:
                             srs_url = re.sub(proj, shared_project, url, count=1)
                         break
         if srs_url == url:
+            print("resorting to fcm info")
             # Only use fcm info if none of the searching through projects is successful
             command = [fcm_exec, "info", url]
             _, stdout, _ = _run_command(command, ignore_fail=True)
@@ -1541,6 +1548,7 @@ class SuiteReport:
                 if result:
                     srs_url = result.group(1).rstrip()
                     break
+        print(srs_url)
         return srs_url
 
     @staticmethod
