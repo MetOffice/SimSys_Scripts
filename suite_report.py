@@ -498,7 +498,6 @@ class SuiteReport:
                 proj_dict["repo mirror"]
             )
 
-        self.debug_print_obj()
         # Check to see if ALL the groups being run fall into the
         # "common groups" category. This is used to control automatic
         # hiding of successful tasks later.
