@@ -491,12 +491,12 @@ class SuiteReport:
             proj_dict["human parent"] = self.convert_to_keyword(
                 proj_dict["parent loc"], self.projects
             )
-            # proj_dict["ticket no"] = self.ascertain_ticket_number(
-            #     proj_dict["repo mirror"], fcm_exec
-            # )
-            # proj_dict["bdiff_files"] = self.get_altered_files_list(
-            #     proj_dict["repo mirror"]
-            # )
+            proj_dict["ticket no"] = self.ascertain_ticket_number(
+                proj_dict["repo mirror"], fcm_exec
+            )
+            proj_dict["bdiff_files"] = self.get_altered_files_list(
+                proj_dict["repo mirror"]
+            )
 
         self.debug_print_obj()
         # Check to see if ALL the groups being run fall into the
@@ -1496,7 +1496,6 @@ class SuiteReport:
         if url is None:
             return None
         srs_url = url
-        print(srs_url)
         for proj, proj_url in projects_dict.items():
             # Only check for keywords which correspond to mirror or SRS format
             if re.search(r".x(|m)$", proj):
@@ -1532,15 +1531,16 @@ class SuiteReport:
                         else:
                             srs_url = re.sub(proj, shared_project, url, count=1)
                         break
-                else:
-                    command = [fcm_exec, "info", url]
-                    _, stdout, _ = _run_command(command, ignore_fail=True)
-                    find_url = re.compile(r"URL:\s*(.*)")
-                    for line in stdout:
-                        result = find_url.search(line)
-                        if result:
-                            srs_url = result.group(1).rstrip()
-                            break
+        if srs_url == url:
+            # Only use fcm info if none of the searching through projects is successful
+            command = [fcm_exec, "info", url]
+            _, stdout, _ = _run_command(command, ignore_fail=True)
+            find_url = re.compile(r"URL:\s*(.*)")
+            for line in stdout:
+                result = find_url.search(line)
+                if result:
+                    srs_url = result.group(1).rstrip()
+                    break
         return srs_url
 
     @staticmethod
