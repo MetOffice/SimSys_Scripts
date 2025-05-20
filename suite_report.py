@@ -1496,6 +1496,7 @@ class SuiteReport:
         if url is None:
             return None
         srs_url = url
+        extraprint = False
         if url.startswith("/home"):
             extraprint=True
         for proj, proj_url in projects_dict.items():
