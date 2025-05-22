@@ -758,13 +758,10 @@ class SuiteReport:
                 ending = ""
             project = vcs_data["url"]
 
-            prefix = "https://code.metoffice.gov.uk/svn/"
-            prefix_svn = "svn://fcm1/"
-            if project.startswith(prefix):
-                project = project[len(prefix) :]
-            if project.startswith(prefix_svn):
-                project = project[len(prefix_svn) :]
-            project = re.split("[/.]", project)[0].upper()
+            match = re.match(r"(?:https://.*?/svn/|svn://[^/]+/)([^/\./]+)",
+                             project)
+            if match:
+                project = match.group(1).upper()
             projects[project] = {}
 
             # Use the version control url as the project source
