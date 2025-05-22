@@ -88,6 +88,7 @@ FCM = {
     "ncas": "fcm",
     "psc": "fcm",
     "uoleeds": "fcm",
+    "azngarch": "fcm",
     "Unknown": "true",
 }
 RESOURCE_MONITORING_JOBS = {
@@ -107,6 +108,7 @@ RESOURCE_MONITORING_JOBS = {
     "ncas": [],
     "psc": [],
     "uoleeds": [],
+    "azngarch": [],
     "Unknown": [],
 }
 CYLC_REVIEW_URL = {
@@ -124,6 +126,7 @@ CYLC_REVIEW_URL = {
     "ncas": "http://puma.nerc.ac.uk/cylc-review",
     "psc": "Unavailable",
     "uoleeds": "Unavailable",
+    "azngarch": "Unavailable",
     "Unknown": "Unavailable",
 }
 HIGHLIGHT_ROSE_ANA_FAILS = [
@@ -166,6 +169,7 @@ COMMON_GROUPS = {
     "mss": [],
     "ncas": [],
     "psc": [],
+    "azngarch": [],
     "Unknown": [],
 }
 
