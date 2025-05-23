@@ -758,8 +758,7 @@ class SuiteReport:
                 ending = ""
             project = vcs_data["url"]
 
-            match = re.match(r"(?:https://.*?/svn/|svn://[^/]+/)([^/\./]+)",
-                             project)
+            match = re.match(r"(?:https://.*?/svn/|svn://[^/]+/)([^/\./]+)", project)
             if match:
                 project = match.group(1).upper()
             projects[project] = {}
