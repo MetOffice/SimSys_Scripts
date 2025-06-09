@@ -51,8 +51,10 @@ fi
 # Prompt user for Update Details
 echo "Enter the platforms requiring a kgo update"
 echo "Enter platforms lowercase and space separated, eg. ex1a azspice"
-read -r platforms
-read -rp "Suite Username: " suite_user
+read -rp "Platforms (default ex1a azspice): " platforms
+platforms=${platforms:-"ex1a azspice"}
+read -rp "Suite Username (default ${USER}): " suite_user
+suite_user=${suite_user:-"${USER}"}
 if [[ $platforms == *"ex1a"* ]]; then
     while :
     do
