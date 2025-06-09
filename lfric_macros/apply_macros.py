@@ -336,7 +336,7 @@ class ApplyMacros:
 
         # If the source exists as a path then return as is
         if os.path.exists(os.path.expanduser(source)):
-            return source
+            return os.path.expanduser(source)
         if ":" in source:
             source_path = os.path.expanduser(source.split(":")[1])
             if os.path.exists(source_path):
