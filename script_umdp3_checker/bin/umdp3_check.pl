@@ -149,7 +149,8 @@ unless ( $binfocode == 0 ) {
     }
 }
 
-if (   grep( /URL:\ssvn:\/\/fcm\d+\/(\w|\.)+_svn\/\w+\/trunk/sxm, @binfo )
+if (   grep( /URL:\ssvn:\/\/[^\/]+\/(\w|\.)+_svn\/\w+\/trunk/sxm, @binfo )
+    or grep( /URL:\shttps:\/\/[^\/]+\/svn\/[\w\.]+\/\w+\/trunk/sxm, @binfo )
     or grep( /URL:.*\/svn\/\w+\/main\/trunk/sxm, @binfo )
     or grep( /URL:..*_svn\/main\/trunk/sxm,      @binfo )
     or grep( /URL:\sfile:\/\/.*\/trunk/sxm,      @binfo ) )
