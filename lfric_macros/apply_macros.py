@@ -548,11 +548,6 @@ class ApplyMacros:
         after_tag = f"vn{self.version}"
         while len(macros) > 0:
             for macro in macros:
-                if not isinstance(macro, str):
-                    macro = (
-                        f"BEFORE_TAG = '{macro['before_tag']}'\n"
-                        f"AFTER_TAG = '{macro['after_tag']}'"
-                    )
                 regexp = re.compile(rf"BEFORE_TAG\s*=\s*[\"']{after_tag}[\"']")
                 if regexp.search(macro):
                     try:
@@ -833,6 +828,7 @@ class ApplyMacros:
 
         missing_macros = []
         for section in meta_imports:
+            section = self.get_full_import_path(section)
             section_missing = []
             section_macros = []
             for macro in self.parsed_macros[section]:
@@ -911,10 +907,18 @@ class ApplyMacros:
                 "[INFO] Writing missing macros to ",
                 self.parse_application_section(meta_dir),
             )
-            macros = self.combine_missing_macros(meta_dir, meta_imports, missing_macros)
-            for macro in macros.items():
-                self.write_new_macro(meta_dir, macro["commmands"], macro)
-            return self.find_last_macro(macros)
+            macros = self.combine_missing_macros(meta_imports, missing_macros)
+            macro_strings = []
+            for macro in macros.values():
+                self.write_new_macro(meta_dir, macro["commands"], macro)
+                macro_strings.append(
+                    f"BEFORE_TAG = '{macro['before_tag']}'\n"
+                    f"AFTER_TAG = '{macro['after_tag']}'"
+                )
+            return self.find_last_macro(
+                macro_strings,
+                meta_dir
+            )
 
         return None
 
@@ -995,7 +999,7 @@ class ApplyMacros:
                 # Check if there are any macros in imported metadata versions.py files
                 # that aren't in the current section.
                 # If there are, then combine these and write them out first
-                last_after_tag = self.fix_missing_macros(meta_dir, import_order)
+                last_after_tag = self.fix_missing_macros(meta_dir, self.target_macros[meta_dir]["imports"])
 
                 if last_after_tag:
                     self.target_macros[meta_dir]["before_tag"] = last_after_tag
