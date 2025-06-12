@@ -263,6 +263,8 @@ class ApplyMacros:
             self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
         else:
             self.version = version
+        self.author = None
+        self.ticket_number = None
         self.target_macros = {}
         self.parsed_macros = defaultdict(list)
         self.meta_dirs = set()
@@ -772,6 +774,11 @@ class ApplyMacros:
                     full_command += self.target_macros[meta_import]["commands"] + "\n"
                 else:
                     full_command += "        # Blank Upgrade Macro\n"
+
+                if self.target_macros[meta_import]["author"] != "Unknown":
+                    self.author = self.target_macros[meta_import]["author"]
+                if self.target_macros[meta_import]["ticket_number"] != "TTTT":
+                    self.ticket_number = self.target_macros[meta_import]["ticket_number"]
         return full_command
 
     def write_new_macro(self, meta_dir, full_command, macro):
@@ -788,11 +795,18 @@ class ApplyMacros:
         temppath = os.path.join(meta_dir, ".versions.py")
         shutil.copy(filepath, temppath)
 
+        author = macro["author"]
+        if not author:
+            author = self.author
+        ticket_number = macro["ticket_number"]
+        if not ticket_number:
+            ticket_number = self.ticket_number
+
         with open(temppath, "a") as f:
             f.write(
-                f"class {macro["class_name"]}(MacroUpgrade):\n"
-                f'    """Upgrade macro for ticket {macro["ticket_number"]} '
-                f'by {macro["author"]}."""\n\n'
+                f'class {macro["class_name"]}(MacroUpgrade):\n'
+                f'    """Upgrade macro for ticket {ticket_number} '
+                f'by {author}."""\n\n'
                 f'    BEFORE_TAG = "{macro["before_tag"]}"\n'
                 f'    AFTER_TAG = "{macro["after_tag"]}"\n\n'
                 "    def upgrade(self, config, meta_config=None):\n"
@@ -949,8 +963,12 @@ class ApplyMacros:
                 last_after_tag = self.find_last_macro(macros, meta_dir)
                 self.target_macros[meta_dir] = {
                     "before_tag": last_after_tag,
+                    "after_tag": self.tag,
                     "commands": "",
                     "imports": "",
+                    "class_name": self.class_name,
+                    "author": None,
+                    "ticket_number": None
                 }
             else:
                 self.target_macros[meta_dir] = self.parse_macro(found_macro, meta_dir)
@@ -969,19 +987,19 @@ class ApplyMacros:
         # added macro or import metadata with the new macro
         for meta_dir in self.meta_dirs:
             import_order = self.determine_import_order(meta_dir)
-
-            # Check if there are any macros in imported metadata versions.py files that
-            # aren't in the current section.
-            # If there are, then combine these and write them out first
-            last_after_tag = self.fix_missing_macros(meta_dir, import_order)
-
-            if last_after_tag:
-                self.target_macros[meta_dir]["before_tag"] = last_after_tag
-
             full_command = self.combine_macros(import_order)
+
             # If there are commands to write out, do so and record this
             # application as having the macro
             if full_command:
+                # Check if there are any macros in imported metadata versions.py files
+                # that aren't in the current section.
+                # If there are, then combine these and write them out first
+                last_after_tag = self.fix_missing_macros(meta_dir, import_order)
+
+                if last_after_tag:
+                    self.target_macros[meta_dir]["before_tag"] = last_after_tag
+
                 print(
                     "[INFO] Writing macros to",
                     self.parse_application_section(meta_dir),
