@@ -884,7 +884,7 @@ class ApplyMacros:
                     if existing["before_tag"] == macro["before_tag"]:
                         continue
                     # if the existing before tag is in the current metadata macro chain
-                    # if it is then we want to use the new before tag
+                    # then we want to use the new before tag
                     for item in self.parsed_macros[meta_import]:
                         if item["before_tag"] == existing["before_tag"]:
                             existing["before_tag"] = macro["before_tag"]
