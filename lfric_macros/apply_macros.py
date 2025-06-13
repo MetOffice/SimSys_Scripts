@@ -844,7 +844,7 @@ class ApplyMacros:
             # Check that if macros are missing ALL of them are missing (this is the
             # case that a new metadata section has been added)
             # Otherwise raise an error as the macro chain is broken
-            if section_macros and len(section_macros) != len(section_missing):
+            if section_missing and len(section_macros) != len(section_missing):
                 raise RuntimeError(
                     f"The versions.py file for section {meta_dir} is missing macros "
                     "from inherited metadata sections. This suggests something has "
@@ -906,7 +906,7 @@ class ApplyMacros:
 
         if missing_macros:
             print(
-                "[INFO] Writing missing macros to ",
+                "[INFO] Writing missing macros to",
                 self.parse_application_section(meta_dir),
             )
             macros = self.combine_missing_macros(meta_imports, missing_macros)
