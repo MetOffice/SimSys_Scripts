@@ -998,6 +998,7 @@ class ApplyMacros:
                 # Check if there are any macros in imported metadata versions.py files
                 # that aren't in the current section.
                 # If there are, then combine these and write them out first
+                last_after_tag = None
                 last_after_tag = self.fix_missing_macros(
                     meta_dir, self.target_macros[meta_dir]["imports"]
                 )
