@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import networkx as nx
 from collections import defaultdict
 
 BLACK_COMMAND = "black --line-length=80"
@@ -265,8 +266,10 @@ class ApplyMacros:
             self.version = version
         self.author = None
         self.ticket_number = None
-        self.target_macros = {}
+        # All parsed macros per metadata section
         self.parsed_macros = defaultdict(list)
+        # Parsed macro with desired after tag, per metadata section
+        self.target_macros = {}
         self.meta_dirs = set()
         self.sections_with_macro = []
         self.python_imports = set()
@@ -832,19 +835,19 @@ class ApplyMacros:
         for section in meta_imports:
             section = self.get_full_import_path(section)
             section_missing = []
-            section_macros = []
+            len_section_macros = len(self.parsed_macros[section])
             for macro in self.parsed_macros[section]:
                 after_tag = macro["after_tag"]
                 # Ignore the macro being upgraded - this is expected to be missing
                 if after_tag == self.tag:
+                    len_section_macros -= 1
                     continue
-                section_macros.append(after_tag)
                 if after_tag not in after_tags:
                     section_missing.append(after_tag)
             # Check that if macros are missing ALL of them are missing (this is the
             # case that a new metadata section has been added)
             # Otherwise raise an error as the macro chain is broken
-            if section_missing and len(section_macros) != len(section_missing):
+            if section_missing and len_section_macros != len(section_missing):
                 raise RuntimeError(
                     f"The versions.py file for section {meta_dir} is missing macros "
                     "from inherited metadata sections. This suggests something has "
@@ -858,7 +861,7 @@ class ApplyMacros:
 
     def combine_missing_macros(self, meta_imports, missing_macros):
         """
-        Combine missing macro commands and write them to the relevant versions.py file.
+        Combine missing macro commands
         Inputs:
             - meta_imports, a list of imported metadata sections
             - missing_macros, a list of after tags missing
@@ -868,19 +871,25 @@ class ApplyMacros:
 
         new_macros = {}
 
+        # Loop over all metadata imports
         for meta_import in meta_imports:
+            # For each missing after tag check whether it exists in this imported sect
             for after_tag in missing_macros:
                 macro = None
                 for m in self.parsed_macros[meta_import]:
                     if m["after_tag"] == after_tag:
                         macro = m
                         break
+                # if the macro exists then save it
                 if macro:
+                    # if the macro not already saved, that's all that's required
                     if after_tag not in new_macros:
                         new_macros[after_tag] = macro
                         continue
+                    # if the macro is already saved, then combine macros
                     existing = new_macros[after_tag]
                     existing["commands"] += macro["commands"]
+                    # if the before tags are the same, we don't need to modify the chain
                     if existing["before_tag"] == macro["before_tag"]:
                         continue
                     # if the existing before tag is in the current metadata macro chain
@@ -910,6 +919,8 @@ class ApplyMacros:
                 self.parse_application_section(meta_dir),
             )
             macros = self.combine_missing_macros(meta_imports, missing_macros)
+            # Record the identified missing macros for this metadata section
+            self.parsed_macros[meta_dir] = [m for m in macros.values()]
             macro_strings = []
             for macro in macros.values():
                 self.write_new_macro(meta_dir, macro["commands"], macro)
@@ -917,9 +928,29 @@ class ApplyMacros:
                     f"BEFORE_TAG = '{macro['before_tag']}'\n"
                     f"AFTER_TAG = '{macro['after_tag']}'"
                 )
+                self.parsed_macros[meta_dir].insert(0, macro)
             return self.find_last_macro(macro_strings, meta_dir)
 
         return None
+
+    def order_meta_dirs(self):
+        """
+        Order the self.meta_dirs list by metadata import order, such that sections
+        higher up the import tree come first
+        Create a networkx ordered graph, with nodes as the import tree and edges as the
+        import statements. Then recreate list from this
+        """
+
+        import_graph = nx.DiGraph()
+
+        for meta_dir in self.meta_dirs:
+            import_graph.add_node(meta_dir)
+            for imp in self.target_macros[meta_dir]["imports"]:
+                import_graph.add_edge(imp, meta_dir)
+
+        # Return an ordered list of nodes. This requires non-circular edges, but this is
+        # guaranteed for valid rose metadata
+        return list(nx.topological_sort(import_graph))
 
     def preprocess_macros(self):
         """
@@ -988,7 +1019,8 @@ class ApplyMacros:
 
         # Now reconstruct the macro for all applications which have the newly
         # added macro or import metadata with the new macro
-        for meta_dir in self.meta_dirs:
+        # The macro sections need to be processed in the order of import
+        for meta_dir in self.order_meta_dirs():
             import_order = self.determine_import_order(meta_dir)
             full_command = self.combine_macros(import_order)
 
