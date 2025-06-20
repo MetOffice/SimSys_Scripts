@@ -760,8 +760,8 @@ class ApplyMacros:
         for meta_import in import_order:
             meta_import = self.get_full_import_path(meta_import)
             if (
-                meta_import in self.target_macros and
-                "commands" in self.target_macros[meta_import]
+                meta_import in self.target_macros
+                and "commands" in self.target_macros[meta_import]
             ):
                 # Add a comment labelling where these commands came from
                 full_command += (
