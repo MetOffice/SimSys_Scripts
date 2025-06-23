@@ -795,12 +795,8 @@ class ApplyMacros:
         temppath = os.path.join(meta_dir, ".versions.py")
         shutil.copy(filepath, temppath)
 
-        author = macro["author"]
-        if not author:
-            author = self.author
-        ticket_number = macro["ticket_number"]
-        if not ticket_number:
-            ticket_number = self.ticket_number
+        author = macro["author"] or self.author
+        ticket_number = macro["ticket_number"] or self.ticket_number
 
         with open(temppath, "a") as f:
             f.write(
