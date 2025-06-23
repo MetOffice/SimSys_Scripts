@@ -17,6 +17,8 @@ import re
 import shutil
 import subprocess
 import tempfile
+import networkx as nx
+from collections import defaultdict
 
 BLACK_COMMAND = "black --line-length=80"
 CLASS_NAME_REGEX = r"vn\d+(_t\d+\w*)?"
@@ -262,9 +264,12 @@ class ApplyMacros:
             self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
         else:
             self.version = version
-        self.ticket_number = None
         self.author = None
-        self.parsed_macros = {}
+        self.ticket_number = None
+        # All parsed macros per metadata section
+        self.parsed_macros = defaultdict(list)
+        # Parsed macro with desired after tag, per metadata section
+        self.target_macros = {}
         self.meta_dirs = set()
         self.sections_with_macro = []
         self.python_imports = set()
@@ -439,29 +444,33 @@ class ApplyMacros:
             - macro, an upgrade macro that matches the class name we are
               looking for
             - meta_dir, the path to the rose metadata directory
+        Returns:
+            - dictionary of the parsed macro, containing before tag, after tag and
+              commands
         """
 
         version_file = os.path.join(meta_dir, "versions.py")
 
-        # The ticket number and author will always be the same across all
-        # macros for this ticket, so only grab these once
-        # These are not vital so don't fail if not found
-        if self.ticket_number is None or self.author is None:
-            ticket_details = re.search(r"Upgrade .* (#\d+) by (\S+.*)", macro)
-            try:
-                self.ticket_number = ticket_details.group(1)
-                self.author = ticket_details.group(2).rstrip('".')
-                self.author = self.author.strip("<>")
-            except AttributeError:
-                pass
+        ticket_details = re.search(r"Upgrade .* (#\d+) by (\S+.*)", macro)
+        try:
+            ticket_number = ticket_details.group(1)
+            author = ticket_details.group(2).rstrip('".')
+            author = author.strip("<>")
+        except AttributeError:
+            ticket_number = "TTTT"
+            author = "Unknown"
+            pass
+
+        class_name = re.search(r"class (vn\d+_t\d+)", macro).group(1)
 
         # Search for the before tag
         # Raise an exception if these are missing
         try:
             before_tag = re.search(rf"BEFORE_TAG{TAG_REGEX}", macro).group(1)
+            after_tag = re.search(rf"AFTER_TAG{TAG_REGEX}", macro).group(1)
         except AttributeError as exc:
             raise Exception(
-                "Couldn't find a Before tag for the requested "
+                "Couldn't find a Before/After tag for the requested "
                 f"macro in the file {version_file}"
             ) from exc
 
@@ -486,9 +495,13 @@ class ApplyMacros:
             commands += line + "\n"
 
         # Record macro details
-        self.parsed_macros[meta_dir] = {
+        return {
             "before_tag": before_tag,
+            "after_tag": after_tag,
             "commands": commands,
+            "ticket_number": ticket_number,
+            "author": author,
+            "class_name": class_name,
         }
 
     def remove_macro(self, contents, meta_dir):
@@ -689,6 +702,9 @@ class ApplyMacros:
                 imp_str = f"from {'.'.join(m for m in mod)} {imp_str}"
             if alias:
                 imp_str += f" as {alias}"
+            # Don't add versionXX_YY import statements
+            if re.match(r"from \.?version\d+_\d+ import \*", imp_str):
+                continue
             versions_file.insert(insertion_index, imp_str)
 
         with open(temppath, "w") as f:
@@ -700,7 +716,7 @@ class ApplyMacros:
     def determine_import_order(self, app):
         """
         Work out what order metadata is imported. This recursively works through
-        import statements recorded in self.parsed_macros["imports"]. Produces a
+        import statements recorded in self.target_macros["imports"]. Produces a
         list of the order in which macro commands should be applied (this should
         be the same order as the imports)
         Inputs:
@@ -719,7 +735,7 @@ class ApplyMacros:
         import_list = [app_name]
 
         try:
-            imports = self.parsed_macros[app]["imports"]
+            imports = self.target_macros[app]["imports"]
         except KeyError:
             # Jules Shared directories will produce a key error - these are
             # guaranteed to not import anything
@@ -744,41 +760,51 @@ class ApplyMacros:
         for meta_import in import_order:
             meta_import = self.get_full_import_path(meta_import)
             if (
-                meta_import in self.parsed_macros
-                and self.parsed_macros[meta_import]["commands"]
+                meta_import in self.target_macros
+                and "commands" in self.target_macros[meta_import]
             ):
                 # Add a comment labelling where these commands came from
                 full_command += (
                     "        # Commands From: "
                     f"{self.parse_application_section(meta_import)}\n"
                 )
-                if self.parsed_macros[meta_import]["commands"].strip("\n"):
-                    full_command += self.parsed_macros[meta_import]["commands"] + "\n"
+                if self.target_macros[meta_import]["commands"].strip("\n"):
+                    full_command += self.target_macros[meta_import]["commands"] + "\n"
                 else:
                     full_command += "        # Blank Upgrade Macro\n"
+
+                if self.target_macros[meta_import]["author"] != "Unknown":
+                    self.author = self.target_macros[meta_import]["author"]
+                if self.target_macros[meta_import]["ticket_number"] != "TTTT":
+                    self.ticket_number = self.target_macros[meta_import][
+                        "ticket_number"
+                    ]
         return full_command
 
-    def write_new_macro(self, meta_dir, full_command):
+    def write_new_macro(self, meta_dir, full_command, macro):
         """
         Write out the new macro with all relevant commands to the versions.py
         file
         Inputs:
             - meta_dir, path to the metadata directory with a versions.py file
             - full_command, str of the combined macro commands
+            - macro, the parsed macro being written
         """
 
-        parsed_macro = self.parsed_macros[meta_dir]
         filepath = os.path.join(meta_dir, "versions.py")
         temppath = os.path.join(meta_dir, ".versions.py")
         shutil.copy(filepath, temppath)
 
+        author = macro["author"] or self.author
+        ticket_number = macro["ticket_number"] or self.ticket_number
+
         with open(temppath, "a") as f:
             f.write(
-                f"class {self.class_name}(MacroUpgrade):\n"
-                f'    """Upgrade macro for ticket {self.ticket_number} '
-                f'by {self.author}."""\n\n'
-                f'    BEFORE_TAG = "{parsed_macro["before_tag"]}"\n'
-                f'    AFTER_TAG = "{self.tag}"\n\n'
+                f'class {macro["class_name"]}(MacroUpgrade):\n'
+                f'    """Upgrade macro for ticket {ticket_number} '
+                f'by {author}."""\n\n'
+                f'    BEFORE_TAG = "{macro["before_tag"]}"\n'
+                f'    AFTER_TAG = "{macro["after_tag"]}"\n\n'
                 "    def upgrade(self, config, meta_config=None):\n"
                 f"{full_command}"  # this variable contains required whitespace
                 "        return config, self.reports\n"
@@ -787,6 +813,140 @@ class ApplyMacros:
         apply_styling(temppath)
 
         os.rename(temppath, filepath)
+
+    def check_missing_macros(self, meta_dir, meta_imports):
+        """
+        Check through macros of imported metadata sections, returning list of any that
+        aren't in the current section (identified by the after tag)
+        Inputs:
+            - meta_dir, the current metadata section
+            - meta_imports, a list of imported metadata sections
+        Returns:
+            - list of macros that need adding to the current section
+        """
+
+        after_tags = [m["after_tag"] for m in self.parsed_macros[meta_dir]]
+
+        missing_macros = []
+        for section in meta_imports:
+            section = self.get_full_import_path(section)
+            section_missing = []
+            len_section_macros = len(self.parsed_macros[section])
+            for macro in self.parsed_macros[section]:
+                after_tag = macro["after_tag"]
+                # Ignore the macro being upgraded - this is expected to be missing
+                if after_tag == self.tag:
+                    len_section_macros -= 1
+                    continue
+                if after_tag not in after_tags:
+                    section_missing.append(after_tag)
+            # Check that if macros are missing ALL of them are missing (this is the
+            # case that a new metadata section has been added)
+            # Otherwise raise an error as the macro chain is broken
+            if section_missing and len_section_macros != len(section_missing):
+                raise RuntimeError(
+                    f"The versions.py file for section {meta_dir} is missing macros "
+                    "from inherited metadata sections. This suggests something has "
+                    "gone wrong in the macro chain and should be investigated."
+                )
+            for after_tag in section_missing:
+                if after_tag not in missing_macros:
+                    missing_macros.append(after_tag)
+
+        return missing_macros
+
+    def combine_missing_macros(self, meta_imports, missing_macros):
+        """
+        Combine missing macro commands
+        Inputs:
+            - meta_imports, a list of imported metadata sections
+            - missing_macros, a list of after tags missing
+        Returns:
+            - dictionary of parsed macros with corrected before tag. Key is after tag
+        """
+
+        new_macros = {}
+
+        # Loop over all metadata imports
+        for meta_import in meta_imports:
+            # For each missing after tag check whether it exists in this imported sect
+            for after_tag in missing_macros:
+                macro = None
+                for m in self.parsed_macros[meta_import]:
+                    if m["after_tag"] == after_tag:
+                        macro = m
+                        break
+                # if the macro exists then save it
+                if macro:
+                    # if the macro not already saved, that's all that's required
+                    if after_tag not in new_macros:
+                        new_macros[after_tag] = macro
+                        continue
+                    # if the macro is already saved, then combine macros
+                    existing = new_macros[after_tag]
+                    existing["commands"] += macro["commands"]
+                    # if the before tags are the same, we don't need to modify the chain
+                    if existing["before_tag"] == macro["before_tag"]:
+                        continue
+                    # if the existing before tag is in the current metadata macro chain
+                    # then we want to use the new before tag
+                    for item in self.parsed_macros[meta_import]:
+                        if item["before_tag"] == existing["before_tag"]:
+                            existing["before_tag"] = macro["before_tag"]
+
+        return new_macros
+
+    def fix_missing_macros(self, meta_dir, meta_imports):
+        """
+        Function to handle checking and fixing of missing upgrade macros
+        Inputs:
+            - meta_dir, the current metadata section
+            - meta_imports, a list of imported metadata sections
+        Returns:
+            - the final after tag in the newly written macro chain if macros are
+              missing, otherwise None
+        """
+
+        missing_macros = self.check_missing_macros(meta_dir, meta_imports)
+
+        if missing_macros:
+            print(
+                "[INFO] Writing missing macros to",
+                self.parse_application_section(meta_dir),
+            )
+            macros = self.combine_missing_macros(meta_imports, missing_macros)
+            # Record the identified missing macros for this metadata section
+            self.parsed_macros[meta_dir] = [m for m in macros.values()]
+            macro_strings = []
+            for macro in macros.values():
+                self.write_new_macro(meta_dir, macro["commands"], macro)
+                macro_strings.append(
+                    f"BEFORE_TAG = '{macro['before_tag']}'\n"
+                    f"AFTER_TAG = '{macro['after_tag']}'"
+                )
+                self.parsed_macros[meta_dir].insert(0, macro)
+            return self.find_last_macro(macro_strings, meta_dir)
+
+        return None
+
+    def order_meta_dirs(self):
+        """
+        Order the self.meta_dirs list by metadata import order, such that sections
+        higher up the import tree come first
+        Create a networkx ordered graph, with nodes as the import tree and edges as the
+        import statements. Then recreate list from this
+        """
+
+        import_graph = nx.DiGraph()
+
+        for meta_dir in self.meta_dirs:
+            import_graph.add_node(meta_dir)
+            for imp in self.target_macros[meta_dir]["imports"]:
+                import_graph.add_edge(imp, meta_dir)
+
+        # Return an ordered list of nodes. This requires non-circular edges, but this is
+        # guaranteed for valid rose metadata
+        return list(nx.topological_sort(import_graph))
 
     def preprocess_macros(self):
         """
@@ -817,27 +977,35 @@ class ApplyMacros:
             # info and delete the macro from the file
             parsed_versions = read_versions_file(meta_dir)
             macros = split_macros(parsed_versions)
+
+            # Record all macros in this metadata section
+            for macro in macros:
+                self.parsed_macros[meta_dir].append(self.parse_macro(macro, meta_dir))
+
+            # Check if target macro exists in this section
             found_macro = self.find_macro(meta_dir, macros)
             if not found_macro:
                 # If we reach here then the new macro hasn't been added to
                 # this versions file - in this case work out the final after
-                #  tag in the chain - if we import other commands for this
+                # tag in the chain - if we import other commands for this
                 # versions file, this final after tag will be the before tag of
                 # that new macro.
                 last_after_tag = self.find_last_macro(macros, meta_dir)
-                self.parsed_macros[meta_dir] = {
+                self.target_macros[meta_dir] = {
                     "before_tag": last_after_tag,
-                    "commands": "",
+                    "after_tag": self.tag,
                     "imports": "",
+                    "class_name": self.class_name,
+                    "author": None,
+                    "ticket_number": None,
                 }
             else:
-                self.parse_macro(found_macro, meta_dir)
+                self.target_macros[meta_dir] = self.parse_macro(found_macro, meta_dir)
                 # Remove the macro from the file
                 self.remove_macro(parsed_versions, meta_dir)
 
-            # Read through rose-meta files for import statements
-            # of other metadata
-            self.parsed_macros[meta_dir]["imports"] = self.read_meta_imports(meta_dir)
+            # Read through rose-meta files for import statements of other metadata
+            self.target_macros[meta_dir]["imports"] = self.read_meta_imports(meta_dir)
 
             # Read through the versions.py file for python import statements
             self.python_imports.update(
@@ -846,18 +1014,33 @@ class ApplyMacros:
 
         # Now reconstruct the macro for all applications which have the newly
         # added macro or import metadata with the new macro
-        for meta_dir in self.meta_dirs:
+        # The macro sections need to be processed in the order of import
+        for meta_dir in self.order_meta_dirs():
             import_order = self.determine_import_order(meta_dir)
             full_command = self.combine_macros(import_order)
+
             # If there are commands to write out, do so and record this
             # application as having the macro
             if full_command:
+                # Check if there are any macros in imported metadata versions.py files
+                # that aren't in the current section.
+                # If there are, then combine these and write them out first
+                last_after_tag = None
+                last_after_tag = self.fix_missing_macros(
+                    meta_dir, self.target_macros[meta_dir]["imports"]
+                )
+
+                if last_after_tag:
+                    self.target_macros[meta_dir]["before_tag"] = last_after_tag
+
                 print(
                     "[INFO] Writing macros to",
                     self.parse_application_section(meta_dir),
                 )
                 self.write_python_imports(meta_dir)
-                self.write_new_macro(meta_dir, full_command)
+                self.write_new_macro(
+                    meta_dir, full_command, self.target_macros[meta_dir]
+                )
                 self.sections_with_macro.append(meta_dir)
 
     ############################################################################
