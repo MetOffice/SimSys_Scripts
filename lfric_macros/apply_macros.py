@@ -703,7 +703,7 @@ class ApplyMacros:
             if alias:
                 imp_str += f" as {alias}"
             # Don't add versionXX_YY import statements
-            if re.match(r"from [\.]?version\d+_\d+ import \*", imp_str):
+            if re.match(r"from \.?version\d+_\d+ import \*", imp_str):
                 continue
             versions_file.insert(insertion_index, imp_str)
 
