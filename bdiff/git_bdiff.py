@@ -21,6 +21,7 @@ And then:
 
 import re
 import subprocess
+from pathlib import Path
 
 
 class GitBDiffError(Exception):
@@ -31,7 +32,9 @@ class GitBDiffNotGit(GitBDiffError):
     """Error if the target not part of a git repository."""
 
     def __init__(self, cmd):
-        super().__init__("not a repository (cmd:" + " ".join(cmd) + ")")
+        super().__init__(
+            "not a repository (cmd:" + " ".join([str(i) for i in cmd]) + ")"
+        )
 
 
 class GitBDiff:
@@ -46,8 +49,16 @@ class GitBDiff:
     # Match branch names
     _branch_pattern = re.compile(r"^(\S+)$")
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, repo=None):
         self.parent = parent or self.primary_branch
+
+        if repo is None:
+            self._repo = None
+        else:
+            self._repo = Path(repo)
+            if not self._repo.is_dir():
+                raise GitBDiffError(f"{repo} is not a directory")
+
         self.ancestor = self.get_branch_point()
         self.current = self.get_latest_commit()
         self.branch = self.get_branch_name()
@@ -112,15 +123,18 @@ class GitBDiff:
             if line != "":
                 yield line
 
-    @staticmethod
-    def run_git(args):
+    def run_git(self, args):
         """Run a git command and yield the output."""
 
         if isinstance(args, str):
             args = args.split()
         cmd = ["git"] + args
 
-        proc = subprocess.run(cmd, capture_output=True, check=False)
+        # Run the the command in the repo directory, capture the
+        # output, and check for errors.  The build in error check is
+        # not used to allow specific git errors to be treated more
+        # precisely
+        proc = subprocess.run(cmd, capture_output=True, check=False, cwd=self._repo)
 
         for line in proc.stderr.decode("utf-8").split("\n"):
             if line.startswith("fatal: not a git repository"):
