@@ -1,0 +1,7 @@
+Using 1 threads
+The following files have failed the UMDP3 compliance tests:
+File src/control/top_level/atm_step_4A.F90 :
+  Lowercase Fortran keywords not permitted
+  Line includes trailing whitespace character(s)
+
+[ERROR] There were a total of 2 compliance tests failures
