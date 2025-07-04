@@ -3,9 +3,9 @@
 This project is aimed to migrate the Met Office simulation systems repositories
 to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 
-
-> [!IMPORTANT] Pre-requisites to run the migration script
-> - Read access to the Met Office Science Repository [MOSRS](https://code.metoffice.gov.uk/trac/home) or the Met Office internal mirror (`svn://fcm1`).
+> [!NOTE] Pre-requisites to run the migration script
+>
+> - Read access to the Met Office Science Repository [MOSRS](https://code.metoffice.gov.uk/trac/home) or the Met Office internal mirror (~~`svn://fcm1`~~ `https://metomi/svn`).
 > - Optional Write access to the [Met Office GitHub organisation](https://github.com/MetOffice) for push to remote (usually, an admin).
 > - Tools: [`fcm`](https://metomi.github.io/fcm/doc/user_guide/introduction.html), [`git`](https://git-scm.com), [`gitlify`](https://github.com/MetOffice/gitlify), [`jq`](https://jqlang.org), and [`gh`](https://cli.github.com) available on the system.
 
@@ -28,7 +28,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
      - [x] Contact [metomi](https://github.com/metomi/mule) owner to deprecate their repository.
    - [x] `svn:gcom/main` (@trunk) → [gcom](https://github.com/MetOffice/gcom) (@trunk)
    - [x] `svn:jules/main` (@trunk) → [jules](https://github.com/MetOffice/jules) (@trunk)
-     - [ ] Check licence agreements, if going public.
+     - [ ] Check licence agreements, if going public. (_in progress..._)
      - [ ] Plan to migrate JULES documentation here.
    - [x] `svn:socrates/main` (@trunk) → [socrates](https://github.com/MetOffice/socrates) (@trunk)
    - [x] `svn:utils/shumlib` (@trunk) → [shumlib](https://github.com/MetOffice/shumlib) (@trunk)
@@ -38,7 +38,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [x] `svn:moci/main` (@trunk) → [moci](https://github.com/MetOffice/moci) (@trunk)
    - [x] `svn:lfric/LFRic` (@trunk) → [lfric_core](https://github.com/MetOffice/lfric_core) (@trunk)
      - [x] Repository already exists: ask for admin access to the repository.
-   - [x] `svn:lfric/GPL-utilities` (@trunk) → [lfri_gpl_utils](https://github.com/MetOffice/lfri_gpl_utils) (@trunk)
+   - [x] `svn:lfric/GPL-utilities` (@trunk) → [rose_picker](https://github.com/MetOffice/rose_picker) (@trunk)
    - [x] `svn:lfric_apps/main` (@trunk) → [lfric_apps](https://github.com/MetOffice/lfric_apps) (@trunk)
      - [ ] Propose `lfric_core` as a submodule in this repository?
    - [x] Check `config.json` is correct and up-to-date with MOSRS revisions.
@@ -50,24 +50,24 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [ ] `LICENCE`
    - [ ] `CONTRIBUTING.md` (CLA)
    - [ ] Correct Copyright statements, particularly in planned open-source repositories. (_in progress..._)
-   - [ ] Map SRS to GitHub username, where possible. (_in progress..._)
+   - [ ] ~~Map SRS to GitHub username, where possible.~~
 
 4. Testbed
    - [ ] Create additional `main` branches.
    - [ ] Test Fab (build tool) integration. (_in progress..._)
    - [ ] Test Simulation System workflows with GitHub.
-   - [ ] Make sure tags/releases are still functional.
-   - [ ] Update Working practices.
+   - [x] Make sure tags/releases are still functional.
+   - [ ] Update Working practices. (_in progress..._)
    - [ ] Allow limited number of developers to test their workflows.
-   - [ ] Add/update Templates.
+   - [ ] Add/update Templates. (_in progress..._)
 
 5. During SRS freeze
+   - [x] Test `trunk` and `main` are able to merge with different history.
    - [ ] Merge `trunk` in _future_ default (`main`) and delete `trunk`
 
 6. Update communication plan
-   - [ ] Update [Simulation Systems Discussion](https://github.com/MetOffice/simulation-systems/discussions/337)
-   - [ ] Engage in [Simulation Systems Q&A](https://github.com/MetOffice/simulation-systems/discussions/categories/questions-and-answers)
-
+   - [x] Update [Simulation Systems Discussion](https://github.com/MetOffice/simulation-systems/discussions/337)
+   - [x] Engage in [Simulation Systems Q&A](https://github.com/MetOffice/simulation-systems/discussions/categories/questions-and-answers)
 
 ## FAQ
 
