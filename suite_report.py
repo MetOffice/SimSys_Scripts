@@ -485,7 +485,7 @@ class SuiteReport:
                     proj_dict["repo mirror"], fcm_exec
                 )
                 proj_dict["repo link"] = re.sub(
-                    r"rev=[a-zA-z0-9.]+",
+                    r"rev=[a-zA-Z0-9.]+",
                     "rev=" + revision,
                     proj_dict["repo link"],
                 )
