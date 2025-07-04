@@ -479,7 +479,7 @@ class SuiteReport:
             # Final attempt to ensure the links have revision numbers and not
             # keywords which aren't evaluated in the browser.
             if proj_dict["repo link"] is not None and re.search(
-                r"rev=[a-zA-z]", proj_dict["repo link"]
+                r"rev=[a-zA-Z]", proj_dict["repo link"]
             ):
                 revision = self.revision_from_loc_layout(
                     proj_dict["repo mirror"], fcm_exec
