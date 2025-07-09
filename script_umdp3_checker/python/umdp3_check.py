@@ -98,11 +98,11 @@ def main():
         suite_mode = True
     
     # Set up threading
-    num_threads = int(os.environ.get('UMDP_CHECKER_THREADS', '1'))
-    if num_threads < 1:
+    max_threads = int(os.environ.get('UMDP_CHECKER_THREADS', '1'))
+    if max_threads < 1:
         print("UMDP_CHECKER_THREADS environment variable is invalid: overriding")
-        num_threads = 1
-    print(f"Using {num_threads} threads")
+        max_threads = 1
+    print(f"Using {max_threads} threads")
     
     # Set up cylc logging
     log_cylc = os.environ.get('CYLC_TASK_LOG_ROOT', '')
@@ -118,16 +118,17 @@ def main():
     
     # Start branch checking
     trunkmode, error_trunk = check_branch_info(branch, suite_mode)
+    print(f"Branch {branch} is {'trunk' if trunkmode else 'a branch'}")
     
     # Process files based on mode
     if trunkmode:
-        process_trunk_mode(branch, suite_mode, global_state, num_threads)
+        process_trunk_mode(branch, suite_mode, global_state, max_threads)
     else:
         process_branch_mode(branch, global_state)
     
     # Run checks
     exit_code = run_all_checks(global_state, dispatch_tables, 
-                              branch, trunkmode, num_threads, log_cylc)
+                              branch, trunkmode, max_threads, log_cylc)
     
     # Print results
     print_results(exit_code, global_state)
@@ -236,12 +237,14 @@ def process_branch_mode(branch: str, global_state: GlobalState):
         if match := re.search(r'^(A|M+)\s*(\S+)$', line):
             modified_file = normalize_path(match.group(2), branch)
             global_state.add_file(modified_file)
-        
+            print(f"DEBUG : Added a modified file: {modified_file}")
+
         # Deleted files
         elif match := re.search(r'^D\s*(\S+)$', line):
             deleted_file = normalize_path(match.group(1), branch)
             global_state.add_deletion(deleted_file)
-    
+            print(f"DEBUG : Added a deleted file: {deleted_file}")
+
     # Process diff to get added lines
     store_line = False
     current_file = ""
@@ -259,9 +262,10 @@ def process_branch_mode(branch: str, global_state: GlobalState):
             line_content = line[1:]  # Remove the '+' prefix
             if current_file in global_state.additions:
                 global_state.additions[current_file].append(line_content)
+                #print(f"DEBUG : Added a line in modified file: {modified_file}")
 
 def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState, 
-                      num_threads: int):
+                      max_threads: int):
     """Process files in trunk mode"""
     external_checks = ["shumlib", "meta", "ukca"]
     filepath_mapping = {'meta': 'um_meta'}
@@ -326,27 +330,28 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
         sys.exit(f"Error: no files in {branch}")
     
     # Process files with threading
-    process_trunk_files_threaded(branchls, global_state, num_threads, suite_mode)
+    process_trunk_files_threaded(branchls, global_state, max_threads, suite_mode)
 
 def process_trunk_files_threaded(branchls: List[str], global_state: GlobalState, 
-                                num_threads: int, suite_mode: bool):
+                                max_threads: int, suite_mode: bool):
     """Process trunk files using threads"""
     # Filter out directories
     files = [line.rstrip() for line in branchls if not line.endswith('/')]
     
-    if len(files) < num_threads:
-        num_threads = len(files)
+    if len(files) < max_threads:
+        max_threads = len(files)
     
     # Use ThreadPoolExecutor for better thread management
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
         # Split work into chunks
-        chunk_size = max(1, len(files) // (3 * num_threads))
-        chunks = [files[i:i + chunk_size] for i in range(0, len(files), chunk_size)]
+        #chunk_size = max(1, len(files) // (3 * num_threads))
+        #chunks = [files[i:i + chunk_size] for i in range(0, len(files), chunk_size)]
         
         # Submit tasks
         futures = []
-        for chunk in chunks:
-            future = executor.submit(trunk_files_parse, chunk, global_state, suite_mode)
+        #for chunk in chunks:
+        for file in files: # DEBUG :
+            future = executor.submit(trunk_files_parse, [file], global_state, suite_mode)
             futures.append(future)
         
         # Wait for completion
@@ -374,7 +379,7 @@ def trunk_files_parse(file_chunk: List[str], global_state: GlobalState,
     return 0
 
 def run_all_checks(global_state: GlobalState, dispatch_tables: UMDP3DispatchTables,
-                   branch: str, trunkmode: bool, num_threads: int, 
+                   branch: str, trunkmode: bool, max_threads: int, 
                    log_cylc: str) -> int:
     """Run all compliance checks"""
     add_keys = global_state.get_files()
@@ -383,28 +388,41 @@ def run_all_checks(global_state: GlobalState, dispatch_tables: UMDP3DispatchTabl
         return 0
     
     # Adjust thread count if needed
-    if len(add_keys) < num_threads:
-        num_threads = len(add_keys)
+    if len(add_keys) < max_threads:
+        max_threads = len(add_keys)
+    #num_threads = len(add_keys) # DEBUG :
     
     # Initialize thread outputs
-    global_state.output_threads = [[] for _ in range(num_threads)]
-    global_state.exit_threads = [0] * num_threads
+    global_state.output_threads = [[] for _ in range(len(add_keys))]
+    global_state.exit_threads = [0] * len(add_keys)
     
     # Use ThreadPoolExecutor for checks
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        chunk_size = max(1, len(add_keys) // (3 * num_threads))
-        chunks = [add_keys[i:i + chunk_size] for i in range(0, len(add_keys), chunk_size)]
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
+        # DEBUG : I think dividing the list of files into "chunks" here is erroneous
+        # I see no issues with running 1 thread per file
+        #chunk_size = max(1, len(add_keys) // (3 * num_threads))
+        #print(f"DEBUG : Running checks on {len(add_keys)} files using {num_threads} threads")
+        #print(f"DEBUG : Chunk size for files is {chunk_size}")
+        #chunks = [add_keys[i:i + chunk_size] for i in range(0, len(add_keys), chunk_size)]
+        #print(f"DEBUG : chunks is {chunks}")
+
         
         futures = []
-        for i, chunk in enumerate(chunks):
-            if i >= num_threads:
-                break
-            future = executor.submit(run_checks, chunk, global_state, 
+        for i, file in enumerate(add_keys):
+            # DEBUG : I think this is unnecessary
+            #if i >= num_threads:
+            #    print(f"DEBUG : Reached maximum number of threads ({num_threads})")
+            #    break
+            future = executor.submit(run_checks, [file], global_state,
                                    dispatch_tables, branch, trunkmode, i, log_cylc)
             futures.append(future)
         
         # Wait for completion
+        print("DEBUG : Waiting for threads to complete")
+        print(f"DEBUG : {len(futures)} threads submitted")
         for future in as_completed(futures):
+            print("DEBUG : Thread completed")
+            # Handle exceptions in threads
             try:
                 future.result()
             except Exception as e:
@@ -417,6 +435,8 @@ def run_checks(file_chunk: List[str], global_state: GlobalState,
                trunkmode: bool, thread_id: int, log_cylc: str) -> int:
     """Run checks for a chunk of files"""
     for modified_file in file_chunk:
+        print(f"DEBUG : Running checks for {modified_file} in thread {thread_id}")
+        print(f"DEBUG : file_chunk is {file_chunk}")
         failed = 0
         failed_tests = []
         is_c_file = False
@@ -460,6 +480,7 @@ def run_checks(file_chunk: List[str], global_state: GlobalState,
             # Run diff tests
             umdp3 = UMDP3()
             for testname, test_func in dispatch_table_diff.items():
+                #print(f"DEBUG : Running diff test {testname} for {modified_file}")
                 umdp3.reset_extra_error_information()
                 answer = test_func(added_lines)
                 extra_error = umdp3.get_extra_error_information()
