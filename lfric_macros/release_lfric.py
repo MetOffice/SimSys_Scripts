@@ -107,8 +107,6 @@ def find_meta_dirs(paths, exclude_dirs=None):
     directories.
     """
 
-
-
     if exclude_dirs is None:
         exclude_dirs = []
 
@@ -411,11 +409,19 @@ def main():
     set_dependency_path(args)
 
     # Find all metadata directories, excluing jules shared and lfric inputs as these have metadata but no macros.
-    exclude_dirs = [".svn", "rose-stem", "integration-test", "lfric-jules-shared", "lfricinputs"]
+    exclude_dirs = [
+        ".svn",
+        "rose-stem",
+        "integration-test",
+        "lfric-jules-shared",
+        "lfricinputs",
+    ]
     meta_dirs = find_meta_dirs([args.apps, args.core], exclude_dirs)
 
     # Find JULES shared metadata directories and combine with all other metadirs for where they are handled differently
-    jules_meta_path = os.path.join(args.apps, "interfaces", "jules_interface", "rose-meta", "lfric-jules-shared")
+    jules_meta_path = os.path.join(
+        args.apps, "interfaces", "jules_interface", "rose-meta", "lfric-jules-shared"
+    )
     jules_shared_meta_dirs = find_meta_dirs([jules_meta_path])
     meta_dirs_plus_jules = meta_dirs.union(jules_shared_meta_dirs)
 
