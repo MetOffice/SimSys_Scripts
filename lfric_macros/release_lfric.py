@@ -99,16 +99,13 @@ def set_dependency_path(args):
         f.write("".join(x for x in lines))
 
 
-def find_meta_dirs(paths, exclude_dirs=None):
+def find_meta_dirs(paths, exclude_dirs=()):
     """
     Return a set of rose-metadata directories that can be found in the apps and
     core sources. Done by seaching for rose-meta.conf files. Records the parent
     directory of the current one, as rose-meta.conf files end up in HEAD/vnX.Y
     directories.
     """
-
-    if exclude_dirs is None:
-        exclude_dirs = []
 
     dirs = set()
     for path in paths:
@@ -409,13 +406,13 @@ def main():
     set_dependency_path(args)
 
     # Find all metadata directories, excluing jules shared and lfric inputs as these have metadata but no macros.
-    exclude_dirs = [
+    exclude_dirs = (
         ".svn",
         "rose-stem",
         "integration-test",
         "lfric-jules-shared",
         "lfricinputs",
-    ]
+    )
     meta_dirs = find_meta_dirs([args.apps, args.core], exclude_dirs)
 
     # Find JULES shared metadata directories and combine with all other metadirs for where they are handled differently
