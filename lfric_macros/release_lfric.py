@@ -99,7 +99,7 @@ def set_dependency_path(args):
         f.write("".join(x for x in lines))
 
 
-def find_meta_dirs(paths):
+def find_meta_dirs(paths, exclude_dirs=()):
     """
     Return a set of rose-metadata directories that can be found in the apps and
     core sources. Done by seaching for rose-meta.conf files. Records the parent
@@ -107,12 +107,10 @@ def find_meta_dirs(paths):
     directories.
     """
 
-    print("[INFO] Finding rose metadata directories")
-
     dirs = set()
     for path in paths:
+        print("[INFO] Finding rose metadata directories in", path)
         for dirpath, dirnames, filenames in os.walk(path):
-            exclude_dirs = [".svn", "rose-stem", "integration-test"]
             dirnames[:] = [d for d in dirnames if d not in exclude_dirs]
             if "rose-meta.conf" in filenames:
                 dirs.add(os.path.dirname(dirpath))
@@ -407,7 +405,22 @@ def main():
 
     set_dependency_path(args)
 
-    meta_dirs = find_meta_dirs([args.apps, args.core])
+    # Find all metadata directories, excluing jules shared and lfric inputs as these have metadata but no macros.
+    exclude_dirs = (
+        ".svn",
+        "rose-stem",
+        "integration-test",
+        "lfric-jules-shared",
+        "lfricinputs",
+    )
+    meta_dirs = find_meta_dirs([args.apps, args.core], exclude_dirs)
+
+    # Find JULES shared metadata directories and combine with all other metadirs for where they are handled differently
+    jules_meta_path = os.path.join(
+        args.apps, "interfaces", "jules_interface", "rose-meta", "lfric-jules-shared"
+    )
+    jules_shared_meta_dirs = find_meta_dirs([jules_meta_path])
+    meta_dirs_plus_jules = meta_dirs.union(jules_shared_meta_dirs)
 
     update_version_number(args)
 
@@ -426,7 +439,7 @@ def main():
     )
     print("\n[INFO] Successfully upgraded apps")
 
-    copy_head_meta(meta_dirs, args)
+    copy_head_meta(meta_dirs_plus_jules, args)
 
     update_meta_import_path(meta_dirs, args)
 
