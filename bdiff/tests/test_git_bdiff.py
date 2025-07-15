@@ -19,12 +19,12 @@ from git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit
 # pylint: disable=redefined-outer-name
 
 
-def add_to_repo(start, end, message):
+def add_to_repo(start, end, message, mode="wt"):
     """Add and commit dummy files to a repo."""
 
     for i in range(start, end):
-        with open(f"file{i}", "wt", encoding="utf-8") as fd:
-            print(f"Hello {i}", file=fd)
+        with open(f"file{i}", mode, encoding="utf-8") as fd:
+            print(f"Lorem ipsum dolor sit amet {i}", file=fd)
 
     subprocess.run(["git", "add", "-A"], check=True)
     subprocess.run(["git", "commit", "--no-gpg-sign", "-m", message], check=True)
@@ -52,6 +52,11 @@ def git_repo(tmpdir_factory):
     # Create a branch from main without any changes
     subprocess.run(["git", "checkout", "main"], check=True)
     subprocess.run(["git", "checkout", "-b", "unchanged"], check=True)
+
+    # Create a branch from main and overwrite some things
+    subprocess.run(["git", "checkout", "main"], check=True)
+    subprocess.run(["git", "checkout", "-b", "overwrite"], check=True)
+    add_to_repo(0, 10, "Overwriting", "at")
 
     # Switch back to the main branch ready for testing
     subprocess.run(["git", "checkout", "main"], check=True)
@@ -134,6 +139,23 @@ def test_branch_of_branch_diff(git_repo):
     assert len(changes) == 20
     assert changes[0] == "file20"
     assert changes[-1] == "file49"
+
+
+def test_overwritten_branch(git_repo):
+    """Test a diff of a branch with changed files."""
+
+    os.chdir(git_repo)
+    subprocess.run(["git", "checkout", "overwrite"], check=True)
+    try:
+        bdiff = GitBDiff()
+        changes = list(bdiff.files())
+    finally:
+        subprocess.run(["git", "checkout", "main"], check=True)
+
+    assert bdiff.branch == "overwrite"
+    assert bdiff.is_branch
+    assert bdiff.has_diverged
+    assert len(changes) == 10
 
 
 def test_unchanged_branch(git_repo):

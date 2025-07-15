@@ -126,15 +126,17 @@ class GitBDiff:
     def run_git(self, args):
         """Run a git command and yield the output."""
 
-        if isinstance(args, str):
-            args = args.split()
+        if not isinstance(args, list):
+            raise TypeError("args must be a list")
         cmd = ["git"] + args
 
         # Run the the command in the repo directory, capture the
         # output, and check for errors.  The build in error check is
         # not used to allow specific git errors to be treated more
         # precisely
-        proc = subprocess.run(cmd, capture_output=True, check=False, cwd=self._repo)
+        proc = subprocess.run(
+            cmd, capture_output=True, check=False, shell=False, cwd=self._repo
+        )
 
         for line in proc.stderr.decode("utf-8").split("\n"):
             if line.startswith("fatal: not a git repository"):
