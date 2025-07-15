@@ -49,7 +49,7 @@ def git_repo(tmpdir_factory):
     subprocess.run(["git", "checkout", "-b", "subbranch"], check=True)
     add_to_repo(40, 50, "Commit to subbranch")
 
-    # Create an branch from main without any changes
+    # Create a branch from main without any changes
     subprocess.run(["git", "checkout", "main"], check=True)
     subprocess.run(["git", "checkout", "-b", "unchanged"], check=True)
 
@@ -70,10 +70,10 @@ def test_init(git_repo):
     assert not bdiff.is_branch
     assert not bdiff.has_diverged
 
-    
+
 def test_repo_selection(git_repo):
     """Test selection of repository directory."""
-    
+
     os.chdir("/")
     bdiff = GitBDiff(repo=git_repo)
 
@@ -82,7 +82,7 @@ def test_repo_selection(git_repo):
     assert not bdiff.is_branch
     assert not bdiff.has_diverged
 
-    
+
 def test_invalid_repo_selection(git_repo):
     """Test non-existent repo or plain file raises an error"""
 

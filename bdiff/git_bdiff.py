@@ -44,10 +44,10 @@ class GitBDiff:
     primary_branch = "main"
 
     # Match hex commit IDs
-    _hash_pattern = re.compile(r"^([0-9a-f]+)$")
+    _hash_pattern = re.compile(r"^\s*([0-9a-f]+)\s*$")
 
     # Match branch names
-    _branch_pattern = re.compile(r"^(\S+)$")
+    _branch_pattern = re.compile(r"^\s*(\S+)\s*$")
 
     def __init__(self, parent=None, repo=None):
         self.parent = parent or self.primary_branch
@@ -140,7 +140,7 @@ class GitBDiff:
             if line.startswith("fatal: not a git repository"):
                 raise GitBDiffNotGit(cmd)
             if line.startswith("fatal: "):
-                raise GitBDiffError(line[7:].rstrip())
+                raise GitBDiffError(line[7:])
 
         if proc.returncode != 0:
             raise GitBDiffError(f"command returned {proc.returncode}")
