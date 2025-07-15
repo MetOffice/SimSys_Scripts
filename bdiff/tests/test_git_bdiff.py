@@ -181,11 +181,12 @@ def test_non_repo(tmpdir):
 
     os.chdir(tmpdir)
 
-    with pytest.raises(GitBDiffNotGit):
+    with pytest.raises(GitBDiffNotGit) as exc:
         GitBDiff()
+    assert "not a repository" in str(exc.value)
 
 
-def test_unknown_parent(git_repo):
+def test_nonexistent_parent(git_repo):
     """Test exception if parent branch does not exist.
 
     This is a proxy test for the detection of all sorts of git
@@ -194,5 +195,24 @@ def test_unknown_parent(git_repo):
 
     os.chdir(git_repo)
 
-    with pytest.raises(GitBDiffError):
+    with pytest.raises(GitBDiffError) as exc:
         GitBDiff(parent="nosuch")
+    assert "Not a valid object name nosuch" in str(exc.value)
+
+
+def test_git_run(git_repo):
+    """Test git interface and error handling."""
+
+    bdiff = GitBDiff()
+
+    with pytest.raises(TypeError) as exc:
+        # Use a string in place of a list
+        for i in bdiff.run_git("commit -m ''"):
+            pass
+    assert "args must be a list" in str(exc.value)
+
+    with pytest.raises(GitBDiffError) as exc:
+        # Run a command that should return non-zero
+        for i in bdiff.run_git(["commit", "-m", "''"]):
+            pass
+    assert "command returned 1" in str(exc.value)
