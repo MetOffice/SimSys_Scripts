@@ -765,7 +765,9 @@ class ApplyMacros:
             ):
                 # Add a comment labelling where these commands came from
                 # Check the comment hasn't already been added
-                if not re.search(r"Commands From: \w+", self.target_macros[meta_import]["commands"]):
+                if not re.search(
+                    r"Commands From: \w+", self.target_macros[meta_import]["commands"]
+                ):
                     full_command += (
                         "        # Commands From: "
                         f"{self.parse_application_section(meta_import)}\n"
