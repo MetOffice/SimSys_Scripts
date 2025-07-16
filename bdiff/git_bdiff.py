@@ -44,7 +44,7 @@ class GitBDiff:
     primary_branch = "main"
 
     # Match hex commit IDs
-    _hash_pattern = re.compile(r"^\s*([0-9a-f]+)\s*$")
+    _hash_pattern = re.compile(r"^\s*([0-9a-f]{40})\s*$")
 
     # Match branch names
     _branch_pattern = re.compile(r"^\s*(\S+)\s*$")
