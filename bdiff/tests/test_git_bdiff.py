@@ -207,12 +207,10 @@ def test_git_run(git_repo):
 
     with pytest.raises(TypeError) as exc:
         # Use a string in place of a list
-        for i in bdiff.run_git("commit -m ''"):
-            pass
+        list(i for i in bdiff.run_git("commit -m ''"))
     assert "args must be a list" in str(exc.value)
 
     with pytest.raises(GitBDiffError) as exc:
         # Run a command that should return non-zero
-        for i in bdiff.run_git(["commit", "-m", "''"]):
-            pass
+        list(i for i in bdiff.run_git(["commit", "-m", "''"]))
     assert "command returned 1" in str(exc.value)
