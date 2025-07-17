@@ -46,8 +46,11 @@ class GitBDiff:
     # Match hex commit IDs
     _hash_pattern = re.compile(r"^\s*([0-9a-f]{40})\s*$")
 
-    # Match branch names
-    _branch_pattern = re.compile(r"^\s*(\S+)\s*$")
+    # Match branch names.  This should catch all valid names but may
+    # also some invalid names through.  This should matter given that
+    # it is being used to match git command output.  For a complete
+    # overview of the naming scheme, see man git check-ref-format
+    _branch_pattern = re.compile(r"^\s*([^\s~\^\:\?\*\[]+[^.])\s*$")
 
     def __init__(self, parent=None, repo=None):
         self.parent = parent or self.primary_branch
