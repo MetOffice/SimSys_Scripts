@@ -21,7 +21,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Tuple, Optional, Set
 import queue
-import magic
+#import magic
 from dataclasses import dataclass
 
 # Import our modules
@@ -44,21 +44,25 @@ class GlobalState:
     deletions: Dict[str, List[str]]
     output_threads: List[List[str]]
     exit_threads: List[int]
-    includes_hash: Set[str]
+    fortran_includes: Set[str]
     
-    def __init__(self):
+    def __init__(self, fortran_includes: Optional[Set[str]] = None):
         self.additions = {}
         self.deletions = {}
         self.output_threads = []
         self.exit_threads = []
-        self.includes_hash = set()
+        self.fortran_includes = fortran_includes or set()
         self._lock = threading.Lock()
     
     def add_file(self, filename: str, lines: List[str] = None):
+        '''Dictionary where the keys are the names of files added or modified
+        in the branch being examined'''
         with self._lock:
             self.additions[filename] = lines or []
     
     def add_deletion(self, filename: str):
+        '''Dictionary where the keys are the names of files deleted in the
+        branch being examined'''
         with self._lock:
             self.deletions[filename] = []
     
@@ -96,7 +100,9 @@ def main():
         branch = os.environ['SOURCE_UM_MIRROR']
         print(f"Redirecting branch to {branch}")
         suite_mode = True
-    
+    else:
+        print("Not running in suite mode.")
+
     # Set up threading
     max_threads = int(os.environ.get('UMDP_CHECKER_THREADS', '1'))
     if max_threads < 1:
@@ -110,22 +116,25 @@ def main():
         print(f"Using cylc logging directory: {log_cylc}")
     
     # Initialize global state
-    global_state = GlobalState()
-    global_state.includes_hash = set(includes)
+    global_state = GlobalState(set(includes))
+    #global_state.fortran_includes = set(includes)
     
     # Initialize dispatch tables
     dispatch_tables = UMDP3DispatchTables()
     
     # Start branch checking
     trunkmode, error_trunk = check_branch_info(branch, suite_mode)
-    print(f"Branch {branch} is {'trunk' if trunkmode else 'a branch'}")
+    print(f"DEBUG : Branch {branch} is {'trunk' if trunkmode else 'a branch'}")
     
     # Process files based on mode
     if trunkmode:
-        process_trunk_mode(branch, suite_mode, global_state, max_threads)
+        file_list = process_trunk_mode(branch, suite_mode, global_state, max_threads)
+        file_list = [f"{branch}/{file}" for file in file_list]
+        process_trunk_files_threaded(file_list, global_state, max_threads, suite_mode)
     else:
-        process_branch_mode(branch, global_state)
-    
+        file_list = process_branch_mode(branch, global_state)
+
+    print(f"DEBUG : Processed {len(file_list)} files in file list")
     # Run checks
     exit_code = run_all_checks(global_state, dispatch_tables, 
                               branch, trunkmode, max_threads, log_cylc)
@@ -330,7 +339,8 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
         sys.exit(f"Error: no files in {branch}")
     
     # Process files with threading
-    process_trunk_files_threaded(branchls, global_state, max_threads, suite_mode)
+    #process_trunk_files_threaded(branchls, global_state, max_threads, suite_mode)
+    return branchls
 
 def process_trunk_files_threaded(branchls: List[str], global_state: GlobalState, 
                                 max_threads: int, suite_mode: bool):
@@ -374,7 +384,7 @@ def trunk_files_parse(file_chunk: List[str], global_state: GlobalState,
                 file_lines = cat_file(file_path if suite_mode else f"{file_path}")
                 global_state.add_file(modified_file, file_lines)
             except Exception as e:
-                print(f"Error reading file {file_path}: {e}")
+                print(f"Error reading file 1 {file_path}: {e}")
     
     return 0
 
@@ -444,7 +454,7 @@ def run_checks(file_chunk: List[str], global_state: GlobalState,
         
         # Check if it's an include file
         if modified_file.endswith('.h'):
-            if modified_file in global_state.includes_hash:
+            if modified_file in global_state.fortran_includes:
                 components = modified_file.split('/')
                 if (components[0] == 'src' and 
                     len(components) >= 3 and components[-2] == 'include' and 
@@ -523,7 +533,8 @@ def run_checks(file_chunk: List[str], global_state: GlobalState,
             # Detect file type using python-magic
             try:
                 file_content = '\n'.join(file_lines)
-                mimetype = magic.from_buffer(file_content.encode(), mime=True)
+                #mimetype = magic.from_buffer(file_content.encode(), mime=True)
+                mimetype = 'text/plain'
             except:
                 mimetype = 'text/plain'
             
@@ -719,7 +730,7 @@ def cat_file(url: str) -> List[str]:
             with open(url, 'r', encoding='utf-8', errors='ignore') as f:
                 return f.read().splitlines()
     except Exception as e:
-        raise Exception(f"Error reading file {url}: {e}")
+        raise Exception(f"Error reading file 2 {url}: {e}")
 
 def read_file(filename: str) -> List[str]:
     """Read a file and return lines"""

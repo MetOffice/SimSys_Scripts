@@ -241,7 +241,7 @@ if ( grep( /Working\sCopy\sRoot\sPath:/sxm, @info ) ) {
 $branch =~ s{/$}{}sxm;
 
 print "Testing branch $branch\n";
-
+# If we are not in trunk mode
 if ( $trunkmode == 0 ) {
 
     if ($repository_relative_path) {
@@ -360,7 +360,7 @@ if ( $trunkmode == 0 ) {
 my @external_checks = ( "shumlib", "meta", "ukca" );
 my %filepath_mapping = ( 'meta' => 'um_meta' );
 my @extracts = ();
-
+# If we are not in trunk mode
 if ( $trunkmode == 0 ) {
     if ($suite_mode) {
 
@@ -429,10 +429,11 @@ if ( $trunkmode == 0 ) {
     }
 }
 else {
+# we are in trunk mode
     @extracts = ( "", "um" );
     push @extracts, @external_checks;
 }
-
+# If we are in trunk mode
 if ( $trunkmode == 1 ) {
 
     #trunk mode: cat all the source files to %additions
@@ -488,7 +489,7 @@ if ( $trunkmode == 1 ) {
         $repository_working_path =
           "(" . $cs_env . "|" . $repository_working_path . ")";
         $repository_relative_path = "";
-
+        print "In Trunk mode, and suite mode : no. of files to check: ". scalar(@branchls) . "\n";
     }
     else {
 
@@ -498,7 +499,7 @@ if ( $trunkmode == 1 ) {
         unless ( $returncode == 0 ) {
             die "Error running ' fcm ls -R $branch':\n@branchls\n";
         }
-
+        print "In Trunk mode, but not suite mode : no. of files to check: ". scalar(@branchls) . "\n";
     }
 
     # check there are some files availible to test!
@@ -619,7 +620,7 @@ my %includes_hash;
 @includes_hash{@includes} = ();
 
 my @add_keys = keys %additions;
-
+print "About to process ", $#add_keys, " if you got this far \n";
 # only run checks if there is at least one file to check
 if ( $#add_keys >= 0 ) {
 
