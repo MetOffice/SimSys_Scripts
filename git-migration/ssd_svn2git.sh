@@ -142,7 +142,7 @@ process_repositories() {
   max_jobs=${BATCH:-$(nproc)}
   TIMESTAMP=$(date +'%Y%m%dT%H%M%S')
   LOG_DIR="${WORKDIR}/logs/${TIMESTAMP}"
-  mkdir -p "$LOG_DIR"
+  (( DRY_RUN )) || mkdir -p "$LOG_DIR"
   while read -r repo; do
     local repo_name trunk svn_url
     repo_name=$(jq -r '.name' <<<"$repo")
@@ -150,7 +150,8 @@ process_repositories() {
     trunk=$(jq -r '.trunk' <<<"$repo")
     svn_url="${SVN_PREFIX}/${trunk}"
     if (( FROM_MIRROR )); then
-      svn_url="svn://fcm1/${trunk////.xm_svn/}"
+      # svn_url="svn://fcm1/${trunk////.xm_svn/}"  # dropped in June 2025
+      svn_url="https://metomi/svn/${trunk////.xm/}"
     fi
     if (( DRY_RUN )); then
       printf "%-.56s %s\n" \
