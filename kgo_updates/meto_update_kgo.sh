@@ -71,6 +71,8 @@ if [[ $platforms == *"ex1a"* ]]; then
             break
         fi
     done
+else
+    ex_kgo_host="unset"
 fi
 read -rp "Suite Name: " suite_name
 read -rp "Enter the path to the merged trunk WC (top directory): " wc_path
