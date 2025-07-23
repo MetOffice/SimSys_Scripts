@@ -292,17 +292,24 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
                 print('\n'.join(host_sources))
                 
                 for repo in external_checks:
+                    print(f"DEBUG :Looking at repo: {repo}")
                     o_repo = repo
                     if repo in filepath_mapping:
+                        print(f"DEBUG : {repo} is in filepath_mapping, mapping to {filepath_mapping[repo]}")
                         repo = filepath_mapping[repo]
+                        print(f"DEBUG : Mapped repo is now {repo}")
                     
                     host_var_name = f"HOST_SOURCE_{repo.upper()}"
                     env_var_res = os.environ.get(host_var_name, '')
+                    print
                     
                     if not any(f'{host_var_name}=' in line for line in host_sources):
                         print(f"{host_var_name} modified in environment. "
                               f"Running full check on this repository")
                         extracts.append(o_repo)
+                    else:
+                        print(f"DEBUG : {host_var_name} not modified in environment. "
+                              f"Skipping full check on this repository")
         
         # Check for rose-suite.conf modifications
         if "rose-stem/rose-suite.conf" in global_state.additions:
@@ -324,16 +331,20 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
         extracts = list(set(extracts))
         if extracts:
             extracts.insert(0, "")
+        print(f"DEBUG : Extracts for trunk + suite mode: {extracts}")
     else:
         extracts = ["", "um"] + external_checks
-    
+        print(f"DEBUG : Extracts for trunk mode (but not suite): {extracts}")
+
     # Get file list
     if suite_mode:
         branchls = get_suite_file_list(extracts)
+        print(f"DEBUG : Found {len(branchls)} files in suite mode using 'get_suite_file_list'")
     else:
         branchls, returncode = run_fcm_command(f'ls -R {branch}')
         if returncode != 0:
             sys.exit(f"Error running 'fcm ls -R {branch}':\n" + '\n'.join(branchls))
+        print(f"DEBUG : Found {len(branchls)} files in trunk mode using 'fcm ls -R {branch}'")
     
     if not branchls:
         sys.exit(f"Error: no files in {branch}")
