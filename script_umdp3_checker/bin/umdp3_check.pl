@@ -363,7 +363,7 @@ my @extracts = ();
 # If we are not in trunk mode
 if ( $trunkmode == 0 ) {
     if ($suite_mode) {
-
+        print "DEBUG : Running in suite mode (but not trunk)- extracting sources from the suite\n";
         # enable trunkmode for specific repositories if the environment does
         # not match rose-stem/rose-suite.conf
 
@@ -394,6 +394,8 @@ if ( $trunkmode == 0 ) {
 
     }
 
+    print "DEBUG : Running in not trunk mode, but for both suite and non-suite"
+          ."- extracting sources from the branch\n";
     # enable trunkmode for specific repositories if rose-stem/rose-suite.conf
     # is modified
     if ( exists $additions{"rose-stem/rose-suite.conf"} ) {
@@ -427,11 +429,14 @@ if ( $trunkmode == 0 ) {
         $error_trunk = 1;
         unshift @extracts, "";
     }
+    print "DEBUG : Extracts to check: @extracts\n";
 }
 else {
 # we are in trunk mode
+    print "DEBUG : Running in trunk mode (but not checking suite) \n";
     @extracts = ( "", "um" );
     push @extracts, @external_checks;
+    print "DEBUG : Extracts to check: @extracts\n";
 }
 # If we are in trunk mode
 if ( $trunkmode == 1 ) {
@@ -448,6 +453,8 @@ if ( $trunkmode == 1 ) {
 
         my $ss_env = $ENV{SCRIPT_SOURCE};
         my $extracts_path = join( " $ss_env/", @extracts );
+        print "DEBUG : at this point \$ss_env is $ss_env\n";
+        print "DEBUG : at this point \$extracts_path is $extracts_path\n";
 
         print "Using extracted source from path(s) : $extracts_path\n";
 

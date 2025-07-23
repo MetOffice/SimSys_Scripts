@@ -770,12 +770,14 @@ def normalize_trunk_path(path: str, suite_mode: bool) -> str:
 def get_suite_file_list(extracts: List[str]) -> List[str]:
     """Get file list for suite mode"""
     script_source = os.environ.get('SCRIPT_SOURCE', '')
+    print(f"DEBUG : SCRIPT_SOURCE is {script_source}")
     if not script_source:
         return []
     
     file_list = []
     
     for extract in extracts:
+        print(f"DEBUG : Looking for files in extract: {extract}, but probably never got here")
         if extract:
             extract_path = os.path.join(script_source, extract)
         else:
@@ -787,6 +789,7 @@ def get_suite_file_list(extracts: List[str]) -> List[str]:
                                   capture_output=True, text=True)
             if result.returncode == 0:
                 file_list.extend(result.stdout.splitlines())
+                print(f"DEBUG : Found {len(result.stdout.splitlines())} files in {extract_path}")
         except Exception:
             continue
     
