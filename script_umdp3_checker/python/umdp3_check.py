@@ -439,10 +439,10 @@ def run_all_checks(global_state: GlobalState, dispatch_tables: UMDP3DispatchTabl
             futures.append(future)
         
         # Wait for completion
-        print("DEBUG : Waiting for threads to complete")
+        #print("DEBUG : Waiting for threads to complete")
         print(f"DEBUG : {len(futures)} threads submitted")
         for future in as_completed(futures):
-            print("DEBUG : Thread completed")
+            #print("DEBUG : Thread completed")
             # Handle exceptions in threads
             try:
                 future.result()
@@ -456,8 +456,8 @@ def run_checks(file_chunk: List[str], global_state: GlobalState,
                trunkmode: bool, thread_id: int, log_cylc: str) -> int:
     """Run checks for a chunk of files"""
     for modified_file in file_chunk:
-        print(f"DEBUG : Running checks for {modified_file} in thread {thread_id}")
-        print(f"DEBUG : file_chunk is {file_chunk}")
+        #print(f"DEBUG : Running checks for {modified_file} in thread {thread_id}")
+        #print(f"DEBUG : file_chunk is {file_chunk}")
         failed = 0
         failed_tests = []
         is_c_file = False
