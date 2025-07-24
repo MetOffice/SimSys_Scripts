@@ -129,7 +129,7 @@ def main():
     # Process files based on mode
     if trunkmode:
         file_list = process_trunk_mode(branch, suite_mode, global_state, max_threads)
-        file_list = [f"{branch}/{file}" for file in file_list]
+        #file_list = [f"{branch}/{file}" for file in file_list]
         process_trunk_files_threaded(file_list, global_state, max_threads, suite_mode)
     else:
         file_list = process_branch_mode(branch, global_state)
