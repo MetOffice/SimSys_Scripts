@@ -279,6 +279,9 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
     external_checks = ["shumlib", "meta", "ukca"]
     filepath_mapping = {'meta': 'um_meta'}
     extracts = []
+
+    extracts = ["", "um"] + external_checks
+    print(f"DEBUG : Extracts for trunk mode (before suite check): {extracts}")
     
     if suite_mode:
         # Handle suite mode logic for external repositories
@@ -332,9 +335,6 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
         if extracts:
             extracts.insert(0, "")
         print(f"DEBUG : Extracts for trunk + suite mode: {extracts}")
-    else:
-        extracts = ["", "um"] + external_checks
-        print(f"DEBUG : Extracts for trunk mode (but not suite): {extracts}")
 
     # Get file list
     if suite_mode:
