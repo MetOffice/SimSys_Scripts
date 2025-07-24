@@ -382,8 +382,9 @@ if ( $trunkmode == 0 ) {
             }
             my $host_var_name = "HOST_SOURCE_" . uc($repo);
             my $env_var_res   = $ENV{$host_var_name};
-            if ( !grep /^$host_var_name=(\"|\')$env_var_res(\"|\')/,
-                @host_sources )
+            #if ( !grep /^$host_var_name=(\"|\')$env_var_res(\"|\')/, @host_sources )
+            my $pattern = qr/^$host_var_name=(["'])$env_var_res\1/;
+            if ( !grep $pattern, @host_sources )
             {
                 print $host_var_name
                   . " modified in environment."
@@ -429,14 +430,15 @@ if ( $trunkmode == 0 ) {
         $error_trunk = 1;
         unshift @extracts, "";
     }
-    print "DEBUG : Extracts to check: @extracts\n";
+    print "DEBUG : Extracts to check (not trunk mode): @extracts\n";
 }
 else {
 # we are in trunk mode
     print "DEBUG : Running in trunk mode (but not checking suite) \n";
     @extracts = ( "", "um" );
+    print "DEBUG : Extracts to check (pre push) $#extracts items : @extracts\n";
     push @extracts, @external_checks;
-    print "DEBUG : Extracts to check: @extracts\n";
+    print "DEBUG : Extracts to check (post push) $#extracts items : @extracts\n";
 }
 # If we are in trunk mode
 if ( $trunkmode == 1 ) {
