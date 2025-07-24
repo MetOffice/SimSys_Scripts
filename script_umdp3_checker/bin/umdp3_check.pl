@@ -384,7 +384,7 @@ if ( $trunkmode == 0 ) {
             my $env_var_res   = $ENV{$host_var_name};
             #if ( !grep /^$host_var_name=(\"|\')$env_var_res(\"|\')/, @host_sources )
             my $pattern = qr/^$host_var_name=(["'])$env_var_res\1/;
-            if ( !grep $pattern, @host_sources )
+            if ( !grep $pattern, @host_sources ) 
             {
                 print $host_var_name
                   . " modified in environment."

@@ -280,7 +280,7 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
     filepath_mapping = {'meta': 'um_meta'}
     extracts = []
 
-    extracts = ["", "um"] + external_checks
+    extracts = ["um"] + external_checks
     print(f"DEBUG : Extracts for trunk mode (before suite check): {extracts}")
     
     if suite_mode:
@@ -332,8 +332,6 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
         
         # Remove duplicates and set up extracts
         extracts = list(set(extracts))
-        #if extracts:
-        #    extracts.insert(0, "")
         print(f"DEBUG : Extracts for trunk + suite mode: {extracts}")
 
     # Get file list
