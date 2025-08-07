@@ -129,7 +129,7 @@ def main():
     # Process files based on mode
     if trunkmode:
         file_list = process_trunk_mode(branch, suite_mode, global_state, max_threads)
-        #file_list = [f"{branch}/{file}" for file in file_list]
+        #file_list = [f"{branch}/{file}" for file in file_list] # This was needed for WC of trunk - but not in suite mode
         process_trunk_files_threaded(file_list, global_state, max_threads, suite_mode)
     else:
         file_list = process_branch_mode(branch, global_state)
@@ -222,12 +222,13 @@ def check_branch_info(branch: str, suite_mode: bool) -> Tuple[bool, int]:
 
 def process_branch_mode(branch: str, global_state: GlobalState):
     """Process files in branch mode"""
-    # Get repository paths
+    """ # Get repository paths - this is commented out as 'info' is not used
     info, infocode = run_fcm_command(f'info {branch}')
     if infocode != 0:
         print("Error running fcm info:")
         print('\n'.join(info))
-        sys.exit("FCM error")
+        sys.exit("FCM error") """
+    file_list=[]
     
     # Get diff
     diff, diffcode = run_fcm_command(f'bdiff {branch}')
@@ -246,6 +247,7 @@ def process_branch_mode(branch: str, global_state: GlobalState):
         if match := re.search(r'^(A|M+)\s*(\S+)$', line):
             modified_file = normalize_path(match.group(2), branch)
             global_state.add_file(modified_file)
+            file_list.append(modified_file)
             print(f"DEBUG : Added a modified file: {modified_file}")
 
         # Deleted files
@@ -272,6 +274,7 @@ def process_branch_mode(branch: str, global_state: GlobalState):
             if current_file in global_state.additions:
                 global_state.additions[current_file].append(line_content)
                 #print(f"DEBUG : Added a line in modified file: {modified_file}")
+    return file_list
 
 def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState, 
                       max_threads: int):
