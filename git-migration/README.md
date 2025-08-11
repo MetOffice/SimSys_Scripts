@@ -3,7 +3,8 @@
 This project is aimed to migrate the Met Office simulation systems repositories
 to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 
-> [!NOTE] Pre-requisites to run the migration script
+> [!NOTE]
+> **Pre-requisites to run the migration script**
 >
 > - Read access to the Met Office Science Repository [MOSRS](https://code.metoffice.gov.uk/trac/home) or the Met Office internal mirror (~~`svn://fcm1`~~ `https://metomi/svn`).
 > - Optional Write access to the [Met Office GitHub organisation](https://github.com/MetOffice) for push to remote (usually, an admin).
@@ -11,7 +12,7 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
 
 ## Checklist
 
-1. Test `gitlify` translation tool
+1. Test `gitlify` translation tool :white_check_mark:
    - [x] Able to convert only svn trunk to Git.
    - [x] Able to map svn revisions to Git tag.
    - [x] Synchronise trunk updates locally in Git repositories.
@@ -22,14 +23,14 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
    - [x] `svn:um/aux` (@trunk) → [um_aux](https://github.com/MetOffice/um_aux) (@trunk)
    - [x] `svn:um/meta` (@trunk) → [um_meta](https://github.com/MetOffice/um_meta) (@trunk)
    - [x] `svn:um/doc` (@trunk) → [um_doc](https://github.com/MetOffice/um_doc) (@trunk)
-     - [x] Compress/convert large graphics in the repository consulting the authors/IAO, if possible. (_in progress..._)
+     - [x] Compress/convert large graphics in the repository consulting the authors/IAO, if possible.
      - [ ] Implement GitHub Action to build/deploy docs: test using [texlive docker image](https://hub.docker.com/r/texlive/texlive/tags?name=2018)
    - [x] `svn:um/mule` (@trunk) → [mule](https://github.com/MetOffice/mule) (@trunk)
      - [x] Contact [metomi](https://github.com/metomi/mule) owner to deprecate their repository.
    - [x] `svn:gcom/main` (@trunk) → [gcom](https://github.com/MetOffice/gcom) (@trunk)
    - [x] `svn:jules/main` (@trunk) → [jules](https://github.com/MetOffice/jules) (@trunk)
-     - [ ] Check licence agreements, if going public. (_in progress..._)
-     - [ ] Plan to migrate JULES documentation here.
+     - [x] Check licence agreements, if going public. (_JULES in progress..._)
+     - [ ] Plan to migrate JULES documentation here (post migration).
    - [x] `svn:socrates/main` (@trunk) → [socrates](https://github.com/MetOffice/socrates) (@trunk)
    - [x] `svn:utils/shumlib` (@trunk) → [shumlib](https://github.com/MetOffice/shumlib) (@trunk)
      - [x] Contact [metomi](https://github.com/metomi/shumlib) owner to deprecate their repository.
@@ -40,21 +41,23 @@ to Git ecosystem. See MetOffice/simulation-systems/discussions/337 for details.
      - [x] Repository already exists: ask for admin access to the repository.
    - [x] `svn:lfric/GPL-utilities` (@trunk) → [rose_picker](https://github.com/MetOffice/rose_picker) (@trunk)
    - [x] `svn:lfric_apps/main` (@trunk) → [lfric_apps](https://github.com/MetOffice/lfric_apps) (@trunk)
-     - [ ] Propose `lfric_core` as a submodule in this repository?
+     - [ ] Propose `lfric_core` as a submodule in this repository? (post migration)
+   - [x] `svn:monc/main` (@trunk) → [monc](https://github.com/MetOffice/monc) (@trunk)
    - [x] Check `config.json` is correct and up-to-date with MOSRS revisions.
 
-3. General updated for all repositories
+3. General updates for all repositories (during migration)
    - [x] All _private_ with specific team access only.
    - [x] Repository Description.
-   - [ ] `README.md`
-   - [ ] `LICENCE`
-   - [ ] `CONTRIBUTING.md` (CLA)
+   - [ ] `README.md` (_in progress..._)
+   - [ ] `LICENCE` (_in progress..._)
+   - [ ] `CONTRIBUTING.md` (CLA) (_in progress..._)
+   - [ ] Automated Code Quality checks via GitHub Action (_in progress..._)
    - [ ] Correct Copyright statements, particularly in planned open-source repositories. (_in progress..._)
    - [ ] ~~Map SRS to GitHub username, where possible.~~
 
 4. Testbed
    - [ ] Create additional `main` branches.
-   - [ ] Test Fab (build tool) integration. (_in progress..._)
+   - [ ] Test Fab (build tool) integration. (_post migration_)
    - [ ] Test Simulation System workflows with GitHub.
    - [x] Make sure tags/releases are still functional.
    - [ ] Update Working practices. (_in progress..._)
