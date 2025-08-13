@@ -4,6 +4,18 @@
 
 set -e
 
+# Set the expected username
+EXPECTED_USER="julesadmin"
+
+# Get the current username
+CURRENT_USER=$(whoami)
+
+# Check if the script is run by the expected user
+if [ "$CURRENT_USER" != "$EXPECTED_USER" ]; then
+    echo "Error: This script must be run as $EXPECTED_USER."
+    exit 1
+fi
+
 read -rp "KGO VERSION:" KGO_VERSION
 read -rp "USER NAME:" USER_NAME
 read -rp "SUITE/RUNX NAME:" SUITE
