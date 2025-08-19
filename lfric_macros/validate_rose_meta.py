@@ -128,7 +128,6 @@ def check_rose_stem_apps(meta_paths, source_path):
     """
 
     print("\n\n[INFO] - Validating rose-stem apps\n\n")
-    print(meta_paths)
     failed = False
 
     start_dir = os.path.join(source_path, "rose-stem", "app")
@@ -205,11 +204,11 @@ def main():
     rose_meta_path = ""
     if args.apps:
         source_path = args.apps
-        meta_paths += f"-M {args.apps}"
+        meta_paths += f"-M {os.path.join(args.apps, "rose-meta")}"
         rose_meta_path += args.apps
     elif args.core:
         source_path = args.core
-        meta_paths += f"-M {args.core} "
+        meta_paths += f"-M {os.path.join(args.core, "rose-meta")} "
         if rose_meta_path:
             rose_meta_path += f":{args.core}"
         else:
