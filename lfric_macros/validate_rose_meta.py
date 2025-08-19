@@ -128,6 +128,7 @@ def check_rose_stem_apps(meta_paths, source_path):
     """
 
     print("\n\n[INFO] - Validating rose-stem apps\n\n")
+    print(meta_paths)
     failed = False
 
     start_dir = os.path.join(source_path, "rose-stem", "app")
