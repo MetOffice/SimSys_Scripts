@@ -42,7 +42,7 @@ INVALID_APPS = [
 ]
 
 
-def run_command(command, shell=False, env=os.environ):
+def run_command(command, shell=False, env=None):
     """
     Run a subprocess command and return the result object
     Inputs:
@@ -52,6 +52,8 @@ def run_command(command, shell=False, env=os.environ):
     """
     if not shell:
         command = command.split()
+    if not env:
+        env = os.environ
     return subprocess.run(
         command,
         capture_output=True,
@@ -69,7 +71,7 @@ def check_rose_metadata(rose_meta_path, source_path):
     metadata-check` on each
     """
 
-    print(f"\n\n[INFO] - Checking rose metadata sections\n\n")
+    print("\n\n[INFO] - Checking rose metadata sections\n\n")
     failed = False
 
     # Add ROSE_META_PATH to env for rose metadata-check command
@@ -125,11 +127,11 @@ def check_rose_stem_apps(meta_paths, source_path):
     macro --validate'
     """
 
+    print("\n\n[INFO] - Validating rose-stem apps\n\n")
     failed = False
 
     start_dir = os.path.join(source_path, "rose-stem", "app")
     apps = os.listdir(start_dir)
-    print(f"\n\n[INFO] - Validating rose-stem apps\n\n")
     for app in apps:
         if app in INVALID_APPS:
             continue
@@ -193,6 +195,9 @@ def parse_args():
 
 
 def main():
+    """
+    main function for this script
+    """
     args = parse_args()
 
     meta_paths = ""
