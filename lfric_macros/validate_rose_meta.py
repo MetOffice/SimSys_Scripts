@@ -219,8 +219,9 @@ def main():
             "line argument"
         )
 
-    if check_rose_metadata(rose_meta_path, source_path) or
-       check_rose_stem_apps(meta_paths, source_path):
+    if check_rose_metadata(rose_meta_path, source_path) or check_rose_stem_apps(
+        meta_paths, source_path
+    ):
         sys.exit("There were metadata validation failures. See output for details")
     print("All metadata successfully validated")
 
