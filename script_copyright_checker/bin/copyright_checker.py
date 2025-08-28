@@ -13,13 +13,7 @@ import os
 import re
 from textwrap import wrap
 
-from fcm_bdiff import (
-    get_branch_diff_filenames,
-    get_branch_info,
-    get_url,
-    is_trunk,
-    use_mirror,
-)
+from git_bdiff import GitBDiff
 
 # Desired maximum column width for output - we make an exception
 # for filenames, which are always printed on a single line to aid
@@ -235,23 +229,13 @@ def parse_options():
     args = parser.parse_args()
 
     if args.full_trunk:
-        branch, retries = use_mirror("./")
-
-        # Get information about the branch
-        info = get_branch_info(branch, retries=retries)
-
-        branch_url = get_url(info)
-
-        if is_trunk(branch_url):
-            args.bdiff = False
-        else:
-            args.bdiff = True
+        args.bdiff = False
 
     if args.bdiff:
         # Filter the files returned by fcm bdiff to just the *.py ones
         args.files = [
             code_file
-            for code_file in get_branch_diff_filenames("./", args.base_path)
+            for code_file in GitBDiff(repo=args.base_path).files()
             if _FILENAME_FILTER.match(code_file)
         ]
     return args
