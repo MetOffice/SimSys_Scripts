@@ -229,15 +229,16 @@ def parse_options():
     args = parser.parse_args()
 
     if args.full_trunk:
-        args.bdiff = False
+        args.bdiff = True
 
     if args.bdiff:
         # Filter the files returned by fcm bdiff to just the *.py ones
         args.files = [
             code_file
-            for code_file in GitBDiff(repo=args.base_path).files()
+            for code_file in GitBDiff(repo=args.base_path, parent="trunk").files()
             if _FILENAME_FILTER.match(code_file)
         ]
+    print(args.files)
     return args
 
 
