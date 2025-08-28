@@ -116,6 +116,8 @@ def parse_suite_controlled(err_msg):
         if line.strip():
             err.append(line)
         i += 1
+    # There is always a single line in the error stating the number of failures.
+    # So only return a non-empty list if there is more than just that line
     if len(err) > 1:
         return err
     return []
@@ -142,6 +144,8 @@ def check_rose_stem_apps(meta_paths, source_path):
                 if line.startswith("meta="):
                     break
             else:
+                # We reach here if the for loop hasn't been broken out of. In that case
+                # we don't want to execut the code below.
                 continue
         command = f"rose macro --validate {meta_paths} -C {app_dir} --no-warn version"
         result = run_command(command)
@@ -166,7 +170,9 @@ def parse_args():
     Read command line args
     """
 
-    parser = argparse.ArgumentParser("Pre-process and apply LFRic Apps upgrade macros.")
+    parser = argparse.ArgumentParser(
+        "Validate rose-metadata in LFRic Meta files and apps"
+    )
     parser.add_argument(
         "-a",
         "--apps",
