@@ -213,7 +213,7 @@ def main():
             source_path = args.apps
             meta_paths += f"-M {os.path.join(args.apps, "rose-meta")}"
             rose_meta_path += args.apps
-        elif args.core:
+        if args.core:
             source_path = args.core
             meta_paths += f"-M {os.path.join(args.core, "rose-meta")} "
             if rose_meta_path:
