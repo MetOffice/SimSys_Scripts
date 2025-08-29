@@ -13,8 +13,6 @@ import os
 import re
 from textwrap import wrap
 
-from git_bdiff import GitBDiff
-
 # Desired maximum column width for output - we make an exception
 # for filenames, which are always printed on a single line to aid
 # ease of selection by the user
@@ -215,12 +213,6 @@ def parse_options():
         ),
     )
     excl_group.add_argument(
-        "--bdiff",
-        action="store_true",
-        default=False,
-        help="run on an fcm branch-diff",
-    )
-    excl_group.add_argument(
         "files",
         nargs="*",
         default=["./"],
@@ -228,17 +220,6 @@ def parse_options():
     )
     args = parser.parse_args()
 
-    if args.full_trunk:
-        args.bdiff = True
-
-    if args.bdiff:
-        # Filter the files returned by fcm bdiff to just the *.py ones
-        args.files = [
-            code_file
-            for code_file in GitBDiff(repo=args.base_path, parent="trunk").files()
-            if _FILENAME_FILTER.match(code_file)
-        ]
-    print(args.files)
     return args
 
 
