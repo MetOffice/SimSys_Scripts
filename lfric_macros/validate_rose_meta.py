@@ -192,6 +192,12 @@ def parse_args():
 
     args = parser.parse_args()
 
+    if not args.apps and not args.core:
+        raise RuntimeError(
+            "At least one of the Apps or Core sources must be provided as a command "
+            "line argument"
+        )
+
     if args.apps:
         args.apps = os.path.expanduser(args.apps)
     if args.core:
@@ -208,11 +214,6 @@ def main():
 
     meta_paths = ""
     rose_meta_path = ""
-    if not args.apps and not args.core:
-        raise RuntimeError(
-            "At least one of the Apps or Core sources must be provided as a command "
-            "line argument"
-        )
     if args.apps:
         source_path = args.apps
         meta_paths += f"-M {os.path.join(args.apps, "rose-meta")} "
