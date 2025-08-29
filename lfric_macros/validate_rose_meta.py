@@ -89,7 +89,7 @@ def check_rose_metadata(rose_meta_path, source_path):
         if result.returncode:
             print(f"[FAIL] - {section} failed to validate")
             print(
-                f"Failure running rose metata-check on {section}:\n{result.stderr}",
+                f"Failure running rose metadata-check on {section}:\n{result.stderr}",
                 file=sys.stderr,
             )
             failed = True
@@ -145,7 +145,7 @@ def check_rose_stem_apps(meta_paths, source_path):
                     break
             else:
                 # We reach here if the for loop hasn't been broken out of. In that case
-                # we don't want to execut the code below.
+                # we don't want to execute the code below.
                 continue
         command = f"rose macro --validate {meta_paths} -C {app_dir} --no-warn version"
         result = run_command(command)
