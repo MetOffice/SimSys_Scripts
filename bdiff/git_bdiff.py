@@ -37,18 +37,6 @@ class GitBDiffNotGit(GitBDiffError):
         )
 
 
-def check_git_error(cmd, proc):
-    """
-    Check that the result from a subprocess doesn't contain git fatal output
-    """
-
-    for line in proc.stderr.decode("utf-8").split("\n"):
-        if line.startswith("fatal: not a git repository"):
-            raise GitBDiffNotGit(cmd)
-        if line.startswith("fatal: "):
-            raise GitBDiffError(line[7:])
-
-
 class GitBase:
     """
     Base class for gitbdiff functionality
@@ -94,7 +82,11 @@ class GitBase:
             cmd, capture_output=True, check=False, shell=False, cwd=self._repo
         )
 
-        check_git_error(cmd, proc)
+        for line in proc.stderr.decode("utf-8").split("\n"):
+            if line.startswith("fatal: not a git repository"):
+                raise GitBDiffNotGit(cmd)
+            if line.startswith("fatal: "):
+                raise GitBDiffError(line[7:])
 
         if proc.returncode != 0:
             raise GitBDiffError(f"command returned {proc.returncode}")
