@@ -37,14 +37,22 @@ class GitBDiffNotGit(GitBDiffError):
         )
 
 
-class GitBDiff:
-    """Class which generates a branch diff."""
+def check_git_error(cmd, proc):
+    """
+    Check that the result from a subprocess doesn't contain git fatal output
+    """
 
-    # Name of primary branch - default is main
-    primary_branch = "main"
+    for line in proc.stderr.decode("utf-8").split("\n"):
+        if line.startswith("fatal: not a git repository"):
+            raise GitBDiffNotGit(cmd)
+        if line.startswith("fatal: "):
+            raise GitBDiffError(line[7:])
 
-    # Match hex commit IDs
-    _hash_pattern = re.compile(r"^\s*([0-9a-f]{40})\s*$")
+
+class GitBase:
+    """
+    Base class for gitbdiff functionality
+    """
 
     # Match branch names.  This should catch all valid names but may
     # also some invalid names through.  This should matter given that
@@ -53,14 +61,60 @@ class GitBDiff:
     _branch_pattern = re.compile(r"^\s*([^\s~\^\:\?\*\[]+[^.])\s*$")
 
     def __init__(self, parent=None, repo=None):
-        self.parent = parent or self.primary_branch
-
         if repo is None:
             self._repo = None
         else:
             self._repo = Path(repo)
             if not self._repo.is_dir():
                 raise GitBDiffError(f"{repo} is not a directory")
+
+    def get_branch_name(self):
+        """Get the name of the current branch."""
+        result = None
+        for line in self.run_git(["branch", "--show-current"]):
+            if m := self._branch_pattern.match(line):
+                result = m.group(1)
+                break
+        else:
+            raise GitBDiffError("unable to get branch name")
+        return result
+
+    def run_git(self, args):
+        """Run a git command and yield the output."""
+
+        if not isinstance(args, list):
+            raise TypeError("args must be a list")
+        cmd = ["git"] + args
+
+        # Run the the command in the repo directory, capture the
+        # output, and check for errors.  The build in error check is
+        # not used to allow specific git errors to be treated more
+        # precisely
+        proc = subprocess.run(
+            cmd, capture_output=True, check=False, shell=False, cwd=self._repo
+        )
+
+        check_git_error(cmd, proc)
+
+        if proc.returncode != 0:
+            raise GitBDiffError(f"command returned {proc.returncode}")
+
+        yield from proc.stdout.decode("utf-8").split("\n")
+
+
+class GitBDiff(GitBase):
+    """Class which generates a branch diff."""
+
+    # Name of primary branch - default is main
+    primary_branch = "main"
+
+    # Match hex commit IDs
+    _hash_pattern = re.compile(r"^\s*([0-9a-f]{40})\s*$")
+
+    def __init__(self, parent=None, repo=None):
+        self.parent = parent or self.primary_branch
+
+        super().__init__(parent, repo)
 
         self.ancestor = self.get_branch_point()
         self.current = self.get_latest_commit()
@@ -96,17 +150,6 @@ class GitBDiff:
             raise GitBDiffError("current revision not found")
         return result
 
-    def get_branch_name(self):
-        """Get the name of the current branch."""
-        result = None
-        for line in self.run_git(["branch", "--show-current"]):
-            if m := self._branch_pattern.match(line):
-                result = m.group(1)
-                break
-        else:
-            raise GitBDiffError("unable to get branch name")
-        return result
-
     @property
     def is_branch(self):
         """Whether this is a branch or main."""
@@ -126,28 +169,23 @@ class GitBDiff:
             if line != "":
                 yield line
 
-    def run_git(self, args):
-        """Run a git command and yield the output."""
 
-        if not isinstance(args, list):
-            raise TypeError("args must be a list")
-        cmd = ["git"] + args
+class GitInfo(GitBase):
+    """
+    Class to contain info of a git repo
+    """
 
-        # Run the the command in the repo directory, capture the
-        # output, and check for errors.  The build in error check is
-        # not used to allow specific git errors to be treated more
-        # precisely
-        proc = subprocess.run(
-            cmd, capture_output=True, check=False, shell=False, cwd=self._repo
-        )
+    def __init__(self, repo=None):
+        super().__init__(repo=repo)
 
-        for line in proc.stderr.decode("utf-8").split("\n"):
-            if line.startswith("fatal: not a git repository"):
-                raise GitBDiffNotGit(cmd)
-            if line.startswith("fatal: "):
-                raise GitBDiffError(line[7:])
+        self.branch = self.get_branch_name()
 
-        if proc.returncode != 0:
-            raise GitBDiffError(f"command returned {proc.returncode}")
+    def is_main(self):
+        """
+        Returns true if branch matches a main-like branch name as defined below
+        """
 
-        yield from proc.stdout.decode("utf-8").split("\n")
+        main_like = ("main", "stable", "trunk", "master")
+        if self.branch in main_like:
+            return True
+        return False
