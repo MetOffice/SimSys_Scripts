@@ -89,7 +89,7 @@ def check_rose_metadata(rose_meta_path, source_path):
         if result.returncode:
             print(f"[FAIL] - {section} failed to validate")
             print(
-                f"Failure running rose metata-check on {section}:\n{result.stderr}",
+                f"Failure running rose metadata-check on {section}:\n{result.stderr}",
                 file=sys.stderr,
             )
             failed = True
