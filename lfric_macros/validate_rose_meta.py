@@ -208,17 +208,18 @@ def main():
 
     meta_paths = ""
     rose_meta_path = ""
-    if args.apps:
-        source_path = args.apps
-        meta_paths += f"-M {os.path.join(args.apps, "rose-meta")}"
-        rose_meta_path += args.apps
-    elif args.core:
-        source_path = args.core
-        meta_paths += f"-M {os.path.join(args.core, "rose-meta")} "
-        if rose_meta_path:
-            rose_meta_path += f":{args.core}"
-        else:
-            rose_meta_path = args.core
+    if args.apps or args.core:
+        if args.apps:
+            source_path = args.apps
+            meta_paths += f"-M {os.path.join(args.apps, "rose-meta")}"
+            rose_meta_path += args.apps
+        elif args.core:
+            source_path = args.core
+            meta_paths += f"-M {os.path.join(args.core, "rose-meta")} "
+            if rose_meta_path:
+                rose_meta_path += f":{args.core}"
+            else:
+                rose_meta_path = args.core
     else:
         raise RuntimeError(
             "At least one of the Apps or Core sources must be provided as a command "
