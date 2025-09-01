@@ -29,22 +29,31 @@ def create_markdown_row(*columns: str, header=False) -> List[str]:
         line.append(f"| {' | '.join(":---:" for _ in columns)} |")
     return line
 
+
 @contextmanager
 def file_or_stdout(file_name):
     if file_name is None:
         yield sys.stdout
     else:
-        with open(file_name, 'w') as out_file:
+        with open(file_name, "w") as out_file:
             yield out_file
 
+
 class SuiteReport(SuiteData):
+
+    # str to enable pink text colour
+    pink_text = r"$${\color{magenta}failed}$$"
+
+    # str's for collapsed sections in markdown
+    open_collapsed = "<details>"
+    close_collapsed = "</details>"
 
     def __init__(self, suite_path: Path):
         self.suite_path: Path = suite_path
         self.suite_user = suite_path.owner()
         self.suite_starttime: str = self.get_suite_starttime()
         self.workflow_id: str = self.get_workflow_id()
-        self.suite_database: Dict[str, str] = self.get_task_states()
+        self.task_states: Dict[str, str] = self.get_task_states()
         self.groups: str = self.read_groups_run()
         self.rose_data: Dict[str, str] = self.read_rose_conf()
         self.dependencies: Dict[str, Dict] = self.read_dependencies()
@@ -75,20 +84,59 @@ class SuiteReport(SuiteData):
 
         self.trac_log.append("")
 
-
     def create_dependency_table(self):
         """
         Create a table containing dependency information
         """
 
-        self.trac_log.extend(create_markdown_row("Dependency", "Source", "Ref", "Main Like", header=True))
+        self.trac_log.extend(
+            create_markdown_row("Dependency", "Source", "Ref", "Main Like", header=True)
+        )
 
         for dependency, data in self.dependencies.items():
-            self.trac_log.extend(create_markdown_row(dependency, data["source"], data["ref"], data["gitinfo"].is_main()))
+            self.trac_log.extend(
+                create_markdown_row(
+                    dependency, data["source"], data["ref"], data["gitinfo"].is_main()
+                )
+            )
 
         self.trac_log.append("")
 
+    def create_task_tables(self, parsed_tasks: Dict[str, List[str]]):
+        """
+        Create tables containing summary of task states and number of tasks won
+        """
 
+        # Ensure pink failures and then normal failures appear at the top
+        sort_order = {"pink failure": 0, "failed": 1}
+        order = list(parsed_tasks.keys())
+        order.sort(key=lambda val: sort_order.get(val, 2))
+
+        # Create summary table
+        self.trac_log.extend(create_markdown_row("State", "Count", header=True))
+        for state in order:
+            tasks = parsed_tasks[state]
+            if not tasks:
+                continue
+            if state == "pink failure":
+                state = self.pink_text
+            self.trac_log.extend(create_markdown_row(state, len(tasks)))
+        self.trac_log.append("")
+
+        # Create Collapsed task tables
+        for state in order:
+            tasks = parsed_tasks[state]
+            if not tasks:
+                continue
+            if state == "pink failure":
+                state = self.pink_text
+            self.trac_log.append(self.open_collapsed)
+            self.trac_log.append(f"<summary>{state} tasks</summary>")
+            self.trac_log.append("")
+            self.trac_log.extend(create_markdown_row("Task", "State", header=True))
+            for task in sorted(tasks):
+                self.trac_log.extend(create_markdown_row(task, state))
+            self.trac_log.append(self.close_collapsed)
 
     def create_log(self):
         """
@@ -107,6 +155,10 @@ class SuiteReport(SuiteData):
         self.create_suite_info_table()
         self.create_dependency_table()
 
+        # Write Tasks Info
+        self.trac_log.append("## Task Information")
+        parsed_tasks = self.parse_tasks()
+        self.create_task_tables(parsed_tasks)
 
     def write_log(self, log_path):
         """
@@ -114,8 +166,9 @@ class SuiteReport(SuiteData):
         """
 
         if log_path:
-            log_path = log_path / "trac_log"
+            log_path = log_path / "trac.log"
         with file_or_stdout(log_path) as wfile:
+            # with open(log_path, "w") as wfile:
             for line in self.trac_log:
                 wfile.write(line + "\n")
 

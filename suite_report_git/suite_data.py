@@ -19,12 +19,41 @@ import re
 from bdiff.git_bdiff import GitBDiff, GitInfo
 from typing import Optional, List, Dict
 from pathlib import Path
+from collections import defaultdict
 
 
 class SuiteData:
     """
     Class to gather info on a suite
     """
+
+    pink_failures = (
+        "_vs_",
+        "lrun_crun_atmos",
+        "proc",
+        "atmos_omp",
+        "atmos_nruncrun",
+        "atmos_thread",
+        "-v-",
+    )
+
+    def parse_tasks(self) -> Dict[str, List[str]]:
+        """
+        Read through the tasks run, sorting by state
+        """
+
+        data = defaultdict(list)
+
+        for task, state in self.task_states.items():
+            if state == "failed" and (
+                task.startswith("rose_ana") or task.startswith("check_")
+            ):
+                for item in self.pink_failures:
+                    if item in task:
+                        state = "pink failure"
+                        break
+            data[state].append(task)
+        return data
 
     def populate_gitbdiff(self):
         """
