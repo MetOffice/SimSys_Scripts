@@ -21,6 +21,12 @@ try:
     from bdiff.git_bdiff import GitBDiff, GitInfo
 except ImportError:
     from git_bdiff import GitBDiff, GitInfo
+finally:
+    raise ImportError(
+        "Unable to import from git_bdiff module. This is included in the same "
+        "repository as this script and included with a relative import. Ensure this "
+        "script is being called from the correct place."
+    )
 from typing import Union, Optional, List, Dict
 from pathlib import Path
 from collections import defaultdict
