@@ -16,8 +16,11 @@ import sqlite3
 import shutil
 import yaml
 import re
-from bdiff.git_bdiff import GitBDiff, GitInfo
-from typing import Optional, List, Dict
+try:
+    from bdiff.git_bdiff import GitBDiff, GitInfo
+except ImportError:
+    from git_bdiff import GitBDiff, GitInfo
+from typing import Union, Optional, List, Dict
 from pathlib import Path
 from collections import defaultdict
 
@@ -85,21 +88,24 @@ class SuiteData:
         """
         Clone the sources defined in the dependencies file, to allow reading of files
         and creation of diffs.
-        If the source is not a github url, then copy it using scp
+        If the source is not a github url, then copy it using rsync
         """
 
         for dependency, data in self.dependencies.items():
             loc = self.temp_directory / dependency
             if data["source"].endswith(".git"):
                 commands = [
-                    f"git clone {data["source"]} {loc}",
-                    f"git -C {loc} checkout {data["ref"]}",
+                    f"git clone {data['source']} {loc}",
+                    f"git -C {loc} checkout {data['ref']}",
                 ]
                 for command in commands:
                     self.run_command(command)
             else:
-                command = f"scp -r -o StrictHostKeyChecking=no {data["source"]} {loc}"
-                self.run_command(command)
+                source = data["source"]
+                if not source.endswith("/"):
+                    source = source + "/"
+                command = f'rsync -e "ssh -o StrictHostKeyChecking=no" -avl {source} {loc}'
+                self.run_command(command, shell=True)
 
     def determine_primary_source(self) -> str:
         """
@@ -259,7 +265,7 @@ class SuiteData:
         return data
 
     def run_command(
-        self, command: str, shell: bool = False, rval: bool = False
+        self, command: Union[str, List[str]], shell: bool = False, rval: bool = False
     ) -> Optional[subprocess.CompletedProcess]:
         """
         Run a subprocess command and return the result object
@@ -268,7 +274,7 @@ class SuiteData:
         Outputs:
             - result object from subprocess.run
         """
-        if not shell:
+        if not shell and type(command) != list:
             command = command.split()
         result = subprocess.run(
             command,
