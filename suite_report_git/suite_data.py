@@ -16,6 +16,7 @@ import sqlite3
 import shutil
 import yaml
 import re
+
 try:
     from bdiff.git_bdiff import GitBDiff, GitInfo
 except ImportError:
@@ -104,7 +105,9 @@ class SuiteData:
                 source = data["source"]
                 if not source.endswith("/"):
                     source = source + "/"
-                command = f'rsync -e "ssh -o StrictHostKeyChecking=no" -avl {source} {loc}'
+                command = (
+                    f'rsync -e "ssh -o StrictHostKeyChecking=no" -avl {source} {loc}'
+                )
                 self.run_command(command, shell=True)
 
     def determine_primary_source(self) -> str:
