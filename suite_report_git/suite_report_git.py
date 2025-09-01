@@ -26,7 +26,7 @@ def create_markdown_row(*columns: str, header=False) -> List[str]:
     """
     line = [f"| {' | '.join(str(c) for c in columns)} |"]
     if header:
-        line.append(f"| {' | '.join(":---:" for _ in columns)} |")
+        line.append(f"| {' | '.join(':---:' for _ in columns)} |")
     return line
 
 
