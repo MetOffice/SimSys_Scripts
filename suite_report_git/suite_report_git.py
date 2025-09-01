@@ -46,6 +46,7 @@ class SuiteReport(SuiteData):
 
     # str's for collapsed sections in markdown
     open_collapsed = "<details>"
+    open_collapsed_show = "<details open>"
     close_collapsed = "</details>"
 
     def __init__(self, suite_path: Path):
@@ -108,9 +109,9 @@ class SuiteReport(SuiteData):
         """
 
         # Ensure pink failures and then normal failures appear at the top
-        sort_order = {"pink failure": 0, "failed": 1}
+        sort_order = {"pink failure": 0, "failed": 1, "submit-failed": 2}
         order = list(parsed_tasks.keys())
-        order.sort(key=lambda val: sort_order.get(val, 2))
+        order.sort(key=lambda val: sort_order.get(val, len(sort_order)))
 
         # Create summary table
         self.trac_log.extend(create_markdown_row("State", "Count", header=True))
@@ -130,7 +131,11 @@ class SuiteReport(SuiteData):
                 continue
             if state == "pink failure":
                 state = self.pink_text
-            self.trac_log.append(self.open_collapsed)
+            if "fail" in state:
+                # Have the collapsed section expanded by default
+                self.trac_log.append(self.open_collapsed_show)
+            else:
+                self.trac_log.append(self.open_collapsed)
             self.trac_log.append(f"<summary>{state} tasks</summary>")
             self.trac_log.append("")
             self.trac_log.extend(create_markdown_row("Task", "State", header=True))
@@ -229,7 +234,8 @@ def parse_args():
         "defaults to finding the suite directory from Cylc Env variables.",
     )
 
-    return parser.parse_args()
+    args, _ = parser.parse_known_args()
+    return args
 
 
 def main():
