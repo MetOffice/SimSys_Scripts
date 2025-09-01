@@ -48,6 +48,9 @@ class GitBase:
     # overview of the naming scheme, see man git check-ref-format
     _branch_pattern = re.compile(r"^\s*([^\s~\^\:\?\*\[]+[^.])\s*$")
 
+    # Text returned if in a detached head
+    detached_head_reference = "detched_head_state"
+
     def __init__(self, parent=None, repo=None):
         if repo is None:
             self._repo = None
@@ -64,7 +67,13 @@ class GitBase:
                 result = m.group(1)
                 break
         else:
-            raise GitBDiffError("unable to get branch name")
+            # Check for being in a Detached Head state
+            for line in self.run_git(["branch"]):
+                if "HEAD detached" in line:
+                    result = self.detached_head_reference
+                    break
+            else:
+                raise GitBDiffError("unable to get branch name")
         return result
 
     def run_git(self, args):
@@ -111,6 +120,8 @@ class GitBDiff(GitBase):
         self.ancestor = self.get_branch_point()
         self.current = self.get_latest_commit()
         self.branch = self.get_branch_name()
+        if self.branch == self.detached_head_reference:
+            raise GitBDiffError("Can't get a diff for a repo in detached head state")
 
     def get_branch_point(self):
         """Get the branch point from the parent repo.
@@ -175,9 +186,10 @@ class GitInfo(GitBase):
     def is_main(self):
         """
         Returns true if branch matches a main-like branch name as defined below
+        Count detached head as main-like as we cannot get a diff for this
         """
 
-        main_like = ("main", "stable", "trunk", "master")
+        main_like = ("main", "stable", "trunk", "master", self.detached_head_reference)
         if self.branch in main_like:
             return True
         return False
