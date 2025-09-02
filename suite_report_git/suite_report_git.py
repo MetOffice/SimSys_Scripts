@@ -40,6 +40,9 @@ def file_or_stdout(file_name):
 
 
 class SuiteReport(SuiteData):
+    """
+    Suite Report object to gather suite data and write out to markdown formatted file
+    """
 
     # str to enable pink text colour
     pink_text = r"$${\color{magenta}failed}$$"
