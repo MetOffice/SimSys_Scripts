@@ -12,7 +12,7 @@ import os
 import subprocess
 import pytest
 
-from git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo
+from ..git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo, GitBase
 
 
 # Disable warnings caused by the use of pytest fixtures
@@ -233,3 +233,27 @@ def test_is_main(git_repo):
             assert not info.is_main()
         else:
             assert info.is_main()
+
+
+def find_previous_hash():
+    """
+    Loop over a git log output and extract a hash that isn't the current head
+    """
+
+    result = subprocess.run(["git", "log"], check=True, capture_output=True, text=True)
+    for line in result.stdout.split("\n"):
+        if line.startswith("commit") and "HEAD" not in line:
+            return line.split()[1]
+
+
+def test_detached_head(git_repo):
+    """Test Detached Head State"""
+
+    os.chdir(git_repo)
+    subprocess.run(["git", "checkout", "main"], check=True)
+
+    commit_hash = find_previous_hash()
+    subprocess.run(["git", "checkout", commit_hash], check=True)
+
+    git_base = GitBase()
+    assert git_base.get_branch_name() == git_base.detached_head_reference
