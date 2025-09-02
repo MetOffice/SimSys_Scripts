@@ -235,6 +235,11 @@ def parse_args():
     )
 
     args, _ = parser.parse_known_args()
+
+    # Check log file is writable, set as None if not (this will output to stdout)
+    if not os.access(args.log_path, os.W_OK):
+        args.log_path = None
+
     return args
 
 

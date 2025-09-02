@@ -37,73 +37,7 @@ class GitBDiffNotGit(GitBDiffError):
         )
 
 
-class GitBase:
-    """
-    Base class for gitbdiff functionality
-    """
-
-    # Match branch names.  This should catch all valid names but may
-    # also some invalid names through.  This should matter given that
-    # it is being used to match git command output.  For a complete
-    # overview of the naming scheme, see man git check-ref-format
-    _branch_pattern = re.compile(r"^\s*([^\s~\^\:\?\*\[]+[^.])\s*$")
-
-    # Text returned if in a detached head
-    detached_head_reference = "detched_head_state"
-
-    def __init__(self, parent=None, repo=None):
-        if repo is None:
-            self._repo = None
-        else:
-            self._repo = Path(repo)
-            if not self._repo.is_dir():
-                raise GitBDiffError(f"{repo} is not a directory")
-
-    def get_branch_name(self):
-        """Get the name of the current branch."""
-        result = None
-        for line in self.run_git(["branch", "--show-current"]):
-            if m := self._branch_pattern.match(line):
-                result = m.group(1)
-                break
-        else:
-            # Check for being in a Detached Head state
-            for line in self.run_git(["branch"]):
-                if "HEAD detached" in line:
-                    result = self.detached_head_reference
-                    break
-            else:
-                raise GitBDiffError("unable to get branch name")
-        return result
-
-    def run_git(self, args):
-        """Run a git command and yield the output."""
-
-        if not isinstance(args, list):
-            raise TypeError("args must be a list")
-        cmd = ["git"] + args
-
-        # Run the the command in the repo directory, capture the
-        # output, and check for errors.  The build in error check is
-        # not used to allow specific git errors to be treated more
-        # precisely
-        proc = subprocess.run(
-            cmd, capture_output=True, check=False, shell=False, cwd=self._repo
-        )
-
-        for line in proc.stderr.decode("utf-8").split("\n"):
-            if line.startswith("fatal: not a git repository"):
-                raise GitBDiffNotGit(cmd)
-            if line.startswith("fatal: "):
-                raise GitBDiffError(line[7:])
-
-        if proc.returncode != 0:
-            raise GitBDiffError(f"command returned {proc.returncode}")
-
-        yield from proc.stdout.decode("utf-8").split("\n")
-
-
-class GitBDiff(GitBase):
+class GitBDiff:
     """Class which generates a branch diff."""
 
     # Name of primary branch - default is main
@@ -112,16 +46,25 @@ class GitBDiff(GitBase):
     # Match hex commit IDs
     _hash_pattern = re.compile(r"^\s*([0-9a-f]{40})\s*$")
 
+    # Match branch names.  This should catch all valid names but may
+    # also some invalid names through.  This should matter given that
+    # it is being used to match git command output.  For a complete
+    # overview of the naming scheme, see man git check-ref-format
+    _branch_pattern = re.compile(r"^\s*([^\s~\^\:\?\*\[]+[^.])\s*$")
+
     def __init__(self, parent=None, repo=None):
         self.parent = parent or self.primary_branch
 
-        super().__init__(parent, repo)
+        if repo is None:
+            self._repo = None
+        else:
+            self._repo = Path(repo)
+            if not self._repo.is_dir():
+                raise GitBDiffError(f"{repo} is not a directory")
 
         self.ancestor = self.get_branch_point()
         self.current = self.get_latest_commit()
         self.branch = self.get_branch_name()
-        if self.branch == self.detached_head_reference:
-            raise GitBDiffError("Can't get a diff for a repo in detached head state")
 
     def get_branch_point(self):
         """Get the branch point from the parent repo.
@@ -153,6 +96,17 @@ class GitBDiff(GitBase):
             raise GitBDiffError("current revision not found")
         return result
 
+    def get_branch_name(self):
+        """Get the name of the current branch."""
+        result = None
+        for line in self.run_git(["branch", "--show-current"]):
+            if m := self._branch_pattern.match(line):
+                result = m.group(1)
+                break
+        else:
+            raise GitBDiffError("unable to get branch name")
+        return result
+
     @property
     def is_branch(self):
         """Whether this is a branch or main."""
@@ -172,24 +126,28 @@ class GitBDiff(GitBase):
             if line != "":
                 yield line
 
+    def run_git(self, args):
+        """Run a git command and yield the output."""
 
-class GitInfo(GitBase):
-    """
-    Class to contain info of a git repo
-    """
+        if not isinstance(args, list):
+            raise TypeError("args must be a list")
+        cmd = ["git"] + args
 
-    def __init__(self, repo=None):
-        super().__init__(repo=repo)
+        # Run the the command in the repo directory, capture the
+        # output, and check for errors.  The build in error check is
+        # not used to allow specific git errors to be treated more
+        # precisely
+        proc = subprocess.run(
+            cmd, capture_output=True, check=False, shell=False, cwd=self._repo
+        )
 
-        self.branch = self.get_branch_name()
+        for line in proc.stderr.decode("utf-8").split("\n"):
+            if line.startswith("fatal: not a git repository"):
+                raise GitBDiffNotGit(cmd)
+            if line.startswith("fatal: "):
+                raise GitBDiffError(line[7:])
 
-    def is_main(self):
-        """
-        Returns true if branch matches a main-like branch name as defined below
-        Count detached head as main-like as we cannot get a diff for this
-        """
+        if proc.returncode != 0:
+            raise GitBDiffError(f"command returned {proc.returncode}")
 
-        main_like = ("main", "stable", "trunk", "master", self.detached_head_reference)
-        if self.branch in main_like:
-            return True
-        return False
+        yield from proc.stdout.decode("utf-8").split("\n")
