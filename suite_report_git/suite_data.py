@@ -127,6 +127,12 @@ class SuiteData:
         if len(self.dependencies) == 1:
             return list(self.dependencies.keys())[0]
 
+        # If 2 dependencies, remove simsys_scripts
+        if len(self.dependencies) == 2:
+            for item in self.dependencies:
+                if item.lower() != "simsys_scripts":
+                    return item
+
         # If LFRic Apps in sources, that is the primary source
         if "lfric_apps" in self.dependencies.keys():
             return "lfric_apps"
