@@ -257,6 +257,3 @@ def test_detached_head(git_repo):
 
     git_base = GitBase()
     assert git_base.get_branch_name() == git_base.detached_head_reference
-
-
-
