@@ -98,9 +98,13 @@ class SuiteReport(SuiteData):
         )
 
         for dependency, data in self.dependencies.items():
+            ref = data["ref"] or ""
+            source = data["source"]
+            if ".git" in source:
+                source = source.split(":")[1]
             self.trac_log.extend(
                 create_markdown_row(
-                    dependency, data["source"], data["ref"], data["gitinfo"].is_main()
+                    dependency, source, ref, data["gitinfo"].is_main()
                 )
             )
 
