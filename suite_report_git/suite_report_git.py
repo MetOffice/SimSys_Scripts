@@ -103,9 +103,7 @@ class SuiteReport(SuiteData):
             if ".git" in source:
                 source = source.split(":")[1]
             self.trac_log.extend(
-                create_markdown_row(
-                    dependency, source, ref, data["gitinfo"].is_main()
-                )
+                create_markdown_row(dependency, source, ref, data["gitinfo"].is_main())
             )
 
         self.trac_log.append("")
