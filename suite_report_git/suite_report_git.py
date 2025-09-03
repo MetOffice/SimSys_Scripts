@@ -15,7 +15,7 @@ import argparse
 from suite_data import SuiteData
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Dict, List
+from typing import Dict, List, Set
 from contextlib import contextmanager
 
 
@@ -146,14 +146,17 @@ class SuiteReport(SuiteData):
                 self.trac_log.extend(create_markdown_row(task, state))
             self.trac_log.append(self.close_collapsed)
 
-    def create_um_code_owner_table(self, owners: Dict) -> List[str]:
+    def create_um_code_owner_table(self, owners: Dict):
         """
         Create a table of required UM code owner approvals
         """
 
-        changed_sections = self.get_changed_um_section()
-        self.trac_log.append(create_markdown_row("Section", "Owner", "Deputy", header=True))
-
+        changed_sections: Set[str] = self.get_changed_um_section()
+        if changed_sections:
+            self.trac_log.extend(create_markdown_row("Section", "Owner", "Deputy", "State", header=True))
+            for section in changed_sections:
+                users = owners.get(section, "Unknown")
+                self.trac_log.extend(create_markdown_row(section, users[0], users[1], "Pending"))
 
 
     def create_um_owners_tables(self):
