@@ -17,6 +17,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 from typing import Dict, List, Set
 from contextlib import contextmanager
+from collections import defaultdict
 
 
 def create_markdown_row(*columns: str, header=False) -> List[str]:
@@ -153,11 +154,45 @@ class SuiteReport(SuiteData):
 
         changed_sections: Set[str] = self.get_changed_um_section()
         if changed_sections:
-            self.trac_log.extend(create_markdown_row("Section", "Owner", "Deputy", "State", header=True))
+            self.trac_log.extend(
+                create_markdown_row("Section", "Owner", "Deputy", "State", header=True)
+            )
             for section in changed_sections:
                 users = owners.get(section, "Unknown")
-                self.trac_log.extend(create_markdown_row(section, users[0], users[1], "Pending"))
+                self.trac_log.extend(
+                    create_markdown_row(section, users[0], users[1], "Pending")
+                )
+        else:
+            self.trac_log.append("* No UM Code Owners Required")
 
+    def create_um_config_owner_table(self, owners: Dict):
+        """
+        Create a table of required UM config owner approvals
+        """
+
+        failed_configs: Set[str] = self.get_um_failed_configs()
+        if not failed_configs:
+            self.trac_log.append("No UM Config Owners Required")
+            return
+
+        self.trac_log.extend(
+            create_markdown_row("Owner", "Config (others)", "State", header=True)
+        )
+
+        # Create a dict with owners as the key
+        table_dict = defaultdict(list)
+        for config in failed_configs:
+            owner, others = owners[config]
+            if others != "--":
+                config = f"{config} ({others})"
+            table_dict[owner].append(config)
+
+        for owner, configs in table_dict.items():
+            self.trac_log.extend(
+                create_markdown_row(
+                    owner, " ".join(f'"{c}"' for c in configs), "Pending"
+                )
+            )
 
     def create_um_owners_tables(self):
         """
@@ -172,8 +207,7 @@ class SuiteReport(SuiteData):
 
         self.trac_log.append("### Config Owners")
         config_owners = self.get_um_owners("ConfigOwners.txt")
-
-        # code_owner_table: List[str] = self.create_um_code_owner_table(um_owners["code"])
+        self.create_um_config_owner_table(config_owners)
 
     def create_log(self):
         """

@@ -48,6 +48,24 @@ class SuiteData:
         "-v-",
     )
 
+    def get_um_failed_configs(self) -> Set[str]:
+        """
+        Read through failed UM rose_ana tasks
+        """
+
+        failed_configs = set()
+        for task, state in self.task_states.items():
+            if task.startswith("rose_ana") and state == "failed":
+                try:
+                    config = task.split("-")[2]
+                except IndexError:
+                    if "mule" in task:
+                        config = "mule"
+                    else:
+                        config = ""
+                failed_configs.add(config)
+        return failed_configs
+
     def read_um_section(self, change: str) -> str:
         """
         Read through a UM file searching for line
@@ -56,11 +74,12 @@ class SuiteData:
         lines = change.read_text()
         lines = lines.lower()
         try:
-            section = re.search(r"this file belongs in section:\s*(\w+)", lines).group(1)
+            section = re.search(r"this file belongs in section:\s*(\w+)", lines).group(
+                1
+            )
         except AttributeError:
             section = "Unknown"
         return section
-
 
     def get_changed_um_section(self) -> Set[str]:
         """
@@ -99,7 +118,6 @@ class SuiteData:
 
         return changed_sections
 
-
     def get_um_owners(self, filename: str) -> Dict:
         """
         Read UM Code Owners file and write to a dictionary
@@ -112,7 +130,12 @@ class SuiteData:
         owners = {}
         for line in owners_text.split("\n"):
             line = line.lower().strip()
-            if not line or line.startswith("#") or line.startswith("area") or line.startswith("configuration"):
+            if (
+                not line
+                or line.startswith("#")
+                or line.startswith("area")
+                or line.startswith("configuration")
+            ):
                 continue
             if line.startswith("{{{"):
                 in_owners = True
