@@ -12,7 +12,7 @@ import os
 import subprocess
 import pytest
 
-from git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit
+from ..git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo, GitBase
 
 
 # Disable warnings caused by the use of pytest fixtures
@@ -58,8 +58,13 @@ def git_repo(tmpdir_factory):
     subprocess.run(["git", "checkout", "-b", "overwrite"], check=True)
     add_to_repo(0, 10, "Overwriting", "at")
 
-    # Switch back to the main branch ready for testing
+    # Switch back to the main branch
     subprocess.run(["git", "checkout", "main"], check=True)
+
+    # Add other trunk-like branches, finishing back in main
+    for branch in ("stable", "master", "trunk"):
+        subprocess.run(["git", "checkout", "-b", branch], check=True)
+        subprocess.run(["git", "checkout", "main"], check=True)
 
     return location
 
@@ -214,3 +219,41 @@ def test_git_run(git_repo):
         # Run a command that should return non-zero
         list(i for i in bdiff.run_git(["commit", "-m", "''"]))
     assert "command returned 1" in str(exc.value)
+
+
+def test_is_main(git_repo):
+    """Test is_trunk function"""
+
+    os.chdir(git_repo)
+
+    for branch in ("stable", "master", "trunk", "main", "mybranch"):
+        info = GitInfo()
+        subprocess.run(["git", "checkout", branch], check=True)
+        if branch == "my_branch":
+            assert not info.is_main()
+        else:
+            assert info.is_main()
+
+
+def find_previous_hash():
+    """
+    Loop over a git log output and extract a hash that isn't the current head
+    """
+
+    result = subprocess.run(["git", "log"], check=True, capture_output=True, text=True)
+    for line in result.stdout.split("\n"):
+        if line.startswith("commit") and "HEAD" not in line:
+            return line.split()[1]
+
+
+def test_detached_head(git_repo):
+    """Test Detached Head State"""
+
+    os.chdir(git_repo)
+    subprocess.run(["git", "checkout", "main"], check=True)
+
+    commit_hash = find_previous_hash()
+    subprocess.run(["git", "checkout", commit_hash], check=True)
+
+    git_base = GitBase()
+    assert git_base.get_branch_name() == git_base.detached_head_reference
