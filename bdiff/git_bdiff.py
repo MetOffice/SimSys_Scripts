@@ -63,6 +63,8 @@ class GitBase:
         """Get the name of the current branch."""
         result = None
         for line in self.run_git(["branch", "--show-current"]):
+            # Set m to self._branch_pattern result
+            # Then check m evaluates to True
             if m := self._branch_pattern.match(line):
                 result = m.group(1)
                 break
