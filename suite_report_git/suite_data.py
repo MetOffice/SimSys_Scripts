@@ -48,6 +48,69 @@ class SuiteData:
         "-v-",
     )
 
+    def get_changed_um_section(self) -> List[str]:
+        """
+        Read through bdiff of UM source and find code owner section for each changed
+        file
+        """
+
+        changed_sections = []
+        for change in self.dependencies["um"]["gitbdiff"]:
+            # First check files which will not have a Code Section Comment
+            if "dependencies.yaml" in change:
+                continue
+            if "ConfigOwners.txt" in change or "CodeOwners.txt" in change:
+                changed_sections.append(change)
+            elif change.startswith("fcm-make"):
+                changed_sections.append("fcm-make_um")
+            elif change.startswith("fab"):
+                changed_sections.append("fab")
+            elif change.startswith("rose-stem"):
+                changed_sections.append("rose_stem")
+            elif change.startswith("rose-meta"):
+                if "etc/stash" in change:
+                    section = "stash"
+                elif "rose-meta.conf" in change:
+                    section = "rose-meta.conf"
+                else:
+                    section = "upgrade_macros"
+            else:
+                section =
+
+
+    def get_um_owners(self, filename: str) -> Dict:
+        """
+        Read UM Code Owners file and write to a dictionary
+        """
+
+        fpath = self.temp_directory / "um" / filename
+        owners_text = fpath.read_text()
+
+        in_owners = False
+        owners = {}
+        for line in owners_text.split("\n"):
+            line = line.lower().strip()
+            if not line or line.startswith("#") or line.startswith("area") or line.startswith("configuration"):
+                continue
+            if line.startswith("{{{"):
+                in_owners = True
+            elif line.startswith("}}}"):
+                in_owners = False
+            elif in_owners:
+                line = line.split()
+                while len(line) < 3:
+                    line.append("--")
+                owners[line[0]] = (line[1], line[2])
+
+        # Hard Code some SSD sections
+        if "Code" in filename:
+            owners["admin"] = ("SSD Team", "--")
+            owners["bin"] = ("SSD Team", "--")
+            owners["CodeOwners.txt"] = ("SSD Team", "--")
+            owners["ConfigOwners.txt"] = ("SSD Team", "--")
+
+        return owners
+
     def parse_tasks(self) -> Dict[str, List[str]]:
         """
         Read through the tasks run, sorting by state

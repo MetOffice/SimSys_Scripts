@@ -146,6 +146,32 @@ class SuiteReport(SuiteData):
                 self.trac_log.extend(create_markdown_row(task, state))
             self.trac_log.append(self.close_collapsed)
 
+    def create_um_code_owner_table(self, owners: Dict) -> List[str]:
+        """
+        Create a table of required UM code owner approvals
+        """
+
+        changed_sections = self.get_changed_um_section()
+        self.trac_log.append(create_markdown_row("Section", "Owner", "Deputy", header=True))
+
+
+
+    def create_um_owners_tables(self):
+        """
+        Create tables for any UM Code Owners and Config Owners required
+        """
+
+        self.trac_log.append("## Approvals")
+
+        self.trac_log.append("### Code Owners")
+        code_owners = self.get_um_owners("CodeOwners.txt")
+        self.create_um_code_owner_table(code_owners)
+
+        self.trac_log.append("### Config Owners")
+        config_owners = self.get_um_owners("ConfigOwners.txt")
+
+        # code_owner_table: List[str] = self.create_um_code_owner_table(um_owners["code"])
+
     def create_log(self):
         """
         Create the trac.log file, writing each line as a str in self.trac_log
@@ -162,6 +188,10 @@ class SuiteReport(SuiteData):
         self.trac_log.append("")
         self.create_suite_info_table()
         self.create_dependency_table()
+
+        # If UM suite, populate UM Owners
+        if self.primary_source == "um":
+            self.create_um_owners_tables()
 
         # Write Tasks Info
         self.trac_log.append("## Task Information")
