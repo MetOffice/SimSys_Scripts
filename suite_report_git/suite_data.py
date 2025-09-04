@@ -202,7 +202,7 @@ class SuiteData:
 
         with open(self.suite_path / "dependencies.yaml", "r") as stream:
             dependencies = yaml.safe_load(stream)
-        for dependecy, data in dependencies.items():
+        for dependency, data in dependencies.items():
             if data["source"] is None:
                 dependencies[dependecy]["source"] = self.find_unknown_dependency(
                     dependecy
