@@ -16,7 +16,7 @@ from typing import List, Dict, Set
 # Declare version
 VERSION = '13.5.0'
 
-fortran_keywords_II = (
+fortran_keywords = (
     "IF", "END", "DO", "CALL", "THEN", "USE", "INTEGER", "PARAMETER", "ELSE",
     "SUBROUTINE", "IMPLICIT", "NONE", ".AND.", "REAL", "MODULE", ".OR.", "LOGICAL", ".FALSE.",
     "CASE", "ALLOCATABLE", "RETURN", "PRIVATE", ".TRUE.", "CONTAINS", "TO", "POINTER",
@@ -226,12 +226,12 @@ class UMDP3:
             if line.startswith("!"):
                 continue
             clean_line = self.remove_quoted(line)
-            clean_line = self.comment.sub("", clean_line)  # Remove comments
+            clean_line = self.comment_line.sub("", clean_line)  # Remove comments
 
             # Check for lowercase keywords
-            for word in self.splitter.findall(clean_line):
+            for word in self.word_splitter.findall(clean_line):
                 upcase = word.upper()
-                if upcase in self.fortran_keywords and word != upcase:
+                if upcase in fortran_keywords and word != upcase:
                     self.add_extra_error(f"lowercase keyword: {word.lower()}")
                     failures += 1
 

@@ -629,7 +629,12 @@ my %includes_hash;
 @includes_hash{@includes} = ();
 
 my @add_keys = keys %additions;
-print "About to process ", $#add_keys, " if you got this far \n";
+my $keys_count = @add_keys;
+print "About to process $keys_count files\n";
+foreach my $filename (@add_keys) {
+    print "DEBUG : Added a modified file: $filename\n";
+}
+
 # only run checks if there is at least one file to check
 if ( $#add_keys >= 0 ) {
 

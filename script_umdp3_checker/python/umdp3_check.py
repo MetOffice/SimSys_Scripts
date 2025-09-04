@@ -40,13 +40,17 @@ max_snooze = 10  # Maximum number of retries before aborting
 @dataclass
 class GlobalState:
     """Thread-safe global state container"""
+    branch_mode: bool
+    suite_mode: bool
     additions: Dict[str, List[str]]
     deletions: Dict[str, List[str]]
     output_threads: List[List[str]]
     exit_threads: List[int]
     fortran_includes: Set[str]
     
-    def __init__(self, fortran_includes: Optional[Set[str]] = None):
+    def __init__(self, fortran_includes: Optional[Set[str]] = None, branch_mode=False, suite_mode=False):
+        self.branch_mode = branch_mode
+        self.suite_mode = suite_mode
         self.additions = {}
         self.deletions = {}
         self.output_threads = []
@@ -72,6 +76,7 @@ class GlobalState:
 
 def main():
     """Main entry point"""
+    # Argument parsing...
     parser = argparse.ArgumentParser(description='UMDP3 compliance checker')
     parser.add_argument('branch', nargs='?', default='.', 
                        help='Branch to check (default: current directory)')
@@ -84,6 +89,7 @@ def main():
     whitelist_includes_file = args.whitelist_file
     
     # Cope with UTF-style working copy syntax
+    # TODO: UTF-Style probably obsolete now.
     branch = re.sub(r'^wc:', '', branch)
     
     # Check whitelist file exists
@@ -94,23 +100,15 @@ def main():
     includes = read_file(whitelist_includes_file)
     
     # Check for suite mode
-    suite_mode = False
-    if os.environ.get('SOURCE_UM_MIRROR'):
-        print("Detected SOURCE_UM_MIRROR environment variable.")
-        branch = os.environ['SOURCE_UM_MIRROR']
-        print(f"Redirecting branch to {branch}")
-        suite_mode = True
-    else:
-        print("Not running in suite mode.")
+    suite_mode, branch = detect_suite_mode(branch)
 
     # Set up threading
-    max_threads = int(os.environ.get('UMDP_CHECKER_THREADS', '1'))
-    if max_threads < 1:
-        print("UMDP_CHECKER_THREADS environment variable is invalid: overriding")
-        max_threads = 1
-    print(f"Using {max_threads} threads")
-    
+    max_threads = set_max_threads()
+
     # Set up cylc logging
+    ''' ToDo: cylc logging : Is this required ?
+        What it appears to result in in the nightlies is too overwhelming to read.
+        Should it be enabled by cmd line arg instead of 'on' for all suites ?'''
     log_cylc = os.environ.get('CYLC_TASK_LOG_ROOT', '')
     if log_cylc:
         print(f"Using cylc logging directory: {log_cylc}")
@@ -123,34 +121,60 @@ def main():
     dispatch_tables = UMDP3DispatchTables()
     
     # Start branch checking
-    trunkmode, error_trunk = check_branch_info(branch, suite_mode)
-    print(f"DEBUG : Branch {branch} is {'trunk' if trunkmode else 'a branch'}")
+    is_trunk, error_trunk = check_branch_info(branch, suite_mode)
+    print(f"DEBUG : Branch {branch} is {'trunk' if is_trunk else 'a branch'}")
     
     # Process files based on mode
-    if trunkmode:
+    if is_trunk:
         file_list = process_trunk_mode(branch, suite_mode, global_state, max_threads)
         #file_list = [f"{branch}/{file}" for file in file_list] # This was needed for WC of trunk - but not in suite mode
         process_trunk_files_threaded(file_list, global_state, max_threads, suite_mode)
     else:
         file_list = process_branch_mode(branch, global_state)
 
-    print(f"DEBUG : Processed {len(file_list)} files in file list")
+    print(f"DEBUG : There are {len(file_list)} files in file list")
+    print(f"DEBUG : There are {len(global_state.additions)} files in additions")
     # Run checks
     exit_code = run_all_checks(global_state, dispatch_tables, 
-                              branch, trunkmode, max_threads, log_cylc)
+                              branch, is_trunk, max_threads, log_cylc)
     
     # Print results
     print_results(exit_code, global_state)
     
     # Exit with appropriate code
-    if error_trunk == 1 or not trunkmode:
+    if error_trunk == 1 or not is_trunk:
         sys.exit(exit_code > 0)
     else:
         sys.exit(0)
 
+def detect_suite_mode(branch: str) -> Tuple[bool, str]:
+    """
+    Checks for the environment variable SOURCE_UM_MIRROR to determine if the script is running in suite mode.
+    Returns a tuple (suite_mode: bool, branch: str), where suite_mode is True if suite mode is detected,
+    and branch may be modified to reflect the suite source location.
+    """
+    ''' TODO: unsure if branch should be altered if in suite mode.
+    Might also be better as 2 routines: one to establish suite mode, the other to set the branch.'''
+    if os.environ.get('SOURCE_UM_MIRROR'):
+        print("Detected SOURCE_UM_MIRROR environment variable.")
+        branch = os.environ['SOURCE_UM_MIRROR']
+        print(f"Redirecting branch to {branch}")
+        return True, branch
+    else:
+        print("Not running in suite mode.")
+        return False, branch
+
+def set_max_threads():
+    max_threads = int(os.environ.get('UMDP_CHECKER_THREADS', '1'))
+    if max_threads < 1:
+        print("UMDP_CHECKER_THREADS environment variable is invalid: overriding")
+        max_threads = 1
+    print(f"Using a maximum of {max_threads} threads at a time")
+    return max_threads
+
 def check_branch_info(branch: str, suite_mode: bool) -> Tuple[bool, int]:
     """Check branch information and determine mode"""
-    trunkmode = False
+    is_trunk = False
     error_trunk = 0
     
     while True:
@@ -187,7 +211,7 @@ def check_branch_info(branch: str, suite_mode: bool) -> Tuple[bool, int]:
         if is_trunk:
             print("Detected trunk: checking full source tree")
             branch = re.sub(r'@.*$', '', branch)
-            trunkmode = True
+            is_trunk = True
             error_trunk = int(os.environ.get('UMDP_CHECKER_TRUNK_ERROR', '0'))
             
             if error_trunk == 1:
@@ -218,7 +242,7 @@ def check_branch_info(branch: str, suite_mode: bool) -> Tuple[bool, int]:
         else:
             break
     
-    return trunkmode, error_trunk
+    return is_trunk, error_trunk
 
 def process_branch_mode(branch: str, global_state: GlobalState):
     """Process files in branch mode"""
