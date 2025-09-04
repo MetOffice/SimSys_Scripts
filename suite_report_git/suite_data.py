@@ -202,10 +202,10 @@ class SuiteData:
 
         with open(self.suite_path / "dependencies.yaml", "r") as stream:
             dependencies = yaml.safe_load(stream)
-        for dependecy, data in dependencies.items():
+        for dependency, data in dependencies.items():
             if data["source"] is None:
-                dependencies[dependecy]["source"] = self.find_unknown_dependency(
-                    dependecy
+                dependencies[dependency]["source"] = self.find_unknown_dependency(
+                    dependency
                 )
         return dependencies
 
@@ -266,7 +266,7 @@ class SuiteData:
         self, database: Path, selections: List[str], source: str
     ) -> List[tuple]:
         """
-        Create an sql statement annd query provided database. Return the result
+        Create an sql statement and query provided database. Return the result
         """
 
         sql_statement = f"select {', '.join(s for s in selections)} from {source};"
