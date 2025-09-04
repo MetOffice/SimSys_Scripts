@@ -40,6 +40,9 @@ def file_or_stdout(file_name):
 
 
 class SuiteReport(SuiteData):
+    """
+    Suite Report object to gather suite data and write out to markdown formatted file
+    """
 
     # str to enable pink text colour
     pink_text = r"$${\color{magenta}failed}$$"
@@ -95,10 +98,12 @@ class SuiteReport(SuiteData):
         )
 
         for dependency, data in self.dependencies.items():
+            ref = data["ref"] or ""
+            source = data["source"]
+            if ".git" in source:
+                source = source.split(":")[1]
             self.trac_log.extend(
-                create_markdown_row(
-                    dependency, data["source"], data["ref"], data["gitinfo"].is_main()
-                )
+                create_markdown_row(dependency, source, ref, data["gitinfo"].is_main())
             )
 
         self.trac_log.append("")
