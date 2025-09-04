@@ -204,8 +204,8 @@ class SuiteData:
             dependencies = yaml.safe_load(stream)
         for dependency, data in dependencies.items():
             if data["source"] is None:
-                dependencies[dependecy]["source"] = self.find_unknown_dependency(
-                    dependecy
+                dependencies[dependency]["source"] = self.find_unknown_dependency(
+                    dependency
                 )
         return dependencies
 
