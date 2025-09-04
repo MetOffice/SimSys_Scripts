@@ -11,6 +11,7 @@ suite. Intended to be run at the end of a rose-stem run.
 
 import sys
 import os
+import re
 import argparse
 from suite_data import SuiteData
 from pathlib import Path
@@ -37,6 +38,17 @@ def file_or_stdout(file_name):
     else:
         with open(file_name, "w") as out_file:
             yield out_file
+
+
+def extract_org_repo(url: str) -> str:
+    """
+    Extract 'Org/repo' from a GitHub URL (SSH or HTTPS).
+    """
+
+    match = re.search(r"github\.com[:/](.*?)(?:\.git)?$", url)
+    if match:
+        return match.group(1)
+    return ""
 
 
 class SuiteReport(SuiteData):
@@ -94,16 +106,28 @@ class SuiteReport(SuiteData):
         """
 
         self.trac_log.extend(
-            create_markdown_row("Dependency", "Source", "Ref", "Main Like", header=True)
+            create_markdown_row("Dependency", "Reference", "Main Like", header=True)
         )
 
         for dependency, data in self.dependencies.items():
             ref = data["ref"] or ""
-            source = data["source"]
-            if ".git" in source:
-                source = source.split(":")[1]
+            reference = data["source"]
+
+            # Remote source - come up with a URL for the reference
+            if ".git" in reference:
+                org_repo = extract_org_repo(reference)
+
+                # Check if this is a hash and use short form if so
+                if re.match(r"^\s*([0-9a-f]{40})\s*$", ref):
+                    ref = ref[:7]
+                url = f"https://github.com/{org_repo}/tree/{ref}"
+                reference = f"[{org_repo}@{ref}]({url})"
+            elif ref:
+                # This is a local clone but a reference has also been provided
+                reference = f"{reference}@{ref}"
+
             self.trac_log.extend(
-                create_markdown_row(dependency, source, ref, data["gitinfo"].is_main())
+                create_markdown_row(dependency, reference, data["gitinfo"].is_main())
             )
 
         self.trac_log.append("")
@@ -178,7 +202,6 @@ class SuiteReport(SuiteData):
         if log_path:
             log_path = log_path / "trac.log"
         with file_or_stdout(log_path) as wfile:
-            # with open(log_path, "w") as wfile:
             for line in self.trac_log:
                 wfile.write(line + "\n")
 
@@ -242,7 +265,7 @@ def parse_args():
     args, _ = parser.parse_known_args()
 
     # Check log file is writable, set as None if not (this will output to stdout)
-    if not os.access(args.log_path, os.W_OK):
+    if args.log_path and not os.access(args.log_path, os.W_OK):
         args.log_path = None
 
     return args
