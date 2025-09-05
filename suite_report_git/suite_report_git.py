@@ -61,7 +61,6 @@ class SuiteReport(SuiteData):
 
     # str's for collapsed sections in markdown
     open_collapsed = "<details>"
-    open_collapsed_show = "<details open>"
     close_collapsed = "</details>"
 
     def __init__(self, suite_path: Path):
@@ -172,17 +171,6 @@ class SuiteReport(SuiteData):
         order = list(parsed_tasks.keys())
         order.sort(key=lambda val: sort_order.get(val, len(sort_order)))
 
-        # Create summary table
-        self.trac_log.extend(create_markdown_row("State", "Count", header=True))
-        for state in order:
-            tasks = parsed_tasks[state]
-            if not tasks:
-                continue
-            if state == "pink failure":
-                state = self.pink_text
-            self.trac_log.extend(create_markdown_row(state, len(tasks)))
-        self.trac_log.append("")
-
         state_emojis = {
             "failed": ":x:",
             "succeeded": ":white_check_mark:",
@@ -198,12 +186,10 @@ class SuiteReport(SuiteData):
                 continue
             if state == "pink failure":
                 state = self.pink_text
-            if "fail" in state:
-                # Have the collapsed section expanded by default
-                self.trac_log.append(self.open_collapsed_show)
-            else:
-                self.trac_log.append(self.open_collapsed)
-            self.trac_log.append(f"<summary>{emoji} {state} tasks</summary>")
+            self.trac_log.append(self.open_collapsed)
+            self.trac_log.append(
+                f"<summary>{emoji} {state} tasks - {len(tasks)}</summary>"
+            )
             self.trac_log.append("")
             self.trac_log.extend(create_markdown_row("Task", "State", header=True))
             for task in sorted(tasks):
