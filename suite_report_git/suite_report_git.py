@@ -16,7 +16,7 @@ import argparse
 from suite_data import SuiteData
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from contextlib import contextmanager
 
 
@@ -27,7 +27,7 @@ def create_markdown_row(*columns: str, header=False) -> List[str]:
     """
     line = [f"| {' | '.join(str(c) for c in columns)} |"]
     if header:
-        line.append(f"| {' | '.join(':---:' for _ in columns)} |")
+        line.append(f"| {' | '.join(':---' for _ in columns)} |")
     return line
 
 
@@ -80,6 +80,27 @@ class SuiteReport(SuiteData):
         self.populate_gitbdiff()
         self.trac_log = []
 
+    def parse_local_source(self, source: str) -> Tuple[str, str]:
+        """
+        Find the branch name or hash and remote reference for a given source
+        """
+
+        source = self.temp_directory / source
+
+        branch_name = self.run_command(f"git -C {source} branch --show-current", rval=True).stdout.strip("\n")
+        if branch_name and branch_name not in ("main", "stable", "trunk"):
+            ref = branch_name
+        else:
+            ref = self.run_command(f"git -C {source} rev-parse HEAD").stdout().strip("\n")
+
+        remote = self.run_command(f"git -C {source} remote -v", rval=True).stdout.split("\n")
+        for line in remote:
+            if "origin" not in line:
+                continue
+            reference = line.split()[1]
+
+        return reference, ref
+
     def create_suite_info_table(self):
         """
         Create a table containing data on the suite run
@@ -113,18 +134,21 @@ class SuiteReport(SuiteData):
             ref = data["ref"] or ""
             reference = data["source"]
 
-            # Remote source - come up with a URL for the reference
-            if ".git" in reference:
-                org_repo = extract_org_repo(reference)
+            if ".git" not in reference:
+                # This is a local copy. To avoid exposing hostname and path, parse it to
+                # get an equivalent url.
+                # There is a danger a local source has been changed from the tested
+                # version in the intervening time, but this is acceptable
+                reference, ref = self.parse_local_source(dependency)
 
-                # Check if this is a hash and use short form if so
-                if re.match(r"^\s*([0-9a-f]{40})\s*$", ref):
-                    ref = ref[:7]
-                url = f"https://github.com/{org_repo}/tree/{ref}"
-                reference = f"[{org_repo}@{ref}]({url})"
-            elif ref:
-                # This is a local clone but a reference has also been provided
-                reference = f"{reference}@{ref}"
+            # Extract organisation and repo from the source
+            org_repo = extract_org_repo(reference)
+
+            # Check if the ref is a hash and use short form if so
+            if re.match(r"^\s*([0-9a-f]{40})\s*$", ref):
+                ref = ref[:7]
+            url = f"https://github.com/{org_repo}/tree/{ref}"
+            reference = f"[{org_repo}@{ref}]({url})"
 
             self.trac_log.extend(
                 create_markdown_row(dependency, reference, data["gitinfo"].is_main())
@@ -153,8 +177,16 @@ class SuiteReport(SuiteData):
             self.trac_log.extend(create_markdown_row(state, len(tasks)))
         self.trac_log.append("")
 
+        state_emojis = {
+            "failed": ":x:",
+            "succeeded": ":white_check_mark:",
+            "submit-failed": ":no_entry_sign:",
+            "waiting": ":hourglass:"
+        }
+
         # Create Collapsed task tables
         for state in order:
+            emoji = state_emojis[state]
             tasks = parsed_tasks[state]
             if not tasks:
                 continue
@@ -165,7 +197,7 @@ class SuiteReport(SuiteData):
                 self.trac_log.append(self.open_collapsed_show)
             else:
                 self.trac_log.append(self.open_collapsed)
-            self.trac_log.append(f"<summary>{state} tasks</summary>")
+            self.trac_log.append(f"<summary>{emoji} {state} tasks</summary>")
             self.trac_log.append("")
             self.trac_log.extend(create_markdown_row("Task", "State", header=True))
             for task in sorted(tasks):
