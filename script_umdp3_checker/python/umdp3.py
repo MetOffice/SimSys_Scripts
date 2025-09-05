@@ -232,7 +232,7 @@ class UMDP3:
             for word in self.word_splitter.findall(clean_line):
                 upcase = word.upper()
                 if upcase in fortran_keywords and word != upcase:
-                    self.add_extra_error(f"lowercase keyword: {word.lower()}")
+                    self.add_extra_error(f"lowercase keyword: {word}")
                     failures += 1
 
         return failures
