@@ -87,13 +87,19 @@ class SuiteReport(SuiteData):
 
         source = self.temp_directory / source
 
-        branch_name = self.run_command(f"git -C {source} branch --show-current", rval=True).stdout.strip("\n")
+        branch_name = self.run_command(
+            f"git -C {source} branch --show-current", rval=True
+        ).stdout.strip("\n")
         if branch_name and branch_name not in ("main", "stable", "trunk"):
             ref = branch_name
         else:
-            ref = self.run_command(f"git -C {source} rev-parse HEAD").stdout().strip("\n")
+            ref = (
+                self.run_command(f"git -C {source} rev-parse HEAD").stdout().strip("\n")
+            )
 
-        remote = self.run_command(f"git -C {source} remote -v", rval=True).stdout.split("\n")
+        remote = self.run_command(f"git -C {source} remote -v", rval=True).stdout.split(
+            "\n"
+        )
         for line in remote:
             if "origin" not in line:
                 continue
@@ -181,7 +187,7 @@ class SuiteReport(SuiteData):
             "failed": ":x:",
             "succeeded": ":white_check_mark:",
             "submit-failed": ":no_entry_sign:",
-            "waiting": ":hourglass:"
+            "waiting": ":hourglass:",
         }
 
         # Create Collapsed task tables
