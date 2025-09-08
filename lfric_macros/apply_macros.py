@@ -1237,16 +1237,16 @@ def parse_args():
         "--core",
         default=None,
         help="The LFRic Core source being used."
-        "Either a path to a working copy or an FCM URL."
-        "If not set, will be read from the dependencies.sh",
+        "Either a path to a working copy or a git source."
+        "If not set, will be read from the dependencies.yaml",
     )
     parser.add_argument(
         "-j",
         "--jules",
         default=None,
         help="The Jules source being used."
-        "Either a path to a working copy or an FCM URL."
-        "If not set, will be read from the dependencies.sh",
+        "Either a path to a working copy or a git source."
+        "If not set, will be read from the dependencies.yaml",
     )
     return parser.parse_args()
 
