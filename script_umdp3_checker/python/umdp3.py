@@ -312,6 +312,8 @@ class UMDP3:
 
     def lowercase_variable_names(self, lines: List[str]) -> int:
         """Check for lowercase or CamelCase variable names only"""
+        '''ToDo: This is a very simplistic check and will not detect many
+        cases which break UMDP3. I suspect the Perl Predeccessor concattenated continuation lines prior to 'cleaning' and checking. Having identified a declaration, it also then scanned the rest of the file for that variable name in any case.'''
         failures = 0
         for line in lines:
             clean_line = self.remove_quoted(line)
@@ -320,7 +322,10 @@ class UMDP3:
             # Simple check for UPPERCASE variable declarations
             if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+', 
                         clean_line, re.IGNORECASE):
+                print(f"Debug: Found variable declaration line: {clean_line}")
+                clean_line = re.sub(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*', '', clean_line)
                 if re.search(r'[A-Z]{2,}', clean_line):
+                    print(f"Debug: Found UPPERCASE variable name: {clean_line}")
                     self.add_extra_error("UPPERCASE variable name")
                     failures += 1
         
@@ -351,6 +356,8 @@ class UMDP3:
 
     def forbidden_keywords(self, lines: List[str]) -> int:
         """Check for use of EQUIVALENCE or PAUSE"""
+        """ToDo: Can't believe this will allow a COMMON BLOCK....
+        Need to check against what the original did.."""
         failures = 0
         for line in lines:
             clean_line = self.remove_quoted(line)
