@@ -323,12 +323,83 @@ def test_intrinsic_modules(lines, expected_result):
     result = checker.intrinsic_modules(lines)
     assert result == expected_result
 
+test_read_unit_args_parameters = [
+    (["  READ(5,*) var"], 1, "READ without explicit UNIT="),
+    (["  READ(UNIT=10) var"], 0, "READ with explicit UNIT="),
+    (["  READ(UNIT=unit_in, NML=lustre_control_custom_files) var"], 0, "READ with UNIT=variable"),
+    (["  READ(unit_in,*) var"], 1, "READ unit as variable, no UNIT="),
+    (["  READ(*,*) var"], 1, "READ from default unit"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_read_unit_args_parameters],
+                         ids=[data[2] for data in test_read_unit_args_parameters])
+def test_read_unit_args(lines, expected_result):
+    checker = UMDP3()
+    result = checker.read_unit_args(lines)
+    assert result == expected_result
+
+test_retire_if_def_parameters = [
+    (["#ifdef DEBUG"], 0, "Correct Use of #ifdef"),
+    (["#ifndef DEBUG"], 0, "Correct Use of #ifndef"),
+    (["#if defined(DEBUG)"], 0, "Correct Use of #if defined"),
+    (["#if !defined(DEBUG)"], 0, "Correct Use of #if !defined"),
+    (["#elif defined(DEBUG)"], 0, "Correct Use of #elif defined"),
+    (["#else"], 0, "Correct Use of #else"),
+    (["#ifdef VATPOLES"], 1, "Incorrect Use of VATPOLES"),
+    (["#ifndef A12_3A"], 1, "Incorrect Use of A12_3A"),
+    (["#if defined(A12_4A)"], 1, "Incorrect Use of A12_4A"),
+    (["#if !defined(UM_JULES)"], 1, "Incorrect Use of UM_JULES"),
+    (["#elif defined(VATPOLES)"], 1, "Incorrect Use of VATPOLES"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_retire_if_def_parameters],
+                         ids=[data[2] for data in test_retire_if_def_parameters])
+def test_retire_if_def(lines, expected_result):     
+    checker = UMDP3()
+    result = checker.retire_if_def(lines)
+    assert result == expected_result
+
+test_forbidden_stop_parameters = [
+    (["  STOP 0"], 1, "Use of STOP statement"),
+    (["STOP"], 1, "Use of STOP statement without code"),
+    (["  PRINT *, 'Hello, World!'"], 0, "No STOP statement"),
+    (["CALL ABORT"], 1, "Use of call abort statement"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_forbidden_stop_parameters],
+                         ids=[data[2] for data in test_forbidden_stop_parameters])
+def test_forbidden_stop(lines, expected_result):
+    checker = UMDP3()
+    result = checker.forbidden_stop(lines)
+    assert result == expected_result
+
+test_intrinsic_as_variable_parameters = [
+    (["  INTEGER :: SIN"], 1, "Use of intrinsic name as variable"),
+    (["  REAL :: COS"], 1, "Use of intrinsic name as variable"),
+    (["  REAL :: MYVAR"], 0, "No use of intrinsic name as variable"),
+    (["  INTEGER :: TAN, MYVAR"], 1, "One intrinsic name as variable"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_intrinsic_as_variable_parameters],
+                         ids=[data[2] for data in test_intrinsic_as_variable_parameters])
+def test_intrinsic_as_variable(lines, expected_result):
+    checker = UMDP3()
+    result = checker.intrinsic_as_variable(lines)
+    assert result == expected_result
+
+test_check_crown_copyright_parameters = [
+    (["! Crown copyright 2024"], 0, "Correct crown copyright statement"),
+    (["! Copyright 2024"], 0, "A copyright statement"),
+    (["! This is a comment"], 1, "No crown copyright statement"),
+    (["! This is a Crown"], 1, "No crown copyright statement"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_check_crown_copyright_parameters],
+                         ids=[data[2] for data in test_check_crown_copyright_parameters])
+def test_check_crown_copyright(lines, expected_result):
+    checker = UMDP3()
+    result = checker.check_crown_copyright(lines)
+    assert result == expected_result
+
+    
 
 """ToDo:
 # Other tests to consider adding:
-    # def test_read_unit_args():
-    # def test_retire_if_def():
-    # def test_implicit_none():
     # def test_forbidden_stop():
     # def test_intrinsic_as_variable():
     # def test_check_crown_copyright():

@@ -560,9 +560,21 @@ class UMDP3:
 
     def retire_if_def(self, lines: List[str]) -> int:
         """Check for if-defs due for retirement"""
+        retired_ifdefs = ['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES', 'A12_2A',]
         failures = 0
-        # This would check against a list of retired if-defs
-        # For now, just a placeholder implementation
+        for line in lines:
+            clean_line = self.remove_quoted(line)
+            clean_line = re.sub(r'!.*$', '', clean_line)            
+            if match := re.search(
+                r"^#(?:(?:ifn?def|"  # ifdef/ifndef
+                r"(?:el)?if\s*\S*?defined\s*\()"  # elif/if defined(
+                r"\s*([^\)\s]*)\)?)",  # SYMBOL
+                line, re.IGNORECASE):
+                # # The above match either returns [None, SYMBOL] or [SYMBOL, None]
+                # SYMBOL = [x for x in match.groups() if x] # reduce to a list of 1 element
+                if match.group(1) in retired_ifdefs:
+                    self.add_extra_error(f"retired if-def: {match.group(1)}")
+                    failures += 1
         return failures
 
     def implicit_none(self, lines: List[str]) -> int:
@@ -592,9 +604,11 @@ class UMDP3:
         failures = 0
         # This would check for intrinsic function names used as variables
         # Simplified implementation
+        # The AI said that - This needs to be compared to the Perl
+        # as I doubt this does anything near what that did...
         for line in lines:
             clean_line = self.remove_quoted(line)
-            if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER)\s*.*::\s*(SIN|COS|LOG|EXP)\b', 
+            if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER)\s*.*::\s*(SIN|COS|LOG|EXP|TAN)\b', 
                         clean_line, re.IGNORECASE):
                 self.add_extra_error("intrinsic function used as variable")
                 failures += 1
@@ -603,11 +617,15 @@ class UMDP3:
 
     def check_crown_copyright(self, lines: List[str]) -> int:
         """Check for crown copyright statement"""
-        file_content = '\n'.join(lines)
-        if 'Crown copyright' in file_content or 'COPYRIGHT' in file_content:
+        """ToDo: This is a very simplistic check and will not detect many
+        cases which break UMDP3. I suspect the Perl Predeccessor 
+        did much more convoluted tests"""
+        comment_lines = [line.upper() for line in lines if line.startswith("!")]
+        file_content = '\n'.join(comment_lines)
+        if 'CROWN COPYRIGHT' in file_content or 'COPYRIGHT' in file_content:
             return 0
         
-        self.add_extra_error("missing crown copyright")
+        self.add_extra_error("missing copyright or crown copyright statement")
         return 1
 
     def check_code_owner(self, lines: List[str]) -> int:
