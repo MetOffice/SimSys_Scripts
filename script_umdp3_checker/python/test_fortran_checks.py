@@ -266,14 +266,66 @@ def test_cpp_ifdef(lines, expected_result):
     result = checker.cpp_ifdef(lines)
     assert result == expected_result
 
+test_cpp_comment_parameters = [
+    #This test fails because the test is wrong - it needs fixing
+    (["#if !defined(cpp)"], 0, "cpp directive without comment"),
+    (["! This is a comment"], 0, "Fortran style comment"),
+    (["#if defined(cpp) ! some comment"], 1, "Fortran comment after cpp directive"),
+    (["#else ! another comment"], 1, "Fortran comment after #else directive"),
+    (["#else"], 0, "#else directive without comment"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_cpp_comment_parameters],
+                         ids=[data[2] for data in test_cpp_comment_parameters])
+def test_cpp_comment(lines, expected_result):
+    checker = UMDP3()
+    result = checker.cpp_comment(lines)
+    assert result == expected_result
+
+test_obsolescent_fortran_intrinsic_parameters = [
+    (["  x = ALOG(2.0)"], 1, "Use of obsolescent intrinsic ALOG"),
+    (["  y = DSIN(x)"], 1, "Use of obsolescent intrinsic DSIN"),
+    (["  z = SIN(x)"], 0, "Use of non-obsolescent intrinsic SIN"),
+    (["  x = ALOG10(2.0)", "  y = DACOS(x)"], 2, "Use of two obsolescent intrinsics"),
+    (["  x = FLOAT(2)", "  z = SIN(x)"], 1, "Use of one obsolescent intrinsic"),
+    (["  y = DMAX1(x)", "  z = SIN(x)"], 1, "Use of one obsolescent intrinsic"),
+    (["  a = DATAN2(2.0)", "  b = DSIN(a)", "  c = SIN(b)"], 2, "Use of two obsolescent intrinsics"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_obsolescent_fortran_intrinsic_parameters],
+                         ids=[data[2] for data in test_obsolescent_fortran_intrinsic_parameters])
+def test_obsolescent_fortran_intrinsic(lines, expected_result):
+    checker = UMDP3()
+    result = checker.obsolescent_fortran_intrinsic(lines)
+    assert result == expected_result
+
+test_exit_stmt_label_parameters = [
+    (["      EXIT 10"], 0, "EXIT statement with label"),
+    (["      EXIT"], 1, "EXIT statement without label"),
+    (["      i = i + 1"], 0, "No EXIT statement"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_exit_stmt_label_parameters],
+                         ids=[data[2] for data in test_exit_stmt_label_parameters])
+def test_exit_stmt_label(lines, expected_result):
+    checker = UMDP3()
+    result = checker.exit_stmt_label(lines)
+    assert result == expected_result
+
+test_intrinsic_modules_parameters = [
+    (["  USE ISO_C_BINDING"], 1, "Incorrect Use of ISO_C_BINDING module"),
+    (["  USE, INTRINSIC :: ISO_FORTRAN_ENV"], 0, "Correct Use of ISO_FORTRAN_ENV module"),
+    (["  USE  :: ISO_FORTRAN_ENV"], 1, "Incorrect Use of ISO_FORTRAN_ENV module"),
+    (["  USE, INTRINSIC :: ISO_C_BINDING"], 0, "Correct Use of ISO_C_BINDING module"),
+    (["  USE SOME_OTHER_MODULE"], 0, "Use of non-intrinsic module without INTRINSIC keyword"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_intrinsic_modules_parameters],
+                         ids=[data[2] for data in test_intrinsic_modules_parameters])
+def test_intrinsic_modules(lines, expected_result):
+    checker = UMDP3()
+    result = checker.intrinsic_modules(lines)
+    assert result == expected_result
+
 
 """ToDo:
 # Other tests to consider adding:
-    # def test_cpp_ifdef():
-    # def test_cpp_comment():
-    # def test_obsolescent_fortran_intrinsic():
-    # def test_exit_stmt_label():
-    # def test_intrinsic_modules():
     # def test_read_unit_args():
     # def test_retire_if_def():
     # def test_implicit_none():

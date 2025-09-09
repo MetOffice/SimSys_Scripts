@@ -483,11 +483,19 @@ class UMDP3:
 
     def cpp_comment(self, lines: List[str]) -> int:
         """Check for Fortran comments in CPP directives"""
+        """Todo: This looks like it will incorrectly fail # if !defined(X)
+        How did the original do this test?"""
         failures = 0
         for line in lines:
-            if re.search(r'^\s*#.*!', line):
-                self.add_extra_error("Fortran comment in CPP directive")
-                failures += 1
+            match = re.search(r'^\s*#if *(!)?defined\s*\(\s*\w+\s*\)(.*)', line) or re.search(r'^\s*#(else) *(.*)', line)
+            if match:
+                print(f"Debug: Found CPP directive line: {line}")
+                print(f"Debug: match groups: {match.groups()}")
+                print(f"Debug: match group(1): {match.group(1)}")
+                print(f"Debug: match group(2): {match.group(2)}")
+                if re.search(r'.*!', match.group(2)):
+                    self.add_extra_error("Fortran comment in CPP directive")
+                    failures += 1
         
         return failures
 
@@ -528,7 +536,7 @@ class UMDP3:
             clean_line = re.sub(r'!.*$', '', clean_line)
             
             for module in intrinsic_modules:
-                if (re.search(rf'\bUSE\s+{module}\b', clean_line, re.IGNORECASE) and
+                if (re.search(rf'\bUSE\s+(::)*\s*{module}\b', clean_line, re.IGNORECASE) and
                     not re.search(r'\bINTRINSIC\b', clean_line, re.IGNORECASE)):
                     self.add_extra_error(f"intrinsic module {module} without INTRINSIC")
                     failures += 1
