@@ -396,14 +396,42 @@ def test_check_crown_copyright(lines, expected_result):
     result = checker.check_crown_copyright(lines)
     assert result == expected_result
 
-    
+test_check_code_owner_parameters = [
+    (["! Code Owner: John Doe"], 0, "code owner statement"),
+    (["! Code Owner : John Doe"], 0, "Another code owner statement"),
+    (["! This is a comment"], 1, "No code owner statement"),
+    (["! Code Owner: "], 0, "Code owner statement with no name"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_check_code_owner_parameters],
+                         ids=[data[2] for data in test_check_code_owner_parameters])
+def test_check_code_owner(lines, expected_result):
+    checker = UMDP3()
+    result = checker.check_code_owner(lines)
+    assert result == expected_result
 
-"""ToDo:
-# Other tests to consider adding:
-    # def test_forbidden_stop():
-    # def test_intrinsic_as_variable():
-    # def test_check_crown_copyright():
-    # def test_check_code_owner():
-    # def test_array_init_form():
-    # def test_line_trail_whitespace():
-    """
+
+test_array_init_form_parameters = [
+    (["  INTEGER, DIMENSION(10) :: array = 0"], 0, "Array initialized using '='"),
+    (["  INTEGER, DIMENSION(10) :: array"], 0, "Array declared without initialization"),
+    (["  INTEGER, DIMENSION(10) :: array = (/ (i, i=1,10) /)"], 1, "Array initialized using array constructor"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_array_init_form_parameters],
+                         ids=[data[2] for data in test_array_init_form_parameters])
+def test_array_init_form(lines, expected_result):
+    checker = UMDP3()
+    result = checker.array_init_form(lines)
+    assert result == expected_result
+
+test_line_trail_whitespace_parameters = [
+    (["  PRINT *, 'Hello, World!  '"], 0, "Line 1 without trailing whitespace"),
+    (["  PRINT *, 'Hello, World!'"], 0, "Line 2 without trailing whitespace"),
+    (["  PRINT *, 'Hello, World!   '  "], 1, "Line 1 with trailing whitespace"),
+    (["  something = sin(coeff /2.0_rdef) +    & "], 1, "Line 2 with trailing whitespace"),
+    (["MODULE some_mod "], 1, "Line 3 with trailing whitespace"),
+]
+@pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_line_trail_whitespace_parameters],
+                         ids=[data[2] for data in test_line_trail_whitespace_parameters])
+def test_line_trail_whitespace(lines, expected_result):
+    checker = UMDP3()
+    result = checker.line_trail_whitespace(lines)
+    assert result == expected_result

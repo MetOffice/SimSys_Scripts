@@ -12,11 +12,12 @@ Python translation of the original Perl UMDP3.pm module.
 import re
 import threading
 from typing import List, Dict, Set
+from fortran_keywords import fortran_keywords
 
 # Declare version
 VERSION = '13.5.0'
 
-fortran_keywords = (
+""" fortran_keywords = (
     "IF", "END", "DO", "CALL", "THEN", "USE", "INTEGER", "PARAMETER", "ELSE",
     "SUBROUTINE", "IMPLICIT", "NONE", ".AND.", "REAL", "MODULE", ".OR.", "LOGICAL", ".FALSE.",
     "CASE", "ALLOCATABLE", "RETURN", "PRIVATE", ".TRUE.", "CONTAINS", "TO", "POINTER",
@@ -107,7 +108,7 @@ fortran_keywords = (
     "UNFORMATTED", "UNLINK", "UNLOCK", "VERIF", "VERIFY", "XOR", "ZABS", "ZCOS", "ZEXP",
     "ZLOG", "ZSIN", "ZSQRT", ".EQ.", ".GE.", ".GT.", ".LE.", ".LT.", ".NE.", ".XOR."
 )
-
+ """
 class UMDP3:
     """UMDP3 compliance checker class"""
     # precompiled, regularly used search patterns.
@@ -118,54 +119,6 @@ class UMDP3:
         self._extra_error_info = {}
         self._lock = threading.Lock()
         self._number_of_files_with_variable_declarations_in_includes = 0
-        
-        # Fortran keywords list
-        # self.fortran_keywords = {
-        #     'ABORT', 'ABS', 'ABSTRACT', 'ACCESS', 'ACHAR', 'ACOS', 'ACOSD', 'ACOSH',
-        #     'ACTION', 'ADJUSTL', 'ADJUSTR', 'ADVANCE', 'AIMAG', 'AINT', 'ALARM', 'ALGAMA',
-        #     'ALL', 'ALLOCATABLE', 'ALLOCATE', 'ALLOCATED', 'ALOG', 'ALOG10', 'AMAX0', 'AMAX1',
-        #     'AMIN0', 'AMIN1', 'AMOD', 'AND', 'ANINT', 'ANY', 'ASIN', 'ASIND', 'ASINH',
-        #     'ASSIGN', 'ASSIGNMENT', 'ASSOCIATE', 'ASSOCIATED', 'ASYNCHRONOUS', 'ATAN', 'ATAN2',
-        #     'ATAN2D', 'ATAND', 'ATANH', 'ATOMIC_ADD', 'ATOMIC_AND', 'ATOMIC_CAS', 'ATOMIC_DEFINE',
-        #     'ATOMIC_FETCH_ADD', 'ATOMIC_FETCH_AND', 'ATOMIC_FETCH_OR', 'ATOMIC_FETCH_XOR',
-        #     'ATOMIC_INT_KIND', 'ATOMIC_LOGICAL_KIND', 'ATOMIC_OR', 'ATOMIC_REF', 'ATOMIC_XOR',
-        #     'BACKSPACE', 'BACKTRACE', 'BESJ0', 'BESJ1', 'BESJN', 'BESSEL_J0', 'BESSEL_J1',
-        #     'BESSEL_JN', 'BESSEL_Y0', 'BESSEL_Y1', 'BESSEL_YN', 'BESY0', 'BESY1', 'BESYN',
-        #     'BGE', 'BGT', 'BIND', 'BIT_SIZE', 'BLANK', 'BLE', 'BLOCK', 'BLT', 'BTEST',
-        #     'CABS', 'CALL', 'CASE', 'CEILING', 'CHAR', 'CHARACTER', 'CLASS', 'CLOSE',
-        #     'CMPLX', 'CODIMENSION', 'COMMAND_ARGUMENT_COUNT', 'COMMON', 'COMPILER_OPTIONS',
-        #     'COMPILER_VERSION', 'COMPLEX', 'CONJG', 'CONTAINS', 'CONTINUE', 'COS', 'COSD',
-        #     'COSH', 'COUNT', 'CPU_TIME', 'CSHIFT', 'CYCLE', 'DATA', 'DATE_AND_TIME',
-        #     'DBLE', 'DEALLOCATE', 'DEFAULT', 'DELIM', 'DIMENSION', 'DIMAG', 'DIRECT',
-        #     'DO', 'DOT_PRODUCT', 'DOUBLE', 'DPROD', 'DREAL', 'DTIME', 'ELEMENTAL',
-        #     'ELSE', 'ELSEIF', 'ELSEWHERE', 'END', 'ENDDO', 'ENDFILE', 'ENDIF', 'ENTRY',
-        #     'ENUM', 'ENUMERATOR', 'EOSHIFT', 'EPSILON', 'ERROR', 'ETIME', 'EXECUTE_COMMAND_LINE',
-        #     'EXIT', 'EXP', 'EXPONENT', 'EXTENDS', 'EXTERNAL', 'EXTRACT', 'FALSE', 'FILE',
-        #     'FINAL', 'FLOAT', 'FLOOR', 'FLUSH', 'FMT', 'FORALL', 'FORMAT', 'FORMATTED',
-        #     'FRACTION', 'FUNCTION', 'GAMMA', 'GENERIC', 'GET_COMMAND', 'GET_COMMAND_ARGUMENT',
-        #     'GET_ENVIRONMENT_VARIABLE', 'GOTO', 'HUGE', 'IACHAR', 'IAND', 'IARG', 'IBCLR',
-        #     'IBITS', 'IBSET', 'ICHAR', 'IDATE', 'IEOR', 'IF', 'IFIX', 'IMAG', 'IMPLICIT',
-        #     'IMPORT', 'IN', 'INCLUDE', 'INDEX', 'INOUT', 'INQUIRE', 'INT', 'INTEGER',
-        #     'INTENT', 'INTERFACE', 'INTRINSIC', 'IOR', 'IOSTAT', 'ISHFT', 'ISHFTC',
-        #     'IS_IOSTAT_END', 'IS_IOSTAT_EOR', 'ITIME', 'KIND', 'LBOUND', 'LEADZ',
-        #     'LEN', 'LEN_TRIM', 'LGE', 'LGT', 'LLE', 'LLT', 'LOG', 'LOG10', 'LOGICAL',
-        #     'MATMUL', 'MAX', 'MAXEXPONENT', 'MAXLOC', 'MAXVAL', 'MERGE', 'MIN',
-        #     'MINEXPONENT', 'MINLOC', 'MINVAL', 'MOD', 'MODULE', 'MODULO', 'MOVE_ALLOC',
-        #     'MVBITS', 'NAMELIST', 'NEAREST', 'NEW_LINE', 'NINT', 'NON_INTRINSIC',
-        #     'NON_OVERRIDABLE', 'NOPASS', 'NOT', 'NULL', 'NULLIFY', 'NUMERIC_STORAGE_SIZE',
-        #     'ONLY', 'OPEN', 'OPERATOR', 'OPTIONAL', 'OR', 'OUT', 'PACK', 'PARAMETER',
-        #     'PASS', 'PAUSE', 'POINTER', 'POPPAR', 'POPCNT', 'PRECISION', 'PRESENT',
-        #     'PRINT', 'PRIVATE', 'PROCEDURE', 'PRODUCT', 'PROGRAM', 'PROTECTED', 'PUBLIC',
-        #     'PURE', 'PUSHPAR', 'RADIX', 'RANDOM_NUMBER', 'RANDOM_SEED', 'RANGE', 'READ',
-        #     'REAL', 'RECURSIVE', 'REPEAT', 'RESHAPE', 'RESULT', 'RETURN', 'REWIND',
-        #     'RRSPACING', 'SAME_TYPE_AS', 'SAVE', 'SCALE', 'SCAN', 'SELECT', 'SELECTED_CHAR_KIND',
-        #     'SELECTED_INT_KIND', 'SELECTED_REAL_KIND', 'SEQUENCE', 'SET_EXPONENT', 'SHAPE',
-        #     'SIGN', 'SIN', 'SIND', 'SINH', 'SIZE', 'SNGL', 'SPACING', 'SPREAD', 'SQRT',
-        #     'STOP', 'STORAGE_SIZE', 'SUM', 'SUBROUTINE', 'SYSTEM_CLOCK', 'TAN', 'TAND',
-        #     'TANH', 'TARGET', 'THEN', 'TIME', 'TINY', 'TRANSFER', 'TRANSPOSE', 'TRIM',
-        #     'TRUE', 'TYPE', 'UBOUND', 'UNFORMATTED', 'UNPACK', 'USE', 'VALUE', 'VERIFY',
-        #     'VOLATILE', 'WHERE', 'WHILE', 'WRITE'
-        # }
         
         # Obsolescent Fortran intrinsics
         self.obsolescent_intrinsics = {
@@ -237,25 +190,6 @@ class UMDP3:
 
         return failures
     
-    def capitalised_keywords_old(self, lines: List[str]) -> int:
-        """Check for lowercase Fortran keywords"""
-        failures = 0
-        for line in lines:
-            # Remove quoted strings and comments
-            clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r'!.*$', '', clean_line)  # Remove comments
-            
-            # Check for lowercase keywords
-            words = re.findall(r'\b\w+\b', clean_line.upper())
-            for word in words:
-                if word.upper() in self.fortran_keywords:
-                    # Check if original was lowercase
-                    if re.search(rf'\b{word.lower()}\b', clean_line.lower()):
-                        self.add_extra_error(f"lowercase keyword: {word.lower()}")
-                        failures += 1
-        
-        return failures
-
     def openmp_sentinels_in_column_one(self, lines: List[str]) -> int:
         """Check OpenMP sentinels are in column one"""
         failures = 0
@@ -630,16 +564,20 @@ class UMDP3:
 
     def check_code_owner(self, lines: List[str]) -> int:
         """Check for correct code owner comment"""
+        """ToDo: oh wow is this test worthless. We don't even guarentee to put the wrds "code owner" in a file. Plus, that's before you take into account both returns were '0' - so it couldn't possibly fail (picard.gif)
+        The Perl looks to have been designed to check the whole file, and turns various logicals on/off dependent on previously processed lines."""
         # Simplified check for code owner information
         file_content = '\n'.join(lines)
         if 'Code Owner:' in file_content or 'code owner' in file_content.lower():
+            print(f"Debug: Found {file_content.lower()}")
             return 0
         
         # This is often a warning rather than an error
-        return 0
+        return 1
 
     def array_init_form(self, lines: List[str]) -> int:
         """Check for old array initialization form"""
+        """ToDo: Another instance that assumes continuation lines are concatenated prior to executing the actual test to ensure both forward slashes are on the same line."""
         failures = 0
         for line in lines:
             clean_line = self.remove_quoted(line)

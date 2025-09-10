@@ -7,6 +7,7 @@
 """
 Package to contain functions which test for UMDP3 compliance.
 Python translation of the original Perl UMDP3.pm module.
+These have been 'ordered' in terms of frequency of occurrence within the UM codebase in order to improve efficiency.
 """
 
 fortran_keywords = (
