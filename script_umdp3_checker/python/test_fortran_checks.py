@@ -54,10 +54,10 @@ def test_openmp_sentinels_in_column_one(lines, expected_result):
 unseparated_keywords_parameters = [
     (["ELSEIF", "ENDDO", "ENDSUBROUTINE"], 3, "All keywords unseparated"),
     (["ELSE IF", "ENDMODULE", "ENDSUBROUTINE"], 2, "One keyword separated"),
-    (["ELSE IF", "END DO", "END IF"], 0, "All keywords separated"),
+    (["ELSE IF", "END PARRALEL DO", "END IF"], 0, "All keywords separated"),
     (["i=0", "i=i+1", "PRINT*,i"], 0, "No keywords"),
     (["PROGRAM test", "i=0", "ENDIF"], 1, "One keyword unseparated"),
-    (["i=0", "ENDIF", "END DO"], 1, "One keyword unseparated in middle")
+    (["i=0", "ENDPARALLELDO", "END DO"], 1, "One keyword unseparated in middle")
 ]
 @pytest.mark.parametrize("lines, expected_result", [data[:2] for data in unseparated_keywords_parameters],
                           ids=[data[2] for data in unseparated_keywords_parameters])

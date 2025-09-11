@@ -5,9 +5,10 @@
 # *****************************COPYRIGHT*******************************
 
 """
-Package to contain functions which test for UMDP3 compliance.
-Python translation of the original Perl UMDP3.pm module.
+List of the Fortran Keywords for the UMDP3 checker to check against.
+Hopefully complete, but may need to be updated from time to time.
 These have been 'ordered' in terms of frequency of occurrence within the UM codebase in order to improve efficiency.
+ToDo: Current order may not be perfect, and could possibly be reviewed. However, it is probably 'good enough' for now.
 """
 
 fortran_keywords = (
