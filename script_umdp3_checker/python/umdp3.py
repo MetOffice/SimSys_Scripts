@@ -29,29 +29,39 @@ class UMDP3:
     def __init__(self):
         self._extra_error_info = {}
         self._lock = threading.Lock()
+        """ToDo: The Perl version had a dodgy looking subroutine to calculate
+        this, but I can't find where it was called from within the files in
+        'bin'. It used all args as a 'list' - searched them for '#include' and
+        then returned the count as well as adding 1 to this global var if any were found.
+        This is either redundant and needs removing, or needs implementing properly."""
         self._number_of_files_with_variable_declarations_in_includes = 0
         
     def reset_extra_error_information(self):
-        """Reset extra error information"""
+        """Reset extra error information :
+        Appears to be used 'between' blocks of tests such as those on diffs and those on full files."""
         with self._lock:
             self._extra_error_info = {}
 
     def get_extra_error_information(self) -> Dict:
-        """Get extra error information"""
+        """Get extra error information. Dictionary with file names as the keys."""
+        """ToDo: I presume this is what's used when creating the report of the actual failures and not just the count. However, this information doesn't seem to be output as yet and will need implementing."""
         with self._lock:
             return self._extra_error_info.copy()
 
     def add_extra_error(self, key: str, value: str = ""):
-        """Add extra error information"""
+        """Add extra error information to the dictionary"""
+        """ToDo: The usefulness of the information added has not been assesed, nor does it appear to be reported as yet."""
         with self._lock:
             self._extra_error_info[key] = value
 
     def get_include_number(self) -> int:
         """Get number of files with variable declarations in includes"""
+        """ToDo: At present, this is hardwired to zero and I don't think anything alters it along the way. Plus it doesn't seem to be called from anywhere..... So this getter is probably very redundant."""
         return self._number_of_files_with_variable_declarations_in_includes
 
     def remove_quoted(self, line: str) -> str:
         """Remove quoted strings from a line"""
+        """ToDo: The original version replaced the quoted sections with a "blessed reference", presumably becuase they were 're-inserted' at some stage. No idea if that capability is still required."""
         # Simple implementation - remove single and double quoted strings
         result = line
         
@@ -63,9 +73,17 @@ class UMDP3:
         
         return result
 
-    # Test functions - each returns 0 for pass, >0 for fail
+    """Test functions :
+        Each accepts a list of 'lines' to search and returns 0 for pass, >0
+        for fail, where the number returned is the count of occurrences of that
+        type of failure.
+    """
+    """ToDo: One thought here is each test should also be told whether it's being passed the contents of a full file, or just a selection of lines involved in a change as some of the tests appear to really only be useful if run on a full file (e.g. the Implicit none checker). Thus if only passed a selection of lines, these tests could be skipped/return 'pass' regardless.
+    Although, a brief look seems to imply that there are two 'dispatch tables' one for full files and one for changed lines."""
+
+    ### SCAN STOP ####
     def capitalised_keywords(self, lines: List[str]) -> int:
-        """Check for lowercase Fortran keywords"""
+        """Check for the presence of lowercase Fortran keywords, which are taken from an imported list 'fortran_keywords'."""
         failures = 0
         for line in lines:
             # Remove quoted strings and comments
