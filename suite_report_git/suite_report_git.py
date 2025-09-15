@@ -16,7 +16,7 @@ import argparse
 from suite_data import SuiteData
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from contextlib import contextmanager
 
 
@@ -27,12 +27,12 @@ def create_markdown_row(*columns: str, header=False) -> List[str]:
     """
     line = [f"| {' | '.join(str(c) for c in columns)} |"]
     if header:
-        line.append(f"| {' | '.join(':---:' for _ in columns)} |")
+        line.append(f"| {' | '.join(':---' for _ in columns)} |")
     return line
 
 
 @contextmanager
-def file_or_stdout(file_name):
+def file_or_stdout(file_name: str):
     if file_name is None:
         yield sys.stdout
     else:
@@ -61,10 +61,9 @@ class SuiteReport(SuiteData):
 
     # str's for collapsed sections in markdown
     open_collapsed = "<details>"
-    open_collapsed_show = "<details open>"
     close_collapsed = "</details>"
 
-    def __init__(self, suite_path: Path):
+    def __init__(self, suite_path: Path)  -> None:
         self.suite_path: Path = suite_path
         self.suite_user = suite_path.owner()
         self.suite_starttime: str = self.get_suite_starttime()
@@ -80,7 +79,34 @@ class SuiteReport(SuiteData):
         self.populate_gitbdiff()
         self.trac_log = []
 
-    def create_suite_info_table(self):
+    def parse_local_source(self, source: str) -> Tuple[str, str]:
+        """
+        Find the branch name or hash and remote reference for a given source
+        """
+
+        source = self.temp_directory / source
+
+        branch_name = self.run_command(
+            f"git -C {source} branch --show-current", rval=True
+        ).stdout.strip("\n")
+        if branch_name and branch_name not in ("main", "stable", "trunk"):
+            ref = branch_name
+        else:
+            ref = (
+                self.run_command(f"git -C {source} rev-parse HEAD").stdout().strip("\n")
+            )
+
+        remote = self.run_command(f"git -C {source} remote -v", rval=True).stdout.split(
+            "\n"
+        )
+        for line in remote:
+            if "origin" not in line:
+                continue
+            reference = line.split()[1]
+
+        return reference, ref
+
+    def create_suite_info_table(self) -> None:
         """
         Create a table containing data on the suite run
         """
@@ -100,7 +126,7 @@ class SuiteReport(SuiteData):
 
         self.trac_log.append("")
 
-    def create_dependency_table(self):
+    def create_dependency_table(self) -> None:
         """
         Create a table containing dependency information
         """
@@ -113,18 +139,21 @@ class SuiteReport(SuiteData):
             ref = data["ref"] or ""
             reference = data["source"]
 
-            # Remote source - come up with a URL for the reference
-            if ".git" in reference:
-                org_repo = extract_org_repo(reference)
+            if ".git" not in reference:
+                # This is a local copy. To avoid exposing hostname and path, parse it to
+                # get an equivalent url.
+                # There is a danger a local source has been changed from the tested
+                # version in the intervening time, but this is acceptable
+                reference, ref = self.parse_local_source(dependency)
 
-                # Check if this is a hash and use short form if so
-                if re.match(r"^\s*([0-9a-f]{40})\s*$", ref):
-                    ref = ref[:7]
-                url = f"https://github.com/{org_repo}/tree/{ref}"
-                reference = f"[{org_repo}@{ref}]({url})"
-            elif ref:
-                # This is a local clone but a reference has also been provided
-                reference = f"{reference}@{ref}"
+            # Extract organisation and repo from the source
+            org_repo = extract_org_repo(reference)
+
+            # Check if the ref is a hash and use short form if so
+            if re.match(r"^\s*([0-9a-f]{40})\s*$", ref):
+                ref = ref[:7]
+            url = f"https://github.com/{org_repo}/tree/{ref}"
+            reference = f"[{org_repo}@{ref}]({url})"
 
             self.trac_log.extend(
                 create_markdown_row(dependency, reference, data["gitinfo"].is_main())
@@ -132,7 +161,7 @@ class SuiteReport(SuiteData):
 
         self.trac_log.append("")
 
-    def create_task_tables(self, parsed_tasks: Dict[str, List[str]]):
+    def create_task_tables(self, parsed_tasks: Dict[str, List[str]]) -> None:
         """
         Create tables containing summary of task states and number of tasks won
         """
@@ -142,37 +171,32 @@ class SuiteReport(SuiteData):
         order = list(parsed_tasks.keys())
         order.sort(key=lambda val: sort_order.get(val, len(sort_order)))
 
-        # Create summary table
-        self.trac_log.extend(create_markdown_row("State", "Count", header=True))
-        for state in order:
-            tasks = parsed_tasks[state]
-            if not tasks:
-                continue
-            if state == "pink failure":
-                state = self.pink_text
-            self.trac_log.extend(create_markdown_row(state, len(tasks)))
-        self.trac_log.append("")
+        state_emojis = {
+            "failed": ":x:",
+            "succeeded": ":white_check_mark:",
+            "submit-failed": ":no_entry_sign:",
+            "waiting": ":hourglass:",
+        }
 
         # Create Collapsed task tables
         for state in order:
+            emoji = state_emojis[state]
             tasks = parsed_tasks[state]
             if not tasks:
                 continue
             if state == "pink failure":
                 state = self.pink_text
-            if "fail" in state:
-                # Have the collapsed section expanded by default
-                self.trac_log.append(self.open_collapsed_show)
-            else:
-                self.trac_log.append(self.open_collapsed)
-            self.trac_log.append(f"<summary>{state} tasks</summary>")
+            self.trac_log.append(self.open_collapsed)
+            self.trac_log.append(
+                f"<summary>{emoji} {state} tasks - {len(tasks)}</summary>"
+            )
             self.trac_log.append("")
             self.trac_log.extend(create_markdown_row("Task", "State", header=True))
             for task in sorted(tasks):
                 self.trac_log.extend(create_markdown_row(task, state))
             self.trac_log.append(self.close_collapsed)
 
-    def create_log(self):
+    def create_log(self) -> None:
         """
         Create the trac.log file, writing each line as a str in self.trac_log
         """
@@ -194,7 +218,7 @@ class SuiteReport(SuiteData):
         parsed_tasks = self.parse_tasks()
         self.create_task_tables(parsed_tasks)
 
-    def write_log(self, log_path):
+    def write_log(self, log_path: Path) -> None:
         """
         Write the log to provided output
         """
@@ -206,7 +230,7 @@ class SuiteReport(SuiteData):
                 wfile.write(line + "\n")
 
 
-def check_log_path(opt) -> Path:
+def check_log_path(opt: str) -> Path:
     """
     Check that log_path is a valid directory, if it has been provided.
     """
@@ -223,7 +247,7 @@ def check_log_path(opt) -> Path:
     return opt
 
 
-def check_suite_path(opt) -> Path:
+def check_suite_path(opt: str) -> Path:
     """
     Check that the suite_path is a valid cylc-run directory
     """
@@ -236,7 +260,7 @@ def check_suite_path(opt) -> Path:
     return opt
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """
     Parse command line arguments
     """
@@ -271,20 +295,19 @@ def parse_args():
     return args
 
 
-def main():
+def main() -> None:
     """
     Main function for this program
     """
 
     args = parse_args()
 
-    suite_report = SuiteReport(args.suite_path)
-
-    suite_report.create_log()
-
-    suite_report.write_log(args.log_path)
-
-    suite_report.cleanup()
+    try:
+        suite_report = SuiteReport(args.suite_path)
+        suite_report.create_log()
+        suite_report.write_log(args.log_path)
+    finally:
+        suite_report.cleanup()
 
 
 if __name__ == "__main__":
