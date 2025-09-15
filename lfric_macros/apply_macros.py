@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import yaml
 import networkx as nx
 from collections import defaultdict
 
@@ -72,31 +73,29 @@ def check_environment():
 
 def get_root_path(wc_path):
     """
-    Given a path to a working copy, ensure the path and working copy are both
-    valid and return the path to the working copy root directory
+    Given a path to a git clone, ensure the path and cline are both
+    valid and return the path to the clone root directory
     Inputs:
-        - wc_path, command line argument to a working copy
+        - wc_path, command line argument to a clone
     Outputs:
-        - str, path to the top level of the apps working copy
+        - str, path to the top level of the apps clone
     """
 
-    # Run fcm info on the given path to ensure it is
-    command = f"fcm info {wc_path}"
+    command = f"git -C {wc_path} rev-parse --show-toplevel"
     result = run_command(command)
     if result.returncode:
         print(
-            "[WARN] - Could not find the fcm root path for the apps working copy. "
-            "Defaulting to assuming the provided path in the root path."
+            "[WARN] - Could not find the git clone root for the apps working copy. "
+            "Defaulting to assuming the provided path is the root path."
         )
         return wc_path
 
     # If no error, then search through output for the working copy root path
     # return the found path
-    for line in result.stdout.split("\n"):
-        if line.startswith("Working Copy Root Path"):
-            return line.split(":", 1)[1].strip()
+    if result.stdout:
+        return result.stdout.strip()
     raise Exception(
-        "Couldn't extract the Working Copy Root path from the output of the "
+        "Couldn't extract the Git Clone Root path from the output of the "
         f"command '{command}'"
     )
 
@@ -321,11 +320,10 @@ class ApplyMacros:
 
     def get_dependency_paths(self, source, repo):
         """
-        Parse the core or jules command line arguments to get the path to a
-        working copy.
+        Parse the core or jules command line arguments to get the path to a git clone.
         If the source isn't defined, first populate the source by reading the
-        dependencies.sh file.
-        If the source is an fcm url check it out to a temporary location
+        dependencies.yaml file.
+        If the source is a remote github source clone it to a temporary location
         Inputs:
             - source, str, The command line argument for the source. If not set
                            this will be None
@@ -335,9 +333,9 @@ class ApplyMacros:
             - str, The path to the source working copy to use
         """
 
-        # If source is None then read the dependencies.sh file for the source
+        # If source is None then read the dependencies.yaml file for the source
         if source is None:
-            source = self.read_dependencies(repo)
+            source, ref = self.read_dependencies(repo)
 
         # If the source exists as a path then return as is
         if os.path.exists(os.path.expanduser(source)):
@@ -347,76 +345,62 @@ class ApplyMacros:
             if os.path.exists(source_path):
                 return source_path
 
-        # Check that the source looks like an fcm keyword, raise an error if not
-        if "fcm:" not in source:
+        # Check that the source looks like a github URL, raise an error if not
+        if ".git" not in source:
             raise Exception(
                 f"The {repo} source: {source}, was not found as a working copy "
-                "and does not look like an fcm url. Please check the source."
-                "If not set on the command then the dependencies.sh file is "
+                "and does not look like an github URL. Please check the source."
+                "If not set on the command then the dependencies.yaml file is "
                 "being used."
             )
 
-        # Checkout the fcm source to a temporary location
-        source = self.fcm_temp_copy(source, repo)
+        # Checkout the git source to a temporary location
+        source = self.git_clone_temp(source, ref, repo)
         return source
 
     def read_dependencies(self, repo):
         """
-        Read through the dependencies.sh file for the source of the repo defined
-        by repo. Uses self.root_path to locate the dependencies.sh file.
+        Read through the dependencies.yaml file for the source of the repo defined
+        by repo. Uses self.root_path to locate the dependencies.yaml file.
         Inputs:
             - repo, str, Either "lfric_core" or "jules" depending on which
                          source is being found. The function will work with
                          other repos, but not intended to within this script.
         Outputs:
-            - str, The source as defined by the dependencies.sh file
+            - str, The source as defined by the dependencies.yaml file
         """
-        dependencies_path = os.path.join(self.root_path, "dependencies.sh")
-        source = ""
-        rev = ""
-        with open(dependencies_path, "r") as dependencies_file:
-            # Loop over lines in dependencies.sh for lines relevant to repo
-            for line in dependencies_file:
-                line = line.strip()
-                if line.startswith(f"export {repo}_rev"):
-                    rev = line.split("=")[1]
-                if line.startswith(f"export {repo}_sources"):
-                    source = line.split("=")[1]
-        # If source not set then default to trunk
-        if source == "":
-            # lfric_core doesn't match the url
-            if repo == "lfric_core":
-                source = "fcm:lfric.xm_tr"
-            else:
-                source = f"fcm:{repo}.xm_tr"
-        # If a revision set then append to source
-        # Defaults to the head of the source
-        # Only do this if it's an fcm url
-        if rev != "" and "fcm:" in source:
-            source = f"{source}@{rev}"
-        return source
+        dependencies_path = os.path.join(self.root_path, "dependencies.yaml")
+        with open(dependencies_path, "r") as f:
+            dependencies = yaml.safe_load(f)
 
-    def fcm_temp_copy(self, url, repo):
+        return dependencies[repo]["source"], dependencies[repo]["ref"]
+
+    def git_clone_temp(self, source, ref, repo):
         """
-        Given an fcm url as a source, checkout a working copy to a temp location
-        and return the path. Update self.temp_dirs with temporary directory path
+        Given a github URL, extract a temporary clone
         Inputs:
-            - url, str, An fcm url of the source
+            - source, str, A github URL
+            - ref, str, A git ref to checkout, None will result in default branch
             - repo, str, the name of the source being found
         Outputs:
             - str, The path to the temporary working copy
         """
 
-        print(f"Extracting {url} to a temporary directory")
+        print(f"Extracting {source} to a temporary directory")
         tempdir = tempfile.mkdtemp()
         self.temp_dirs[repo] = tempdir
-        command = f"fcm co {url} {tempdir}"
-        result = run_command(command)
-        if result.returncode:
-            raise Exception(
-                f"Failed to checkout from URL {url} into directory {tempdir} "
-                f"with error message:\n\n{result.stderr}"
-            )
+        commands = (
+            f"git clone {source} {tempdir}",
+            f"git -C {tempdir} checkout {ref}"
+        )
+        for command in commands:
+            print(command)
+            result = run_command(command)
+            if result.returncode:
+                raise Exception(
+                    f"Failed to clone from {source} into directory {tempdir} "
+                    f"with error message:\n\n{result.stderr}"
+                )
         return tempdir
 
     ############################################################################
@@ -1237,16 +1221,16 @@ def parse_args():
         "--core",
         default=None,
         help="The LFRic Core source being used."
-        "Either a path to a working copy or an FCM URL."
-        "If not set, will be read from the dependencies.sh",
+        "Either a path to a working copy or a git source."
+        "If not set, will be read from the dependencies.yaml",
     )
     parser.add_argument(
         "-j",
         "--jules",
         default=None,
         help="The Jules source being used."
-        "Either a path to a working copy or an FCM URL."
-        "If not set, will be read from the dependencies.sh",
+        "Either a path to a working copy or a git source."
+        "If not set, will be read from the dependencies.yaml",
     )
     return parser.parse_args()
 
@@ -1273,7 +1257,7 @@ def apply_macros_main(tag, cname=None, version=None, apps=".", core=None, jules=
             banner_print("WARNING")
             print(
                 "Macros have been applied to apps in LFRic Core. A temporary "
-                "copy of the LFRic Core source given by the `dependencies.sh` "
+                "copy of the LFRic Core source given by the `dependencies.yaml` "
                 f"file is located at:\n{macro_object.core_source}\nEnsure you "
                 "have committed those changes back to the core branch."
             )
