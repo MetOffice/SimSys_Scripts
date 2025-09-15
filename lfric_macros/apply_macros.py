@@ -394,7 +394,6 @@ class ApplyMacros:
             f"git -C {tempdir} checkout {ref}"
         )
         for command in commands:
-            print(command)
             result = run_command(command)
             if result.returncode:
                 raise Exception(
