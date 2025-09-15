@@ -1,14 +1,14 @@
-#!/usr/bin/env python3
+# *****************************COPYRIGHT*******************************
+# (C) Crown copyright Met Office. All rights reserved.
+# For further details please refer to the file COPYRIGHT.txt
+# which you should have received as part of this distribution.
+# *****************************COPYRIGHT*******************************
 """
 Clone sources for a rose-stem run for use with git bdiff module in scripts
 """
 
-import os
 import re
 import subprocess
-from datetime import datetime
-from pathlib import Path
-from ast import literal_eval
 
 
 def run_command(command, shell=False, rval=False):
@@ -38,22 +38,19 @@ def run_command(command, shell=False, rval=False):
         return result
 
 
-def clone_repo_mirror(values, loc):
+def clone_repo_mirror(source, repo_ref, parent, mirror_loc, loc):
     """
     Clone a repo source using a local git mirror.
     Assume the mirror is set up as per the Met Office
     """
 
-    mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
-
-    repo_ref = values["ref"]
     if not repo_ref:
         repo_ref = "HEAD"
 
-    source = values["source"].removeprefix("git@github.com:")
+    source = source.removeprefix("git@github.com:")
     user = source.split("/")[0]
     # Check that the user is different to the Upstream User
-    if user in values["parent"].split("/")[0]:
+    if user in parent.split("/")[0]:
         user = None
 
     # If the ref is a hash then we don't need the fork user as part of the fetch.
@@ -95,28 +92,3 @@ def sync_repo(repo_source, repo_ref, loc):
     if repo_ref:
         command = f"git -C {loc} checkout {repo_ref}"
         run_command(command)
-
-
-def main():
-
-    clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
-
-    dependencies = literal_eval(os.environ["DEPENDENCIES"])
-
-    for dependency, values in dependencies.items():
-
-        print(f"Extracting {dependency} at time {datetime.now()}")
-
-        loc = clone_loc / dependency
-
-        if ".git" in values["source"]:
-            if os.environ["USE_MIRRORS"] == "True":
-                clone_repo_mirror(values, loc)
-            else:
-                clone_repo(values["source"], values["ref"], loc)
-        else:
-            sync_repo(values["source"], values["ref"], loc)
-
-
-if __name__ == "__main__":
-    main()
