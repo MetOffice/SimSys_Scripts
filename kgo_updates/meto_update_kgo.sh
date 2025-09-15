@@ -90,7 +90,9 @@ new_kgo_dir=${new_kgo_dir:-"vn${version_number}_t${ticket_number}"}
 # Check in the working_copy rose-stem for .rc or .cylc files
 # Need this for the variables file extension
 # Can't use Cylc version as .rc can be used in compatibility mode
-if [ -f "${wc_path}/rose-stem/suite.rc" ]; then
+# Temporary Update post UM switched to flow.cylc, but still variables.rc
+# This section can be removed once UM is just using .cylc at vn14.0
+if [ -f "${wc_path}/rose-stem/family-common.rc" ]; then
     variables_extension=".rc"
 elif [ -f "${wc_path}/rose-stem/suite.cylc" ] || [ -f "${wc_path}/rose-stem/flow.cylc" ]; then
     variables_extension=".cylc"
