@@ -32,7 +32,7 @@ def create_markdown_row(*columns: str, header=False) -> List[str]:
 
 
 @contextmanager
-def file_or_stdout(file_name):
+def file_or_stdout(file_name: str):
     if file_name is None:
         yield sys.stdout
     else:
@@ -63,7 +63,7 @@ class SuiteReport(SuiteData):
     open_collapsed = "<details>"
     close_collapsed = "</details>"
 
-    def __init__(self, suite_path: Path):
+    def __init__(self, suite_path: Path)  -> None:
         self.suite_path: Path = suite_path
         self.suite_user = suite_path.owner()
         self.suite_starttime: str = self.get_suite_starttime()
@@ -106,7 +106,7 @@ class SuiteReport(SuiteData):
 
         return reference, ref
 
-    def create_suite_info_table(self):
+    def create_suite_info_table(self) -> None:
         """
         Create a table containing data on the suite run
         """
@@ -126,7 +126,7 @@ class SuiteReport(SuiteData):
 
         self.trac_log.append("")
 
-    def create_dependency_table(self):
+    def create_dependency_table(self) -> None:
         """
         Create a table containing dependency information
         """
@@ -161,7 +161,7 @@ class SuiteReport(SuiteData):
 
         self.trac_log.append("")
 
-    def create_task_tables(self, parsed_tasks: Dict[str, List[str]]):
+    def create_task_tables(self, parsed_tasks: Dict[str, List[str]]) -> None:
         """
         Create tables containing summary of task states and number of tasks won
         """
@@ -196,7 +196,7 @@ class SuiteReport(SuiteData):
                 self.trac_log.extend(create_markdown_row(task, state))
             self.trac_log.append(self.close_collapsed)
 
-    def create_log(self):
+    def create_log(self) -> None:
         """
         Create the trac.log file, writing each line as a str in self.trac_log
         """
@@ -218,7 +218,7 @@ class SuiteReport(SuiteData):
         parsed_tasks = self.parse_tasks()
         self.create_task_tables(parsed_tasks)
 
-    def write_log(self, log_path):
+    def write_log(self, log_path: Path) -> None:
         """
         Write the log to provided output
         """
@@ -230,7 +230,7 @@ class SuiteReport(SuiteData):
                 wfile.write(line + "\n")
 
 
-def check_log_path(opt) -> Path:
+def check_log_path(opt: str) -> Path:
     """
     Check that log_path is a valid directory, if it has been provided.
     """
@@ -247,7 +247,7 @@ def check_log_path(opt) -> Path:
     return opt
 
 
-def check_suite_path(opt) -> Path:
+def check_suite_path(opt: str) -> Path:
     """
     Check that the suite_path is a valid cylc-run directory
     """
@@ -260,7 +260,7 @@ def check_suite_path(opt) -> Path:
     return opt
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """
     Parse command line arguments
     """
@@ -295,20 +295,19 @@ def parse_args():
     return args
 
 
-def main():
+def main() -> None:
     """
     Main function for this program
     """
 
     args = parse_args()
 
-    suite_report = SuiteReport(args.suite_path)
-
-    suite_report.create_log()
-
-    suite_report.write_log(args.log_path)
-
-    suite_report.cleanup()
+    try:
+        suite_report = SuiteReport(args.suite_path)
+        suite_report.create_log()
+        suite_report.write_log(args.log_path)
+    finally:
+        suite_report.cleanup()
 
 
 if __name__ == "__main__":

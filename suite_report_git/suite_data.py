@@ -22,12 +22,12 @@ try:
 except ImportError:
     try:
         from git_bdiff import GitBDiff, GitInfo
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "Unable to import from git_bdiff module. This is included in the same "
             "repository as this script and included with a relative import. Ensure "
             "this script is being called from the correct place."
-        )
+        ) from err
 from typing import Union, Optional, List, Dict
 from pathlib import Path
 from collections import defaultdict
@@ -48,6 +48,9 @@ class SuiteData:
         "-v-",
     )
 
+    def __init__(self) -> None:
+        pass
+
     def parse_tasks(self) -> Dict[str, List[str]]:
         """
         Read through the tasks run, sorting by state
@@ -66,7 +69,7 @@ class SuiteData:
             data[state].append(task)
         return data
 
-    def populate_gitbdiff(self):
+    def populate_gitbdiff(self) -> None:
         """
         Run GitBDiff on each copied source if the source isn't main-like, storing in the
         dependencies directory
@@ -82,7 +85,7 @@ class SuiteData:
                     repo=self.temp_directory / dependency, parent=parent
                 ).files()
 
-    def populate_gitinfo(self):
+    def populate_gitinfo(self) -> None:
         """
         Run GitInfo on each copied source, storing in the dependencies directory
         """
@@ -92,7 +95,7 @@ class SuiteData:
                 self.temp_directory / dependency
             )
 
-    def clone_sources(self):
+    def clone_sources(self) -> None:
         """
         Clone the sources defined in the dependencies file, to allow reading of files
         and creation of diffs.
@@ -151,6 +154,10 @@ class SuiteData:
         for item in path.rglob("*-rose-suite.conf"):
             conf_file = item
             break
+        else:
+            raise FileNotFoundError(
+                "Couldn't find a *-rose-suite.conf file in the cylc-run log directory"
+            )
 
         rose_conf_text = conf_file.read_text().split("\n")
         rose_conf = {}
@@ -158,6 +165,7 @@ class SuiteData:
             line = line.strip()
             if (
                 not line
+                or "=" not in line
                 or line.startswith("!")
                 or line.startswith("[")
                 or line.startswith("#")
@@ -222,6 +230,8 @@ class SuiteData:
                     return workflow_id
                 except IndexError:
                     continue
+
+        return "unknown_workflow_id"
 
     def get_suite_starttime(self) -> str:
         """
@@ -290,7 +300,7 @@ class SuiteData:
         Outputs:
             - result object from subprocess.run
         """
-        if not shell and type(command) != list:
+        if not shell and isinstance(command, str):
             command = command.split()
         result = subprocess.run(
             command,
@@ -308,7 +318,7 @@ class SuiteData:
         if rval:
             return result
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """
         Remove self.temp_directory
         """
