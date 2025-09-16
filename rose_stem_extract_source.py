@@ -19,7 +19,7 @@ def main():
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
 
-    run_command("mkdir -p clone_loc")
+    run_command(f"mkdir -p {clone_loc}")
 
     dependencies = literal_eval(os.environ["DEPENDENCIES"])
 
