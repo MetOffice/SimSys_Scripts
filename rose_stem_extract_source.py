@@ -12,12 +12,14 @@ import os
 from datetime import datetime
 from pathlib import Path
 from ast import literal_eval
-from get_git_sources import clone_repo, clone_repo_mirror, sync_repo
+from get_git_sources import clone_repo, clone_repo_mirror, sync_repo, run_command
 
 
 def main():
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
+
+    run_command("mkdir -p clone_loc")
 
     dependencies = literal_eval(os.environ["DEPENDENCIES"])
 
