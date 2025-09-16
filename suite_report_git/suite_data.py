@@ -47,7 +47,12 @@ class SuiteData:
         "atmos_thread",
         "-v-",
     )
-
+    def __init__(self) -> None:
+        self.dependencies = {}
+        self.rose_data = {}
+        self.suite_path = None
+        self.task_states = {}
+        self.temp_directory = None
     def __init__(self) -> None:
         pass
 
