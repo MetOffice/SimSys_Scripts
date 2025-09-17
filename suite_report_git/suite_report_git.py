@@ -11,13 +11,13 @@ suite. Intended to be run at the end of a rose-stem run.
 
 import sys
 import os
+import re
 import argparse
 from suite_data import SuiteData
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Dict, List, Set
+from typing import Dict, List, Tuple
 from contextlib import contextmanager
-from collections import defaultdict
 
 
 def create_markdown_row(*columns: str, header=False) -> List[str]:
@@ -27,17 +27,28 @@ def create_markdown_row(*columns: str, header=False) -> List[str]:
     """
     line = [f"| {' | '.join(str(c) for c in columns)} |"]
     if header:
-        line.append(f"| {' | '.join(':---:' for _ in columns)} |")
+        line.append(f"| {' | '.join(':---' for _ in columns)} |")
     return line
 
 
 @contextmanager
-def file_or_stdout(file_name):
+def file_or_stdout(file_name: str):
     if file_name is None:
         yield sys.stdout
     else:
         with open(file_name, "w") as out_file:
             yield out_file
+
+
+def extract_org_repo(url: str) -> str:
+    """
+    Extract 'Org/repo' from a GitHub URL (SSH or HTTPS).
+    """
+
+    match = re.search(r"github\.com[:/](.*?)(?:\.git)?$", url)
+    if match:
+        return match.group(1)
+    return ""
 
 
 class SuiteReport(SuiteData):
@@ -50,10 +61,9 @@ class SuiteReport(SuiteData):
 
     # str's for collapsed sections in markdown
     open_collapsed = "<details>"
-    open_collapsed_show = "<details open>"
     close_collapsed = "</details>"
 
-    def __init__(self, suite_path: Path):
+    def __init__(self, suite_path: Path) -> None:
         self.suite_path: Path = suite_path
         self.suite_user = suite_path.owner()
         self.suite_starttime: str = self.get_suite_starttime()
@@ -69,7 +79,34 @@ class SuiteReport(SuiteData):
         self.populate_gitbdiff()
         self.trac_log = []
 
-    def create_suite_info_table(self):
+    def parse_local_source(self, source: str) -> Tuple[str, str]:
+        """
+        Find the branch name or hash and remote reference for a given source
+        """
+
+        source = self.temp_directory / source
+
+        branch_name = self.run_command(
+            f"git -C {source} branch --show-current", rval=True
+        ).stdout.strip("\n")
+        if branch_name and branch_name not in ("main", "stable", "trunk"):
+            ref = branch_name
+        else:
+            ref = (
+                self.run_command(f"git -C {source} rev-parse HEAD").stdout().strip("\n")
+            )
+
+        remote = self.run_command(f"git -C {source} remote -v", rval=True).stdout.split(
+            "\n"
+        )
+        for line in remote:
+            if "origin" not in line:
+                continue
+            reference = line.split()[1]
+
+        return reference, ref
+
+    def create_suite_info_table(self) -> None:
         """
         Create a table containing data on the suite run
         """
@@ -89,25 +126,42 @@ class SuiteReport(SuiteData):
 
         self.trac_log.append("")
 
-    def create_dependency_table(self):
+    def create_dependency_table(self) -> None:
         """
         Create a table containing dependency information
         """
 
         self.trac_log.extend(
-            create_markdown_row("Dependency", "Source", "Ref", "Main Like", header=True)
+            create_markdown_row("Dependency", "Reference", "Main Like", header=True)
         )
 
         for dependency, data in self.dependencies.items():
+            ref = data["ref"] or ""
+            reference = data["source"]
+
+            if ".git" not in reference:
+                # This is a local copy. To avoid exposing hostname and path, parse it to
+                # get an equivalent url.
+                # There is a danger a local source has been changed from the tested
+                # version in the intervening time, but this is acceptable
+                reference, ref = self.parse_local_source(dependency)
+
+            # Extract organisation and repo from the source
+            org_repo = extract_org_repo(reference)
+
+            # Check if the ref is a hash and use short form if so
+            if re.match(r"^\s*([0-9a-f]{40})\s*$", ref):
+                ref = ref[:7]
+            url = f"https://github.com/{org_repo}/tree/{ref}"
+            reference = f"[{org_repo}@{ref}]({url})"
+
             self.trac_log.extend(
-                create_markdown_row(
-                    dependency, data["source"], data["ref"], data["gitinfo"].is_main()
-                )
+                create_markdown_row(dependency, reference, data["gitinfo"].is_main())
             )
 
         self.trac_log.append("")
 
-    def create_task_tables(self, parsed_tasks: Dict[str, List[str]]):
+    def create_task_tables(self, parsed_tasks: Dict[str, List[str]]) -> None:
         """
         Create tables containing summary of task states and number of tasks won
         """
@@ -117,99 +171,32 @@ class SuiteReport(SuiteData):
         order = list(parsed_tasks.keys())
         order.sort(key=lambda val: sort_order.get(val, len(sort_order)))
 
-        # Create summary table
-        self.trac_log.extend(create_markdown_row("State", "Count", header=True))
-        for state in order:
-            tasks = parsed_tasks[state]
-            if not tasks:
-                continue
-            if state == "pink failure":
-                state = self.pink_text
-            self.trac_log.extend(create_markdown_row(state, len(tasks)))
-        self.trac_log.append("")
+        state_emojis = {
+            "failed": ":x:",
+            "succeeded": ":white_check_mark:",
+            "submit-failed": ":no_entry_sign:",
+            "waiting": ":hourglass:",
+        }
 
         # Create Collapsed task tables
         for state in order:
+            emoji = state_emojis[state]
             tasks = parsed_tasks[state]
             if not tasks:
                 continue
             if state == "pink failure":
                 state = self.pink_text
-            if "fail" in state:
-                # Have the collapsed section expanded by default
-                self.trac_log.append(self.open_collapsed_show)
-            else:
-                self.trac_log.append(self.open_collapsed)
-            self.trac_log.append(f"<summary>{state} tasks</summary>")
+            self.trac_log.append(self.open_collapsed)
+            self.trac_log.append(
+                f"<summary>{emoji} {state} tasks - {len(tasks)}</summary>"
+            )
             self.trac_log.append("")
             self.trac_log.extend(create_markdown_row("Task", "State", header=True))
             for task in sorted(tasks):
                 self.trac_log.extend(create_markdown_row(task, state))
             self.trac_log.append(self.close_collapsed)
 
-    def create_um_code_owner_table(self, owners: Dict):
-        """
-        Create a table of required UM code owner approvals
-        """
-
-        changed_sections: Set[str] = self.get_changed_um_section()
-        if changed_sections:
-            self.trac_log.extend(
-                create_markdown_row("Section", "Owner", "Deputy", "State", header=True)
-            )
-            for section in changed_sections:
-                users = owners.get(section, "Unknown")
-                self.trac_log.extend(
-                    create_markdown_row(section, users[0], users[1], "Pending")
-                )
-        else:
-            self.trac_log.append("* No UM Code Owners Required")
-
-    def create_um_config_owner_table(self, owners: Dict):
-        """
-        Create a table of required UM config owner approvals
-        """
-
-        failed_configs: Set[str] = self.get_um_failed_configs()
-        if not failed_configs:
-            self.trac_log.append("No UM Config Owners Required")
-            return
-
-        self.trac_log.extend(
-            create_markdown_row("Owner", "Config (others)", "State", header=True)
-        )
-
-        # Create a dict with owners as the key
-        table_dict = defaultdict(list)
-        for config in failed_configs:
-            owner, others = owners[config]
-            if others != "--":
-                config = f"{config} ({others})"
-            table_dict[owner].append(config)
-
-        for owner, configs in table_dict.items():
-            self.trac_log.extend(
-                create_markdown_row(
-                    owner, " ".join(f'"{c}"' for c in configs), "Pending"
-                )
-            )
-
-    def create_um_owners_tables(self):
-        """
-        Create tables for any UM Code Owners and Config Owners required
-        """
-
-        self.trac_log.append("## Approvals")
-
-        self.trac_log.append("### Code Owners")
-        code_owners = self.get_um_owners("CodeOwners.txt")
-        self.create_um_code_owner_table(code_owners)
-
-        self.trac_log.append("### Config Owners")
-        config_owners = self.get_um_owners("ConfigOwners.txt")
-        self.create_um_config_owner_table(config_owners)
-
-    def create_log(self):
+    def create_log(self) -> None:
         """
         Create the trac.log file, writing each line as a str in self.trac_log
         """
@@ -226,16 +213,12 @@ class SuiteReport(SuiteData):
         self.create_suite_info_table()
         self.create_dependency_table()
 
-        # If UM suite, populate UM Owners
-        if self.primary_source == "um":
-            self.create_um_owners_tables()
-
         # Write Tasks Info
         self.trac_log.append("## Task Information")
         parsed_tasks = self.parse_tasks()
         self.create_task_tables(parsed_tasks)
 
-    def write_log(self, log_path):
+    def write_log(self, log_path: Path) -> None:
         """
         Write the log to provided output
         """
@@ -243,12 +226,11 @@ class SuiteReport(SuiteData):
         if log_path:
             log_path = log_path / "trac.log"
         with file_or_stdout(log_path) as wfile:
-            # with open(log_path, "w") as wfile:
             for line in self.trac_log:
                 wfile.write(line + "\n")
 
 
-def check_log_path(opt) -> Path:
+def check_log_path(opt: str) -> Path:
     """
     Check that log_path is a valid directory, if it has been provided.
     """
@@ -265,7 +247,7 @@ def check_log_path(opt) -> Path:
     return opt
 
 
-def check_suite_path(opt) -> Path:
+def check_suite_path(opt: str) -> Path:
     """
     Check that the suite_path is a valid cylc-run directory
     """
@@ -278,7 +260,7 @@ def check_suite_path(opt) -> Path:
     return opt
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """
     Parse command line arguments
     """
@@ -307,26 +289,25 @@ def parse_args():
     args, _ = parser.parse_known_args()
 
     # Check log file is writable, set as None if not (this will output to stdout)
-    if not os.access(args.log_path, os.W_OK):
+    if args.log_path and not os.access(args.log_path, os.W_OK):
         args.log_path = None
 
     return args
 
 
-def main():
+def main() -> None:
     """
     Main function for this program
     """
 
     args = parse_args()
 
-    suite_report = SuiteReport(args.suite_path)
-
-    suite_report.create_log()
-
-    suite_report.write_log(args.log_path)
-
-    suite_report.cleanup()
+    try:
+        suite_report = SuiteReport(args.suite_path)
+        suite_report.create_log()
+        suite_report.write_log(args.log_path)
+    finally:
+        suite_report.cleanup()
 
 
 if __name__ == "__main__":

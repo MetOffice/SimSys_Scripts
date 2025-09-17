@@ -22,13 +22,13 @@ try:
 except ImportError:
     try:
         from git_bdiff import GitBDiff, GitInfo
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "Unable to import from git_bdiff module. This is included in the same "
             "repository as this script and included with a relative import. Ensure "
             "this script is being called from the correct place."
-        )
-from typing import Union, Optional, List, Dict, Set
+        ) from err
+from typing import Union, Optional, List, Dict
 from pathlib import Path
 from collections import defaultdict
 
@@ -48,113 +48,12 @@ class SuiteData:
         "-v-",
     )
 
-    def get_um_failed_configs(self) -> Set[str]:
-        """
-        Read through failed UM rose_ana tasks
-        """
-
-        failed_configs = set()
-        for task, state in self.task_states.items():
-            if task.startswith("rose_ana") and state == "failed":
-                try:
-                    config = task.split("-")[2]
-                except IndexError:
-                    if "mule" in task:
-                        config = "mule"
-                    else:
-                        config = ""
-                failed_configs.add(config)
-        return failed_configs
-
-    def read_um_section(self, change: str) -> str:
-        """
-        Read through a UM file searching for line
-        """
-        change = self.temp_directory / "um" / change
-        lines = change.read_text()
-        lines = lines.lower()
-        try:
-            section = re.search(r"this file belongs in section:\s*(\w+)", lines).group(
-                1
-            )
-        except AttributeError:
-            section = "Unknown"
-        return section
-
-    def get_changed_um_section(self) -> Set[str]:
-        """
-        Read through bdiff of UM source and find code owner section for each changed
-        file
-        """
-
-        changed_sections = set()
-        for change_path in self.dependencies["um"]["gitbdiff"]:
-            change = change_path.lower()
-            # First check files which will not have a Code Section Comment
-            if "dependencies.yaml" in change:
-                continue
-            if "configowners.txt" in change or "codeowners.txt" in change:
-                changed_sections.add(change)
-            elif change.startswith("admin"):
-                changed_sections.add("admin")
-            elif change.startswith("bin"):
-                changed_sections.add("bin")
-            elif change.startswith("fcm-make"):
-                changed_sections.add("fcm-make_um")
-            elif change.startswith("fab"):
-                changed_sections.add("fab")
-            elif change.startswith("rose-stem"):
-                changed_sections.add("rose_stem")
-            elif change.startswith("rose-meta"):
-                if "etc/stash" in change:
-                    changed_sections.add("stash")
-                elif "rose-meta.conf" in change:
-                    changed_sections.add("rose-meta.conf")
-                else:
-                    changed_sections.add("upgrade_macros")
-            else:
-                # Read the section from the code comment
-                changed_sections.add(self.read_um_section(change_path))
-
-        return changed_sections
-
-    def get_um_owners(self, filename: str) -> Dict:
-        """
-        Read UM Code Owners file and write to a dictionary
-        """
-
-        fpath = self.temp_directory / "um" / filename
-        owners_text = fpath.read_text()
-
-        in_owners = False
-        owners = {}
-        for line in owners_text.split("\n"):
-            line = line.lower().strip()
-            if (
-                not line
-                or line.startswith("#")
-                or line.startswith("area")
-                or line.startswith("configuration")
-            ):
-                continue
-            if line.startswith("{{{"):
-                in_owners = True
-            elif line.startswith("}}}"):
-                in_owners = False
-            elif in_owners:
-                line = line.split()
-                while len(line) < 3:
-                    line.append("--")
-                owners[line[0]] = (line[1], line[2])
-
-        # Hard Code some SSD sections
-        if "Code" in filename:
-            owners["admin"] = ("SSD Team", "--")
-            owners["bin"] = ("SSD Team", "--")
-            owners["codeowners.txt"] = ("SSD Team", "--")
-            owners["configowners.txt"] = ("SSD Team", "--")
-
-        return owners
+    def __init__(self) -> None:
+        self.dependencies = {}
+        self.rose_data = {}
+        self.suite_path = None
+        self.task_states = {}
+        self.temp_directory = None
 
     def parse_tasks(self) -> Dict[str, List[str]]:
         """
@@ -174,7 +73,7 @@ class SuiteData:
             data[state].append(task)
         return data
 
-    def populate_gitbdiff(self):
+    def populate_gitbdiff(self) -> None:
         """
         Run GitBDiff on each copied source if the source isn't main-like, storing in the
         dependencies directory
@@ -190,7 +89,7 @@ class SuiteData:
                     repo=self.temp_directory / dependency, parent=parent
                 ).files()
 
-    def populate_gitinfo(self):
+    def populate_gitinfo(self) -> None:
         """
         Run GitInfo on each copied source, storing in the dependencies directory
         """
@@ -200,7 +99,7 @@ class SuiteData:
                 self.temp_directory / dependency
             )
 
-    def clone_sources(self):
+    def clone_sources(self) -> None:
         """
         Clone the sources defined in the dependencies file, to allow reading of files
         and creation of diffs.
@@ -259,6 +158,10 @@ class SuiteData:
         for item in path.rglob("*-rose-suite.conf"):
             conf_file = item
             break
+        else:
+            raise FileNotFoundError(
+                "Couldn't find a *-rose-suite.conf file in the cylc-run log directory"
+            )
 
         rose_conf_text = conf_file.read_text().split("\n")
         rose_conf = {}
@@ -266,6 +169,7 @@ class SuiteData:
             line = line.strip()
             if (
                 not line
+                or "=" not in line
                 or line.startswith("!")
                 or line.startswith("[")
                 or line.startswith("#")
@@ -310,10 +214,10 @@ class SuiteData:
 
         with open(self.suite_path / "dependencies.yaml", "r") as stream:
             dependencies = yaml.safe_load(stream)
-        for dependecy, data in dependencies.items():
+        for dependency, data in dependencies.items():
             if data["source"] is None:
-                dependencies[dependecy]["source"] = self.find_unknown_dependency(
-                    dependecy
+                dependencies[dependency]["source"] = self.find_unknown_dependency(
+                    dependency
                 )
         return dependencies
 
@@ -330,6 +234,8 @@ class SuiteData:
                     return workflow_id
                 except IndexError:
                     continue
+
+        return "unknown_workflow_id"
 
     def get_suite_starttime(self) -> str:
         """
@@ -374,7 +280,7 @@ class SuiteData:
         self, database: Path, selections: List[str], source: str
     ) -> List[tuple]:
         """
-        Create an sql statement annd query provided database. Return the result
+        Create an sql statement and query provided database. Return the result
         """
 
         sql_statement = f"select {', '.join(s for s in selections)} from {source};"
@@ -398,7 +304,7 @@ class SuiteData:
         Outputs:
             - result object from subprocess.run
         """
-        if not shell and type(command) != list:
+        if not shell and isinstance(command, str):
             command = command.split()
         result = subprocess.run(
             command,
@@ -416,7 +322,7 @@ class SuiteData:
         if rval:
             return result
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """
         Remove self.temp_directory
         """
