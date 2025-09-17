@@ -19,6 +19,7 @@ import yaml
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
+
 try:
     from bdiff.git_bdiff import GitBDiff, GitInfo
 except ImportError:
