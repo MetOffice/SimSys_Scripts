@@ -49,7 +49,11 @@ class SuiteData:
     )
 
     def __init__(self) -> None:
-        pass
+        self.dependencies = {}
+        self.rose_data = {}
+        self.suite_path = None
+        self.task_states = {}
+        self.temp_directory = None
 
     def parse_tasks(self) -> Dict[str, List[str]]:
         """
