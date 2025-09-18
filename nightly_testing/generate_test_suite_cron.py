@@ -89,7 +89,7 @@ def create_git_clone_cron(repo):
     clone_path = os.path.join(CLONE_DIR, f"clone_{repo}")
     repo_mirror = os.path.join(MIRROR_PATH, 'MetOffice', f'{repo}.git')
 
-    command = "# Clone Git Repos - every day at 23:30 #"
+    command = f"# Clone {repo} - every day at 23:30 #"
     l = len(command)
     command = f"{l*'#'}\n{command}\n{l*'#'}\n30 23 * * * {PROFILE} ; "
     command += f"rm -rf {clone_path} ; "
@@ -221,7 +221,7 @@ def generate_cylc_command(suite, wc_path, cylc_version, name):
         f"-n {name} "
         f"-S USE_MIRRORS=true "
     )
-    if suite["revisions"] == "heads":
+    if "revisions" in suite and suite["revisions"] == "heads":
         command += f"-S USE_HEADS=true "
     command += f"--source={wc_path} "
     return command
