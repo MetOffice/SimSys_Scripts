@@ -542,6 +542,19 @@
         { "vn0.9.0": 7765 },
         { "vn1.0.0": 10936 }
       ]
+    },
+    {
+      "name": "socrates-spectral",
+      "description": "Spectral data for SOCRATES",
+      "trunk": "socrates/spectral",
+      "tags": [
+        { "apps2.1": 1745 },
+        { "apps2.2": 1829 },
+        { "um13.6": 1642 },
+        { "um13.7": 1673 },
+        { "um13.8": 1741 },
+        { "um13.9": 1829 }
+      ]
     }
   ]
 }
