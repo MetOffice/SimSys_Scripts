@@ -9,15 +9,17 @@ Script to produce report on testing completed by a simulation-systems test
 suite. Intended to be run at the end of a rose-stem run.
 """
 
-import sys
+import argparse
 import os
 import re
-import argparse
-from suite_data import SuiteData
+import sys
+from collections import defaultdict
+from contextlib import contextmanager
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Dict, List, Tuple
-from contextlib import contextmanager
+from typing import Dict, List, Set, Tuple
+
+from suite_data import SuiteData
 
 
 def create_markdown_row(*columns: str, header=False) -> List[str]:
@@ -33,6 +35,9 @@ def create_markdown_row(*columns: str, header=False) -> List[str]:
 
 @contextmanager
 def file_or_stdout(file_name: str):
+    """
+    Yield file_name if writable, or stdout if not
+    """
     if file_name is None:
         yield sys.stdout
     else:
@@ -196,6 +201,68 @@ class SuiteReport(SuiteData):
                 self.trac_log.extend(create_markdown_row(task, state))
             self.trac_log.append(self.close_collapsed)
 
+    def create_um_code_owner_table(self, owners: Dict) -> None:
+        """
+        Create a table of required UM code owner approvals
+        """
+
+        changed_sections: Set[str] = self.get_changed_um_section()
+        if changed_sections:
+            self.trac_log.extend(
+                create_markdown_row("Section", "Owner", "Deputy", "State", header=True)
+            )
+            for section in changed_sections:
+                users = owners.get(section, "Unknown")
+                self.trac_log.extend(
+                    create_markdown_row(section, users[0], users[1], "Pending")
+                )
+        else:
+            self.trac_log.append("* No UM Code Owners Required")
+
+    def create_um_config_owner_table(self, owners: Dict) -> None:
+        """
+        Create a table of required UM config owner approvals
+        """
+
+        failed_configs: Set[str] = self.get_um_failed_configs()
+        if not failed_configs:
+            self.trac_log.append("No UM Config Owners Required")
+            return
+
+        self.trac_log.extend(
+            create_markdown_row("Owner", "Config (others)", "State", header=True)
+        )
+
+        # Create a dict with owners as the key
+        table_dict = defaultdict(list)
+        for config in failed_configs:
+            owner, others = owners[config]
+            if others != "--":
+                config = f"{config} ({others})"
+            table_dict[owner].append(config)
+
+        for owner, configs in table_dict.items():
+            self.trac_log.extend(
+                create_markdown_row(
+                    owner, " ".join(f'"{c}"' for c in configs), "Pending"
+                )
+            )
+
+    def create_um_owners_tables(self) -> None:
+        """
+        Create tables for any UM Code Owners and Config Owners required
+        """
+
+        self.trac_log.append("## Approvals")
+
+        self.trac_log.append("### Code Owners")
+        code_owners = self.get_um_owners("CodeOwners.txt")
+        self.create_um_code_owner_table(code_owners)
+
+        self.trac_log.append("### Config Owners")
+        config_owners = self.get_um_owners("ConfigOwners.txt")
+        self.create_um_config_owner_table(config_owners)
+
     def create_log(self) -> None:
         """
         Create the trac.log file, writing each line as a str in self.trac_log
@@ -212,6 +279,10 @@ class SuiteReport(SuiteData):
         self.trac_log.append("")
         self.create_suite_info_table()
         self.create_dependency_table()
+
+        # If UM suite, populate UM Owners
+        if self.primary_source == "um":
+            self.create_um_owners_tables()
 
         # Write Tasks Info
         self.trac_log.append("## Task Information")
