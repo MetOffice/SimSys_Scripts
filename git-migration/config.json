@@ -550,11 +550,11 @@
       "description": "Spectral data for SOCRATES",
       "trunk": "socrates/spectral",
       "tags": [
-        { "apps2.1": 1745 },
+        { "apps2.1": 1736 },
         { "apps2.2": 1829 },
-        { "um13.6": 1642 },
-        { "um13.7": 1673 },
-        { "um13.8": 1741 },
+        { "um13.6": 1613 },
+        { "um13.7": 1613 },
+        { "um13.8": 1736 },
         { "um13.9": 1829 }
       ]
     }
