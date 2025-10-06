@@ -27,7 +27,7 @@ Optional:
 * revisions: heads to use the HoT for sub-repos, set to use the set revisions
 * vars: strings that follow the -S command on the command line
 * monitoring: Boolean, whether to run the monitoring script on this suite
-* cylc_version: Can be any string beginning 8 that is a valid cylc install
+* cylc_version: Can be any string beginning 7 or 8 that is a valid cylc install
                 at the site, such that `export CYLC_VERSION=<cylc_version>`
                 works.
 """
@@ -37,26 +37,37 @@ import os
 import re
 import subprocess
 import sys
+
 import yaml
 
+DEFAULT_CYLC_VERSION = "8"
 DEPENDENCIES = {
     "lfric_apps": [
         "casim",
         "jules",
-        "lfric_core",
+        "lfric",
         "shumlib",
         "socrates",
         "ukca",
         "um",
     ],
     "um": ["casim", "jules", "mule", "shumlib", "socrates", "ukca"],
-    "lfric_core": [],
+    "lfric": [],
     "jules": [],
     "ukca": [],
 }
+CYLC_DIFFS = {
+    "7": {
+        "name": "--name=",
+        "clean": "rose suite-clean",
+    },
+    "8": {
+        "name": "--workflow-name=",
+        "clean": "cylc clean --timeout=7200",
+    },
+}
 
-CLONE_DIR = os.path.join(os.environ["TMPDIR"], os.environ["USER"])
-MIRROR_PATH = "/data/users/gitassist/git_mirrors/"
+WC_DIR = os.path.join(os.environ["TMPDIR"], os.environ["USER"])
 UMDIR = os.environ["UMDIR"]
 PROFILE = ". /etc/profile"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
@@ -72,21 +83,61 @@ def run_command(command):
     )
 
 
-def create_git_clone_cron(repo):
+def major_cylc_version(cylc_version):
     """
-    Return a string of cron commands to get a git clone from the gitassist mirror
-    Runs at 23:30 each day before all other tasks
+    Return the major version of cylc being requested by cylc_version
+    Expected to be 7 or 8
+    """
+    return re.split("[._-]", cylc_version)[0]
+
+
+def join_checkout_commands(repos, dir_wc):
+    """
+    Join commands that checkout new repos
     """
 
-    clone_path = os.path.join(CLONE_DIR, f"clone_{repo}")
-    repo_mirror = os.path.join(MIRROR_PATH, "MetOffice", f"{repo}.git")
+    command = ""
+    for repo in repos:
+        wc_path = os.path.join(dir_wc, "wc_" + repo)
+        command += f"fcm co -q --force fcm:{repo}.xm_tr@HEAD {wc_path} ; "
+    return command
 
-    command = f"# Clone {repo} - every day at 23:30 #"
+
+def fetch_working_copy_cron():
+    """
+    Cleanup and then re-checkout working copies for each of the repos used
+    Create an lfric_apps heads working copy
+    Runs at 23:30, before all other tasks
+    """
+
+    command = "# Checkout Working Copies - every day at 23:30 #"
     l = len(command)
     command = f"{l*'#'}\n{command}\n{l*'#'}\n30 23 * * * {PROFILE} ; "
-    command += f"rm -rf {clone_path} ; "
-    command += f"git clone {repo_mirror} {clone_path}"
+    command += f"rm -rf {os.path.join(WC_DIR, 'wc_*')} ; "
+    command += join_checkout_commands(DEPENDENCIES.keys(), WC_DIR)
+    command += lfric_heads_sed(os.path.join(WC_DIR, "wc_lfric_apps"))
+
     return command + "\n\n\n"
+
+
+def lfric_heads_sed(wc_path):
+    """
+    Add 2 sed commands to setup dependencies.sh for heads testing
+    One command replaces all revisions with HEAD
+    The other removes all sources - in the event a branch/working copy is left in at
+    commit, this means that the Heads testing should still run. The set-revisions
+    testing would show the wrong source.
+    As this edits the working copy it copies the original copy with _heads added
+    and returns this new wc path
+    """
+
+    wc_path_new = wc_path + "_heads"
+    dep_path = os.path.join(wc_path_new, "dependencies.sh")
+
+    rstr = f"cp -rf {wc_path} {wc_path_new} ; "
+    rstr += f'sed -i -e "s/^\\(export .*_rev=\\).*/\\1HEAD/" {dep_path} ; '
+    rstr += f'sed -i -e "s/^\\(export .*_sources=\\).*/\\1/" {dep_path} ; '
+    return rstr
 
 
 def generate_cron_timing_str(suite, mode):
@@ -178,7 +229,7 @@ def generate_clean_commands(cylc_version, name, log_file):
         f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
         f"cylc stop '{name}' >/dev/null 2>&1 ; sleep 10 ; "
-        f"cylc clean --timeout=7200 -y -q {name} "
+        f"{CYLC_DIFFS[major_cylc_version(cylc_version)]['clean']} -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
 
@@ -201,22 +252,38 @@ def generate_clean_cron(suite_name, suite, log_file, cylc_version):
     return clean_cron
 
 
-def generate_cylc_command(suite, wc_path, cylc_version, name):
+def generate_rose_stem_command(suite, wc_path, cylc_version, name):
     """
     Return a string with the rose-stem command
     Ignores any additional source arguments
     """
 
-    command = (
+    return (
         f"export CYLC_VERSION={cylc_version} ; "
-        f"cylc vip -z g={suite['groups']} "
-        f"-n {name} "
-        f"-S USE_MIRRORS=true "
+        + f"rose stem --group={suite['groups']} "
+        + f"{CYLC_DIFFS[major_cylc_version(cylc_version)]['name']}{name} "
+        + f"--source={wc_path} "
     )
-    if "revisions" in suite and suite["revisions"] == "heads":
-        command += f"-S USE_HEADS=true "
-    command += f"--source={wc_path} "
-    return command
+
+
+def populate_heads_sources(suite):
+    """
+    Append all required dependency sources when using heads testing
+    """
+
+    heads = ""
+
+    if (
+        "revisions" not in suite
+        or suite["revisions"] != "heads"
+        or suite["repo"] == "lfric_apps"
+        or suite["repo"] not in DEPENDENCIES
+    ):
+        return heads
+
+    for item in sorted(DEPENDENCIES[suite["repo"]]):
+        heads += f"--source=fcm:{item}.xm_tr@HEAD "
+    return heads
 
 
 def populate_cl_variables(suite):
@@ -250,12 +317,18 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
         wc_path = wc_path + "_heads"
 
     # Begin rose-stem command
-    job_command += generate_cylc_command(suite, wc_path, cylc_version, name)
+    job_command += generate_rose_stem_command(suite, wc_path, cylc_version, name)
+
+    # Add Heads Sources if required
+    job_command += populate_heads_sources(suite)
 
     # Add any -S vars defined
     job_command += populate_cl_variables(suite)
 
     job_command += f">> {log_file} 2>&1"
+
+    if major_cylc_version(cylc_version) == "8":
+        job_command += f" ; cylc play {name} >> {log_file} 2>&1"
 
     # If this is a cylc-8-next job, check that the 8-next symlink in metomi points
     # elsewhere than the cylc-8 symlink
@@ -278,12 +351,12 @@ def generate_cron_job(suite_name, suite, log_file):
     rose-stem task and for the suite-clean task
     """
 
-    cylc_version = suite.get("cylc_version", "8")
+    cylc_version = suite.get("cylc_version", DEFAULT_CYLC_VERSION)
     cylc_version = str(cylc_version)
 
     date_str = f"_$({DATE_BASE})"
     name = suite_name + date_str
-    wc_path = os.path.join(CLONE_DIR, "wc_" + suite["repo"])
+    wc_path = os.path.join(WC_DIR, "wc_" + suite["repo"])
 
     header = generate_header(suite_name, suite)
     cron_job = generate_main_job(name, suite, log_file, wc_path, cylc_version)
@@ -349,8 +422,7 @@ if __name__ == "__main__":
         "'generate_test-suite_cron.py' file.\n# Use that script and associated "
         "config file to modify these cron jobs.\n\n"
     )
-    for repo in DEPENDENCIES:
-        main_crontab += create_git_clone_cron(repo)
+    main_crontab += fetch_working_copy_cron()
 
     last_repo = None
     for suite_name in sorted(suites.keys()):
