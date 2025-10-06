@@ -215,7 +215,7 @@ def generate_cylc_command(suite, wc_path, cylc_version, name):
     )
     if "revisions" in suite and suite["revisions"] == "heads":
         command += f"-S USE_HEADS=true "
-    command += f"--source={wc_path} "
+    command += f"{wc_path} "
     return command
 
 
