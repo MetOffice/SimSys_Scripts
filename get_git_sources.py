@@ -44,8 +44,12 @@ def clone_repo_mirror(source, repo_ref, parent, mirror_loc, loc):
     Assume the mirror is set up as per the Met Office
     """
 
+    command = f"git clone {mirror_loc} {loc}"
+    run_command(command)
+
+    # If not provided a ref, return
     if not repo_ref:
-        repo_ref = "HEAD"
+        return
 
     source = source.removeprefix("git@github.com:")
     user = source.split("/")[0]
@@ -60,7 +64,6 @@ def clone_repo_mirror(source, repo_ref, parent, mirror_loc, loc):
     else:
         fetch = f"{user}/{repo_ref}"
     commands = (
-        f"git clone {mirror_loc} {loc}",
         f"git -C {loc} fetch origin {fetch}",
         f"git -C {loc} checkout FETCH_HEAD",
     )
