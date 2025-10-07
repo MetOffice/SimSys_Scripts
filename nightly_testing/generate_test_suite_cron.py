@@ -34,7 +34,6 @@ Optional:
 
 import argparse
 import os
-import re
 import subprocess
 import sys
 import yaml
@@ -82,8 +81,8 @@ def create_git_clone_cron(repo):
     repo_mirror = os.path.join(MIRROR_PATH, "MetOffice", f"{repo}.git")
 
     command = f"# Clone {repo} - every day at 23:30 #"
-    l = len(command)
-    command = f"{l*'#'}\n{command}\n{l*'#'}\n30 23 * * * {PROFILE} ; "
+    length = len(command)
+    command = f"{length*'#'}\n{command}\n{length*'#'}\n30 23 * * * {PROFILE} ; "
     command += f"rm -rf {clone_path} ; "
     command += f"git clone {repo_mirror} {clone_path}"
     return command + "\n\n\n"
@@ -214,7 +213,7 @@ def generate_cylc_command(suite, wc_path, cylc_version, name):
         f"-S USE_MIRRORS=true "
     )
     if "revisions" in suite and suite["revisions"] == "heads":
-        command += f"-S USE_HEADS=true "
+        command += "-S USE_HEADS=true "
     command += f"{wc_path} "
     return command
 
