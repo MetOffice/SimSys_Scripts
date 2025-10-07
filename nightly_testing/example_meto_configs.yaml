@@ -1,5 +1,5 @@
 base:
-    cylc_run_path: /home/users/umtest/cylc-run
+    cylc_run_path: /path/to/nightly/user/cylc-run
     rose_bush_base_url: https://cylchub/services/cylc-review/taskjobs/umtest/?suite=
     wiki_url: http://code.metoffice.gov.uk/trac/lfric_apps
     logo_file: um_logo.png
@@ -130,7 +130,7 @@ um_set-revisions_all:
     vars:
         - USE_EXAB=true
         - HOUSEKEEPING=false
-        - PREBUILDS=false 
+        - PREBUILDS=false
     time_launch: 00:45
     time_clean: 00:30
     period: weekly
