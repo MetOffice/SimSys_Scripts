@@ -307,7 +307,7 @@ def parse_cl_args():
     parser.add_argument(
         "-f",
         "--cron_file",
-        default="~/Crontabs/auto-gen_testing.cron",
+        default="~/Crontabs/auto-gen_testing_git.cron",
         help="The file the cronjobs will be written to."
         "Installation assumes this ends with '.cron'",
     )
