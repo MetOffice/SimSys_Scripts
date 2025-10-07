@@ -15,36 +15,36 @@ from fstring_parse import *
 # main or a single subroutine but actual text is not yet defined in stone...
 
 conjoined_keywords = {
-        r"BLOCK\s*DATA":          "BLOCK DATA",
-        r"DOUBLE\s*PRECISION":    "DOUBLE PRECISION",
-        r"ELSE\s*IF":             "ELSE IF",
-        r"ELSE\s*WHERE":          "ELSE WHERE",
-        r"END\s*ASSOCIATE":       "END ASSOCIATE",
-        r"END\s*BLOCK":           "END BLOCK",
-        r"END\s*BLOCK\s*DATA":    "END BLOCK DATA",
-        r"END\s*CRITICAL":        "END CRITICAL",
-        r"END\s*DO":              "END DO",
-        r"END\s*ENUM":            "END ENUM",
-        r"END\s*FILE":            "END FILE",
-        r"END\s*FORALL":          "END FORALL",
-        r"END\s*FUNCTION":        "END FUNCTION",
-        r"END\s*IF":              "END IF",
-        r"END\s*INTERFACE":       "END INTERFACE",
-        r"END\s*MODULE":          "END MODULE",
-        r"END\s*PARALLEL":        "END PARALLEL",
-        r"END\s*PARALLEL\s*DO":   "END PARALLEL DO",
-        r"END\s*PROCEDURE":       "END PROCEDURE",
-        r"END\s*PROGRAM":         "END PROGRAM",
-        r"END\s*SELECT":          "END SELECT",
-        r"END\s*SUBMODULE":       "END SUBMODULE",
-        r"END\s*SUBROUTINE":      "END SUBROUTINE",
-        r"END\s*TYPE":            "END TYPE",
-        r"END\s*WHERE":           "END WHERE",
-        r"GO\s*TO":               "GO TO",
-        r"IN\s*OUT":              "IN OUT",
-        r"PARALLEL\s*DO":         "PARALLEL DO",
-        r"SELECT\s*CASE":         "SELECT CASE",
-        r"SELECT\s*TYPE":         "SELECT TYPE",
+    r"BLOCK\s*DATA": "BLOCK DATA",
+    r"DOUBLE\s*PRECISION": "DOUBLE PRECISION",
+    r"ELSE\s*IF": "ELSE IF",
+    r"ELSE\s*WHERE": "ELSE WHERE",
+    r"END\s*ASSOCIATE": "END ASSOCIATE",
+    r"END\s*BLOCK": "END BLOCK",
+    r"END\s*BLOCK\s*DATA": "END BLOCK DATA",
+    r"END\s*CRITICAL": "END CRITICAL",
+    r"END\s*DO": "END DO",
+    r"END\s*ENUM": "END ENUM",
+    r"END\s*FILE": "END FILE",
+    r"END\s*FORALL": "END FORALL",
+    r"END\s*FUNCTION": "END FUNCTION",
+    r"END\s*IF": "END IF",
+    r"END\s*INTERFACE": "END INTERFACE",
+    r"END\s*MODULE": "END MODULE",
+    r"END\s*PARALLEL": "END PARALLEL",
+    r"END\s*PARALLEL\s*DO": "END PARALLEL DO",
+    r"END\s*PROCEDURE": "END PROCEDURE",
+    r"END\s*PROGRAM": "END PROGRAM",
+    r"END\s*SELECT": "END SELECT",
+    r"END\s*SUBMODULE": "END SUBMODULE",
+    r"END\s*SUBROUTINE": "END SUBROUTINE",
+    r"END\s*TYPE": "END TYPE",
+    r"END\s*WHERE": "END WHERE",
+    r"GO\s*TO": "GO TO",
+    r"IN\s*OUT": "IN OUT",
+    r"PARALLEL\s*DO": "PARALLEL DO",
+    r"SELECT\s*CASE": "SELECT CASE",
+    r"SELECT\s*TYPE": "SELECT TYPE",
 }
 
 
@@ -67,11 +67,11 @@ def keyword_split(line, str_continuation):
     stripline = workline.strip()
 
     # Pre-processor lines start with #. Ignore them completely.
-    pre_proc = (stripline[0] == "#")
+    pre_proc = stripline[0] == "#"
 
     # Lines that are completely commented start with a bang and are also
     # ignored completely.
-    all_comment = (stripline[0] == "!")
+    all_comment = stripline[0] == "!"
 
     if pre_proc or all_comment:
         return line
@@ -99,11 +99,12 @@ def keyword_split(line, str_continuation):
 
         m = re.search(searchstring, match_line, re.IGNORECASE)
         if m:
-            first_o_line = line[m.start(1):m.end(1)]
-            bit_to_change = line[m.start(2):m.end(2)]
-            rest_o_line = line[m.start(3):]
-            line = split_conjoined_keyword(first_o_line, bit_to_change,
-                                           value, rest_o_line)
+            first_o_line = line[m.start(1) : m.end(1)]
+            bit_to_change = line[m.start(2) : m.end(2)]
+            rest_o_line = line[m.start(3) :]
+            line = split_conjoined_keyword(
+                first_o_line, bit_to_change, value, rest_o_line
+            )
 
             workline = clean_str_continuation(line, str_continuation)
 
@@ -117,8 +118,7 @@ def keyword_split(line, str_continuation):
                     blank_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print("{0:s} Line simplification has failed " \
-                          "for:".format(e.msg))
+                    print("{0:s} Line simplification has failed " "for:".format(e.msg))
                     print(line)
                     exit(1)
 
@@ -129,8 +129,8 @@ def keyword_split(line, str_continuation):
 
 
 def apply_whitespace_fixes(lines, striptrailingspace=True, keywordsplit=True):
-    '''For a lit of lines apply UMDP3 styling to each line and return
-    the result'''
+    """For a lit of lines apply UMDP3 styling to each line and return
+    the result"""
 
     output_lines = []
     continuation = False
@@ -180,22 +180,22 @@ def apply_whitespace_fixes(lines, striptrailingspace=True, keywordsplit=True):
 
         # if we are a (pp) continuation, save the partial line
         if pp_continuation:
-            pp_line_previous = ''.join([re.sub(r"\\\s*$", "",
-                                               pp_line_previous),
-                                        re.sub(r"&\s*$", "", line_previous),
-                                        line])
+            pp_line_previous = "".join(
+                [
+                    re.sub(r"\\\s*$", "", pp_line_previous),
+                    re.sub(r"&\s*$", "", line_previous),
+                    line,
+                ]
+            )
             line_previous = ""
             pseudo_line = re.sub(r"\\\s*$", "&", pp_line_previous)
-            pseudo_str_continuation = is_str_continuation(pseudo_line,
-                                                          str_continuation)
+            pseudo_str_continuation = is_str_continuation(pseudo_line, str_continuation)
             if not pseudo_comment:
-                pseudo_line = partial_blank_fstring(pseudo_line,
-                                                    str_continuation)
+                pseudo_line = partial_blank_fstring(pseudo_line, str_continuation)
                 if pseudo_line.strip()[0] == "#":
                     pseudo_comment = True
                 if pseudo_line.find("!") != -1:
-                    pseudo_line = blank_fcomments(pseudo_line,
-                                                  str_continuation)
+                    pseudo_line = blank_fcomments(pseudo_line, str_continuation)
                     if pseudo_line.find("!") == -1:
                         pseudo_comment = True
         elif continuation:
@@ -208,7 +208,7 @@ def apply_whitespace_fixes(lines, striptrailingspace=True, keywordsplit=True):
 
 
 def main():
-    '''
+    """
     Main program code.
     Expects there to be a single command line argument, which should be the
     name of a file to process. It will abort if no argument is provided, or
@@ -220,17 +220,21 @@ def main():
     a module - you're in trouble...
     Then each lie is checked to see if there is a 'REAL' declaration and
     processed if there is.
-    '''
+    """
     parser = argparse.ArgumentParser()
-    parser.add_argument("-k", "--keywordsplit",
-                        help="Split potentially conjoined keywords"
-                             " such as INOUT",
-                        action="store_true")
-    parser.add_argument("-s", "--striptrailingspace",
-                        help="Strip Trailing spaces from lines",
-                        action="store_true")
-    parser.add_argument("filename", type=str,
-                        help="Name of file to process")
+    parser.add_argument(
+        "-k",
+        "--keywordsplit",
+        help="Split potentially conjoined keywords" " such as INOUT",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-s",
+        "--striptrailingspace",
+        help="Strip Trailing spaces from lines",
+        action="store_true",
+    )
+    parser.add_argument("filename", type=str, help="Name of file to process")
     args = parser.parse_args()
 
     modify = False
@@ -256,16 +260,19 @@ def main():
         with open(filename) as fortran_file:
             raw_code = fortran_file.readlines()
     except EnvironmentError:
-        print("Error opening file. :\n     \"{0:s}\"\n".format(filename) +
-              "I need a valid filename on which to work....")
+        print(
+            'Error opening file. :\n     "{0:s}"\n'.format(filename)
+            + "I need a valid filename on which to work...."
+        )
         raise SystemExit
 
     print("\nLooking at file :\n     {0:s}".format(filename))
     # re-open the fortran file, this time to write to it.
-    with open(filename, 'r+') as fortran_file:
+    with open(filename, "r+") as fortran_file:
         lines_in = fortran_file.read().split("\n")
-        new_lines = apply_whitespace_fixes(lines_in, args.striptrailingspace,
-                                           args.keywordsplit)
+        new_lines = apply_whitespace_fixes(
+            lines_in, args.striptrailingspace, args.keywordsplit
+        )
         fortran_file.seek(0)
         fortran_file.write("\n".join(new_lines))
         fortran_file.truncate()
