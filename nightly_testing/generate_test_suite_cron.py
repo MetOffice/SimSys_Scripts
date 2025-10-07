@@ -214,7 +214,7 @@ def generate_cylc_command(suite, wc_path, cylc_version, name):
     )
     if "revisions" in suite and suite["revisions"] == "heads":
         command += "-S USE_HEADS=true "
-    command += f"{wc_path} "
+    command += f"{os.path.join(wc_path, "rose-stem")} "
     return command
 
 
