@@ -11,11 +11,14 @@ Class containing helper methods for gathering data needed for a SuiteReport obje
 import sys
 
 sys.path.append("../")
-import subprocess
-import sqlite3
-import shutil
-import yaml
 import re
+import shutil
+import sqlite3
+import subprocess
+import yaml
+from collections import defaultdict
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Union
 
 try:
     from bdiff.git_bdiff import GitBDiff, GitInfo
@@ -28,9 +31,6 @@ except ImportError:
             "repository as this script and included with a relative import. Ensure "
             "this script is being called from the correct place."
         ) from err
-from typing import Union, Optional, List, Dict
-from pathlib import Path
-from collections import defaultdict
 
 
 class SuiteData:
@@ -54,6 +54,114 @@ class SuiteData:
         self.suite_path = None
         self.task_states = {}
         self.temp_directory = None
+
+    def get_um_failed_configs(self) -> Set[str]:
+        """
+        Read through failed UM rose_ana tasks
+        """
+
+        failed_configs = set()
+        for task, state in self.task_states.items():
+            if task.startswith("rose_ana") and state == "failed":
+                try:
+                    config = task.split("-")[2]
+                except IndexError:
+                    if "mule" in task:
+                        config = "mule"
+                    else:
+                        config = ""
+                failed_configs.add(config)
+        return failed_configs
+
+    def read_um_section(self, change: str) -> str:
+        """
+        Read through a UM file searching for line
+        """
+        change = self.temp_directory / "um" / change
+        lines = change.read_text()
+        lines = lines.lower()
+        try:
+            section = re.search(r"this file belongs in section:\s*(\w+)", lines).group(
+                1
+            )
+        except AttributeError:
+            section = "Unknown"
+        return section
+
+    def get_changed_um_section(self) -> Set[str]:
+        """
+        Read through bdiff of UM source and find code owner section for each changed
+        file
+        """
+
+        changed_sections = set()
+        for change_path in self.dependencies["um"]["gitbdiff"]:
+            change = change_path.lower()
+            # First check files which will not have a Code Section Comment
+            if "dependencies.yaml" in change:
+                continue
+            if "configowners.txt" in change or "codeowners.txt" in change:
+                changed_sections.add(change)
+            elif change.startswith("admin"):
+                changed_sections.add("admin")
+            elif change.startswith("bin"):
+                changed_sections.add("bin")
+            elif change.startswith("fcm-make"):
+                changed_sections.add("fcm-make_um")
+            elif change.startswith("fab"):
+                changed_sections.add("fab")
+            elif change.startswith("rose-stem"):
+                changed_sections.add("rose_stem")
+            elif change.startswith("rose-meta"):
+                if "etc/stash" in change:
+                    changed_sections.add("stash")
+                elif "rose-meta.conf" in change:
+                    changed_sections.add("rose-meta.conf")
+                else:
+                    changed_sections.add("upgrade_macros")
+            else:
+                # Read the section from the code comment
+                changed_sections.add(self.read_um_section(change_path))
+
+        return changed_sections
+
+    def get_um_owners(self, filename: str) -> Dict:
+        """
+        Read UM Code Owners file and write to a dictionary
+        """
+
+        fpath = self.temp_directory / "um" / filename
+        owners_text = fpath.read_text()
+
+        in_owners = False
+        owners = {}
+        for line in owners_text.split("\n"):
+            line = line.lower().strip()
+            if (
+                not line
+                or line.startswith("#")
+                or line.startswith("area")
+                or line.startswith("configuration")
+            ):
+                continue
+            if line.startswith("{{{"):
+                in_owners = True
+            elif line.startswith("}}}"):
+                in_owners = False
+            elif in_owners:
+                line = line.split()
+                while len(line) < 3:
+                    line.append("--")
+                owners[line[0]] = (line[1], line[2])
+
+        # Hard Code some SSD sections
+        if "Code" in filename:
+            owners["admin"] = ("SSD Team", "--")
+            owners["bin"] = ("SSD Team", "--")
+            owners["codeowners.txt"] = ("SSD Team", "--")
+            owners["configowners.txt"] = ("SSD Team", "--")
+
+        return owners
 
     def parse_tasks(self) -> Dict[str, List[str]]:
         """

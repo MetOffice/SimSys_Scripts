@@ -30,10 +30,12 @@ Options:
                            (default: all repositories defined in config.json)
   -c, --config[=VALUE]     Path to config.json file (default: config.json in the parent directory)
   -w, --workdir[=VALUE]    Working directory (default: ${DATADIR}/git-migration)
+  -s, --skip[=VALUE]       Comma-separated list of repository names to skip
 
 Examples:
   ${0##*/} -c /path/to/config.json -w ${DATADIR}/git-migration
   ${0##*/} --config=/path/to/config.json --workdir=${DATADIR}/git-migration
+  ${0##*/} --skip=repo1,repo2
 
 Report bugs to <yaswant.pradhan@metoffice.gov.uk>
 EOF
@@ -146,6 +148,16 @@ process_repositories() {
   while read -r repo; do
     local repo_name trunk svn_url
     repo_name=$(jq -r '.name' <<<"$repo")
+    # Skip if in skip list
+    if [[ -n "$SKIP_REPOS" ]]; then
+      IFS=',' read -ra SKIP_ARRAY <<< "$SKIP_REPOS"
+      for skip in "${SKIP_ARRAY[@]}"; do
+        if [[ "$repo_name" == "$skip" ]]; then
+          echo "Skipping repository: $repo_name"
+          continue 2
+        fi
+      done
+    fi
     [[ -z "$REPO_NAME" || "$REPO_NAME" == "$repo_name" ]] || continue
     trunk=$(jq -r '.trunk' <<<"$repo")
     svn_url="${SVN_PREFIX}/${trunk}"
@@ -184,8 +196,8 @@ process_repositories() {
 # ----------------------------------------------------------------------------
 
 OPTS=$(getopt \
-  -o hdmnuj:c:r:w: \
-  -l help,debug,from-mirror,list-repos,update,parallel:,config:,repository:,workdir: \
+  -o hdmnuj:c:r:w:s: \
+  -l help,debug,from-mirror,list-repos,update,parallel:,config:,repository:,workdir:,skip: \
   -n "${0##*/}" -- "$@") || { usage; exit 1; }
 eval set -- "$OPTS"
 
@@ -196,6 +208,7 @@ UPDATE_GITHUB=0
 FROM_MIRROR=0
 REPO_NAME=
 DRY_RUN=
+SKIP_REPOS=
 
 while true; do
   case "$1" in
@@ -208,6 +221,7 @@ while true; do
   -c | --config) CONFIG_FILE=$(readlink -fe "$2"); shift 2 ;;
   -r | --repository) REPO_NAME="$2"; validate_repo "$REPO_NAME"; shift 2 ;;
   -w | --workdir) WORKDIR=$(readlink -f "$2"); shift 2 ;;
+  -s | --skip) SKIP_REPOS="$2"; shift 2 ;;
   --) shift; break ;;
   *) break ;;
   esac
