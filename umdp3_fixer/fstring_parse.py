@@ -3,7 +3,7 @@
 # For further details please refer to the file COPYRIGHT.txt
 # which you should have received as part of this distribution.
 # *****************************COPYRIGHT*******************************
-'''
+"""
 ## NOTE ##
 This module is one of several for which the Master copy is in the
 UM repository. When making changes, please ensure the changes are made in the UM
@@ -12,35 +12,39 @@ copied over.
 
 This module contains various functions for parsing and manuipulating
 quoted strings in Fortran
-'''
+"""
 import re
 
 
 class ParsingError(Exception):
-    '''
+    """
     Raised when an operation attempts to parse a line that doesn't look
     like it expects.
-    '''
+    """
+
     def __init__(self):
-        self.msg = 'Parsing Error.'
+        self.msg = "Parsing Error."
+
     pass
 
 
 class QuoteError(ParsingError):
-    '''
+    """
     Raised when there are an unexpected number of quote marks (single or
     double) in a line.
-    '''
+    """
+
     def __init__(self, quote, number):
         self.number = number
         self.quote = quote
-        self.quotemarks = {"'": "single quotes",
-                           "\"": "double quotes"}
+        self.quotemarks = {"'": "single quotes", '"': "double quotes"}
 
-        self.msg = "There are an odd number of non-commented " \
-                   "and non-quoted {1:s} in this line. " \
-                   "(From a total of {0:d})".format(number,
-                                                    self.quotemarks[quote])
+        self.msg = (
+            "There are an odd number of non-commented "
+            "and non-quoted {1:s} in this line. "
+            "(From a total of {0:d})".format(number, self.quotemarks[quote])
+        )
+
     pass
 
 
@@ -53,7 +57,7 @@ ISPPCONTCR = re.compile(r"\\\s*$", flags=re.IGNORECASE)
 
 
 def replace_characters(line, locs, lens, replchar="X"):
-    '''
+    """
     Replace characters in a line at particular locations.
 
     e.g. for the line
@@ -68,7 +72,7 @@ def replace_characters(line, locs, lens, replchar="X"):
     > print newline
     She said 'I like tea at Fortnum + Mason'. I prefer fish & chips.
 
-    '''
+    """
 
     # This code requires that the replacement is a single string, which is
     # used as many times as necessary.
@@ -83,7 +87,7 @@ def replace_characters(line, locs, lens, replchar="X"):
     # replacement character character.
     for loc, ln in zip(*[locs, lens]):
         for l in range(ln):
-            newline[loc+l] = replchar
+            newline[loc + l] = replchar
 
     # Return the newline, joined back together as a string.
     return "".join(newline)
@@ -100,9 +104,8 @@ def blank_fstring(line, string_continuation=[False, False]):
     match = PBLANKFSTRRE.search(bline)
 
     if match is not None:
-            # match character is a solo - something has gone wrong
-            raise QuoteError(match.group(1), len(re.findall(match.group(1),
-                                                            line)))
+        # match character is a solo - something has gone wrong
+        raise QuoteError(match.group(1), len(re.findall(match.group(1), line)))
 
     return bline
 
@@ -123,15 +126,15 @@ def partial_blank_fstring(line, string_continuation=[False, False]):
         apos_loc = finder("'")
 
         # find the first remaining "
-        quot_loc = finder("\"")
+        quot_loc = finder('"')
 
-        if (apos_loc == -1 and quot_loc == -1):
+        if apos_loc == -1 and quot_loc == -1:
             # no strings remaining
             break
 
-        if (apos_loc == -1):
+        if apos_loc == -1:
             apos_loc = quot_loc + 1
-        if (quot_loc == -1):
+        if quot_loc == -1:
             quot_loc = apos_loc + 1
 
         first_loc = min(apos_loc, quot_loc)
@@ -139,19 +142,18 @@ def partial_blank_fstring(line, string_continuation=[False, False]):
         # find the first remaining !
         bang_loc = finder("!")
 
-        if (bang_loc != -1 and bang_loc < first_loc):
+        if bang_loc != -1 and bang_loc < first_loc:
             # all remaining strings are after the start of comments
             break
 
         matchchar = line[first_loc]
 
-        match = re.search(matchchar+'.*?'+matchchar, bline)
+        match = re.search(matchchar + ".*?" + matchchar, bline)
 
         if match is not None:
             start = match.start()
             end = match.end()
-            bline = replace_characters(bline, [start], [end-start],
-                                       replchar=' ')
+            bline = replace_characters(bline, [start], [end - start], replchar=" ")
         else:
             # match character is a solo - we have done as much as we can
             break
@@ -175,7 +177,7 @@ def blank_fcomments(line, string_continuation=[False, False]):
     if "!" in modified_line:
         start = modified_line.index("!")
         end = len(bline)
-        bline = replace_characters(bline, [start], [end-start], replchar=' ')
+        bline = replace_characters(bline, [start], [end - start], replchar=" ")
 
     return bline
 
@@ -241,16 +243,16 @@ def is_str_continuation_preparblank(parblanked, line):
     apos_loc = finder("'")
 
     # find the first remaining "
-    quot_loc = finder("\"")
+    quot_loc = finder('"')
 
-    if (apos_loc == -1 and quot_loc == -1):
+    if apos_loc == -1 and quot_loc == -1:
         # no strings remaining; ergo no string continuation
         return cont
 
     # find which of ' or " occurs first
-    if (apos_loc == -1):
+    if apos_loc == -1:
         apos_loc = quot_loc + 1
-    if (quot_loc == -1):
+    if quot_loc == -1:
         quot_loc = apos_loc + 1
 
     first_loc = min(apos_loc, quot_loc)
@@ -282,7 +284,7 @@ def clean_str_continuation(line, string_continuation=[False, False]):
     if string_continuation[SQUOTE]:
         out_line = re.sub("^(.*?)'", r"\1 ", line)
     elif string_continuation[DQUOTE]:
-        out_line = re.sub("^(.*?)\"", r"\1 ", line)
+        out_line = re.sub('^(.*?)"', r"\1 ", line)
     else:
         out_line = line
 
@@ -310,7 +312,7 @@ def simplify_line(lines):
 
         while is_pp_continuation(line):
             iline += 1
-            line = ''.join([re.sub(r"\\(\s*)$", r" \1", line), lines[iline]])
+            line = "".join([re.sub(r"\\(\s*)$", r" \1", line), lines[iline]])
 
         # blank any strings pulled in, in case they contain a ! character
         try:
@@ -339,21 +341,20 @@ def simplify_line(lines):
 
             while is_pp_continuation(xline):
                 xiline += 1
-                xline = ''.join([re.sub(r"\\(\s*)$", r" \1", xline),
-                                lines[xiline]])
+                xline = "".join([re.sub(r"\\(\s*)$", r" \1", xline), lines[xiline]])
 
             xline = clean_str_continuation(xline, is_str_continuation(line))
 
             # Skip following lines if they contain only comments,
             # pre-processor directives, or are empty
-            if (re.search(r"^\s*$", blank_fcomments(xline),
-                          flags=re.IGNORECASE)
-               or re.search(r"^\s*#\w+", xline, flags=re.IGNORECASE)):
+            if re.search(
+                r"^\s*$", blank_fcomments(xline), flags=re.IGNORECASE
+            ) or re.search(r"^\s*#\w+", xline, flags=re.IGNORECASE):
                 iline = xiline + 1
             else:
                 break
 
-        line = ''.join([re.sub(r"&(\s*)$", r" \1", line), lines[iline]])
+        line = "".join([re.sub(r"&(\s*)$", r" \1", line), lines[iline]])
 
         if not is_pp_continuation(line):
             if not is_continuation(line):
@@ -362,8 +363,10 @@ def simplify_line(lines):
     # if the line still continues in some form, we have mis-parsed
     if is_continuation(line) or is_pp_continuation(line):
         print("Indentation simplify line has failed. [3]")
-        print("Line still appears to have continuations after parsing. " \
-              "Line simplification has failed for:")
+        print(
+            "Line still appears to have continuations after parsing. "
+            "Line simplification has failed for:"
+        )
         print(line)
         exit(1)
 
@@ -386,7 +389,7 @@ def simplify_line(lines):
     # this is to aid with pattern matching where brackets are included
     bracket_nest_level = 0
     new_line = ""
-    for char in (line):
+    for char in line:
         if char == "(":
             bracket_nest_level += 1
             if bracket_nest_level > 1:
@@ -405,7 +408,7 @@ def simplify_line(lines):
 
 
 def find_quoted_char(line, char, string_continuation=[False, False]):
-    '''
+    """
     Check if a particular string (char) is present inside double or single
     quotes within a line of text, and return locations of any occurrences
     within the line.
@@ -428,7 +431,7 @@ def find_quoted_char(line, char, string_continuation=[False, False]):
     Note that this assumes that the line has been pre-processed to remove
     apostrophes. It will fail if there are an odd number of single or
     double quotes on the line.
-    '''
+    """
 
     # First check there are any instances of char in this line. If not, just
     # leave without doing anything.
@@ -455,7 +458,7 @@ def find_quoted_char(line, char, string_continuation=[False, False]):
     # location of the character in the original is a quoted character location.
     for match in re.finditer(char, line):
         i = match.start()
-        if (line[i] != blanked_str[i]):
+        if line[i] != blanked_str[i]:
             char_loc.append(i)
 
     if len(char_loc) > 0:
@@ -465,7 +468,7 @@ def find_quoted_char(line, char, string_continuation=[False, False]):
 
 
 def find_commented_char(line, char, string_continuation=[False, False]):
-    r'''
+    r"""
     Check if a particular string (char) is present inside a Fortran comment
     within a line of text, and return locations of any occurrences within the
     line.
@@ -489,7 +492,7 @@ def find_commented_char(line, char, string_continuation=[False, False]):
     Note that this will give unexpected results if there are bangs that aren't
     comment markers. It assumes that the line has been pre-processed with
     find_quoted_char to remove any bangs that are within strings.
-    '''
+    """
 
     # First check there are any instances of char, if not just leave
     # without processing the line.
@@ -525,8 +528,9 @@ def find_commented_char(line, char, string_continuation=[False, False]):
     if comment is None:
         char_loc = []
     else:
-        char_loc = [loc.start() + comment.start()
-                    for loc in re.finditer(char, comment.group())]
+        char_loc = [
+            loc.start() + comment.start() for loc in re.finditer(char, comment.group())
+        ]
 
     # Return the location of any commented characters.
     if len(char_loc) > 0:

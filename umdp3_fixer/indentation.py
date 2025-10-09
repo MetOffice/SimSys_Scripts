@@ -5,7 +5,7 @@
 # For further details please refer to the file COPYRIGHT.txt
 # which you should have received as part of this distribution.
 # *****************************COPYRIGHT*******************************
-'''
+"""
 ## NOTE ##
 This module is one of several for which the Master copy is in the
 UM repository. When making changes, please ensure the changes are made in the UM
@@ -14,7 +14,7 @@ copied over.
 
 Module containing various functions used to apply UMDP3 style indentation
 to Fortran source code
-'''
+"""
 import re
 import sys
 from fstring_parse import *
@@ -45,10 +45,10 @@ INDENTATION_START = [
     # ELSEWHERE statement
     r"^\s*ELSE\s*WHERE\s*(\(.*?\)[^\w]*$|$)",
     # (ABSTRACT) INTERFACE statement - possibly followed by label suffix
-    r"^\s*(ABSTRACT\s*)?INTERFACE" \
-    r"(\s+\w+\s*$|\s*$|" \
-    r"\s+ASSIGNMENT\s*\(\s*=\s*\)\s*$|" \
-    r"\s+OPERATOR\s*\(.*\)\s*$|" \
+    r"^\s*(ABSTRACT\s*)?INTERFACE"
+    r"(\s+\w+\s*$|\s*$|"
+    r"\s+ASSIGNMENT\s*\(\s*=\s*\)\s*$|"
+    r"\s+OPERATOR\s*\(.*\)\s*$|"
     r"\s+(READ|WRITE)\s*\(\s*(UN)?FORMATTED\s*\)\s*$)",
     # ENUMs
     r"^\s*ENUM\s*,\s*BIND\s*\(\s*C\s*\)\s*$",
@@ -76,10 +76,10 @@ INDENTATION_END = [
     # ELSEWHERE statement
     r"^\s*ELSE\s*WHERE\s*(\(.*?\)[^\w]*$|$)",
     # END INTERFACE statement - possibly followed by label suffix
-    r"^\s*END\s*INTERFACE" \
-    r"(\s+\w+\s*$|\s*$|" \
-    r"\s+ASSIGNMENT\s*\(\s*=\s*\)\s*$|" \
-    r"\s+OPERATOR\s*\(.*\)\s*$|" \
+    r"^\s*END\s*INTERFACE"
+    r"(\s+\w+\s*$|\s*$|"
+    r"\s+ASSIGNMENT\s*\(\s*=\s*\)\s*$|"
+    r"\s+OPERATOR\s*\(.*\)\s*$|"
     r"\s+(READ|WRITE)\s*\(\s*(UN)?FORMATTED\s*\)\s*$)",
     # END ENUM statement
     r"^\s*END\s*ENUM\s*$",
@@ -93,11 +93,11 @@ def get_current_indent(line):
 
 def indent_line(line, indentation):
     "Returns the given line adjusted by the required amount"
-    indentation_str = " "*abs(indentation)
+    indentation_str = " " * abs(indentation)
     if indentation > 0:
         return indentation_str + line
     elif indentation < 0:
-        if re.search("^"+indentation_str, line):
+        if re.search("^" + indentation_str, line):
             return re.sub(indentation_str, "", line, count=1)
         else:
             return line.lstrip()
@@ -122,7 +122,7 @@ def apply_indentation(lines, debug=False):
     for iline, line in enumerate(lines):
 
         if debug:
-            print("\n{0:d}: \"{1:s}\"".format(iline, line))
+            print('\n{0:d}: "{1:s}"'.format(iline, line))
 
         # If this line is continuing a previous preprocessing line,
         # just ignore indentation
@@ -135,21 +135,21 @@ def apply_indentation(lines, debug=False):
                 pp_continuation = False
 
         # Ignore line if an OMP directive
-        elif (re.search(r"^\s*!\$.*", line, flags=re.IGNORECASE)):
+        elif re.search(r"^\s*!\$.*", line, flags=re.IGNORECASE):
             if debug:
                 print("    (OMP comment)")
             new_lines.append(re.sub(r"^\s*!", "!", line))
 
         # Ignore line if an fcm DEPENDS ON comment
-        elif (re.search(r"^\s*!\s*DEPENDS\s*ON\s*:",
-                        line, flags=re.IGNORECASE)):
+        elif re.search(r"^\s*!\s*DEPENDS\s*ON\s*:", line, flags=re.IGNORECASE):
             if debug:
                 print("    (DEPENDS ON comment)")
             new_lines.append(re.sub(r"^\s*!", "!", line))
 
         # Ignore line if a misc compiler directive
-        elif (re.search(r"^\s*!(DIR|DEC|HPF|GCC|PGI|FPP|MIC)\$.*",
-                        line, flags=re.IGNORECASE)):
+        elif re.search(
+            r"^\s*!(DIR|DEC|HPF|GCC|PGI|FPP|MIC)\$.*", line, flags=re.IGNORECASE
+        ):
             if debug:
                 print("    (Compiler Directive comment)")
             new_lines.append(re.sub(r"^\s*!", "!", line))
@@ -257,8 +257,11 @@ def apply_indentation(lines, debug=False):
             simple_line = simplify_line(lines[iline:])
 
             if debug:
-                print("??" + " "*len("{0:d}".format(iline)) +
-                      "\"{0:s}\"".format(simple_line))
+                print(
+                    "??"
+                    + " " * len("{0:d}".format(iline))
+                    + '"{0:s}"'.format(simple_line)
+                )
 
             # Check for ending statements first - since the indentation
             # shift for the end of a block must also be applied to the
@@ -281,8 +284,11 @@ def apply_indentation(lines, debug=False):
             indented_line = indent_line(line, relative_indent)
 
             if debug:
-                print("=>" + " "*len("{0:d}".format(iline)) +
-                      "\"{0:s}\"".format(indented_line))
+                print(
+                    "=>"
+                    + " " * len("{0:d}".format(iline))
+                    + '"{0:s}"'.format(indented_line)
+                )
 
             new_lines.append(indented_line)
 
@@ -331,7 +337,7 @@ def apply_indentation(lines, debug=False):
 
 
 def main():
-    '''Main toplevel function for testing'''
+    """Main toplevel function for testing"""
     input_file = sys.argv[1]
 
     with open(input_file, "r+") as file_in:

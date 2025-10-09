@@ -4,7 +4,7 @@
 # For further details please refer to the file COPYRIGHT.txt
 # which you should have received as part of this distribution.
 # *****************************COPYRIGHT*******************************
-'''
+"""
 ## NOTE ##
 This module is one of several for which the Master copy is in the
 UM repository. When making changes, please ensure the changes are made in the UM
@@ -25,7 +25,7 @@ amersands and exclamation marks within quoted strings or comments, but there
 may be some cases which are missed. These lines will be left without applying
 the ampersand shifting, and will be flagged, optionally with a message in
 stdout.
-'''
+"""
 import sys
 import re
 import traceback
@@ -37,21 +37,25 @@ DEFAULT_COL = 80
 
 
 class CharError(ParsingError):
-    '''
+    """
     Raised when there are an unexpected number of a certain char in a line.
-    '''
+    """
+
     def __init__(self, char, number):
         self.number = number
         self.char = char
-        self.msg = "There are {0:d} unquoted, uncommented " \
-                   "\"{1:s}\" in this line.".format(number, char)
+        self.msg = (
+            "There are {0:d} unquoted, uncommented "
+            '"{1:s}" in this line.'.format(number, char)
+        )
+
     pass
 
 
 def print_message(errtype, msg, iline=None, line=None, fname=None):
-    '''
+    """
     Print a formatted message
-    '''
+    """
     if fname is None:
         fnamestr = ""
     else:
@@ -70,13 +74,15 @@ def print_message(errtype, msg, iline=None, line=None, fname=None):
     else:
         linestr = ": {0:s}".format(line)
 
-    print("{0:s}{1:s}{2:s} - {3:s}{4:s}".format(fnamestr, ilinestr, errtype,
-                                                msg, linestr))
+    print(
+        "{0:s}{1:s}{2:s} - {3:s}{4:s}".format(fnamestr, ilinestr, errtype, msg, linestr)
+    )
 
 
-def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
-                    preclean=False):
-    '''
+def shift_ampersand(
+    line, line_previous, str_continuation, col=DEFAULT_COL, preclean=False
+):
+    """
     Check if the line contains an ampersand.
     If so then set location of ampersand to col so as to be consistent
     Sometimes there are comments after the ampersand, in this case keep
@@ -85,7 +91,7 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
     comment. If the line is still too long, then reduce whitespace between
     the end of the code and the ampersand until the comment fits within the
     required line length.
-    '''
+    """
 
     # return earliy if there are no apersands at all.
     if "&" not in line:
@@ -106,11 +112,11 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
     stripline = workline.strip()
 
     # Pre-processor lines start with #. Ignore them completely.
-    pre_proc = (stripline[0] == "#")
+    pre_proc = stripline[0] == "#"
 
     # Lines that are completely commented start with a bang and are also
     # ignored completely (except if they are actually OpenMP)
-    all_comment = (stripline[0] == "!")
+    all_comment = stripline[0] == "!"
     omp_sentinal = all_comment and (stripline[1] == "$")
 
     # Ignore empty lines or pre-processor directives
@@ -164,8 +170,9 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
     if omp_loc != -1:
         omp_continue = workline.upper().find("!$OMP&")
         if omp_continue != -1:
-            workline = replace_characters(workline, [omp_continue+5], [1],
-                                          replchar=" ")
+            workline = replace_characters(
+                workline, [omp_continue + 5], [1], replchar=" "
+            )
         workline = replace_characters(workline, [omp_loc], [1], replchar="W")
 
     # Find where there are ampersands or bangs within single or double
@@ -177,26 +184,29 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
     # If any ampersands or bangs were found within quotes, replace them
     # with "X" and "Y" respectively.
     if quoted_amp_locs is not None:
-        lens = len(quoted_amp_locs) * [1, ]
-        workline = replace_characters(workline, quoted_amp_locs, lens,
-                                      replchar="X")
+        lens = len(quoted_amp_locs) * [
+            1,
+        ]
+        workline = replace_characters(workline, quoted_amp_locs, lens, replchar="X")
     if quoted_bang_locs is not None:
-        lens = len(quoted_bang_locs) * [1, ]
-        workline = replace_characters(workline, quoted_bang_locs, lens,
-                                      replchar="Y")
+        lens = len(quoted_bang_locs) * [
+            1,
+        ]
+        workline = replace_characters(workline, quoted_bang_locs, lens, replchar="Y")
 
     # Find where there are ampersands within comments and replace them with
     # "Z" temporarily.
     commented_amp_locs = find_commented_char(workline, "&", str_continuation)
 
     if commented_amp_locs is not None:
-        lens = len(commented_amp_locs) * [1, ]
-        workline = replace_characters(workline, commented_amp_locs, lens,
-                                      replchar="Z")
+        lens = len(commented_amp_locs) * [
+            1,
+        ]
+        workline = replace_characters(workline, commented_amp_locs, lens, replchar="Z")
 
     # Check if there is still more than one ampersand in this line and
     # warn if there is.
-    if (len(re.findall("&", workline)) > 1):
+    if len(re.findall("&", workline)) > 1:
         amp_loc = workline.find("&")
 
         # determin if there is a leading ampersand
@@ -204,8 +214,7 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
 
         if len(beforeline) == 0:
             # the first ampersand is a leading continuation
-            workline = replace_characters(workline, [amp_loc], [1],
-                                          replchar=" ")
+            workline = replace_characters(workline, [amp_loc], [1], replchar=" ")
         else:
             raise CharError("&", len(re.findall("&", workline)))
 
@@ -220,17 +229,20 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
     # Now the locations of the characters that are needed have been found,
     # replace ampersands and bangs where they were.
     if quoted_amp_locs is not None:
-        lens = len(quoted_amp_locs) * [1, ]
-        workline = replace_characters(workline, quoted_amp_locs, lens,
-                                      replchar="&")
+        lens = len(quoted_amp_locs) * [
+            1,
+        ]
+        workline = replace_characters(workline, quoted_amp_locs, lens, replchar="&")
     if quoted_bang_locs is not None:
-        lens = len(quoted_bang_locs) * [1, ]
-        workline = replace_characters(workline, quoted_bang_locs, lens,
-                                      replchar="!")
+        lens = len(quoted_bang_locs) * [
+            1,
+        ]
+        workline = replace_characters(workline, quoted_bang_locs, lens, replchar="!")
     if commented_amp_locs is not None:
-        lens = len(commented_amp_locs) * [1, ]
-        workline = replace_characters(workline, commented_amp_locs, lens,
-                                      replchar="&")
+        lens = len(commented_amp_locs) * [
+            1,
+        ]
+        workline = replace_characters(workline, commented_amp_locs, lens, replchar="&")
     if omp_loc != -1:
         workline = replace_characters(workline, [omp_loc], [1], replchar="!")
 
@@ -251,8 +263,7 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
 
             if len(beforeline) == 0:
                 # the ampersand is a leading continuations
-                workline = replace_characters(workline, [amp_loc], [1],
-                                              replchar=" ")
+                workline = replace_characters(workline, [amp_loc], [1], replchar=" ")
             else:
                 # Keep the part of the input line before the ampersand (without
                 # white space).
@@ -287,7 +298,7 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
             # trailing whitespace.
             if len(workline.rstrip()) > col:
                 comment = workline[comment_loc:].rstrip()
-                workline = workline[:amp_loc+1]
+                workline = workline[: amp_loc + 1]
                 workline = " ".join([workline, comment])
 
             # If the line is still too long, see if ampersand can be moved
@@ -312,10 +323,10 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
                 # there is only one space left.
                 for i in range(nloop):
 
-                    if workline[amp_location-1] == " ":
+                    if workline[amp_location - 1] == " ":
                         # If there is still whitespace that can be removed,
                         # remove it and update the ampersand location.
-                        del workline[amp_location-1]
+                        del workline[amp_location - 1]
                         amp_location -= 1
                     else:
                         # Ampersand is now next to no-blank text so place
@@ -330,20 +341,21 @@ def shift_ampersand(line, line_previous, str_continuation, col=DEFAULT_COL,
 
 
 def check_line_len(line, maxlinelen=DEFAULT_COL):
-    '''
+    """
     Check line to see if it violates length requirements. If debugging,
     write some information to stdout.
-    '''
+    """
 
-    return (len(line) > maxlinelen)
+    return len(line) > maxlinelen
 
 
-def apply_ampersand_shift(lines, col=DEFAULT_COL, fname=None, debug=False,
-                          preclean=False):
-    '''
+def apply_ampersand_shift(
+    lines, col=DEFAULT_COL, fname=None, debug=False, preclean=False
+):
+    """
     For a lot of lines make sure any continuation ampersands are in the
     same column and return the result
-    '''
+    """
 
     not_parsed = []
     output_lines = []
@@ -354,14 +366,18 @@ def apply_ampersand_shift(lines, col=DEFAULT_COL, fname=None, debug=False,
 
     for iline, line in enumerate(lines):
         try:
-            outline = shift_ampersand(line, line_previous, str_continuation,
-                                      col, preclean)
+            outline = shift_ampersand(
+                line, line_previous, str_continuation, col, preclean
+            )
         except ParsingError as e:
             if debug:
-                print_message("PARSING ERROR",
-                              "{0:s} Ampersand shifting has not been "
-                              "applied".format(e.msg), iline+1, line=line,
-                              fname=fname)
+                print_message(
+                    "PARSING ERROR",
+                    "{0:s} Ampersand shifting has not been " "applied".format(e.msg),
+                    iline + 1,
+                    line=line,
+                    fname=fname,
+                )
             outline = line
             not_parsed.append(iline)
 
@@ -397,11 +413,10 @@ def apply_ampersand_shift(lines, col=DEFAULT_COL, fname=None, debug=False,
     return output_lines, not_parsed
 
 
-def apply_check_line_len(lines, fname=None, maxlinelen=DEFAULT_COL,
-                         debug=False):
-    '''
+def apply_check_line_len(lines, fname=None, maxlinelen=DEFAULT_COL, debug=False):
+    """
     For a lot of lines check if any lines are longer than required
-    '''
+    """
 
     any_too_long = False
     ilines_too_long = []
@@ -411,9 +426,13 @@ def apply_check_line_len(lines, fname=None, maxlinelen=DEFAULT_COL,
             any_too_long = True
             ilines_too_long.append(iline)
             if debug:
-                print_message("VIOLATION",
-                              "Line > {0:d} columns".format(maxlinelen),
-                              iline+1, line=line, fname=fname)
+                print_message(
+                    "VIOLATION",
+                    "Line > {0:d} columns".format(maxlinelen),
+                    iline + 1,
+                    line=line,
+                    fname=fname,
+                )
 
     if any_too_long:
         return ilines_too_long
@@ -422,10 +441,11 @@ def apply_check_line_len(lines, fname=None, maxlinelen=DEFAULT_COL,
 
 
 def main():
-    '''
+    """
     Main toplevel function for testing
-    '''
-    parser = OptionParser(usage="""
+    """
+    parser = OptionParser(
+        usage="""
     %prog [--column col] [--debug] file_1 [file_2 [file_3] ... ]
 
     This script will attempt to manipulate white space to make sure ampersands
@@ -434,11 +454,16 @@ def main():
     If the line is still too long, it will minimise its length.
 
     The optional --column tells which column should be used (default=80)
-    """)
-    parser.add_option("--column", dest="col", type="int", default=DEFAULT_COL,
-                      help="Column in which ampersands should appear")
-    parser.add_option("--debug", action="store_true",
-                      help="Report useful information")
+    """
+    )
+    parser.add_option(
+        "--column",
+        dest="col",
+        type="int",
+        default=DEFAULT_COL,
+        help="Column in which ampersands should appear",
+    )
+    parser.add_option("--debug", action="store_true", help="Report useful information")
 
     (opts, args) = parser.parse_args()
 
@@ -449,24 +474,29 @@ def main():
 
     with open(input_file, "r+") as file_in:
         lines_in = file_in.read().split("\n")
-        new_lines, not_parsed = apply_ampersand_shift(lines_in, opts.col,
-                                                      fname=input_file,
-                                                      debug=opts.debug)
+        new_lines, not_parsed = apply_ampersand_shift(
+            lines_in, opts.col, fname=input_file, debug=opts.debug
+        )
         if opts.debug:
             if len(not_parsed) > 0:
-                print_message("WARNING",
-                              "Ampersand alignment failed for some lines "
-                              "due to parsing errors. Please check lines and "
-                              "make sure they are correct.",
-                              fname=input_file)
-            ilines_too_long = apply_check_line_len(new_lines, input_file,
-                                                   maxlinelen=opts.col,
-                                                   debug=True)
+                print_message(
+                    "WARNING",
+                    "Ampersand alignment failed for some lines "
+                    "due to parsing errors. Please check lines and "
+                    "make sure they are correct.",
+                    fname=input_file,
+                )
+            ilines_too_long = apply_check_line_len(
+                new_lines, input_file, maxlinelen=opts.col, debug=True
+            )
             if ilines_too_long is not None:
-                print_message("WARNING",
-                              "Some lines are longer than {0:d} characters. "
-                              "Please check and make them "
-                              "shorter.".format(opts.col), fname=input_file)
+                print_message(
+                    "WARNING",
+                    "Some lines are longer than {0:d} characters. "
+                    "Please check and make them "
+                    "shorter.".format(opts.col),
+                    fname=input_file,
+                )
 
         file_in.seek(0)
         file_in.write("\n".join(new_lines))
