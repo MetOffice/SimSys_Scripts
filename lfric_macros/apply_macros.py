@@ -389,10 +389,7 @@ class ApplyMacros:
         print(f"Extracting {source} to a temporary directory")
         tempdir = tempfile.mkdtemp()
         self.temp_dirs[repo] = tempdir
-        commands = (
-            f"git clone {source} {tempdir}",
-            f"git -C {tempdir} checkout {ref}"
-        )
+        commands = (f"git clone {source} {tempdir}", f"git -C {tempdir} checkout {ref}")
         for command in commands:
             result = run_command(command)
             if result.returncode:
