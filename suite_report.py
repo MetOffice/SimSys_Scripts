@@ -1998,7 +1998,7 @@ class SuiteReport:
                     "There has been an exception in SuiteReport.print_report()",
                     "See output for more information",
                     "rose-stem suite output will be in the files :\n",
-                    f"~/cylc-run/{suite_dir}/log/suite/log",
+                    f"~/cylc-run/{suite_dir}/log/scheduler/log",
                 ]
             )
         finally:
