@@ -9,9 +9,13 @@ Clone sources for a rose-stem run for use with git bdiff module in scripts
 
 import re
 import subprocess
+from typing import Optional
+from pathlib import Path
 
 
-def run_command(command, shell=False, rval=False):
+def run_command(
+    command: str, rval: bool = False
+) -> Optional[subprocess.CompletedProcess]:
     """
     Run a subprocess command and return the result object
     Inputs:
@@ -19,14 +23,13 @@ def run_command(command, shell=False, rval=False):
     Outputs:
         - result object from subprocess.run
     """
-    if not shell:
-        command = command.split()
+    command = command.split()
     result = subprocess.run(
         command,
         capture_output=True,
         text=True,
         timeout=300,
-        shell=shell,
+        shell=True,
         check=False,
     )
     if result.returncode:
@@ -38,7 +41,9 @@ def run_command(command, shell=False, rval=False):
         return result
 
 
-def clone_repo_mirror(source, repo_ref, parent, mirror_loc, loc):
+def clone_repo_mirror(
+    source: str, repo_ref: str, parent: str, mirror_loc: Path, loc: Path
+) -> None:
     """
     Clone a repo source using a local git mirror.
     Assume the mirror is set up as per the Met Office
@@ -71,7 +76,7 @@ def clone_repo_mirror(source, repo_ref, parent, mirror_loc, loc):
         run_command(command)
 
 
-def clone_repo(repo_source, repo_ref, loc):
+def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     """
     Clone the repo and checkout the provided ref
     Only if a remote source
@@ -84,7 +89,7 @@ def clone_repo(repo_source, repo_ref, loc):
         run_command(command)
 
 
-def sync_repo(repo_source, repo_ref, loc):
+def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     """
     Rsync a local git clone and checkout the provided ref
     """

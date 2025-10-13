@@ -6,22 +6,24 @@
 # *****************************COPYRIGHT*******************************
 """
 Clone sources for a rose-stem run for use with git bdiff module in scripts
+Only intended for use with rose-stem suites that have provided appropriate environment
+variables
 """
 
 import os
 from datetime import datetime
 from pathlib import Path
 from ast import literal_eval
-from get_git_sources import clone_repo, clone_repo_mirror, sync_repo, run_command
+from get_git_sources import clone_repo, clone_repo_mirror, sync_repo
+from typing import Dict
 
 
-def main():
+def main() -> None:
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
+    clone_loc.mkdir(parents=True)
 
-    run_command(f"mkdir -p {clone_loc}")
-
-    dependencies = literal_eval(os.environ["DEPENDENCIES"])
+    dependencies: Dict = literal_eval(os.environ["DEPENDENCIES"])
 
     for dependency, values in dependencies.items():
 
