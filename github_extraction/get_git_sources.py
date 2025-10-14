@@ -29,7 +29,7 @@ def run_command(
         capture_output=True,
         text=True,
         timeout=300,
-        shell=True,
+        shell=False,
         check=False,
     )
     if result.returncode:
