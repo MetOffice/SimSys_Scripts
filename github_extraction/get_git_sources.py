@@ -67,6 +67,8 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     Only if a remote source
     """
 
+    loc.mkdir(parents=True)
+
     commands = (
         f"git -C {loc} init",
         f"git -C {loc} remote add origin {repo_source}",
