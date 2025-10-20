@@ -9,7 +9,6 @@ Class containing helper methods for gathering data needed for a SuiteReport obje
 """
 
 import re
-import os
 import shutil
 import sqlite3
 import subprocess
@@ -190,8 +189,6 @@ class SuiteData:
         """
 
         for dependency in self.dependencies:
-            print(dependency)
-            print(self.temp_directory)
             self.dependencies[dependency]["gitinfo"] = GitInfo(
                 self.temp_directory / dependency
             )
