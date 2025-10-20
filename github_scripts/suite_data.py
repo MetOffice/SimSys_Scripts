@@ -9,6 +9,7 @@ Class containing helper methods for gathering data needed for a SuiteReport obje
 """
 
 import re
+import os
 import shutil
 import sqlite3
 import subprocess
@@ -17,6 +18,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 from git_bdiff import GitBDiff, GitInfo
+
 
 class SuiteData:
     """
@@ -188,6 +190,8 @@ class SuiteData:
         """
 
         for dependency in self.dependencies:
+            print(dependency)
+            print(self.temp_directory)
             self.dependencies[dependency]["gitinfo"] = GitInfo(
                 self.temp_directory / dependency
             )
@@ -283,21 +287,18 @@ class SuiteData:
 
     def find_unknown_dependency(self, dependency: str) -> str:
         """
-        TEMPORARY
         The primary dependency may be unset in the dependencies file. In this case find
-        it from the *_SOURCE variable in the rose-suite.conf.
-        TODO: Once cylc provides the location of the source code itself, this method
-        should be changed to use that instead, as then the _SOURCE variable will be
-        removed
+        it from the CYLC_WORKFLOW_SRC_DIR variable that gets set in the
+        flow-processed.cylc file
         """
 
-        var = f"{dependency.upper()}_SOURCE".replace('"', "")
-        if var not in self.rose_data:
-            raise RuntimeError(f"Cant determine source for {dependency}")
-        rval = self.rose_data[var]
-        if "$ROSE_ORIG_HOST" in rval:
-            rval = rval.replace("$ROSE_ORIG_HOST", self.rose_data["ROSE_ORIG_HOST"])
-        return rval
+        log_file = self.suite_path / "log" / "scheduler" / "log"
+        with open(log_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if re.search(f"{dependency.upper()} SOURCE CLONE=", line):
+                    return line.split("=")[1].rstrip("/")
+        raise RuntimeError(f"Unable to find source for dependency {dependency}")
 
     def read_dependencies(self) -> Dict[str, Dict]:
         """
