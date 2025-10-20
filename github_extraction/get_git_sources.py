@@ -52,7 +52,22 @@ def clone_repo_mirror(
     command = f"git clone {mirror_loc} {loc}"
     run_command(command)
 
+    # If not provided a ref, return
+    if not repo_ref:
+        return
 
+    source = source.removeprefix("git@github.com:")
+    user = source.split("/")[0]
+    # Check that the user is different to the Upstream User
+    if user in parent.split("/")[0]:
+        user = None
+
+    # If the ref is a hash then we don't need the fork user as part of the fetch.
+    # Equally, if the user is the Upstream User, it's not needed
+    if re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref) or not user:
+        fetch = repo_ref
+    else:
+        fetch = f"{user}/{repo_ref}"
     commands = (
         f"git -C {loc} fetch origin {fetch}",
         f"git -C {loc} checkout FETCH_HEAD",
@@ -67,14 +82,26 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     Only if a remote source
     """
 
-    loc.mkdir(parents=True)
+    # commands = (
+    #     f"git -C {loc} init",
+    #     f"git -C {loc} remote add origin {repo_source}",
+    #     f"git -C {loc} fetch origin {repo_ref}",
+    #     f"git -C {loc} checkout FETCH_HEAD"
+    # )
+    # for command in commands:
+    #     run_command(command)
 
-    commands = (
-        f"git -C {loc} init",
-        f"git -C {loc} remote add origin {repo_source}",
-        f"git -C {loc} fetch origin {repo_ref}",
-        f"git -C {loc} checkout FETCH_HEAD"
-    )
+    if re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref):
+        commands = (
+            f"git clone --depth 1 {repo_source} {loc}",
+            f"git -C {loc} fetch --depth 1 origin {repo_ref}",
+            f"git -C {loc} checkout {repo_ref}"
+        )
+    else:
+        commands = (
+            f"git clone --branch {repo_ref} --depth 1 {repo_source} {loc}"
+        )
+
     for command in commands:
         run_command(command)
 
