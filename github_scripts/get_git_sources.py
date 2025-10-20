@@ -109,6 +109,13 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     Rsync a local git clone and checkout the provided ref
     """
 
+    # Remove if this clone already exists
+    if loc.exists():
+        rmtree(loc)
+
+    # Create a clean clone location
+    loc.mkdir(parents=True)
+
     # Trailing slash required for rsync
     command = f"rsync -av {repo_source}/ {loc}"
     run_command(command)
