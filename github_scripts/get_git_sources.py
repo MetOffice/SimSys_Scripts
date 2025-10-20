@@ -91,6 +91,9 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     if loc.exists():
         rmtree(loc)
 
+    # Create a clean clone location
+    loc.mkdir(parents=True)
+
     commands = (
         f"git -C {loc} init",
         f"git -C {loc} remote add origin {repo_source}"
