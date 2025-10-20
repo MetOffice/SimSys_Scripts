@@ -8,9 +8,6 @@
 Class containing helper methods for gathering data needed for a SuiteReport object
 """
 
-import sys
-
-sys.path.append("../")
 import re
 import shutil
 import sqlite3
@@ -19,19 +16,7 @@ import yaml
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
-
-try:
-    from bdiff.git_bdiff import GitBDiff, GitInfo
-except ImportError:
-    try:
-        from git_bdiff import GitBDiff, GitInfo
-    except ImportError as err:
-        raise ImportError(
-            "Unable to import from git_bdiff module. This is included in the same "
-            "repository as this script and included with a relative import. Ensure "
-            "this script is being called from the correct place."
-        ) from err
-
+from git_bdiff import GitBDiff, GitInfo
 
 class SuiteData:
     """
