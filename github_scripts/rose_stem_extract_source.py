@@ -21,7 +21,6 @@ from typing import Dict
 def main() -> None:
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
-    clone_loc.mkdir(parents=True)
 
     dependencies: Dict = literal_eval(os.environ["DEPENDENCIES"])
 
