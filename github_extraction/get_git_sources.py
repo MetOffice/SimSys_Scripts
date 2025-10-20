@@ -91,26 +91,12 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     if loc.exists():
         rmtree(loc)
 
-    # commands = (
-    #     f"git -C {loc} init",
-    #     f"git -C {loc} remote add origin {repo_source}",
-    #     f"git -C {loc} fetch origin {repo_ref}",
-    #     f"git -C {loc} checkout FETCH_HEAD"
-    # )
-    # for command in commands:
-    #     run_command(command)
-
-    if re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref):
-        commands = (
-            f"git clone --depth 1 {repo_source} {loc}",
-            f"git -C {loc} fetch --depth 1 origin {repo_ref}",
-            f"git -C {loc} checkout {repo_ref}"
-        )
-    else:
-        commands = (
-            f"git clone --branch {repo_ref} --depth 1 {repo_source} {loc}",
-        )
-
+    commands = (
+        f"git -C {loc} init",
+        f"git -C {loc} remote add origin {repo_source}"
+        f"git -C {loc} fetch origin {repo_ref}",
+        f"git -C {loc} checkout FETCH_HEAD"
+    )
     for command in commands:
         run_command(command)
 
