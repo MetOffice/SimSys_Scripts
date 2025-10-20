@@ -11,6 +11,7 @@ import re
 import subprocess
 from typing import Optional
 from pathlib import Path
+from shutil import rmtree
 
 
 def run_command(
@@ -49,6 +50,10 @@ def clone_repo_mirror(
     Assume the mirror is set up as per the Met Office
     """
 
+    # Remove if this clone already exists
+    if loc.exists():
+        rmtree(loc)
+
     command = f"git clone {mirror_loc} {loc}"
     run_command(command)
 
@@ -82,6 +87,10 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     Only if a remote source
     """
 
+    # Remove if this clone already exists
+    if loc.exists():
+        rmtree(loc)
+
     # commands = (
     #     f"git -C {loc} init",
     #     f"git -C {loc} remote add origin {repo_source}",
@@ -99,7 +108,7 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
         )
     else:
         commands = (
-            f"git clone --branch {repo_ref} --depth 1 {repo_source} {loc}"
+            f"git clone --branch {repo_ref} --depth 1 {repo_source} {loc}",
         )
 
     for command in commands:
