@@ -69,7 +69,7 @@ def clone_repo_mirror(
 
     # If the ref is a hash then we don't need the fork user as part of the fetch.
     # Equally, if the user is the Upstream User, it's not needed
-    if re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref) or not user:
+    if not user or re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref):
         fetch = repo_ref
     else:
         fetch = f"{user}/{repo_ref}"
