@@ -279,12 +279,12 @@ class SuiteData:
         flow-processed.cylc file
         """
 
+        pattern = re.compile(rf"{dependency.upper()} SOURCE CLONE=(\S+)")
         log_file = self.suite_path / "log" / "scheduler" / "log"
         with open(log_file, "r") as f:
             for line in f:
-                line = line.strip()
-                if re.search(f"{dependency.upper()} SOURCE CLONE=", line):
-                    return line.split("=")[1].rstrip("/")
+                if match := pattern.search(line):
+                    return match.group(1).rstrip("/")
         raise RuntimeError(f"Unable to find source for dependency {dependency}")
 
     def read_dependencies(self) -> Dict[str, Dict]:
