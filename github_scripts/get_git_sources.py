@@ -91,9 +91,12 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     if loc.exists():
         rmtree(loc)
 
+    # Create a clean clone location
+    loc.mkdir(parents=True)
+
     commands = (
         f"git -C {loc} init",
-        f"git -C {loc} remote add origin {repo_source}"
+        f"git -C {loc} remote add origin {repo_source}",
         f"git -C {loc} fetch origin {repo_ref}",
         f"git -C {loc} checkout FETCH_HEAD"
     )
@@ -105,6 +108,13 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     """
     Rsync a local git clone and checkout the provided ref
     """
+
+    # Remove if this clone already exists
+    if loc.exists():
+        rmtree(loc)
+
+    # Create a clean clone location
+    loc.mkdir(parents=True)
 
     # Trailing slash required for rsync
     command = f"rsync -av {repo_source}/ {loc}"
