@@ -17,6 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 from git_bdiff import GitBDiff, GitInfo
+from get_git_sources import clone_repo, sync_repo
 
 
 class SuiteData:
@@ -203,20 +204,9 @@ class SuiteData:
         for dependency, data in self.dependencies.items():
             loc = self.temp_directory / dependency
             if data["source"].endswith(".git"):
-                commands = [
-                    f"git clone {data['source']} {loc}",
-                    f"git -C {loc} checkout {data['ref']}",
-                ]
-                for command in commands:
-                    self.run_command(command)
+                clone_repo(data['source'], data['ref'], loc)
             else:
-                source = data["source"]
-                if not source.endswith("/"):
-                    source = source + "/"
-                command = (
-                    f'rsync -e "ssh -o StrictHostKeyChecking=no" -avl {source} {loc}'
-                )
-                self.run_command(command, shell=True)
+                sync_repo(data['source'], data['ref'], loc)
 
     def determine_primary_source(self) -> str:
         """
