@@ -204,9 +204,9 @@ class SuiteData:
         for dependency, data in self.dependencies.items():
             loc = self.temp_directory / dependency
             if data["source"].endswith(".git"):
-                clone_repo(data['source'], data['ref'], loc)
+                clone_repo(data["source"], data["ref"], loc)
             else:
-                sync_repo(data['source'], data['ref'], loc)
+                sync_repo(data["source"], data["ref"], loc)
 
     def determine_primary_source(self) -> str:
         """
