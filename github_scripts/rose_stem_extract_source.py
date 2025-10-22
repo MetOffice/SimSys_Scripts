@@ -26,7 +26,8 @@ def set_https(dependencies: Dict) -> Dict:
     print("Modifying Dependencies")
     for dependency, values in dependencies.items():
         if values["source"].startswith("git@github.com:"):
-            dependencies[dependency]["source"].replace(
+            source = dependencies[dependency]["source"]
+            dependencies[dependency]["source"] = source.replace(
                 "git@github.com:", "https://github.com/"
             )
 
@@ -39,7 +40,7 @@ def main() -> None:
 
     dependencies: Dict = literal_eval(os.environ["DEPENDENCIES"])
 
-    if os.environ.get("USE_TOKENS", "False") ==  "True":
+    if os.environ.get("USE_TOKENS", "False") == "True":
         dependencies = set_https(dependencies)
 
     for dependency, values in dependencies.items():
