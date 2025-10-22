@@ -23,8 +23,8 @@ def set_https(dependencies: Dict) -> Dict:
     Change sources in a dependencies dictions to use https instead of ssh
     """
 
-    for dependency in dependencies:
-        if dependency["source"].startswith("git@github.com:"):
+    for dependency, values in dependencies.items():
+        if values["source"].startswith("git@github.com:"):
             dependencies[dependency]["source"].replace(
                 "git@github.com:", "https://github.com/"
             )
@@ -45,7 +45,7 @@ def main() -> None:
 
         print(
             f"Extracting {dependency} at time {datetime.now()} "
-            f"using source {dependency['source']} and ref {dependency['ref']}"
+            f"using source {values['source']} and ref {values['ref']}"
         )
 
         loc = clone_loc / dependency
