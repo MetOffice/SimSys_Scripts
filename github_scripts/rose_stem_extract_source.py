@@ -38,6 +38,7 @@ def main() -> None:
 
     dependencies: Dict = literal_eval(os.environ["DEPENDENCIES"])
 
+    print(os.environ["USE_TOKENS"])
     if os.environ.get("USE_TOKENS", "False") == "True":
         dependencies = set_https(dependencies)
 
