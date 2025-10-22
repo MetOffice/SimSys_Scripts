@@ -204,9 +204,9 @@ class SuiteData:
         for dependency, data in self.dependencies.items():
             loc = self.temp_directory / dependency
             if data["source"].endswith(".git"):
-                clone_repo(data['source'], data['ref'], loc)
+                clone_repo(data["source"], data["ref"], loc)
             else:
-                sync_repo(data['source'], data['ref'], loc)
+                sync_repo(data["source"], data["ref"], loc)
 
     def determine_primary_source(self) -> str:
         """
@@ -279,12 +279,12 @@ class SuiteData:
         flow-processed.cylc file
         """
 
+        pattern = re.compile(rf"{dependency.upper()} SOURCE CLONE=(\S+)")
         log_file = self.suite_path / "log" / "scheduler" / "log"
         with open(log_file, "r") as f:
             for line in f:
-                line = line.strip()
-                if re.search(f"{dependency.upper()} SOURCE CLONE=", line):
-                    return line.split("=")[1].rstrip("/")
+                if match := pattern.search(line):
+                    return match.group(1).rstrip("/")
         raise RuntimeError(f"Unable to find source for dependency {dependency}")
 
     def read_dependencies(self) -> Dict[str, Dict]:
