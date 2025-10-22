@@ -43,7 +43,10 @@ def main() -> None:
 
     for dependency, values in dependencies.items():
 
-        print(f"Extracting {dependency} at time {datetime.now()}")
+        print(
+            f"Extracting {dependency} at time {datetime.now()} "
+            f"using source {dependency["source"]} and ref {dependency["ref"]}"
+        )
 
         loc = clone_loc / dependency
 
