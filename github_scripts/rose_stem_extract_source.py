@@ -39,7 +39,7 @@ def main() -> None:
     dependencies: Dict = literal_eval(os.environ["DEPENDENCIES"])
 
     print(os.environ["USE_TOKENS"])
-    if os.environ.get("USE_TOKENS", "False") == "True":
+    if os.environ.get("USE_TOKENS", False):
         dependencies = set_https(dependencies)
 
     for dependency, values in dependencies.items():
@@ -52,7 +52,7 @@ def main() -> None:
         loc = clone_loc / dependency
 
         if ".git" in values["source"]:
-            if os.environ.get("USE_MIRRORS", "False") == "True":
+            if os.environ.get("USE_MIRRORS", False):
                 mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
                 clone_repo_mirror(
                     values["source"], values["ref"], values["parent"], mirror_loc, loc
