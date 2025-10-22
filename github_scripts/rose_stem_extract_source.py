@@ -53,8 +53,6 @@ def main() -> None:
         loc = clone_loc / dependency
 
         if ".git" in values["source"]:
-            print(os.environ.get("USE_MIRRORS", "False"))
-            print(type(os.environ.get("USE_MIRRORS", "False")))
             if os.environ.get("USE_MIRRORS", "False") == "True":
                 mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
                 clone_repo_mirror(
