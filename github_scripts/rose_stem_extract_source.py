@@ -18,11 +18,28 @@ from get_git_sources import clone_repo, clone_repo_mirror, sync_repo
 from typing import Dict
 
 
+def set_https(dependencies: Dict) -> Dict:
+    """
+    Change sources in a dependencies dictions to use https instead of ssh
+    """
+
+    for dependency in dependencies:
+        if dependency["source"].startswith("git@github.com:"):
+            dependencies[dependency]["source"].replace(
+                "git@github.com:", "https://github.com/"
+            )
+
+    return dependencies
+
+
 def main() -> None:
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
 
     dependencies: Dict = literal_eval(os.environ["DEPENDENCIES"])
+
+    if os.environ.get("USE_TOKENS", "False") == "True":
+        dependencies = set_https(dependencies)
 
     for dependency, values in dependencies.items():
 
@@ -31,7 +48,7 @@ def main() -> None:
         loc = clone_loc / dependency
 
         if ".git" in values["source"]:
-            if os.environ["USE_MIRRORS"] == "True":
+            if os.environ.get("USE_MIRRORS", "False") == "True":
                 mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
                 clone_repo_mirror(
                     values["source"], values["ref"], values["parent"], mirror_loc, loc
