@@ -23,6 +23,7 @@ def set_https(dependencies: Dict) -> Dict:
     Change sources in a dependencies dictions to use https instead of ssh
     """
 
+    print("Modifying Dependencies")
     for dependency, values in dependencies.items():
         if values["source"].startswith("git@github.com:"):
             dependencies[dependency]["source"].replace(
@@ -38,7 +39,6 @@ def main() -> None:
 
     dependencies: Dict = literal_eval(os.environ["DEPENDENCIES"])
 
-    print(os.environ["USE_TOKENS"])
     if os.environ.get("USE_TOKENS", False):
         dependencies = set_https(dependencies)
 
