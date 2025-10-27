@@ -84,10 +84,11 @@ def diff_cwd_working(model_source, path, saved_umask, tmpdir):
             # we select only <x>
             print("[FAIL] " + diff_filesname.split()[1])
         print(
-            "Please run rose-stem/bin/umdp3_fixer.py on each of the "
+            "Please run umdp3_fixer.py on each of the "
             "failed files in your working copy and check the changes. "
             "Then commit the changes to your branch and then re-run all "
-            "rose-stem testing."
+            "rose-stem testing.\n\nThe umdp3_fixer.py script can be found in "
+            "https://github.com/MetOffice/SimSys_Scripts.git"
         )
         os.umask(saved_umask)
         shutil.rmtree(tmpdir)
