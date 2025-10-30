@@ -397,9 +397,7 @@
       "name": "um_meta",
       "description": "Metadata for the Met Office Unified Model (UM)",
       "trunk": "um/meta",
-      "tags": [
-        { "git_migration": 131163 }
-      ]
+      "tags": [{ "git_migration": 131163 }]
     },
     {
       "name": "um",
