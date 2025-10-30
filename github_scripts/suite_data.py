@@ -8,9 +8,6 @@
 Class containing helper methods for gathering data needed for a SuiteReport object
 """
 
-import sys
-
-sys.path.append("../")
 import re
 import shutil
 import sqlite3
@@ -19,18 +16,8 @@ import yaml
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
-
-try:
-    from bdiff.git_bdiff import GitBDiff, GitInfo
-except ImportError:
-    try:
-        from git_bdiff import GitBDiff, GitInfo
-    except ImportError as err:
-        raise ImportError(
-            "Unable to import from git_bdiff module. This is included in the same "
-            "repository as this script and included with a relative import. Ensure "
-            "this script is being called from the correct place."
-        ) from err
+from git_bdiff import GitBDiff, GitInfo
+from get_git_sources import clone_repo, sync_repo
 
 
 class SuiteData:
@@ -217,20 +204,9 @@ class SuiteData:
         for dependency, data in self.dependencies.items():
             loc = self.temp_directory / dependency
             if data["source"].endswith(".git"):
-                commands = [
-                    f"git clone {data['source']} {loc}",
-                    f"git -C {loc} checkout {data['ref']}",
-                ]
-                for command in commands:
-                    self.run_command(command)
+                clone_repo(data["source"], data["ref"], loc)
             else:
-                source = data["source"]
-                if not source.endswith("/"):
-                    source = source + "/"
-                command = (
-                    f'rsync -e "ssh -o StrictHostKeyChecking=no" -avl {source} {loc}'
-                )
-                self.run_command(command, shell=True)
+                sync_repo(data["source"], data["ref"], loc)
 
     def determine_primary_source(self) -> str:
         """
@@ -298,21 +274,18 @@ class SuiteData:
 
     def find_unknown_dependency(self, dependency: str) -> str:
         """
-        TEMPORARY
         The primary dependency may be unset in the dependencies file. In this case find
-        it from the *_SOURCE variable in the rose-suite.conf.
-        TODO: Once cylc provides the location of the source code itself, this method
-        should be changed to use that instead, as then the _SOURCE variable will be
-        removed
+        it from the CYLC_WORKFLOW_SRC_DIR variable that gets set in the
+        flow-processed.cylc file
         """
 
-        var = f"{dependency.upper()}_SOURCE".replace('"', "")
-        if var not in self.rose_data:
-            raise RuntimeError(f"Cant determine source for {dependency}")
-        rval = self.rose_data[var]
-        if "$ROSE_ORIG_HOST" in rval:
-            rval = rval.replace("$ROSE_ORIG_HOST", self.rose_data["ROSE_ORIG_HOST"])
-        return rval
+        pattern = re.compile(rf"{dependency.upper()} SOURCE CLONE=(\S+)")
+        log_file = self.suite_path / "log" / "scheduler" / "log"
+        with open(log_file, "r") as f:
+            for line in f:
+                if match := pattern.search(line):
+                    return match.group(1).rstrip("/")
+        raise RuntimeError(f"Unable to find source for dependency {dependency}")
 
     def read_dependencies(self) -> Dict[str, Dict]:
         """
