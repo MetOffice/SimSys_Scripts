@@ -176,7 +176,7 @@ class SuiteData:
 
         for dependency, data in self.dependencies.items():
             if not data["gitinfo"].is_main():
-                parent = "trunk"
+                parent = "main"
                 self.dependencies[dependency]["gitbdiff"] = GitBDiff(
                     repo=self.temp_directory / dependency, parent=parent
                 ).files()
