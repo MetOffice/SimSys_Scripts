@@ -373,8 +373,8 @@ def main() -> None:
 
     args = parse_args()
 
+    suite_report = SuiteReport(args.suite_path)
     try:
-        suite_report = SuiteReport(args.suite_path)
         suite_report.create_log()
         suite_report.write_log(args.log_path)
     finally:
