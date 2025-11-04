@@ -1,9 +1,8 @@
+#!/usr/bin/env python3
 # *****************************COPYRIGHT*******************************
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file LICENSE
+# For further details please refer to the file LICENCE
 # which you should have received as part of this distribution.
-# Created date: 10/03/2025
-# Modified date: 14/03/2025
 # *****************************COPYRIGHT*******************************
 
 """
