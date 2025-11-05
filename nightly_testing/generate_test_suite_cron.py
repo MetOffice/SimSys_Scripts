@@ -176,7 +176,7 @@ def generate_clean_commands(cylc_version, name, log_file):
     return (
         f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
-        f"cylc stop '{name}' >/dev/null 2>&1 ; sleep 10 ; "
+        f"cylc stop --kill '{name}' >/dev/null 2>&1 ; sleep 10 ; "
         f"cylc clean --timeout=7200 -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
@@ -214,7 +214,7 @@ def generate_cylc_command(suite, wc_path, cylc_version, name):
     )
     if "revisions" in suite and suite["revisions"] == "heads":
         command += "-S USE_HEADS=true "
-    command += f"{os.path.join(wc_path, "rose-stem")} "
+    command += f"{os.path.join(wc_path, 'rose-stem')} "
     return command
 
 
@@ -243,10 +243,6 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     cron_job = generate_cron_timing_str(suite, "main")
 
     job_command = f"{PROFILE} ; "
-
-    # LFRic Apps heads uses a different working copy
-    if suite["repo"] == "lfric_apps" and suite["revisions"] == "heads":
-        wc_path = wc_path + "_heads"
 
     # Begin rose-stem command
     job_command += generate_cylc_command(suite, wc_path, cylc_version, name)
@@ -282,7 +278,7 @@ def generate_cron_job(suite_name, suite, log_file):
 
     date_str = f"_$({DATE_BASE})"
     name = suite_name + date_str
-    wc_path = os.path.join(CLONE_DIR, "wc_" + suite["repo"])
+    wc_path = os.path.join(CLONE_DIR, "clone_" + suite["repo"])
 
     header = generate_header(suite_name, suite)
     cron_job = generate_main_job(name, suite, log_file, wc_path, cylc_version)
