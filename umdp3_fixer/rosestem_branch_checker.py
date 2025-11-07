@@ -129,7 +129,7 @@ def run_umdp3checker(model_source, path, amp_column):
             print("", file=sys.stderr)
         else:
             print("[FAIL] Problem while attempting to run umdp3_fixer.py")
-            raise
+            raise exc
     return
 
 
