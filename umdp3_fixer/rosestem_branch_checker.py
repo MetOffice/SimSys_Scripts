@@ -100,15 +100,14 @@ def diff_cwd_working(model_source, path, saved_umask, tmpdir):
     return
 
 
-def run_umdp3checker(model_source, path, amp_column):
+def run_umdp3checker(model_source, fixer_source, path, amp_column):
     """Run the umdp3 fixer script in the tmp dir copy of the working branch."""
+    command = (
+        f"{os.path.join(fixer_source, 'umdp3_fixer.py')} --col {amp_column} "
+        f"$(find {path} -name '*.[F|f]90' -o -name '*.inc' | xargs)"
+    )
     result = subprocess.run(
-        model_source
-        + "/rose-stem/bin/umdp3_fixer.py "
-        + "--col {0:} ".format(amp_column)
-        + "$(find "
-        + path
-        + " -name '*.[F|f]90' -o -name '*.inc' | xargs)",
+        command,
         capture_output=True,
         check=False,
         stdin=subprocess.DEVNULL,
@@ -149,6 +148,15 @@ def main():
     # e.g. "--source model_source_branch"
 
     parser.add_option(
+        "--fixer_source",
+        dest="fixer_source",
+        action="store",
+        help="the directory containing the fixer scripts - defaults to "
+             "source/rose-stem/bin",
+        default=None
+    )
+
+    parser.add_option(
         "--col",
         dest="col",
         action="store",
@@ -161,10 +169,13 @@ def main():
     # Parse the command line.
     (opts, _) = parser.parse_args()
     model_source = opts.source
+    fixer_source = opts.fixer_source
+    if fixer_source is None:
+        fixer_source = os.path.join(model_source, "rose-stem", "bin")
     amp_column = opts.col
 
     (path, saved_umask, tmpdir) = copy_working_branch(model_source)
-    run_umdp3checker(model_source, path, amp_column)
+    run_umdp3checker(model_source, fixer_source, path, amp_column)
     diff_cwd_working(model_source, path, saved_umask, tmpdir)
 
     os.umask(saved_umask)
