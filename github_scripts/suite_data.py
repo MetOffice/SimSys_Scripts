@@ -306,7 +306,7 @@ class SuiteData:
 
         with open(self.suite_path / "log" / "scheduler" / "log", "r") as f:
             for line in f:
-                match = re.search(r"INFO - Workflow: (\S+\/\w+)", line)
+                match = re.search(r"INFO - Workflow: (\w+\/\w+)", line)
                 try:
                     workflow_id = match.group(1)
                     return workflow_id
@@ -336,7 +336,7 @@ class SuiteData:
         for row in self.query_suite_database(
             self.suite_path / "log" / "db", ["key", "value"], "workflow_template_vars"
         ):
-            if row[0] in ("g", "group"):
+            if row[0] in ("g", "groups"):
                 groups = row[1].strip("[]'\"").split(",")
                 break
         return groups
