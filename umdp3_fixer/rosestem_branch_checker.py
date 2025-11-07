@@ -102,34 +102,34 @@ def diff_cwd_working(model_source, path, saved_umask, tmpdir):
 
 def run_umdp3checker(model_source, path, amp_column):
     """Run the umdp3 fixer script in the tmp dir copy of the working branch."""
-    try:
-        subprocess.run(
-            model_source
-            + "/rose-stem/bin/umdp3_fixer.py "
-            + "--col {0:} ".format(amp_column)
-            + "$(find "
-            + path
-            + " -name '*.[F|f]90' -o -name '*.inc' | xargs)",
-            capture_output=True,
-            check=True,
-            stdin=subprocess.DEVNULL,
-            shell=True,
-        )
+    result = subprocess.run(
+        model_source
+        + "/rose-stem/bin/umdp3_fixer.py "
+        + "--col {0:} ".format(amp_column)
+        + "$(find "
+        + path
+        + " -name '*.[F|f]90' -o -name '*.inc' | xargs)",
+        capture_output=True,
+        check=False,
+        stdin=subprocess.DEVNULL,
+        shell=True,
+        text=True
+    )
 
-    except subprocess.CalledProcessError as exc:
-        if "Exception: Some files were modified" in exc.stderr.decode():
+    if result.returncode:
+        if "Exception: Some files were modified" in result.stderr:
             # umpd3_fixer.py raises an exception on finding any modified
             # files, but we can ignore it here.
             print(
                 "[WARN] The following files were found to be modified:", file=sys.stderr
             )
-            for line in exc.stderr.decode().split("\n"):
+            for line in result.stderr.split("\n"):
                 if line.strip().startswith("Modified:"):
                     print("   * " + line.replace("Modified:", ""), file=sys.stderr)
             print("", file=sys.stderr)
         else:
             print("[FAIL] Problem while attempting to run umdp3_fixer.py")
-            raise exc
+            print(result.stderr)
     return
 
 
