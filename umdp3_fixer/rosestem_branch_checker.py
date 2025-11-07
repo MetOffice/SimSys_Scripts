@@ -112,7 +112,7 @@ def run_umdp3checker(model_source, fixer_source, path, amp_column):
         check=False,
         stdin=subprocess.DEVNULL,
         shell=True,
-        text=True
+        text=True,
     )
 
     if result.returncode:
@@ -152,8 +152,8 @@ def main():
         dest="fixer_source",
         action="store",
         help="the directory containing the fixer scripts - defaults to "
-             "source/rose-stem/bin",
-        default=None
+        "source/rose-stem/bin",
+        default=None,
     )
 
     parser.add_option(
