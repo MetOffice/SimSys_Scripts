@@ -123,7 +123,6 @@ class SuiteReport(SuiteData):
             ("Suite User", self.suite_user),
             ("Workflow Start", self.suite_starttime),
             ("Groups Run", ",".join(g for g in self.groups)),
-            ("ROSE_ORIG_HOST", self.rose_data["ROSE_ORIG_HOST"]),
         )
 
         for row in rows:

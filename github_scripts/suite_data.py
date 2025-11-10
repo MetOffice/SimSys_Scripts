@@ -176,10 +176,7 @@ class SuiteData:
 
         for dependency, data in self.dependencies.items():
             if not data["gitinfo"].is_main():
-                if dependency.lower() == "simsys_scripts":
-                    parent = "main"
-                else:
-                    parent = "trunk"
+                parent = "main"
                 self.dependencies[dependency]["gitbdiff"] = GitBDiff(
                     repo=self.temp_directory / dependency, parent=parent
                 ).files()
@@ -309,7 +306,7 @@ class SuiteData:
 
         with open(self.suite_path / "log" / "scheduler" / "log", "r") as f:
             for line in f:
-                match = re.search(r"INFO - Workflow: (\w+\/\w+)", line)
+                match = re.search(r"INFO - Workflow: (\S+\/\w+)", line)
                 try:
                     workflow_id = match.group(1)
                     return workflow_id
@@ -339,7 +336,7 @@ class SuiteData:
         for row in self.query_suite_database(
             self.suite_path / "log" / "db", ["key", "value"], "workflow_template_vars"
         ):
-            if row[0] in ("g", "groups"):
+            if row[0] in ("g", "group"):
                 groups = row[1].strip("[]'\"").split(",")
                 break
         return groups
