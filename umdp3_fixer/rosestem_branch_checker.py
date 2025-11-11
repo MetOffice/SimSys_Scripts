@@ -100,7 +100,7 @@ def diff_cwd_working(model_source, path, saved_umask, tmpdir):
     return
 
 
-def run_umdp3checker(model_source, fixer_source, path, amp_column):
+def run_umdp3checker(fixer_source, path, amp_column):
     """Run the umdp3 fixer script in the tmp dir copy of the working branch."""
     command = (
         f"{os.path.join(fixer_source, 'umdp3_fixer.py')} --col {amp_column} "
@@ -127,9 +127,9 @@ def run_umdp3checker(model_source, fixer_source, path, amp_column):
                     print("   * " + line.replace("Modified:", ""), file=sys.stderr)
             print("", file=sys.stderr)
         else:
-            print("[FAIL] Problem while attempting to run umdp3_fixer.py")
-            print(result.stderr)
-            exit()
+            raise RuntimeError(
+                "[FAIL] Problem while attempting to run umdp3_fixer.py\n{result.stderr}"
+            )
     return
 
 
