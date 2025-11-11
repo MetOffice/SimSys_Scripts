@@ -109,7 +109,6 @@ def run_umdp3checker(fixer_source, path, amp_column):
     result = subprocess.run(
         command,
         capture_output=True,
-        check=False,
         stdin=subprocess.DEVNULL,
         shell=True,
         text=True,
