@@ -174,7 +174,7 @@ def main():
     amp_column = opts.col
 
     (path, saved_umask, tmpdir) = copy_working_branch(model_source)
-    run_umdp3checker(model_source, fixer_source, path, amp_column)
+    run_umdp3checker(fixer_source, path, amp_column)
     diff_cwd_working(model_source, path, saved_umask, tmpdir)
 
     os.umask(saved_umask)
