@@ -127,7 +127,8 @@ def run_umdp3checker(fixer_source, path, amp_column):
             print("", file=sys.stderr)
         else:
             raise RuntimeError(
-                "[FAIL] Problem while attempting to run umdp3_fixer.py\n{result.stderr}"
+                "[FAIL] Problem while attempting to run umdp3_fixer.py\n"
+                f"{result.stderr}"
             )
     return
 
@@ -160,8 +161,8 @@ def main():
         dest="col",
         action="store",
         help='Column to put "&"s in',
-        type="int",
-        default="80",
+        type=int,
+        default=80,
     )
     # e.g. "--col 80"
 
