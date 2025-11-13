@@ -22,7 +22,7 @@ Usage:
 
 """
 
-from optparse import OptionParser
+from argparse import ArgumentParser
 import sys
 import os
 import shutil
@@ -136,8 +136,8 @@ def main():
     """Take in the location of working branch location and run the tests."""
     # Initialise the command line parser.
     description = "Args for the source code..."
-    parser = OptionParser(description=description)
-    parser.add_option(
+    parser = ArgumentParser(description=description)
+    parser.add_argument(
         "--source",
         dest="source",
         action="store",
@@ -146,7 +146,7 @@ def main():
     )
     # e.g. "--source model_source_branch"
 
-    parser.add_option(
+    parser.add_argument(
         "--fixer_source",
         dest="fixer_source",
         action="store",
@@ -155,7 +155,7 @@ def main():
         default=None,
     )
 
-    parser.add_option(
+    parser.add_argument(
         "--col",
         dest="col",
         action="store",
@@ -166,7 +166,7 @@ def main():
     # e.g. "--col 80"
 
     # Parse the command line.
-    (opts, _) = parser.parse_args()
+    opts = parser.parse_args()
     model_source = opts.source
     fixer_source = opts.fixer_source
     if fixer_source is None:
@@ -174,7 +174,7 @@ def main():
     amp_column = opts.col
 
     (path, saved_umask, tmpdir) = copy_working_branch(model_source)
-    run_umdp3checker(model_source, fixer_source, path, amp_column)
+    run_umdp3checker(fixer_source, path, amp_column)
     diff_cwd_working(model_source, path, saved_umask, tmpdir)
 
     os.umask(saved_umask)
