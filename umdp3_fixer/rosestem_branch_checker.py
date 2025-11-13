@@ -161,7 +161,7 @@ def main():
         action="store",
         help='Column to put "&"s in',
         type="int",
-        default="80",
+        default=80,
     )
     # e.g. "--col 80"
 
