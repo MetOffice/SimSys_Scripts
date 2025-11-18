@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
+# *****************************COPYRIGHT*******************************
+# (C) Crown copyright Met Office. All rights reserved.
+# For further details please refer to the file LICENSE
+# which you should have received as part of this distribution.
+# *****************************COPYRIGHT*******************************
 # Script to create standard labels in multiple GitHub repositories
 # Requires GitHub CLI: https://cli.github.com/
-# yp. 2024-06-11
 
 set -euo pipefail
 
@@ -10,6 +14,7 @@ ADD_LABELS=true
 DELETE_LABELS=false
 usage() {
     echo "Usage: $0 [--add|--delete] [--help|-h]"
+    echo "Manage labels in below repository - using this requires admin rights to the repositories"
     echo "  --add      Add labels (default)"
     echo "  --delete   Delete labels"
     echo "  --help,-h  Show this help message"
