@@ -97,9 +97,9 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     commands = (
         f"git -C {loc} init",
         f"git -C {loc} remote add origin {repo_source}",
-        f"git -C {loc} fetch origin main:main",
         f"git -C {loc} fetch origin {repo_ref}",
         f"git -C {loc} checkout FETCH_HEAD",
+        f"git -C {loc} fetch origin main:main",
     )
     for command in commands:
         run_command(command)
