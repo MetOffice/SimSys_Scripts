@@ -15,7 +15,7 @@ from shutil import rmtree
 
 
 def run_command(
-    command: str, rval: bool = False, check:bool = True
+    command: str, rval: bool = False, check: bool = True
 ) -> Optional[subprocess.CompletedProcess]:
     """
     Run a subprocess command and return the result object
