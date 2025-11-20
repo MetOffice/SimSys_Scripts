@@ -15,7 +15,7 @@ from shutil import rmtree
 
 
 def run_command(
-    command: str, rval: bool = False
+    command: str, rval: bool = False, check:bool = True
 ) -> Optional[subprocess.CompletedProcess]:
     """
     Run a subprocess command and return the result object
@@ -33,7 +33,7 @@ def run_command(
         shell=False,
         check=False,
     )
-    if result.returncode:
+    if check and result.returncode:
         print(result.stdout, end="\n\n\n")
         raise RuntimeError(
             f"[FAIL] Issue found running command {command}\n\n{result.stderr}"
@@ -118,12 +118,19 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     loc.mkdir(parents=True)
 
     # Trailing slash required for rsync
-    commands = (
-        f"rsync -av {repo_source}/ {loc}",
-        f"git -C {loc} fetch origin main:main",
-    )
-    for command in commands:
-        run_command(command)
+    command = f"rsync -av {repo_source}/ {loc}"
+    run_command(command)
+
+    # Fetch the main branch from origin
+    # Ignore errors - these are likely because the main branch already exists
+    # Instead write them as warnings
+    command = f"git -C {loc} fetch origin main:main"
+    result = run_command(command, check=False, rval=True)
+    if result.returncode:
+        print("Warning - fetching main from origin resulted in an error")
+        print("This is likely due to the main branch already existing")
+        print(f"Error message:\n\n{result.stderr}")
+
     if repo_ref:
         command = f"git -C {loc} checkout {repo_ref}"
         run_command(command)
