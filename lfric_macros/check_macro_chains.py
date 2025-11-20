@@ -103,8 +103,8 @@ def main():
     Main function of the program
     """
 
-    source_apps = os.path.join(os.environ["SOURCE_ROOT"], "apps")
-    source_core = os.path.join(os.environ["SOURCE_ROOT"], "core")
+    source_apps = os.path.join(os.environ["SOURCE_ROOT"], "lfric_apps")
+    source_core = os.path.join(os.environ["SOURCE_ROOT"], "lfric_core")
 
     macro_object = ApplyMacros(
         "vn0.0_t0", None, "vn0.0", source_apps, source_core, None

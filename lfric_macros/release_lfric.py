@@ -22,6 +22,7 @@ import os
 import re
 import socket
 import subprocess
+import shutil
 
 from apply_macros import (
     ApplyMacros,
@@ -87,14 +88,19 @@ def set_dependency_path(args):
     dep_path = os.path.join(args.apps, "dependencies.sh")
     with open(dep_path) as f:
         lines = f.readlines()
+    in_core = False
     for i, line in enumerate(lines):
-        if line.strip().startswith("export lfric_core_rev"):
-            lines[i] = "export lfric_core_rev=\n"
-        if line.strip().startswith("export lfric_core_sources"):
-            lines[i] = (
-                "export lfric_core_sources="
-                f"{hostname}:{os.path.abspath(args.core)}\n"
-            )
+        if line.strip().startswith("lfric_core"):
+            in_core = True
+        elif in_core and "source:" in line:
+            line = line.split("source:")
+            line = f"{line[0]}source:{hostname}:{os.path.abspath(args.core)}\n"
+        elif in_core and "ref:" in line:
+            line = line.split("ref:")
+            line = f"{line[0]}ref:"
+        elif in_core:
+            break
+        lines[i] = line
     with open(dep_path, "w") as f:
         f.write("".join(x for x in lines))
 
@@ -216,8 +222,9 @@ def copy_head_meta(meta_dirs, args):
     for meta_dir in meta_dirs:
         head = os.path.join(meta_dir, "HEAD")
         new = os.path.join(meta_dir, args.version)
-        command = f"fcm cp {head} {new}"
-        result = run_command(command)
+        shutil.copytree(head, new)
+        command = f"git add {new}"
+        _ = run_command(command)
 
 
 def update_meta_import_path(meta_dirs, args):
@@ -264,8 +271,9 @@ def copy_versions_files(meta_dirs, args):
     for meta_dir in meta_dirs:
         versions_file = os.path.join(meta_dir, "versions.py")
         upgrade_file = os.path.join(meta_dir, upgrade_name)
-        command = f"fcm cp {versions_file} {upgrade_file}"
-        result = run_command(command)
+        shutil.copyfile(versions_file, upgrade_file)
+        command = f"git add {upgrade_file}"
+        _ = run_command(command)
 
     return upgrade_name
 
@@ -321,8 +329,7 @@ def update_versions_file(meta_dirs, upgrade_name):
 
     for meta_dir in meta_dirs:
         versions_file = os.path.join(meta_dir, "versions.py")
-        command = f"cp {template_path} {versions_file}"
-        result = run_command(command)
+        shutil.copyfile(template_path, versions_file)
         add_new_import(versions_file, upgrade_name)
 
 
