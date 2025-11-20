@@ -22,7 +22,7 @@ Usage:
 
 """
 
-from optparse import OptionParser
+from argparse import ArgumentParser
 import sys
 import os
 import shutil
@@ -100,36 +100,36 @@ def diff_cwd_working(model_source, path, saved_umask, tmpdir):
     return
 
 
-def run_umdp3checker(model_source, path, amp_column):
+def run_umdp3checker(fixer_source, path, amp_column):
     """Run the umdp3 fixer script in the tmp dir copy of the working branch."""
-    try:
-        subprocess.run(
-            model_source
-            + "/rose-stem/bin/umdp3_fixer.py "
-            + "--col {0:} ".format(amp_column)
-            + "$(find "
-            + path
-            + " -name '*.[F|f]90' -o -name '*.inc' | xargs)",
-            capture_output=True,
-            check=True,
-            stdin=subprocess.DEVNULL,
-            shell=True,
-        )
+    command = (
+        f"{os.path.join(fixer_source, 'umdp3_fixer.py')} --col {amp_column} "
+        f"$(find {path} -name '*.[F|f]90' -o -name '*.inc' | xargs)"
+    )
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        stdin=subprocess.DEVNULL,
+        shell=True,
+        text=True,
+    )
 
-    except subprocess.CalledProcessError as exc:
-        if "Exception: Some files were modified" in exc.stderr.decode():
+    if result.returncode:
+        if "Exception: Some files were modified" in result.stderr:
             # umpd3_fixer.py raises an exception on finding any modified
             # files, but we can ignore it here.
             print(
                 "[WARN] The following files were found to be modified:", file=sys.stderr
             )
-            for line in exc.stderr.decode().split("\n"):
+            for line in result.stderr.split("\n"):
                 if line.strip().startswith("Modified:"):
                     print("   * " + line.replace("Modified:", ""), file=sys.stderr)
             print("", file=sys.stderr)
         else:
-            print("[FAIL] Problem while attempting to run umdp3_fixer.py")
-            raise
+            raise RuntimeError(
+                "[FAIL] Problem while attempting to run umdp3_fixer.py\n"
+                f"{result.stderr}"
+            )
     return
 
 
@@ -137,8 +137,8 @@ def main():
     """Take in the location of working branch location and run the tests."""
     # Initialise the command line parser.
     description = "Args for the source code..."
-    parser = OptionParser(description=description)
-    parser.add_option(
+    parser = ArgumentParser(description=description)
+    parser.add_argument(
         "--source",
         dest="source",
         action="store",
@@ -147,23 +147,35 @@ def main():
     )
     # e.g. "--source model_source_branch"
 
-    parser.add_option(
+    parser.add_argument(
+        "--fixer_source",
+        dest="fixer_source",
+        action="store",
+        help="the directory containing the fixer scripts - defaults to "
+        "source/rose-stem/bin",
+        default=None,
+    )
+
+    parser.add_argument(
         "--col",
         dest="col",
         action="store",
         help='Column to put "&"s in',
-        type="int",
-        default="80",
+        type=int,
+        default=80,
     )
     # e.g. "--col 80"
 
     # Parse the command line.
-    (opts, _) = parser.parse_args()
+    opts = parser.parse_args()
     model_source = opts.source
+    fixer_source = opts.fixer_source
+    if fixer_source is None:
+        fixer_source = os.path.join(model_source, "rose-stem", "bin")
     amp_column = opts.col
 
     (path, saved_umask, tmpdir) = copy_working_branch(model_source)
-    run_umdp3checker(model_source, path, amp_column)
+    run_umdp3checker(fixer_source, path, amp_column)
     diff_cwd_working(model_source, path, saved_umask, tmpdir)
 
     os.umask(saved_umask)
