@@ -97,6 +97,7 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     commands = (
         f"git -C {loc} init",
         f"git -C {loc} remote add origin {repo_source}",
+        f"git -C {loc} fetch origin main:main",
         f"git -C {loc} fetch origin {repo_ref}",
         f"git -C {loc} checkout FETCH_HEAD",
     )
@@ -117,8 +118,12 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     loc.mkdir(parents=True)
 
     # Trailing slash required for rsync
-    command = f"rsync -av {repo_source}/ {loc}"
-    run_command(command)
+    commands = (
+        f"rsync -av {repo_source}/ {loc}",
+        f"git -C {loc} fetch origin main:main",
+    )
+    for command in commands:
+        run_command(command)
     if repo_ref:
         command = f"git -C {loc} checkout {repo_ref}"
         run_command(command)
