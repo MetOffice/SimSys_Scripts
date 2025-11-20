@@ -22,6 +22,7 @@ import os
 import re
 import socket
 import subprocess
+import shutil
 
 from apply_macros import (
     ApplyMacros,
@@ -221,8 +222,9 @@ def copy_head_meta(meta_dirs, args):
     for meta_dir in meta_dirs:
         head = os.path.join(meta_dir, "HEAD")
         new = os.path.join(meta_dir, args.version)
-        command = f"cp -r {head} {new}"
-        result = run_command(command)
+        shutil.copytree(head, new)
+        command = f"git add {new}"
+        _ = run_command(command)
 
 
 def update_meta_import_path(meta_dirs, args):
@@ -269,8 +271,9 @@ def copy_versions_files(meta_dirs, args):
     for meta_dir in meta_dirs:
         versions_file = os.path.join(meta_dir, "versions.py")
         upgrade_file = os.path.join(meta_dir, upgrade_name)
-        command = f"cp {versions_file} {upgrade_file}"
-        result = run_command(command)
+        shutil.copyfile(versions_file, upgrade_file)
+        command = f"git add {upgrade_file}"
+        _ = run_command(command)
 
     return upgrade_name
 
@@ -326,8 +329,7 @@ def update_versions_file(meta_dirs, upgrade_name):
 
     for meta_dir in meta_dirs:
         versions_file = os.path.join(meta_dir, "versions.py")
-        command = f"cp {template_path} {versions_file}"
-        result = run_command(command)
+        shutil.copyfile(template_path, versions_file)
         add_new_import(versions_file, upgrade_name)
 
 
