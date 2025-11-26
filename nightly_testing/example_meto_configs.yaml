@@ -44,7 +44,7 @@ lfric_apps_excd_heads_nightly:
     vars:
         - HOUSEKEEPING=false
         - USE_EXCD=true
-    time_launch: 04:45
+    time_launch: 04:30
     time_clean: 04:50
     period: nightly_all
 
@@ -154,11 +154,23 @@ um_heads_weekly-portio2b:
     groups: fcm_make_portio2b,compiler_warning_check
     revisions: set
     vars:
-        - USE_EXAB=true
         - HOUSEKEEPING=false
         - PREBUILDS=false
-    time_launch: 05:30
+    time_launch: 06:00
     time_clean: 05:45
+    period: weekly
+
+
+um_exz_heads_weekly:
+    repo: um
+    groups: ex1a_cce_n48_ga8_amip_2day
+    revisions: heads
+    vars:
+        - HOUSEKEEPING=false
+        - PREBUILDS=false
+        - USE_EXZ=true
+    time_launch: 03:10
+    time_clean: 05:20
     period: weekly
 
 ###################
@@ -225,7 +237,7 @@ um_set-revisions_next-cylc_nightly:
 
 jules_nightly:
     repo: jules
-    groups: all
+    groups: all,fab
     vars:
         - USE_EXAB=true
         - HOUSEKEEPING=false
@@ -240,6 +252,6 @@ jules_excd_nightly:
     vars:
         - HOUSEKEEPING=false
         - USE_EXCD=true
-    time_launch: 05:55
+    time_launch: 06:00
     time_clean: 06:30
     period: nightly_all
