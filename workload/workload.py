@@ -5,7 +5,7 @@ import prettytable
 from prettytable import PrettyTable
 from pylint.pyreverse.inspector import Project
 
-test = True
+test = False
 
 lfric_repositories = [
     "lfric_apps",
