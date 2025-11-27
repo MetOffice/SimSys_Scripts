@@ -94,7 +94,7 @@ class ProjectData:
     A class to hold GitHub project data. The focus is on review information.
 
     data: dict Raw data from the project
-    review_data: list Data filtered to contain a list of Review objects
+    review_data: list Data filtered to contain a list of review tuples
     """
 
     def __init__(self):
@@ -119,27 +119,27 @@ class ProjectData:
 
     def filter_reviewers(self):
         """
-        Filter the data to create a list of Review objects
+        Filter the data to create a list of review tuples
         """
         all_reviews = self.data["items"]
         for review in all_reviews:
             if "code Review" in review:
-                self.review_data.append(
-                    Review(review["code Review"], review["repository"])
-                )
+                self.review_data.append((review["code Review"], review["repository"]))
 
             if "sciTech Review" in review:
                 self.review_data.append(
-                    Review(review["sciTech Review"], review["repository"])
+                    (review["sciTech Review"], review["repository"])
                 )
 
-    def one_repo(self, repository):
+    def one_repo(self, repository: str) -> list:
         """
         Filter the review data to just that of one repository
+
+        repository: string Name of repository to include
+        return: list All reviewers that have reviews assigned in that repository
+                including duplicates.
         """
-        return [
-            x.get_reviewer() for x in self.review_data if repository in x.get_repo()
-        ]
+        return [x[0] for x in self.review_data if repository in x[1]]
 
 
 class Team:
@@ -151,7 +151,7 @@ class Team:
     members: A list of team members
     """
 
-    def __init__(self, team_name, github_id):
+    def __init__(self, team_name: str, github_id: str):
         self.name = team_name
         self.github_id = github_id
         self.members = []
@@ -182,32 +182,13 @@ class Team:
         for item in full_data:
             self.members.append(item["login"])
 
-        self.members.sort()
+        self.members = sorted(self.members, key=str.lower)
 
-    def get_team_members(self):
+    def get_team_members(self) -> list:
         """
         return: list of team members
         """
         return self.members
-
-
-class Review:
-    """
-    A class to hold a single review instance a person has been assigned.
-
-    reviewer: str GitHub id of person assigned review
-    repository: str name of repository for the review
-    """
-
-    def __init__(self, reviewer, repository):
-        self.reviewer = reviewer
-        self.repository = repository
-
-    def get_reviewer(self):
-        return self.reviewer
-
-    def get_repo(self):
-        return self.repository
 
 
 def main():
