@@ -1,6 +1,9 @@
 import json
 import subprocess
+
+import prettytable
 from prettytable import PrettyTable
+from pylint.pyreverse.inspector import Project
 
 test = True
 
@@ -22,7 +25,13 @@ ssd_repositories = [
 ]
 
 
-def count_items(item_list):
+def count_items(item_list: list) -> dict:
+    """
+    Count the number of occurrences of each item in a list.
+
+    item_list: list
+    returns: dict dictionary of unique items with a count of occurrences.
+    """
     unique_items = set(item_list)
 
     count = {}
@@ -32,7 +41,16 @@ def count_items(item_list):
     return count
 
 
-def build_table(data, reviewer_list, repos):
+def build_table(data: Project, reviewer_list: list, repos: list) -> PrettyTable:
+    """
+    Build a pretty table from the data by extracting just the desired
+    repositories and reviewers.
+
+    data: Project GitHub project data of reviews
+    reviewer_list: list reviewers desired in this table
+    repos: list repositories desired in this table
+    returns: PrettyTable table of number of reviews completed by each person.
+    """
     table = PrettyTable()
 
     table.add_column("Reviewer", reviewer_list)
@@ -57,8 +75,14 @@ def build_table(data, reviewer_list, repos):
     return table
 
 
-def print_table(name, table):
-    print(name)
+def print_table(title: str, table: PrettyTable) -> None:
+    """
+    Print a pretty table and its title.
+
+    title: str Title of table to be printed first
+    table: PrettyTable table to be printed
+    """
+    print(title)
     # table.set_style(TableStyle.MARKDOWN) #requires newer version
     table.align["Reviewer"] = "l"
     # table.sortby = "Total"
@@ -66,6 +90,13 @@ def print_table(name, table):
 
 
 class ProjectData:
+    """
+    A class to hold GitHub project data. The focus is on review information.
+
+    data: dict Raw data from the project
+    review_data: list Data filtered to contain a list of Review objects
+    """
+
     def __init__(self):
         self.data = {}
         self.review_data = []
@@ -74,6 +105,9 @@ class ProjectData:
         self.filter_reviewers()
 
     def fetch_project_data(self):
+        """
+        Retrieve data from GitHub API or a from a test file.
+        """
         if test:
             with open("test.json") as f:
                 self.data = json.loads(f.read())
@@ -84,6 +118,9 @@ class ProjectData:
             self.data = json.loads(output.stdout)
 
     def filter_reviewers(self):
+        """
+        Filter the data to create a list of Review objects
+        """
         all_reviews = self.data["items"]
         for review in all_reviews:
             if "code Review" in review:
@@ -97,12 +134,22 @@ class ProjectData:
                 )
 
     def one_repo(self, repository):
+        """
+        Filter the review data to just that of one repository
+        """
         return [
             x.get_reviewer() for x in self.review_data if repository in x.get_repo()
         ]
 
 
 class Team:
+    """
+    A class to hold GitHub team data.
+
+    name: str Name of team
+    github_id: str GitHub team ID used for fetching team data
+    members: A list of team members
+    """
 
     def __init__(self, team_name, github_id):
         self.name = team_name
@@ -112,6 +159,10 @@ class Team:
         self.set_team_members()
 
     def set_team_members(self):
+        """
+        Retrieve team members from GitHub API or a from a test file. Create
+        a list of login IDs and sort it.
+        """
 
         if test:
             file = self.github_id + ".json"
@@ -134,10 +185,20 @@ class Team:
         self.members.sort()
 
     def get_team_members(self):
+        """
+        return: list of team members
+        """
         return self.members
 
 
 class Review:
+    """
+    A class to hold a single review instance a person has been assigned.
+
+    reviewer: str GitHub id of person assigned review
+    repository: str name of repository for the review
+    """
+
     def __init__(self, reviewer, repository):
         self.reviewer = reviewer
         self.repository = repository
@@ -150,6 +211,8 @@ class Review:
 
 
 def main():
+
+    # Extract data from github about the reviews and team members.
     data = ProjectData()
 
     teams = [
@@ -158,14 +221,15 @@ def main():
         Team("TCD", "toolscollabdev"),
     ]
 
+    # Create tables for each combination of reviewers and reposotories
     tables = {}
 
-    # Table for SSD only repositories
+    ## Table for SSD only repositories
     repo_list = ssd_repositories
     reviewers = teams[0].get_team_members()
     tables["SSD"] = build_table(data, reviewers, repo_list)
 
-    # Table for LFRic repositories
+    ## Table for LFRic repositories
     repo_list = lfric_repositories
     reviewers = []
     for team in teams:
