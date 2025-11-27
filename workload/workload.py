@@ -2,23 +2,24 @@ import json
 import subprocess
 from prettytable import PrettyTable
 
-test = False
+test = True
 
 lfric_repositories = [
-                "lfric_apps",
-                "lfric_core",
-                ]
+    "lfric_apps",
+    "lfric_core",
+]
 
 ssd_repositories = [
-                "um",
-                "jules",
-                "socrates",
-                "casim",
-                "ukca",
-                "simulation-systems",
-                "SimSys_Scripts",
-                "git_playground",
-                "growss"]
+    "um",
+    "jules",
+    "socrates",
+    "casim",
+    "ukca",
+    "simulation-systems",
+    "SimSys_Scripts",
+    "git_playground",
+    "growss",
+]
 
 
 def count_items(item_list):
@@ -31,7 +32,7 @@ def count_items(item_list):
     return count
 
 
-def build_table(project, reviewer_list, repos):
+def build_table(data, reviewer_list, repos):
     table = PrettyTable()
 
     table.add_column("Reviewer", reviewer_list)
@@ -39,7 +40,7 @@ def build_table(project, reviewer_list, repos):
     totals = [0] * len(reviewer_list)
 
     for repo in repos:
-        review_count = count_items(project.one_repo(repo))
+        review_count = count_items(data.one_repo(repo))
 
         sorted_count = []
         for index, person in enumerate(reviewer_list):
@@ -72,7 +73,6 @@ class ProjectData:
         self.fetch_project_data()
         self.filter_reviewers()
 
-
     def fetch_project_data(self):
         if test:
             with open("test.json") as f:
@@ -83,18 +83,23 @@ class ProjectData:
             output = subprocess.run(command, shell=True, capture_output=True)
             self.data = json.loads(output.stdout)
 
-
     def filter_reviewers(self):
         all_reviews = self.data["items"]
         for review in all_reviews:
             if "code Review" in review:
-                self.review_data.append(Review(review["code Review"], review["repository"]))
+                self.review_data.append(
+                    Review(review["code Review"], review["repository"])
+                )
 
             if "sciTech Review" in review:
-                self.review_data.append(Review(review["sciTech Review"], review["repository"]))
+                self.review_data.append(
+                    Review(review["sciTech Review"], review["repository"])
+                )
 
     def one_repo(self, repository):
-        return [x.get_reviewer() for x in self.review_data if repository in x.get_repo()]
+        return [
+            x.get_reviewer() for x in self.review_data if repository in x.get_repo()
+        ]
 
 
 class Team:
@@ -113,9 +118,11 @@ class Team:
             with open(file) as f:
                 full_data = json.loads(f.read())
         else:
-            command = (f"gh api "
-                        f"-H \"Accept: application/vnd.github+json\" "
-                        f"/orgs/MetOffice/teams/{self.github_id}/members")
+            command = (
+                f"gh api "
+                f'-H "Accept: application/vnd.github+json" '
+                f"/orgs/MetOffice/teams/{self.github_id}/members"
+            )
 
             output = subprocess.run(command, shell=True, capture_output=True)
 
@@ -145,9 +152,11 @@ class Review:
 def main():
     data = ProjectData()
 
-    teams = [Team("SSD", "ssdteam"),
-             Team("CCD", "core-capability-development"),
-             Team("TCD", "toolscollabdev")]
+    teams = [
+        Team("SSD", "ssdteam"),
+        Team("CCD", "core-capability-development"),
+        Team("TCD", "toolscollabdev"),
+    ]
 
     tables = {}
 
@@ -170,5 +179,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
