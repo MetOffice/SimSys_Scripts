@@ -22,6 +22,15 @@ ssd_repositories = [
     "growss",
 ]
 
+#Ideally get this list another way but for now hardcode it.
+other_reviewers = [
+    "MetBenjaminWent",
+    "jedbakerMO",
+    #Chris Maynard
+    #James CS
+    #Oakley Brunt
+]
+
 
 class ProjectData:
     """
@@ -85,12 +94,13 @@ class Team:
     members: A list of team members
     """
 
-    def __init__(self, team_name: str, github_id: str):
+    def __init__(self, team_name: str, github_id: str = None):
         self.name = team_name
         self.github_id = github_id
         self.members = []
 
-        self.set_team_members()
+        if github_id:
+            self.set_team_members()
 
     def set_team_members(self):
         """
@@ -194,10 +204,14 @@ def main():
     # Extract data from github about the reviews and team members.
     data = ProjectData()
 
+    other = Team("Other LFric")
+    other.members = other_reviewers
+
     teams = [
         Team("SSD", "ssdteam"),
         Team("CCD", "core-capability-development"),
         Team("TCD", "toolscollabdev"),
+        other
     ]
 
     # Create tables for each combination of reviewers and reposotories
