@@ -1,9 +1,7 @@
 import json
 import subprocess
 
-import prettytable
 from prettytable import PrettyTable
-from pylint.pyreverse.inspector import Project
 
 test = False
 
@@ -23,70 +21,6 @@ ssd_repositories = [
     "git_playground",
     "growss",
 ]
-
-
-def count_items(item_list: list) -> dict:
-    """
-    Count the number of occurrences of each item in a list.
-
-    item_list: list
-    returns: dict dictionary of unique items with a count of occurrences.
-    """
-    unique_items = set(item_list)
-
-    count = {}
-    for item in unique_items:
-        count[item] = item_list.count(item)
-
-    return count
-
-
-def build_table(data: Project, reviewer_list: list, repos: list) -> PrettyTable:
-    """
-    Build a pretty table from the data by extracting just the desired
-    repositories and reviewers.
-
-    data: Project GitHub project data of reviews
-    reviewer_list: list reviewers desired in this table
-    repos: list repositories desired in this table
-    returns: PrettyTable table of number of reviews completed by each person.
-    """
-    table = PrettyTable()
-
-    table.add_column("Reviewer", reviewer_list)
-
-    totals = [0] * len(reviewer_list)
-
-    for repo in repos:
-        review_count = count_items(data.one_repo(repo))
-
-        sorted_count = []
-        for index, person in enumerate(reviewer_list):
-            if person in review_count:
-                sorted_count.append(review_count[person])
-                totals[index] += review_count[person]
-            else:
-                sorted_count.append(0)
-
-        table.add_column(repo, sorted_count)
-
-    table.add_column("Total", totals)
-
-    return table
-
-
-def print_table(title: str, table: PrettyTable) -> None:
-    """
-    Print a pretty table and its title.
-
-    title: str Title of table to be printed first
-    table: PrettyTable table to be printed
-    """
-    print(title)
-    # table.set_style(TableStyle.MARKDOWN) #requires newer version
-    table.align["Reviewer"] = "l"
-    # table.sortby = "Total"
-    print(table)
 
 
 class ProjectData:
@@ -189,6 +123,70 @@ class Team:
         return: list of team members
         """
         return self.members
+
+
+def count_items(item_list: list) -> dict:
+    """
+    Count the number of occurrences of each item in a list.
+
+    item_list: list
+    returns: dict dictionary of unique items with a count of occurrences.
+    """
+    unique_items = set(item_list)
+
+    count = {}
+    for item in unique_items:
+        count[item] = item_list.count(item)
+
+    return count
+
+
+def build_table(data: ProjectData, reviewer_list: list, repos: list) -> PrettyTable:
+    """
+    Build a pretty table from the data by extracting just the desired
+    repositories and reviewers.
+
+    data: Project GitHub project data of reviews
+    reviewer_list: list reviewers desired in this table
+    repos: list repositories desired in this table
+    returns: PrettyTable table of number of reviews completed by each person.
+    """
+    table = PrettyTable()
+
+    table.add_column("Reviewer", reviewer_list)
+
+    totals = [0] * len(reviewer_list)
+
+    for repo in repos:
+        review_count = count_items(data.one_repo(repo))
+
+        sorted_count = []
+        for index, person in enumerate(reviewer_list):
+            if person in review_count:
+                sorted_count.append(review_count[person])
+                totals[index] += review_count[person]
+            else:
+                sorted_count.append(0)
+
+        table.add_column(repo, sorted_count)
+
+    table.add_column("Total", totals)
+
+    return table
+
+
+def print_table(title: str, table: PrettyTable) -> None:
+    """
+    Print a pretty table and its title.
+
+    title: str Title of table to be printed first
+    table: PrettyTable table to be printed
+    """
+    print(title)
+    # table.set_style(TableStyle.MARKDOWN) #requires newer version
+    table.align["Reviewer"] = "l"
+    # table.sortby = "Total"
+    print(table)
 
 
 def main():
