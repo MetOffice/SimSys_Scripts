@@ -22,13 +22,13 @@ ssd_repositories = [
     "growss",
 ]
 
-#Ideally get this list another way but for now hardcode it.
+# Ideally get this list another way but for now hardcode it.
 other_reviewers = [
     "MetBenjaminWent",
     "jedbakerMO",
-    #Chris Maynard
-    #James CS
-    #Oakley Brunt
+    # Chris Maynard
+    # James CS
+    # Oakley Brunt
 ]
 
 
@@ -211,7 +211,7 @@ def main():
         Team("SSD", "ssdteam"),
         Team("CCD", "core-capability-development"),
         Team("TCD", "toolscollabdev"),
-        other
+        other,
     ]
 
     # Create tables for each combination of reviewers and reposotories
