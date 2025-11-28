@@ -58,7 +58,7 @@ class GlobalState:
         self.fortran_includes = fortran_includes or set()
         self._lock = threading.Lock()
     
-    def add_file(self, filename: str, lines: List[str] = None):
+    def add_file(self, filename: str, lines: List[str] = []):
         '''Dictionary where the keys are the names of files added or modified
         in the branch being examined'''
         with self._lock:
@@ -331,7 +331,6 @@ def process_trunk_mode(branch: str, suite_mode: bool, global_state: GlobalState,
                     
                     host_var_name = f"HOST_SOURCE_{repo.upper()}"
                     env_var_res = os.environ.get(host_var_name, '')
-                    print
                     
                     if not any(f'{host_var_name}=' in line for line in host_sources):
                         print(f"{host_var_name} modified in environment. "

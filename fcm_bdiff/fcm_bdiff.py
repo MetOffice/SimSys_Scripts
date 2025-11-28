@@ -64,18 +64,18 @@ class FCMBase:
         # _branch is the URL of the branch which, after the call to use_mirror,
         # is the branch that was taken from the trunk (to avoid test branches etc)
         self._branch, self._retries = self.use_mirror(repo or Path("."))
-        self._branch_info = self.get_branch_info(self._branch, retries=self._retries)
+        self._branch_info = self.get_branch_info(retries=self._retries)
+        self._branch_url = self.get_url()
+        self._parent = self.get_branch_parent()
 
         # The branch parent(ancestor in git_bdiff) should be the trunk(main); if it isn't assume this is a
         # branch-of-branch (a test branch), and redirect the request to point at
         # the parent branch
-        self._parent = self.get_branch_parent(self._branch_info)
-        while not self.is_trunk(self._parent):
+        while not self.is_trunk_test(self._parent):
             self._branch = self._parent
-            self._branch_info = self.get_branch_info(self._branch, retries=self._retries)
-            self._parent = self.get_branch_parent(self._branch_info)
-
-        self._branch_url = self.get_url(self._branch_info)
+            self._branch_info = self.get_branch_info(retries=self._retries)
+            self._branch_url = self.get_url()
+            self._parent = self.get_branch_parent()
  
     def get_branch_name(self):
         """
@@ -177,7 +177,7 @@ class FCMBase:
             raise Exception("Could not find URL field")
         return url
 
-    def is_trunk(url):
+    def is_trunk_test(self, url):
         """
         Given an FCM url, returns True if it appears to be pointing to the
         UM main trunk
@@ -231,7 +231,7 @@ class FCMBDiff(FCMBase):
         self.ancestor = self.get_branch_parent()
         self.current = self.get_latest_commit()
         self.branch = self.get_branch_name()
-        self.is_trunk = self.is_trunk(self._branch_url)
+        self.is_trunk = self.is_trunk_test(self._branch_url)
         self.is_branch = not self.is_trunk
         self.repos_root = self.get_repository_root()
     
@@ -260,7 +260,7 @@ class FCMBDiff(FCMBase):
         # but if it has been reversed then we get
         # svn://fcm1/um.xm_svn/main/branches/dev/USER/BRANCH_NAME/PATH
         # This results in an invalid path provided by relative_paths
-        bdiff = self.get_bdiff_summarize(self._branch, retries=self._retries)
+        bdiff = self.get_bdiff_summarize(retries=self._retries)
 
         # Extract files from the bdiff that have been modified (M) or added (A).
         # Strip whitespace, and remove blank lines while turning the output into
@@ -323,4 +323,4 @@ class FCMInfo(FCMBase):
     
     def is_main(self) -> bool:
         """Return True if the branch is the main trunk."""
-        return self.is_trunk(self._branch_url)
+        return self.is_trunk_test(self._branch_url)

@@ -1,7 +1,7 @@
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Dict, Set
+from typing import Iterable, List, Dict, Set
 from dataclasses import dataclass
 import argparse
 # Add custom modules to Python path if needed
@@ -9,7 +9,7 @@ import argparse
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from git_bdiff import git_bdiff
+from github_scripts import git_bdiff
 import fcm_bdiff
 
 """
@@ -20,35 +20,28 @@ conformance, and to run relevant style checkers on those files.
 import concurrent.futures
 
 
-@dataclass
-class CheckResult:
-    """Result from running a style checker on a file."""
-    file_path: str
-    checker_name: str
-    passed: bool
-    output: str
-    return_code: int
+# @dataclass
+# class CheckResult:
+#     """Result from running a style checker on a file."""
+#     file_path: str
+#     checker_name: str
+#     passed: bool
+#     output: str
+#     return_code: int
 
 
-class CMSInterface(ABC):
-    """Abstract base class for CMS integration."""
-    
-    @abstractmethod
-    def get_changed_files(self, branch: str, base_branch: str = "main") -> List[Path]:
-        """Get list of files changed on a branch."""
-        pass
-
+# 
 class GitBdiffWrapper:
     """Wrapper around git_bdiff to get changed files."""
     
     def __init__(self, repo_path: Path = Path(".")):
         self.repo_path = repo_path
     
-    def get_changed_files(self, branch: str, base_branch: str = "main") -> List[Path]:
+    def get_changed_files(self, branch: str) -> Iterable[str]:
         """Get list of files changed between base_branch and branch."""
         bdiff_obj = git_bdiff.GitBDiff(repo=self.repo_path)
         
-        return bdiff_obj
+        return bdiff_obj.files()
 
 
 class FCMBdiffWrapper:
@@ -57,131 +50,99 @@ class FCMBdiffWrapper:
     def __init__(self, repo_path: Path = Path(".")):
         self.repo_path = repo_path
     
-    def get_changed_files(self, branch: str, base_branch: str = "main") -> List[Path]:
+    def get_changed_files(self, branch: str) -> Iterable[str]:
         """Get list of files changed between base_branch and branch."""
         bdiff_obj = fcm_bdiff.FCMBDiff(repo=self.repo_path)
         
-        return bdiff_obj.files_changed_between(branch, base_branch)
+        return bdiff_obj.files()
+
+# class StyleChecker(ABC):
+#     """Abstract base class for style checkers."""
+    
+#     @abstractmethod
+#     def check(self, file_path: Path) -> CheckResult:
+#         """Run the style checker on a file."""
+#         pass
+    
+#     @abstractmethod
+#     def get_name(self) -> str:
+#         """Return the name of this checker."""
+#         pass
 
 
-class GitCMS(CMSInterface):
-    """Git CMS implementation."""
+# class ExternalChecker(StyleChecker):
+#     """Wrapper for external style checking tools."""
     
-    def __init__(self, repo_path: Path = Path(".")):
-        self.repo_path = repo_path
+#     def __init__(self, name: str, command: List[str], file_extensions: Set[str] = set()):
+#         self.name = name
+#         self.command = command
+#         self.file_extensions = file_extensions or set()
     
-    def get_changed_files(self, branch: str, base_branch: str = "main") -> List[Path]:
-        """Get files changed between base_branch and branch."""
-        try:
-            result = subprocess.run(
-                ["git", "diff", "--name-only", f"{base_branch}...{branch}"],
-                cwd=self.repo_path,
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            files = [self.repo_path / f.strip() for f in result.stdout.split("\n") if f.strip()]
-            return [f for f in files if f.exists()]
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"Git command failed: {e.stderr}")
-
-
-class StyleChecker(ABC):
-    """Abstract base class for style checkers."""
-    
-    @abstractmethod
-    def check(self, file_path: Path) -> CheckResult:
-        """Run the style checker on a file."""
-        pass
-    
-    @abstractmethod
-    def get_name(self) -> str:
-        """Return the name of this checker."""
-        pass
-
-
-class ExternalChecker(StyleChecker):
-    """Wrapper for external style checking tools."""
-    
-    def __init__(self, name: str, command: List[str], file_extensions: Set[str] = None):
-        self.name = name
-        self.command = command
-        self.file_extensions = file_extensions or set()
-    
-    def check(self, file_path: Path) -> CheckResult:
-        """Run external checker command on file."""
-        if self.file_extensions and file_path.suffix not in self.file_extensions:
-            return CheckResult(
-                file_path=str(file_path),
-                checker_name=self.name,
-                passed=True,
-                output=f"Skipped (extension {file_path.suffix} not in {self.file_extensions})",
-                return_code=0
-            )
+#     def check(self, file_path: Path) -> CheckResult:
+#         """Run external checker command on file."""
+#         if self.file_extensions and file_path.suffix not in self.file_extensions:
+#             return CheckResult(
+#                 file_path=str(file_path),
+#                 checker_name=self.name,
+#                 passed=True,
+#                 output=f"Skipped (extension {file_path.suffix} not in {self.file_extensions})",
+#                 return_code=0
+#             )
         
-        try:
-            cmd = self.command + [str(file_path)]
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=60
-            )
+#         try:
+#             cmd = self.command + [str(file_path)]
+#             result = subprocess.run(
+#                 cmd,
+#                 capture_output=True,
+#                 text=True,
+#                 timeout=60
+#             )
             
-            return CheckResult(
-                file_path=str(file_path),
-                checker_name=self.name,
-                passed=result.returncode == 0,
-                output=result.stdout + result.stderr,
-                return_code=result.returncode
-            )
-        except subprocess.TimeoutExpired:
-            return CheckResult(
-                file_path=str(file_path),
-                checker_name=self.name,
-                passed=False,
-                output="Checker timed out",
-                return_code=-1
-            )
-        except Exception as e:
-            return CheckResult(
-                file_path=str(file_path),
-                checker_name=self.name,
-                passed=False,
-                output=str(e),
-                return_code=-1
-            )
+#             return CheckResult(
+#                 file_path=str(file_path),
+#                 checker_name=self.name,
+#                 passed=result.returncode == 0,
+#                 output=result.stdout + result.stderr,
+#                 return_code=result.returncode
+#             )
+#         except subprocess.TimeoutExpired:
+#             return CheckResult(
+#                 file_path=str(file_path),
+#                 checker_name=self.name,
+#                 passed=False,
+#                 output="Checker timed out",
+#                 return_code=-1
+#             )
+#         except Exception as e:
+#             return CheckResult(
+#                 file_path=str(file_path),
+#                 checker_name=self.name,
+#                 passed=False,
+#                 output=str(e),
+#                 return_code=-1
+#             )
     
-    def get_name(self) -> str:
-        return self.name
-
-
-class DifferenceDiscoverer:
-    """Main framework for establishing the differences to check."""
-    
-    def __init__(self, cms: CMSInterface):
-        self.cms = cms
-    
-    def check_branch(self, branch: str, base_branch: str = "main") -> Dict[str, List[CheckResult]]:
-        """Check all changed files on a branch."""
-        changed_files = self.cms.get_changed_files(branch, base_branch)
-        
-        if not changed_files:
-            return {}
-        
-        return self.check_files(changed_files)
+#     def get_name(self) -> str:
+#         return self.name
 
 
 class ConformanceChecker:
     """Main framework for running style checks in parallel."""
 
-    def __init__(self, cms: CMSInterface, checkers: List[StyleChecker],     
-                 checklist: List[str], max_workers: int = 4):
+    def __init__(self, cms, checkers: List[str],     
+                 max_workers: int = 4):
         self.cms = cms
         self.checkers = checkers
         self.max_workers = max_workers
+        self.changed_files = [] 
+
+    def check_branch(self, branch: str, base_branch: str = "main"):
+        """Check all changed files on a branch."""
+        changed_files = self.cms.get_changed_files(branch)
+        self.changed_files = changed_files
+        return
         
-    def check_files(self, files: List[Path]) -> Dict[str, List[CheckResult]]:
+    def check_files(self, files: List[str]) -> Dict[str, List]:
         """Run all checkers on given files in parallel."""
         results = {}
         
@@ -205,7 +166,7 @@ class ConformanceChecker:
         
         return results
     
-    def print_results(self, results: Dict[str, List[CheckResult]]) -> bool:
+    def print_results(self, results: Dict[str, List]) -> bool:
         """Print results and return True if all checks passed."""
         all_passed = True
         
@@ -227,21 +188,33 @@ def process_arguments():
         prog="umdp3_conformance.py",
         description="""UMDP3 Conformance Checker""",
         epilog="T-T-T-T-That's all folks !!")
-    parser.add_argument("path", type=str, default="./", help="path to repository")
+    parser.add_argument("--path", type=str, default="./", help="path to repository")
     parser.add_argument("--branch", type=str, default="HEAD", help="Branch to check")
     parser.add_argument("--base-branch", type=str, default="main", help="Base branch for comparison")
     parser.add_argument("--checker-configs", type=str, default=None,
                         help="Checker configuration file")
     return parser.parse_args()
 
-
+def which_cms_is_it(path):
+    """Determine which CMS is in use based on the presence of certain files."""
+    repo_path = Path(path)
+    if (repo_path / ".git").is_dir():
+        return GitBdiffWrapper(repo_path)
+    elif (repo_path / ".svn").is_dir():
+        # If we still want this to work reliably with FCM, it will need
+        # to also accept URLs and not just local paths.
+        return FCMBdiffWrapper(repo_path)
+    else:
+        raise RuntimeError("Unknown CMS type at path: " + str(path))
+    
 # Example usage
 if __name__ == "__main__":
     args = process_arguments()
 
     # Configure CMS
-    cms = GitCMS()
-    
+    cms = which_cms_is_it(args.path)
+    checkers = []
+
     # Configure checkers
     if args.checker_configs:
         # Load checkers from configuration file (not implemented)
@@ -249,9 +222,9 @@ if __name__ == "__main__":
         pass
     else:
         checkers = [
-            ExternalChecker("flake8", ["flake8"], {".py"}),
-            ExternalChecker("black", ["black", "--check"], {".py"}),
-            ExternalChecker("pylint", ["pylint"], {".py"}),
+            # ExternalChecker("flake8", ["flake8"], {".py"}),
+            # ExternalChecker("black", ["black", "--check"], {".py"}),
+            # ExternalChecker("pylint", ["pylint"], {".py"}),
         ]
     
     # Create conformance checker
@@ -259,7 +232,10 @@ if __name__ == "__main__":
     
     # Check current branch
 
-    files = checker.check_branch("HEAD", "main")
-    all_passed = checker.print_results(results)
+    checker.check_branch(args.branch, args.base_branch)
+    for file in checker.changed_files:
+        print(file) 
+    #results = checker.check_files([str(f) for f in files])  
+    #all_passed = checker.print_results(results)
     
-    exit(0 if all_passed else 1)
+    #exit(0 if all_passed else 1)
