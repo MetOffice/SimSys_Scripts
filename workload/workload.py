@@ -1,9 +1,9 @@
+import argparse
 import json
 import subprocess
+from pathlib import Path
 
 from prettytable import PrettyTable
-
-test = False
 
 lfric_repositories = [
     "lfric_apps",
@@ -40,19 +40,20 @@ class ProjectData:
     review_data: list Data filtered to contain a list of review tuples
     """
 
-    def __init__(self):
+    def __init__(self, test:bool = False):
         self.data = {}
         self.review_data = []
 
-        self.fetch_project_data()
+        self.fetch_project_data(test)
         self.filter_reviewers()
 
-    def fetch_project_data(self):
+    def fetch_project_data(self, test:bool):
         """
         Retrieve data from GitHub API or a from a test file.
         """
         if test:
-            with open("test.json") as f:
+            file = Path(__file__).with_name("test.json")
+            with open(file) as f:
                 self.data = json.loads(f.read())
 
         else:
@@ -89,27 +90,25 @@ class Team:
     """
     A class to hold GitHub team data.
 
-    name: str Name of team
     github_id: str GitHub team ID used for fetching team data
     members: A list of team members
     """
 
-    def __init__(self, team_name: str, github_id: str = None):
-        self.name = team_name
+    def __init__(self, github_id: str = None, test: bool = False):
         self.github_id = github_id
         self.members = []
 
         if github_id:
-            self.set_team_members()
+            self.set_team_members(test)
 
-    def set_team_members(self):
+    def set_team_members(self, test:bool):
         """
         Retrieve team members from GitHub API or a from a test file. Create
         a list of login IDs and sort it.
         """
 
         if test:
-            file = self.github_id + ".json"
+            file = Path(__file__).with_name(self.github_id + ".json")
             with open(file) as f:
                 full_data = json.loads(f.read())
         else:
@@ -185,7 +184,7 @@ def build_table(data: ProjectData, reviewer_list: list, repos: list) -> PrettyTa
     return table
 
 
-def print_table(title: str, table: PrettyTable) -> None:
+def print_table(title: str, table: PrettyTable, sortTotal: bool) -> None:
     """
     Print a pretty table and its title.
 
@@ -195,44 +194,67 @@ def print_table(title: str, table: PrettyTable) -> None:
     print(title)
     # table.set_style(TableStyle.MARKDOWN) #requires newer version
     table.align["Reviewer"] = "l"
-    # table.sortby = "Total"
+
+    if sortTotal:
+        table.sortby = "Total"
+
     print(table)
 
 
-def main():
+def parse_args():
+    """
+    Read command line args
+    """
+
+    parser = argparse.ArgumentParser("Create tables of review workload based on Simulation Systems Review Tracker")
+    parser.add_argument(
+        "--total",
+        action='store_true',
+        help="Sort tables by total number of reviews.",
+    )
+    parser.add_argument(
+        "--test",
+        action='store_true',
+        help="Use test input files.",
+    )
+
+    return parser.parse_args()
+
+def main(total: bool, test: bool):
 
     # Extract data from github about the reviews and team members.
-    data = ProjectData()
+    data = ProjectData(test)
 
-    other = Team("Other LFric")
-    other.members = other_reviewers
+    other_team = Team(test = test)
+    other_team.members = other_reviewers
 
-    teams = [
-        Team("SSD", "ssdteam"),
-        Team("CCD", "core-capability-development"),
-        Team("TCD", "toolscollabdev"),
-        other,
-    ]
+    teams = {
+        "SSD": Team("ssdteam", test),
+        "CCD": Team("core-capability-development", test),
+        "TCD": Team("toolscollabdev", test),
+        "Other": other_team,
+    }
 
     # Create tables for each combination of reviewers and reposotories
     tables = {}
 
     ## Table for SSD only repositories
     repo_list = ssd_repositories
-    reviewers = teams[0].get_team_members()
+    reviewers = teams["SSD"].get_team_members()
     tables["SSD"] = build_table(data, reviewers, repo_list)
 
     ## Table for LFRic repositories
     repo_list = lfric_repositories
     reviewers = []
-    for team in teams:
+    for team in teams.values():
         reviewers += team.get_team_members()
     tables["LFRic"] = build_table(data, reviewers, repo_list)
 
     # Print tables
     for name, table in tables.items():
-        print_table(name, table)
+        print_table(name, table, total)
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args.total, args.test)
