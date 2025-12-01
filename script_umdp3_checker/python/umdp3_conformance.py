@@ -19,42 +19,44 @@ conformance, and to run relevant style checkers on those files.
 
 import concurrent.futures
 
+@dataclass
+class CheckResult:
+    """Result from running a style checker on a file."""
+    file_path: str = "No file provided"
+    checker_name: str = "Unnamed Checker"
+    passed: bool = False
+    output: str = ""
+    return_code: int = 0
 
-# @dataclass
-# class CheckResult:
-#     """Result from running a style checker on a file."""
-#     file_path: str
-#     checker_name: str
-#     passed: bool
-#     output: str
-#     return_code: int
-
-
-# 
 class GitBdiffWrapper:
     """Wrapper around git_bdiff to get changed files."""
     
     def __init__(self, repo_path: Path = Path(".")):
         self.repo_path = repo_path
+        self.bdiff_obj = git_bdiff.GitBDiff(repo=self.repo_path)
     
     def get_changed_files(self, branch: str) -> Iterable[str]:
-        """Get list of files changed between base_branch and branch."""
-        bdiff_obj = git_bdiff.GitBDiff(repo=self.repo_path)
-        
-        return bdiff_obj.files()
-
+        """Get list of files changed between base_branch and branch."""    
+        return self.bdiff_obj.files()
+    
+    def is_branch(self) -> bool:
+        """Check if we're looking at a branch"""
+        return self.bdiff_obj.is_branch
 
 class FCMBdiffWrapper:
     """Wrapper around fcm_bdiff to get changed files."""
     
     def __init__(self, repo_path: Path = Path(".")):
         self.repo_path = repo_path
+        self.bdiff_obj = fcm_bdiff.FCMBDiff(repo=self.repo_path)
     
     def get_changed_files(self, branch: str) -> Iterable[str]:
-        """Get list of files changed between base_branch and branch."""
-        bdiff_obj = fcm_bdiff.FCMBDiff(repo=self.repo_path)
-        
-        return bdiff_obj.files()
+        """Get list of files changed between base_branch and branch."""        
+        return self.bdiff_obj.files()
+    
+    def is_branch(self) -> bool:
+        """Check if we're looking at a branch"""
+        return self.bdiff_obj.is_branch
 
 # class StyleChecker(ABC):
 #     """Abstract base class for style checkers."""
@@ -136,6 +138,10 @@ class ConformanceChecker:
         self.max_workers = max_workers
         self.changed_files = [] 
 
+    def is_branch(self) -> bool:
+        """Check if we're looking at a branch"""
+        return self.cms.is_branch()
+    
     def check_branch(self, branch: str, base_branch: str = "main"):
         """Check all changed files on a branch."""
         changed_files = self.cms.get_changed_files(branch)
@@ -188,11 +194,16 @@ def process_arguments():
         prog="umdp3_conformance.py",
         description="""UMDP3 Conformance Checker""",
         epilog="T-T-T-T-That's all folks !!")
-    parser.add_argument("--path", type=str, default="./", help="path to repository")
-    parser.add_argument("--branch", type=str, default="HEAD", help="Branch to check")
-    parser.add_argument("--base-branch", type=str, default="main", help="Base branch for comparison")
+    parser.add_argument("--path", type=str, default="./",
+                        help="path to repository")
+    parser.add_argument("--branch", type=str, default="HEAD",
+                        help="Branch to check")
+    parser.add_argument("--base-branch", type=str, default="main",
+                        help="Base branch for comparison")
     parser.add_argument("--checker-configs", type=str, default=None,
                         help="Checker configuration file")
+    parser.add_argument("--file-types", type=List[str], default=["Fortran"],
+                        help="File types to check, comma-separated")
     return parser.parse_args()
 
 def which_cms_is_it(path):
@@ -229,7 +240,13 @@ if __name__ == "__main__":
     
     # Create conformance checker
     checker = ConformanceChecker(cms, checkers, max_workers=8)
-    
+    if not checker.is_branch():
+        print(f"The path {args.path} is not a branch."
+              "\nThe meaning of differences is unclear, and so"
+              " checking is aborted.")
+        exit(1)
+    else:
+        print(f"The path {args.path} is a branch.")
     # Check current branch
 
     checker.check_branch(args.branch, args.base_branch)
