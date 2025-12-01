@@ -60,7 +60,9 @@ class ProjectData:
             command = "gh project item-list 376 -L 500 --owner MetOffice --format json"
             output = subprocess.run(command.split(), capture_output=True, timeout=180)
             if output.returncode:
-                raise RuntimeError("Error fetching GitHub Project data:  \n " + output.stderr.decode())
+                raise RuntimeError(
+                    "Error fetching GitHub Project data:  \n " + output.stderr.decode()
+                )
 
             self.data = json.loads(output.stdout)
 
