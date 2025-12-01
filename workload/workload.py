@@ -40,14 +40,14 @@ class ProjectData:
     review_data: list Data filtered to contain a list of review tuples
     """
 
-    def __init__(self, test:bool = False):
+    def __init__(self, test: bool = False):
         self.data = {}
         self.review_data = []
 
         self.fetch_project_data(test)
         self.filter_reviewers()
 
-    def fetch_project_data(self, test:bool):
+    def fetch_project_data(self, test: bool):
         """
         Retrieve data from GitHub API or a from a test file.
         """
@@ -58,7 +58,10 @@ class ProjectData:
 
         else:
             command = "gh project item-list 376 -L 500 --owner MetOffice --format json"
-            output = subprocess.run(command, shell=True, capture_output=True)
+            output = subprocess.run(command.split(), capture_output=True, timeout=180)
+            if output.returncode:
+                raise RuntimeError("Error fetching GitHub Project data:  \n " + output.stderr.decode())
+
             self.data = json.loads(output.stdout)
 
     def filter_reviewers(self):
@@ -101,7 +104,7 @@ class Team:
         if github_id:
             self.set_team_members(test)
 
-    def set_team_members(self, test:bool):
+    def set_team_members(self, test: bool):
         """
         Retrieve team members from GitHub API or a from a test file. Create
         a list of login IDs and sort it.
@@ -118,7 +121,13 @@ class Team:
                 f"/orgs/MetOffice/teams/{self.github_id}/members"
             )
 
-            output = subprocess.run(command, shell=True, capture_output=True)
+            output = subprocess.run(
+                command, shell=True, capture_output=True, timeout=180
+            )
+            if output.returncode:
+                raise RuntimeError(
+                    "Error fetching GitHub Team data: \n" + output.stderr.decode()
+                )
 
             full_data = json.loads(output.stdout)
 
@@ -206,26 +215,29 @@ def parse_args():
     Read command line args
     """
 
-    parser = argparse.ArgumentParser("Create tables of review workload based on Simulation Systems Review Tracker")
+    parser = argparse.ArgumentParser(
+        "Create tables of review workload based on Simulation Systems Review Tracker"
+    )
     parser.add_argument(
         "--total",
-        action='store_true',
+        action="store_true",
         help="Sort tables by total number of reviews.",
     )
     parser.add_argument(
         "--test",
-        action='store_true',
+        action="store_true",
         help="Use test input files.",
     )
 
     return parser.parse_args()
+
 
 def main(total: bool, test: bool):
 
     # Extract data from github about the reviews and team members.
     data = ProjectData(test)
 
-    other_team = Team(test = test)
+    other_team = Team(test=test)
     other_team.members = other_reviewers
 
     teams = {
