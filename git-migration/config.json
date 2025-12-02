@@ -84,7 +84,8 @@
         { "drivers_2.0.1": 3926 },
         { "drivers_2.0.2": 5232 },
         { "GO6_fcm_make_configs_1.0": 1352 },
-        { "GO6_fcm_make_configs_1.1": 2065 }
+        { "GO6_fcm_make_configs_1.1": 2065 },
+        { "git_migration": 5833 }
       ]
     },
     {
