@@ -50,11 +50,28 @@ REPOS=()
 DRY_RUN=0
 
 # -- Helper functions
+check_admin_permission() {
+  local repo_name="$1"
+  local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
+  local permission
+
+  # Returns 0 if user is admin, 1 otherwise
+  permission=$(gh api "$repo_api" --jq '.role_name' 2>/dev/null)
+  [[ "$permission" == "admin" ]]
+}
+
 remove_collaborator() {
   local repo_name="$1"
   local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
 
-  if [ "$DRY_RUN" -eq 1 ]; then
+  # Check current permission level
+  if (( !DRY_RUN )) && check_admin_permission "$repo_name"; then
+    echo "WARNING: '${USERNAME}' has admin role on ${OWNER}/${repo_name}." >&2
+    echo "Skipping removal to prevent loss of admin access." >&2
+    return 0
+  fi
+
+  if (( DRY_RUN )); then
     echo "[DRY-RUN] Would remove '${USERNAME}' from ${OWNER}/${repo_name}."
   else
     gh api --method DELETE "$repo_api" && \
@@ -67,7 +84,14 @@ add_collaborator() {
   local repo_name="$1"
   local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
 
-  if [ "$DRY_RUN" -eq 1 ]; then
+  # Check current permission level to prevent admin role changes
+  if (( !DRY_RUN )) && check_admin_permission "$repo_name"; then
+    echo "WARNING: '${USERNAME}' has admin role on ${OWNER}/${repo_name}." >&2
+    echo "Skipping to prevent modification of admin permissions." >&2
+    return 0
+  fi
+
+  if (( DRY_RUN )); then
     echo "[DRY-RUN] Would add '${USERNAME}' to ${OWNER}/${repo_name} with" \
       "permission '$PERMISSION'."
   else
