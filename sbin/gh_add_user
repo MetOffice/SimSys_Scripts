@@ -13,6 +13,12 @@
 #   Commandline JSON processor (jq): https://jqlang.org/
 #   Admin privileges to the repos
 
+# WARNINGS:
+# - This script modifies repository permissions. Use with caution.
+# - Always verify the current permissions before making changes.
+# - Removing a user with admin privileges may lead to loss of access.
+# - It also impacts API rate limits for the authenticated user.
+
 set -euo pipefail
 
 usage() {
@@ -20,12 +26,12 @@ usage() {
 Usage: ${0##*/} -u <username> [-r <repo>] [options]
   -u <username>    GitHub username to add/remove
   -r <repo>        Repository name (if omitted, operate on all repos
-                   from config.json)
+                   from ../git-migration/config.json)
   -o <owner>       Repository owner (default: MetOffice)
   -p <permission>  Permission (read, write, admin, maintain, triage;
                    default: read)
   -d               Remove user as collaborator instead of adding
-  -n, --dry-run    Print actions without making changes
+  -n               Print actions without making changes
   -h, --help       Show this help message
 
 Examples:
@@ -56,7 +62,7 @@ check_admin_permission() {
   local permission
 
   # Returns 0 if user is admin, 1 otherwise
-  permission=$(gh api "$repo_api" --jq '.role_name' 2>/dev/null)
+  permission=$(gh api "${repo_api}/permission" --jq '.role_name' 2>/dev/null)
   [[ "$permission" == "admin" ]]
 }
 
