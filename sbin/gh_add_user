@@ -8,9 +8,11 @@
 
 # Add collaborator to a repository (requires admin privilege on the repo)
 # gh api --method PUT /repos/:owner/:repo/collaborators/:username
-# yaswant.pradhan
+# Requires:
+#   GitHub CLI (gh): https://cli.github.com/
+#   Commandline JSON processor (jq): https://jqlang.org/
+#   Admin privileges to the repos
 
-# add a user to a repository via command line options
 set -euo pipefail
 
 usage() {
@@ -65,21 +67,19 @@ add_collaborator() {
   local repo_name="$1"
   local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
 
-  # Check if user is already a collaborator
-  if [ "$DRY_RUN" -eq 0 ] && gh api "$repo_api" --silent > /dev/null 2>&1; then
-    echo "User '${USERNAME}' already a collaborator on ${OWNER}/${repo_name}."
-    return 0
-  fi
-
   if [ "$DRY_RUN" -eq 1 ]; then
     echo "[DRY-RUN] Would add '${USERNAME}' to ${OWNER}/${repo_name} with" \
       "permission '$PERMISSION'."
   else
-    if gh api --method PUT "$repo_api" -f permission="$PERMISSION"; then
-      echo "Added '${USERNAME}' to ${OWNER}/${repo_name} with permission" \
-        "'$PERMISSION'."
+    # PUT method is idempotent: adds user if new, updates permission if exists
+    # HTTP 201 = created (new), 204 = updated (existing)
+    if gh api --method PUT "$repo_api" -f permission="$PERMISSION" \
+       --silent 2>/dev/null; then
+      echo "Added/Updated '${USERNAME}' on ${OWNER}/${repo_name} with" \
+        "permission '$PERMISSION'."
     else
       echo "Failed to add '${USERNAME}' to ${OWNER}/${repo_name}." >&2
+      return 1
     fi
   fi
 }
