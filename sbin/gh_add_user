@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+
+# ----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# ----------------------------------------------------------------------------
+
+# Add collaborator to a repository (requires admin privilege on the repo)
+# gh api --method PUT /repos/:owner/:repo/collaborators/:username
+# yaswant.pradhan
+
+# add a user to a repository via command line options
+set -euo pipefail
+
+usage() {
+  cat <<EOF
+Usage: ${0##*/} -u <username> [-r <repo>] [options]
+  -u <username>    GitHub username to add/remove
+  -r <repo>        Repository name (if omitted, operate on all repos
+                   from config.json)
+  -o <owner>       Repository owner (default: MetOffice)
+  -p <permission>  Permission (read, write, admin, maintain, triage;
+                   default: read)
+  -d               Remove user as collaborator instead of adding
+  -n, --dry-run    Print actions without making changes
+  -h, --help       Show this help message
+
+Examples:
+  # Add/Remove a user to/from all repositories defined in config.json
+  ${0##*/} -u <username> [-p <permission>]
+  ${0##*/} -u <username> -d
+
+  # Add/Remove a user to/from a specific repository
+  ${0##*/} -u <username> -r <repo> [-o <owner>] [-p <permission>]
+  ${0##*/} -u <username> -r <repo> -o <owner> -d
+
+EOF
+  exit 1
+}
+
+# -- Defaults
+PERMISSION="read"
+OWNER="MetOffice"
+DELETE=0
+CONFIG_JSON="$(dirname "${BASH_SOURCE[0]}")/../git-migration/config.json"
+REPOS=()
+DRY_RUN=0
+
+# -- Helper functions
+remove_collaborator() {
+  local repo_name="$1"
+  local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    echo "[DRY-RUN] Would remove '${USERNAME}' from ${OWNER}/${repo_name}."
+  else
+    gh api --method DELETE "$repo_api" && \
+      echo "Removed '${USERNAME}' from ${OWNER}/${repo_name}." || \
+      echo "Failed to remove '${USERNAME}' from ${OWNER}/${repo_name}." >&2
+  fi
+}
+
+add_collaborator() {
+  local repo_name="$1"
+  local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
+
+  # Check if user is already a collaborator
+  if [ "$DRY_RUN" -eq 0 ] && gh api "$repo_api" --silent > /dev/null 2>&1; then
+    echo "User '${USERNAME}' already a collaborator on ${OWNER}/${repo_name}."
+    return 0
+  fi
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    echo "[DRY-RUN] Would add '${USERNAME}' to ${OWNER}/${repo_name} with" \
+      "permission '$PERMISSION'."
+  else
+    if gh api --method PUT "$repo_api" -f permission="$PERMISSION"; then
+      echo "Added '${USERNAME}' to ${OWNER}/${repo_name} with permission" \
+        "'$PERMISSION'."
+    else
+      echo "Failed to add '${USERNAME}' to ${OWNER}/${repo_name}." >&2
+    fi
+  fi
+}
+
+# -- Parse options
+while getopts "u:r:o:p:dnh-:" opt; do
+  case $opt in
+    u) USERNAME="$OPTARG" ;;
+    r) REPO="$OPTARG" ;;
+    o) OWNER="$OPTARG" ;;
+    p)
+      case $OPTARG in
+        read|pull) PERMISSION="read" ;;
+        write|push) PERMISSION="write" ;;
+        admin|maintain|triage) PERMISSION="$OPTARG" ;;
+        *) echo "Invalid permission: $OPTARG"; usage ;;
+      esac
+      ;;
+    d) DELETE=1 ;;
+    n) DRY_RUN=1 ;;
+    h) usage ;;
+    -) [ "$OPTARG" = "help" ] && usage ;;
+    *) usage ;;
+  esac
+done
+
+# -- Validate required args (username is mandatory)
+if [ -z "${USERNAME:-}" ]; then
+  usage
+fi
+
+# -- Populate REPOS array from config.json
+# Only populate REPOS from config.json if no explicit -r repo provided
+if [ -z "${REPO:-}" ]; then
+  if command -v jq >/dev/null 2>&1 && [ -f "$CONFIG_JSON" ]; then
+    mapfile -t REPOS < <(jq -r '.repo[].name' "$CONFIG_JSON")
+  else
+    REPOS=()
+  fi
+fi
+
+# -- Determine target repos
+TARGET_REPOS=()
+if [ -n "${REPO:-}" ]; then
+  TARGET_REPOS=("$REPO")
+else
+  # No repo provided: operate on all repos from config.json
+  if [ ${#REPOS[@]} -eq 0 ]; then
+    echo "No -r <repo> provided and repo list empty/unavailable." >&2
+    echo "Install 'jq' and ensure config exists at: $CONFIG_JSON" >&2
+    exit 1
+  fi
+  TARGET_REPOS=("${REPOS[@]}")
+fi
+
+# -- Process each target repo
+for repo_name in "${TARGET_REPOS[@]}"; do
+  if [ "$DELETE" -eq 1 ]; then
+    remove_collaborator "$repo_name"
+  else
+    add_collaborator "$repo_name"
+  fi
+done
