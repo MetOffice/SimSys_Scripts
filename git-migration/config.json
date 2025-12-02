@@ -509,7 +509,8 @@
         { "vn2.0": 5732 },
         { "vn2.0.1": 5838 },
         { "vn2.1": 8283 },
-        { "vn2.2": 12057 }
+        { "vn2.2": 12057 },
+        { "git_migration": 15832 }
       ]
     },
     {
@@ -533,14 +534,15 @@
         { "core1.2.1": 51467 },
         { "core2.0": 51632 },
         { "core2.1": 52315 },
-        { "core2.2": 53282 }
+        { "core2.2": 53282 },
+        { "git_migration": 54094 }
       ]
     },
     {
       "name": "rose_picker",
       "description": "LFRic GPL Tools",
       "trunk": "lfric/GPL-utilities",
-      "tags": []
+      "tags": [{ "git_migration": 48054 }]
     },
     {
       "name": "monc",
@@ -550,7 +552,8 @@
         { "vn0.7": 2226 },
         { "vn0.8": 3628 },
         { "vn0.9.0": 7765 },
-        { "vn1.0.0": 10936 }
+        { "vn1.0.0": 10936 },
+        { "git_migration": 10936 }
       ]
     },
     {
