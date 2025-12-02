@@ -500,7 +500,7 @@ def main():
     parser.add_argument(
         "-E",
         "--extension",
-        default=".rc",
+        default=".cylc",
         help="The extension of the variables file, either .rc " "or .cylc",
     )
 
