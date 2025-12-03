@@ -311,15 +311,13 @@ class FCMBDiff(FCMBase):
         command = ["fcm", "bdiff", "--summarize", self._branch]
         return self.run_fcm_command(command, retries, snooze)
 
-# --------------------------------------------------------------------
 class FCMInfo(FCMBase):
     """Class to hold FCM branch information. Mirroring the functionality
     in the git_bdiff.GitBranchInfo class."""
     
     def __init__(self, branch_info: str):
         super().__init__(self, repo=None)
-
-        self.branch_name = self.get_branch_name
+        self.branch_name = self.get_branch_name()
     
     def is_main(self) -> bool:
         """Return True if the branch is the main trunk."""
