@@ -189,7 +189,6 @@ class ConformanceChecker:
         more efficient to have each file opened once, and all checkers run on it
         before moving to the next file?"""
         results = {}
-        results["test"] = "value"
 
         tasks = [
             (checker, file_path)
@@ -308,14 +307,11 @@ if __name__ == "__main__":
     #     print(file) 
     results = checker.check_files()
     for result_name, result in results.items():
-        # if all([doodah.passed for doodah in result]):
-        #     print(f"Result for {result_name} is : [OK]")
-        # else:
-        #     print(f"Result for {result_name} is : [FAIL]")
-        print(f" there are {len(result)} results for {result_name}")
-        if result_name == "Captain Daves doomed test of destruction":
-            for doodah in result:
-                print(f"  Checker: {doodah.checker_name}, Passed: {doodah.passed}") 
+        if all([doodah.passed for doodah in result]):
+            print(f"Result for {result_name} is : [OK]")
+        else:
+            print(f"Result for {result_name} is : [FAIL]")
+
     #all_passed = checker.print_results(results)
     
     #exit(0 if all_passed else 1)
