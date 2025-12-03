@@ -345,7 +345,7 @@ class ApplyMacros:
             if os.path.exists(source_path):
                 return source_path
 
-        # Check that the source looks like a github URL, raise an error if not
+        # Check that the source looks like a GitHub URL, raise an error if not
         if ".git" not in source:
             raise Exception(
                 f"The {repo} source: {source}, was not found as a working copy "
