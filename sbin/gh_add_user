@@ -6,7 +6,7 @@
 # under which the code may be used.
 # ----------------------------------------------------------------------------
 
-# Add collaborator to a repository (requires admin privilege on the repo)
+# Add collaborator to a repository
 # gh api --method PUT /repos/:owner/:repo/collaborators/:username
 # Requires:
 #   GitHub CLI (gh): https://cli.github.com/
@@ -16,7 +16,6 @@
 # WARNINGS:
 # - This script modifies repository permissions. Use with caution.
 # - Always verify the current permissions before making changes.
-# - Removing a user with admin privileges may lead to loss of access.
 # - It also impacts API rate limits for the authenticated user.
 
 set -euo pipefail
@@ -151,8 +150,21 @@ else
   TARGET_REPOS=("${REPOS[@]}")
 fi
 
+# -- Get current user once if needed for self-removal check
+CURRENT_USER=""
+if (( DELETE && !DRY_RUN )); then
+  CURRENT_USER=$(gh api user --jq '.login' 2>/dev/null)
+fi
+
 # -- Process each target repo
 for repo_name in "${TARGET_REPOS[@]}"; do
+  # Prevent users from removing themselves
+  if [[ -n "$CURRENT_USER" ]] && [[ "$CURRENT_USER" == "$USERNAME" ]]; then
+    echo "WARNING: Won't remove (${USERNAME}) from ${OWNER}/${repo_name}" >&2
+    echo "Skipping self-removal to prevent loss of your own access." >&2
+    continue
+  fi
+
   # Check admin permission once before any operation (skip in dry-run mode)
   if (( !DRY_RUN )) && check_admin_permission "$repo_name"; then
     echo "WARNING: '${USERNAME}' has admin role on ${OWNER}/${repo_name}." >&2
