@@ -346,7 +346,7 @@ class ApplyMacros:
                 return source_path
 
         # Check that the source looks like a GitHub URL, raise an error if not
-        if ".git" not in source:
+        if "git@github.com:" not in source and "https://github.com/" not in source:
             raise Exception(
                 f"The {repo} source: {source}, was not found as a working copy "
                 "and does not look like an GitHub URL. Please check the source."
