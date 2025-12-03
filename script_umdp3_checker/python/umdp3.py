@@ -82,6 +82,28 @@ class UMDP3:
     Although, a brief look seems to imply that there are two 'dispatch tables' one for full files and one for changed lines."""
 
     ### SCAN STOP ####
+    def capitulated_keywords(self, lines: List[str]) -> int:
+        """Do some stuff, with print statements"""
+        failures = 0
+        line_count = 0
+        #print("Debug: In capitulated_keywords test")
+        for line in lines:
+            line_count += 1
+            # Remove quoted strings and comments
+            if line.startswith("!"):
+                continue
+            clean_line = self.remove_quoted(line)
+            clean_line = self.comment_line.sub("", clean_line)  # Remove comments
+
+            # Check for lowercase keywords
+            for word in self.word_splitter.findall(clean_line):
+                upcase = word.upper()
+                if upcase in fortran_keywords and word != upcase:
+                    self.add_extra_error(f"lowercase keyword: {word}")
+                    failures += 1
+
+        return line_count
+
     def capitalised_keywords(self, lines: List[str]) -> int:
         """Check for the presence of lowercase Fortran keywords, which are taken from an imported list 'fortran_keywords'."""
         failures = 0
