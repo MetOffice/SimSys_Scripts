@@ -349,7 +349,7 @@ class ApplyMacros:
         if ".git" not in source:
             raise Exception(
                 f"The {repo} source: {source}, was not found as a working copy "
-                "and does not look like an github URL. Please check the source."
+                "and does not look like an GitHub URL. Please check the source."
                 "If not set on the command then the dependencies.yaml file is "
                 "being used."
             )
