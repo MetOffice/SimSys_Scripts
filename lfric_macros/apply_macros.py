@@ -323,7 +323,7 @@ class ApplyMacros:
         Parse the core or jules command line arguments to get the path to a git clone.
         If the source isn't defined, first populate the source by reading the
         dependencies.yaml file.
-        If the source is a remote github source clone it to a temporary location
+        If the source is a remote GitHub source clone it to a temporary location
         Inputs:
             - source, str, The command line argument for the source. If not set
                            this will be None
