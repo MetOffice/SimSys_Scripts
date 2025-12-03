@@ -73,7 +73,7 @@ def check_environment():
 
 def get_root_path(wc_path):
     """
-    Given a path to a git clone, ensure the path and cline are both
+    Given a path to a git clone, ensure the path and clone are both
     valid and return the path to the clone root directory
     Inputs:
         - wc_path, command line argument to a clone
