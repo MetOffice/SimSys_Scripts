@@ -85,8 +85,8 @@ def get_root_path(wc_path):
     result = run_command(command)
     if result.returncode:
         print(
-            "[WARN] - Could not find the git clone root for the apps working copy. "
-            "Defaulting to assuming the provided path is the root path."
+            "[WARN] - Unable to locate the git clone root for the apps working copy."
+            "Assuming the given path is the root directory by default."
         )
         return wc_path
 
