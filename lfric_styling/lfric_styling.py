@@ -30,7 +30,8 @@ def lowercase_keywords(file):
     with open(file, "r") as fp:
         lines = fp.read()
         for keyword in NEW_KEYWORDS:
-            # regex to check if a keyword is preceded with a '!' symbol or it matches a keyword and group each.
+            # regex to check if a keyword is preceded with a '!' symbol
+            # or if it matches a keyword and group each.
             pattern = rf"((?:(?<=!)).*|(\b{re.escape(keyword.upper())}\b))"
             lines = re.sub(pattern, convert_to_lower, lines, flags=re.MULTILINE)
 
