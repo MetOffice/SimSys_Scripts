@@ -185,10 +185,10 @@ class UMDP3:
             # Simple check for UPPERCASE variable declarations
             if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+', 
                         clean_line, re.IGNORECASE):
-                print(f"Debug: Found variable declaration line: {clean_line}")
+                # print(f"Debug: Found variable declaration line: {clean_line}")
                 clean_line = re.sub(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*', '', clean_line)
                 if re.search(r'[A-Z]{2,}', clean_line):
-                    print(f"Debug: Found UPPERCASE variable name: {clean_line}")
+                    # print(f"Debug: Found UPPERCASE variable name: {clean_line}")
                     self.add_extra_error("UPPERCASE variable name")
                     failures += 1
         
@@ -352,10 +352,10 @@ class UMDP3:
         for line in lines:
             match = re.search(r'^\s*#if *(!)?defined\s*\(\s*\w+\s*\)(.*)', line) or re.search(r'^\s*#(else) *(.*)', line)
             if match:
-                print(f"Debug: Found CPP directive line: {line}")
-                print(f"Debug: match groups: {match.groups()}")
-                print(f"Debug: match group(1): {match.group(1)}")
-                print(f"Debug: match group(2): {match.group(2)}")
+                # print(f"Debug: Found CPP directive line: {line}")
+                # print(f"Debug: match groups: {match.groups()}")
+                # print(f"Debug: match group(1): {match.group(1)}")
+                # print(f"Debug: match group(2): {match.group(2)}")
                 if re.search(r'.*!', match.group(2)):
                     self.add_extra_error("Fortran comment in CPP directive")
                     failures += 1
@@ -498,7 +498,7 @@ class UMDP3:
         # Simplified check for code owner information
         file_content = '\n'.join(lines)
         if 'Code Owner:' in file_content or 'code owner' in file_content.lower():
-            print(f"Debug: Found {file_content.lower()}")
+            # print(f"Debug: Found {file_content.lower()}")
             return 0
         
         # This is often a warning rather than an error
