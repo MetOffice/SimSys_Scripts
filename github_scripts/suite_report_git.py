@@ -97,9 +97,8 @@ class SuiteReport(SuiteData):
         if branch_name and branch_name not in ("main", "stable", "trunk"):
             ref = branch_name
         else:
-            ref = (
-                self.run_command(f"git -C {source} rev-parse HEAD").stdout().strip("\n")
-            )
+            result = self.run_command(f"git -C {source} rev-parse HEAD", rval=True)
+            ref = result.stdout.strip("\n")
 
         remote = self.run_command(f"git -C {source} remote -v", rval=True).stdout.split(
             "\n"
