@@ -25,7 +25,7 @@ class UMDP3DispatchTables:
         """Get dispatch table for Fortran diff tests"""
         return {
             'Lowercase Fortran keywords not permitted': self.umdp3.capitalised_keywords,
-            'Captain Daves doomed test of destruction': self.umdp3.capitulated_keywords,
+            # 'Captain Daves doomed test of destruction': self.umdp3.capitulated_keywords,
             'OpenMP sentinels not in column one': self.umdp3.openmp_sentinels_in_column_one,
             'Omitted optional space in keywords': self.umdp3.unseparated_keywords,
             'GO TO other than 9999': self.umdp3.go_to_other_than_9999,
