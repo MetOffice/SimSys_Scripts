@@ -95,7 +95,7 @@ def set_dependency_path(args):
             in_core = True
         elif in_core and "source:" in line:
             prefix, _, _ = line.partition("source:")
-            line = f"{prefix} source:{hostname}:{os.path.abspath(args.core)}\n"
+            line = f"{prefix}source: {hostname}:{os.path.abspath(args.core)}\n"
         elif in_core and "ref:" in line:
             prefix, _, _ = line.partition("ref:")
             line = f"{prefix}ref:"
