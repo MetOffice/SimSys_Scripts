@@ -14,6 +14,7 @@ import argparse
 import ast
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -35,7 +36,7 @@ def run_command(command, shell=False):
         - result object from subprocess.run
     """
     if not shell:
-        command = command.split()
+        command = shlex.split(command)
     return subprocess.run(
         command,
         capture_output=True,
