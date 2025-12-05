@@ -74,7 +74,7 @@ class SuiteReport(SuiteData):
         self.suite_starttime: str = self.get_suite_starttime()
         self.workflow_id: str = self.get_workflow_id()
         self.task_states: Dict[str, str] = self.get_task_states()
-        self.groups: str = self.read_groups_run()
+        self.groups: List[str] = self.read_groups_run()
         self.rose_data: Dict[str, str] = self.read_rose_conf()
         self.dependencies: Dict[str, Dict] = self.read_dependencies()
         self.primary_source: str = self.determine_primary_source()

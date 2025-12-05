@@ -329,7 +329,7 @@ class SuiteData:
             starttime = row[0]
         return starttime.split("+")[0]
 
-    def read_groups_run(self) -> str:
+    def read_groups_run(self) -> List[str]:
         """
         Read in groups run as part of suite from the cylc database file
         """
@@ -341,6 +341,8 @@ class SuiteData:
             if row[0] in ("g", "group"):
                 groups = row[1].strip("[]'\"").split(",")
                 break
+        if groups is None:
+            groups = ["suite_default"]
         return groups
 
     def get_task_states(self) -> Dict[str, str]:
