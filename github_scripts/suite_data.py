@@ -180,6 +180,8 @@ class SuiteData:
                 self.dependencies[dependency]["gitbdiff"] = GitBDiff(
                     repo=self.temp_directory / dependency, parent=parent
                 ).files()
+            else:
+                self.dependencies[dependency]["gitbdiff"] = []
 
     def populate_gitinfo(self) -> None:
         """

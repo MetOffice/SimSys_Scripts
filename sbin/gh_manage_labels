@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+# ----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# ----------------------------------------------------------------------------
+
+# Script to create standard labels in multiple GitHub repositories
+# Requires GitHub CLI: https://cli.github.com/ and Admin privileges to the repos
+
+set -euo pipefail
+
+# -- Parse options
+ADD_LABELS=true
+DELETE_LABELS=false
+usage() {
+  echo "Usage: $0 [--add|--delete] [--help|-h]"
+  echo "  --add      Add labels (default)"
+  echo "  --delete   Delete labels"
+  echo "  --help,-h  Show this help message"
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --add)
+        ADD_LABELS=true
+        DELETE_LABELS=false
+        shift ;;
+    --delete)
+        ADD_LABELS=false
+        DELETE_LABELS=true
+        shift ;;
+    --help|-h)
+        usage
+        exit 0 ;;
+    *)
+        echo "Unknown option: $1" >&2
+        usage
+        exit 1 ;;
+  esac
+done
+
+# -- Label Settings
+# Format: "label_name|hex_color|description"
+labels=(
+  "Linked UM|#50bfe6|This PR is linked to a MetOffice/um PR"
+  "Linked JULES|#66ff66|This PR is linked to a MetOffice/jules PR"
+  "Linked Apps|#ff6037|This PR is linked to a MetOffice/lfric_apps PR"
+  "Linked Core|#ffff66|This PR is linked to a MetOffice/lfric_core PR"
+  "Linked UKCA|#ff00cc|This PR is linked to a MetOffice/ukca PR"
+  "Linked CASIM|#fd5b78|This PR is linked to a MetOffice/casim PR"
+  "Linked SOCRATES|#16d0cb|This PR is linked to a MetOffice/socrates PR"
+  "Linked Mule|#00ffff|This PR is linked to a MetOffice/mule PR"
+  "Linked Shumlib|#0080ff|This PR is linked to a MetOffice/shumlib PR"
+  "KGO|#9c27b0|This PR contains changes to KGO"
+  "macro|#aaf0d1|This PR contains a metadata upgrade macro"
+  "Accessibility|#1c96b9|Problems with the accessibility of the documentation"
+  "Discussion|#FBCA04|Issues that require some formal discussion"
+  "cla-required|#b60205|The CLA has not yet been signed by the author of this PR - added by GA"
+  "cla-signed|#0052cc|The CLA has been signed as part of this PR - added by GA"
+)
+
+# -- Add labels in relevant repositories
+repos=(
+  "MetOffice/um"
+  "MetOffice/jules"
+  "MetOffice/lfric_apps"
+  "MetOffice/lfric_core"
+  "MetOffice/ukca"
+  "MetOffice/casim"
+  "MetOffice/socrates"
+  "MetOffice/mule"
+  "MetOffice/shumlib"
+  "MetOffice/um_aux"
+  "MetOffice/um_doc"
+  "MetOffice/um_meta"
+  "MetOffice/socrates-spectral"
+  "MetOffice/moci"
+)
+
+# -- Extract labels and colors
+
+for repo in "${repos[@]}"; do
+  echo "Processing labels in repository: $repo"
+  for label in "${labels[@]}"; do
+    name=$(echo "$label" | cut -d'|' -f1)
+    color=$(echo "$label" | cut -d'|' -f2)
+    description=$(echo "$label" | cut -d'|' -f3)
+    linked_repo=$(echo "$label" | grep -oP 'MetOffice/\w+' || true)
+
+    [[ "$repo" == "$linked_repo" ]] && continue
+
+    if [[ "$ADD_LABELS" == true ]]; then
+      gh label create "$name" \
+        --color "$color" \
+        --description "$description" \
+        --force \
+        --repo "$repo"
+    fi
+    if [[ "$DELETE_LABELS" == true ]]; then
+      gh label delete "$name" --yes --repo "$repo" || true
+    fi
+  done
+done
+
+if [[ "$ADD_LABELS" == true ]]; then
+  echo "Labels added."
+elif [[ "$DELETE_LABELS" == true ]]; then
+  echo "Labels deleted."
+fi
