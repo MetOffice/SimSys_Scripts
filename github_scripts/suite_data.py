@@ -341,6 +341,8 @@ class SuiteData:
             if row[0] in ("g", "group"):
                 groups = row[1].strip("[]'\"").split(",")
                 break
+        if groups is None:
+            groups = "suite_default"
         return groups
 
     def get_task_states(self) -> Dict[str, str]:
