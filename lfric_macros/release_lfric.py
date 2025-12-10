@@ -22,6 +22,8 @@ import os
 import re
 import socket
 import subprocess
+import shutil
+import shlex
 
 from apply_macros import (
     ApplyMacros,
@@ -54,7 +56,7 @@ def run_command(command, timelimit=120):
         - result object from subprocess.run
     """
     result = subprocess.run(
-        command.split(),
+        shlex.split(command),
         capture_output=True,
         text=True,
         timeout=timelimit,
@@ -81,20 +83,25 @@ def set_dependency_path(args):
     LFRic Core source
     """
 
-    print("[INFO] Updating dependencies.sh Core source")
+    print("[INFO] Updating dependencies.yaml Core source")
 
     hostname = socket.gethostname()
-    dep_path = os.path.join(args.apps, "dependencies.sh")
+    dep_path = os.path.join(args.apps, "dependencies.yaml")
     with open(dep_path) as f:
         lines = f.readlines()
+    in_core = False
     for i, line in enumerate(lines):
-        if line.strip().startswith("export lfric_core_rev"):
-            lines[i] = "export lfric_core_rev=\n"
-        if line.strip().startswith("export lfric_core_sources"):
-            lines[i] = (
-                "export lfric_core_sources="
-                f"{hostname}:{os.path.abspath(args.core)}\n"
-            )
+        if line.strip().startswith("lfric_core"):
+            in_core = True
+        elif in_core and "source:" in line:
+            prefix, _, _ = line.partition("source:")
+            line = f"{prefix}source: {hostname}:{os.path.abspath(args.core)}\n"
+        elif in_core and "ref:" in line:
+            prefix, _, _ = line.partition("ref:")
+            line = f"{prefix}ref:"
+        elif in_core:
+            break
+        lines[i] = line
     with open(dep_path, "w") as f:
         f.write("".join(x for x in lines))
 
@@ -216,8 +223,16 @@ def copy_head_meta(meta_dirs, args):
     for meta_dir in meta_dirs:
         head = os.path.join(meta_dir, "HEAD")
         new = os.path.join(meta_dir, args.version)
-        command = f"fcm cp {head} {new}"
-        result = run_command(command)
+        shutil.copytree(head, new)
+        if args.core in new:
+            new = new.removeprefix(args.core)
+            new = new.lstrip("/")
+            command = f"git -C {args.core} add {new}"
+        elif args.apps in new:
+            new = new.removeprefix(args.apps)
+            new = new.lstrip("/")
+            command = f"git -C {args.apps} add {new}"
+        _ = run_command(command)
 
 
 def update_meta_import_path(meta_dirs, args):
@@ -264,8 +279,18 @@ def copy_versions_files(meta_dirs, args):
     for meta_dir in meta_dirs:
         versions_file = os.path.join(meta_dir, "versions.py")
         upgrade_file = os.path.join(meta_dir, upgrade_name)
-        command = f"fcm cp {versions_file} {upgrade_file}"
-        result = run_command(command)
+        if not os.path.exists(versions_file):
+            raise FileNotFoundError(f"The file {versions_file} doesn't exist")
+        shutil.copyfile(versions_file, upgrade_file)
+        if args.core in upgrade_file:
+            upgrade_file = upgrade_file.removeprefix(args.core)
+            upgrade_file = upgrade_file.lstrip("/")
+            command = f"git -C {args.core} add {upgrade_file}"
+        elif args.apps in upgrade_file:
+            upgrade_file = upgrade_file.removeprefix(args.apps)
+            upgrade_file = upgrade_file.lstrip("/")
+            command = f"git -C {args.apps} add {upgrade_file}"
+        _ = run_command(command)
 
     return upgrade_name
 
@@ -321,8 +346,7 @@ def update_versions_file(meta_dirs, upgrade_name):
 
     for meta_dir in meta_dirs:
         versions_file = os.path.join(meta_dir, "versions.py")
-        command = f"cp {template_path} {versions_file}"
-        result = run_command(command)
+        shutil.copyfile(template_path, versions_file)
         add_new_import(versions_file, upgrade_name)
 
 

@@ -74,7 +74,7 @@ class SuiteReport(SuiteData):
         self.suite_starttime: str = self.get_suite_starttime()
         self.workflow_id: str = self.get_workflow_id()
         self.task_states: Dict[str, str] = self.get_task_states()
-        self.groups: str = self.read_groups_run()
+        self.groups: List[str] = self.read_groups_run()
         self.rose_data: Dict[str, str] = self.read_rose_conf()
         self.dependencies: Dict[str, Dict] = self.read_dependencies()
         self.primary_source: str = self.determine_primary_source()
@@ -97,9 +97,8 @@ class SuiteReport(SuiteData):
         if branch_name and branch_name not in ("main", "stable", "trunk"):
             ref = branch_name
         else:
-            ref = (
-                self.run_command(f"git -C {source} rev-parse HEAD").stdout().strip("\n")
-            )
+            result = self.run_command(f"git -C {source} rev-parse HEAD", rval=True)
+            ref = result.stdout.strip("\n")
 
         remote = self.run_command(f"git -C {source} remote -v", rval=True).stdout.split(
             "\n"
