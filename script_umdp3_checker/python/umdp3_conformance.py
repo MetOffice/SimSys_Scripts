@@ -111,6 +111,18 @@ class StyleChecker(ABC):
         """Run the style checker on a file."""
         pass
 
+    @classmethod
+    def from_full_list(cls,
+                       name: str,
+                       file_extensions: Set[str],
+                       check_functions: Dict[str, Callable],
+                       all_files: List[Path]
+                       ) -> 'StyleChecker':
+        """Create a StyleChecker instance filtering files from a full list."""
+        filtered_files = cls.filter_files(all_files, file_extensions)
+        return cls(name, file_extensions,
+                   check_functions, filtered_files)
+    
     @staticmethod
     def filter_files(files: List[Path],
                      file_extensions: Set[str] = set()
@@ -324,7 +336,12 @@ def process_arguments():
         prog="umdp3_conformance.py",
         description="""UMDP3 Conformance Checker""",
         epilog="T-T-T-T-That's all folks !!")
-    parser.add_argument("--path", type=str, default="./",
+    parser.add_argument("-f", "--file-types",
+                        type=List[str], nargs='+',
+                        default=["Fortran"],
+                        choices=["Fortran", "Python"],
+                        help="File types to check, comma-separated")
+    parser.add_argument("-p", "--path", type=str, default="./",
                         help="path to repository")
     parser.add_argument("--branch", type=str, default="HEAD",
                         help="Branch to check")
@@ -332,8 +349,6 @@ def process_arguments():
                         help="Base branch for comparison")
     parser.add_argument("--checker-configs", type=str, default=None,
                         help="Checker configuration file")
-    parser.add_argument("--file-types", type=List[str], default=["Fortran"],
-                        help="File types to check, comma-separated")
     return parser.parse_args()
 
 def which_cms_is_it(path: str) -> CMSSystem:
@@ -367,12 +382,8 @@ if __name__ == "__main__":
         for changed_file in cms.get_changed_files():
             print(f"  {changed_file}")
     
-    active_checkers = []
     file_extensions = set()
-    fortran_file_checker = UMDP3_checker("Default Non Checker",
-                                         set(),
-                                         {},
-                                         [Path(f) for f in cms.get_changed_files()])
+    active_checkers = []
 
     # Configure checkers
     # ToDo : Uncertain as to how flexible this needs to be.
@@ -388,7 +399,7 @@ if __name__ == "__main__":
     
     if args.file_types:
         # Filter checkers based on file types.
-        if args.file_types == ["Fortran"]:
+        if "Fortran" in args.file_types:
             file_extensions = {".f", ".for", ".f90",
                                ".f95", ".f03", ".f08",
                                ".F90"}
@@ -397,12 +408,15 @@ if __name__ == "__main__":
             fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
             print("Configuring Fortran checkers:")
             checkers = fortran_diff_table | fortran_file_table
-            fortran_file_checker = UMDP3_checker("Fortran Checker",
-                                                 file_extensions,
-                                                 checkers,
-                                                 [Path(f) for f in cms.get_changed_files()])
-    else:
-        print("No file types specified, Defaulting to Python external checkers.")
+            # fortran_file_checker = UMDP3_checker("Fortran Checker",
+            #                                      file_extensions,
+            #                                      checkers,
+            #                                      [Path(f) for f in cms.get_changed_files()])
+            fortran_file_checker = UMDP3_checker.from_full_list("Fortran Checker", file_extensions, checkers, [Path(f) for f in cms.get_changed_files()])
+                                                            
+            active_checkers.append(fortran_file_checker)
+    elif "Python" in args.file_types:
+        print("Setting up Python external checkers.")
         file_extensions = {".py"}
         """ToDo : To make this conform to type checking, there should be a way of making each check a dict item with name and a callable.
         For now, just assume each checker is an external command represented as a list of strings."""
@@ -415,18 +429,18 @@ if __name__ == "__main__":
                                               file_extensions,
                                               checkers,
                                               [Path(f) for f in cms.get_changed_files()])
-        fortran_file_checker = python_file_checker
-    file_extensions = {".py"}
-    checkers = {
-        "flake 8" : ["flake8"],
-        "black"   : ["black", "--check"],
-        "pylint"  : ["pylint"],
-    }
-    python_file_checker = ExternalChecker("Python External Checkers",
-                                            file_extensions,
-                                            checkers,
-                                            [Path(f) for f in cms.get_changed_files()])
-    active_checkers = [python_file_checker, fortran_file_checker]
+        active_checkers.append(python_file_checker)
+    # file_extensions = {".py"}
+    # checkers = {
+    #     "flake 8" : ["flake8"],
+    #     "black"   : ["black", "--check"],
+    #     "pylint"  : ["pylint"],
+    # }
+    # python_file_checker = ExternalChecker("Python External Checkers",
+    #                                         file_extensions,
+    #                                         checkers,
+    #                                         [Path(f) for f in cms.get_changed_files()])
+    # active_checkers.append(python_file_checker)
     # ToDo : Should probably create a list of style checkers based on
     #  file types. Where each one filters out files it doesn't
     #  care about. Then create a conformance checker for each
