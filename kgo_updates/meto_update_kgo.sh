@@ -202,19 +202,8 @@ fi
 # This process will need modifying as we go forward
 # Currently hardcoded to UM kgo as lfricinputs not on ex machines
 if [[ $succeeded_ex1a -eq 1 ]]; then
-    printf "${GREEN}\n\nrsyncing the kgo to exz + 2nd Host Zone.\n${NC}"
+    printf "${GREEN}\n\nrsyncing the kgo to 2nd Host Zone + EXZ.\n${NC}"
     host_from=$(rose host-select "$ex_kgo_host")
-
-    # rsync to EXZ
-    rsync_com="ssh -Y ${host_from} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
-    sudo -iu ${root_user} bash -c "$rsync_com"
-    rc=$?
-    if [[ $rc -ne 0 ]]; then
-        printf "${RED}The rsync to the exz has failed.\n${NC}"
-    else
-        printf "${GREEN}The rsync to the exz has succeeded.\n${NC}"
-    fi
-    rc=
 
     # rsync to 2nd Host Zone
     host_to=$(rose host-select "$ex_rsync_host")
@@ -225,6 +214,17 @@ if [[ $succeeded_ex1a -eq 1 ]]; then
         printf "${RED}The rsync to the ${host_to} has failed.\n${NC}"
     else
         printf "${GREEN}The rsync to the ${host_to} has succeeded.\n${NC}"
+    fi
+    rc=
+
+    # rsync to EXZ
+    rsync_com="ssh -Y ${host_from} 'rsync -av /common/internal/umdir/standard_jobs/${rsync_dir} login.exz:/common/umdir/standard_jobs/${rsync_dir}'"
+    sudo -iu ${root_user} bash -c "$rsync_com"
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+        printf "${RED}The rsync to the exz has failed.\n${NC}"
+    else
+        printf "${GREEN}The rsync to the exz has succeeded.\n${NC}"
     fi
     rc=
 elif [[ $platforms == *"ex1a"* ]]; then
