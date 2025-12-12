@@ -84,11 +84,11 @@ class ProjectData:
             cr = ""
             sr = ""
             if "code Review" in review:
-                cr = f"{review['code Review']}"
+                cr = review['code Review']
                 self.review_data.append((review["code Review"], review["repository"]))
 
             if "sciTech Review" in review:
-                sr = f"{review['sciTech Review']}"
+                sr = review['sciTech Review']
                 self.review_data.append(
                     (review["sciTech Review"], review["repository"])
                 )
