@@ -72,7 +72,7 @@ class ProjectData:
                     json.dump(self.data, f)
                 print(
                     "Project data saved to test.json. Use --test to run with"
-                    "the captured data."
+                    " the captured data."
                 )
 
     def filter_reviewers(self, test: bool = False):
