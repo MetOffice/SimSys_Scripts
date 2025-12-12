@@ -3,7 +3,6 @@ import json
 import subprocess
 from pathlib import Path
 
-from awscli.testutils import capture_output
 from prettytable import PrettyTable
 
 lfric_repositories = [
