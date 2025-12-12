@@ -70,6 +70,10 @@ class ProjectData:
                 file = Path(__file__).with_name("test.json")
                 with open(file, "w") as f:
                     json.dump(self.data, f)
+                print(
+                    "Project data saved to test.json. Use --test to run with"
+                    "the captured data."
+                )
 
     def filter_reviewers(self, test: bool = False):
         """
