@@ -91,10 +91,14 @@ class ProjectData:
                 )
 
             if test and (cr or sr):
-                print("SciTech:", f"{sr: <18}",
-                      "Code:", f"{cr: <18}",
-                      f"{review['repository']: <50}",
-                      review["title"])
+                print(
+                    "SciTech:",
+                    f"{sr: <18}",
+                    "Code:",
+                    f"{cr: <18}",
+                    f"{review['repository']: <50}",
+                    review["title"],
+                )
 
     def one_repo(self, repository: str) -> list:
         """
@@ -249,7 +253,7 @@ def parse_args():
     parser.add_argument(
         "--capture_project",
         action="store_true",
-        help="Capture the current project status into the test file"
+        help="Capture the current project status into the test file",
     )
 
     return parser.parse_args()
