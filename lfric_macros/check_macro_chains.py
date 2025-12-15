@@ -98,10 +98,26 @@ def compare_tags(before, after, path, errors):
         ) + "\n".join(x for x in single_tags)
 
 
+def check_fcm():
+    """
+    Check if this script is being run for a fcm working copy and fail gracefully
+    if so.
+    """
+    dependency = os.path.join(os.environ["SOURCE_ROOT"], "apps", "dependencies.sh")
+
+    if os.path.exists(dependency):
+        raise Exception(
+            "[ERROR] check_macro_chains.py no longer works with FCM sources. "
+            "Please ignore this error until you have migrated your work "
+            "to GitHub. Thank you"
+        )
+
+
 def main():
     """
     Main function of the program
     """
+    check_fcm()
 
     source_apps = os.path.join(os.environ["SOURCE_ROOT"], "lfric_apps")
     source_core = os.path.join(os.environ["SOURCE_ROOT"], "lfric_core")
