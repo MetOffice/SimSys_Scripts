@@ -40,14 +40,14 @@ class ProjectData:
     review_data: list Data filtered to contain a list of review tuples
     """
 
-    def __init__(self, test: bool = False):
+    def __init__(self, test: bool = False, capture: bool = False):
         self.data = {}
         self.review_data = []
 
-        self.fetch_project_data(test)
-        self.filter_reviewers()
+        self.fetch_project_data(test, capture)
+        self.filter_reviewers(test)
 
-    def fetch_project_data(self, test: bool):
+    def fetch_project_data(self, test: bool, capture: bool):
         """
         Retrieve data from GitHub API or a from a test file.
         """
@@ -66,18 +66,41 @@ class ProjectData:
 
             self.data = json.loads(output.stdout)
 
-    def filter_reviewers(self):
+            if capture:
+                file = Path(__file__).with_name("test.json")
+                with open(file, "w") as f:
+                    json.dump(self.data, f)
+                print(
+                    "Project data saved to test.json. Use --test to run with"
+                    " the captured data."
+                )
+
+    def filter_reviewers(self, test: bool = False):
         """
         Filter the data to create a list of review tuples
         """
         all_reviews = self.data["items"]
         for review in all_reviews:
+            cr = ""
+            sr = ""
             if "code Review" in review:
+                cr = review["code Review"]
                 self.review_data.append((review["code Review"], review["repository"]))
 
             if "sciTech Review" in review:
+                sr = review["sciTech Review"]
                 self.review_data.append(
                     (review["sciTech Review"], review["repository"])
+                )
+
+            if test and (cr or sr):
+                print(
+                    "SciTech:",
+                    f"{sr: <18}",
+                    "Code:",
+                    f"{cr: <18}",
+                    f"{review['repository']: <50}",
+                    review["title"],
                 )
 
     def one_repo(self, repository: str) -> list:
@@ -230,14 +253,19 @@ def parse_args():
         action="store_true",
         help="Use test input files.",
     )
+    parser.add_argument(
+        "--capture_project",
+        action="store_true",
+        help="Capture the current project status into the test file",
+    )
 
     return parser.parse_args()
 
 
-def main(total: bool, test: bool):
+def main(total: bool, test: bool, capture_project: bool):
 
     # Extract data from github about the reviews and team members.
-    data = ProjectData(test)
+    data = ProjectData(test, capture_project)
 
     other_team = Team(test=test)
     other_team.members = other_reviewers
@@ -271,4 +299,4 @@ def main(total: bool, test: bool):
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.total, args.test)
+    main(args.total, args.test, args.capture_project)
