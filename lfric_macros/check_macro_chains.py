@@ -109,7 +109,7 @@ def check_fcm():
     if os.path.exists(dependency):
         raise Exception(
             "[ERROR] check_macro_chains.py no longer works with FCM sources. "
-            "Please ignore this error until you have migrated your work"
+            "Please ignore this error until you have migrated your work "
             "to GitHub. Thank you"
         )
 
