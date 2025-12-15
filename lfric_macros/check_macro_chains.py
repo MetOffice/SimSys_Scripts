@@ -105,7 +105,6 @@ def check_fcm():
     """
     dependency = os.path.join(os.environ["SOURCE_ROOT"], "apps", "dependencies.sh")
 
-    print ("check FCM")
     if os.path.exists(dependency):
         raise Exception(
             "[ERROR] check_macro_chains.py no longer works with FCM sources. "
