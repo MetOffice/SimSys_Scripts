@@ -121,7 +121,6 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     # Trailing slash required for rsync
     # Respect .gitignore for rsync
     command = f"rsync -av {repo_source}/ {loc} --filter=':- .gitignore'"
-    print("rsync command: ", command)
     run_command(command)
 
     # Fetch the main branch from origin
