@@ -506,12 +506,14 @@ class UMDP3:
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def cpp_comment(self, lines: List[str]) -> int:
+    def cpp_comment(self, lines: List[str]) -> TestResult:
         """Check for Fortran comments in CPP directives"""
         """Todo: This looks like it will incorrectly fail # if !defined(X)
         How did the original do this test?"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             match = re.search(r'^\s*#if *(!)?defined\s*\(\s*\w+\s*\)(.*)', line) or re.search(r'^\s*#(else) *(.*)', line)
             if match:
                 # print(f"Debug: Found CPP directive line: {line}")
@@ -521,8 +523,13 @@ class UMDP3:
                 if re.search(r'.*!', match.group(2)):
                     self.add_extra_error("Fortran comment in CPP directive")
                     failures += 1
+                    error_log = self.add_error_log(error_log,
+                                    "Fortran comment in CPP directive",
+                                    count + 1)
         
-        return failures
+        return TestResult(checker_name="Fortran comment in CPP directive",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
     def obsolescent_fortran_intrinsic(self, lines: List[str]) -> TestResult:
         """Check for archaic Fortran intrinsic functions"""

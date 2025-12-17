@@ -44,7 +44,7 @@ class OldUMDP3Checks:
             'Used Subversion keyword substitution which is prohibited': self.umdp3.svn_keyword_subst,
             'Used !OMP instead of !$OMP': self.umdp3.omp_missing_dollar,
             'Used #ifdef or #ifndef rather than #if defined() or #if !defined()': self.umdp3.cpp_ifdef,
-            # 'Presence of fortran comment in CPP directive': self.umdp3.cpp_comment,
+            'Presence of fortran comment in CPP directive': self.umdp3.cpp_comment,
             'Used an archaic fortran intrinsic function': self.umdp3.obsolescent_fortran_intrinsic,
             'EXIT statements should be labelled': self.umdp3.exit_stmt_label,
             'Intrinsic modules must be USEd with an INTRINSIC keyword specifier': self.umdp3.intrinsic_modules,
