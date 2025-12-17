@@ -12,6 +12,7 @@ import subprocess
 from typing import Optional
 from pathlib import Path
 from shutil import rmtree
+import shlex
 
 
 def run_command(
@@ -24,7 +25,7 @@ def run_command(
     Outputs:
         - result object from subprocess.run
     """
-    command = command.split()
+    command = shlex.split(command)
     result = subprocess.run(
         command,
         capture_output=True,
@@ -118,7 +119,8 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     loc.mkdir(parents=True)
 
     # Trailing slash required for rsync
-    command = f"rsync -av {repo_source}/ {loc}"
+    # Respect .gitignore for rsync
+    command = f"rsync -av {repo_source}/ {loc} --filter=':- .gitignore'"
     run_command(command)
 
     # Fetch the main branch from origin
