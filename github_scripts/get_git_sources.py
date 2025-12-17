@@ -12,6 +12,7 @@ import subprocess
 from typing import Optional
 from pathlib import Path
 from shutil import rmtree
+import shlex
 
 
 def run_command(
@@ -24,7 +25,7 @@ def run_command(
     Outputs:
         - result object from subprocess.run
     """
-    command = command.split()
+    command = shlex.split(command)
     result = subprocess.run(
         command,
         capture_output=True,
