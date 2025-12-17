@@ -166,17 +166,11 @@ class SuiteReport(SuiteData):
 
     def create_task_tables(self, parsed_tasks: Dict[str, List[str]]) -> None:
         """
-        Create tables containing summary of task states and number of tasks run
+        Create tables containing summary of task states and number of tasks won
         """
 
         # Ensure pink failures and then normal failures appear at the top
-        # Succeeded will come last
-        sort_order = {
-            "pink failure": 0,
-            "failed": 1,
-            "submit-failed": 2,
-            "succeeded": 9999,
-        }
+        sort_order = {"pink failure": 0, "failed": 1, "submit-failed": 2}
         order = list(parsed_tasks.keys())
         order.sort(key=lambda val: sort_order.get(val, len(sort_order)))
 
@@ -189,25 +183,21 @@ class SuiteReport(SuiteData):
 
         # Create Collapsed task tables
         for state in order:
-            emoji = state_emojis.get(state, "grey_question")
+            emoji = state_emojis[state]
             tasks = parsed_tasks[state]
             if not tasks:
                 continue
             if state == "pink failure":
                 state = self.pink_text
-            if state == "succeeded":
-                self.trac_log.append(f"{emoji} {state} - tasks - {len(tasks)}")
-                self.trac_log.append("")
-            else:
-                self.trac_log.append(self.open_collapsed)
-                self.trac_log.append(
-                    f"<summary>{emoji} {state} tasks - {len(tasks)}</summary>"
-                )
-                self.trac_log.append("")
-                self.trac_log.extend(create_markdown_row("Task", "State", header=True))
-                for task in sorted(tasks):
-                    self.trac_log.extend(create_markdown_row(task, state))
-                self.trac_log.append(self.close_collapsed)
+            self.trac_log.append(self.open_collapsed)
+            self.trac_log.append(
+                f"<summary>{emoji} {state} tasks - {len(tasks)}</summary>"
+            )
+            self.trac_log.append("")
+            self.trac_log.extend(create_markdown_row("Task", "State", header=True))
+            for task in sorted(tasks):
+                self.trac_log.extend(create_markdown_row(task, state))
+            self.trac_log.append(self.close_collapsed)
 
     def create_um_code_owner_table(self, owners: Dict) -> None:
         """
