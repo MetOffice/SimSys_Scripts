@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from umdp3 import UMDP3
-from umdp3_dispatch_tables import UMDP3DispatchTables
+from script_umdp3_checker.python.old_umdp3_checks import UMDP3DispatchTables
 
 def test_basic_functionality():
     """Test basic UMDP3 functionality"""

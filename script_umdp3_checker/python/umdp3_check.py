@@ -27,7 +27,7 @@ from dataclasses import dataclass
 # Import our modules
 from umdp3 import UMDP3
 from umdp3_critic_policy import UMDP3CriticPolicy
-from umdp3_dispatch_tables import UMDP3DispatchTables
+from old_umdp3_checks import OldUMDP3Checks
 
 # Declare version
 VERSION = '13.5.0'
@@ -118,7 +118,7 @@ def main():
     #global_state.fortran_includes = set(includes)
     
     # Initialize dispatch tables
-    dispatch_tables = UMDP3DispatchTables()
+    dispatch_tables = OldUMDP3Checks()
     
     # Start branch checking
     is_trunk, error_trunk = check_branch_info(branch, suite_mode)
@@ -423,7 +423,7 @@ def trunk_files_parse(file_chunk: List[str], global_state: GlobalState,
     
     return 0
 
-def run_all_checks(global_state: GlobalState, dispatch_tables: UMDP3DispatchTables,
+def run_all_checks(global_state: GlobalState, dispatch_tables: OldUMDP3Checks,
                    branch: str, trunkmode: bool, max_threads: int, 
                    log_cylc: str) -> int:
     """Run all compliance checks"""
@@ -476,7 +476,7 @@ def run_all_checks(global_state: GlobalState, dispatch_tables: UMDP3DispatchTabl
     return sum(global_state.exit_threads)
 
 def run_checks(file_chunk: List[str], global_state: GlobalState,
-               dispatch_tables: UMDP3DispatchTables, branch: str, 
+               dispatch_tables: OldUMDP3Checks, branch: str, 
                trunkmode: bool, thread_id: int, log_cylc: str) -> int:
     """Run checks for a chunk of files"""
     for modified_file in file_chunk:

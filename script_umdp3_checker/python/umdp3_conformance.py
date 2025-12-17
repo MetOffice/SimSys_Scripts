@@ -11,7 +11,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from github_scripts import git_bdiff
 import fcm_bdiff
-from umdp3_dispatch_tables import UMDP3DispatchTables
+from old_umdp3_checks import OldUMDP3Checks
+from umdp3 import TestResult
 
 """
 Framework and Classes to generate a list of files to check for style
@@ -20,13 +21,14 @@ conformance, and to run relevant style checkers on those files.
 
 import concurrent.futures
 
-@dataclass
-class TestResult:
-    """Result from running a single style checker test on a file."""
-    checker_name: str = "Unnamed Checker"
-    failure_count: int = 0
-    passed: bool = False
-    output: str = ""
+# @dataclass
+# class TestResult:
+#     """Result from running a single style checker test on a file."""
+#     checker_name: str = "Unnamed Checker"
+#     failure_count: int = 0
+#     passed: bool = False
+#     output: str = ""
+#     errors: str = ""
 
 @dataclass
 class CheckResult:
@@ -40,7 +42,7 @@ class CMSSystem(ABC):
     """Abstract base class for CMS systems like git or FCM."""
     
     @abstractmethod
-    def get_changed_files(self) -> Iterable[str]:
+    def get_changed_files(self) -> List[Path]:
         """Get list of files changed between base_branch and branch."""
         pass
     
@@ -62,9 +64,10 @@ class GitBdiffWrapper(CMSSystem):
         self.bdiff_obj = git_bdiff.GitBDiff(repo=self.repo_path)
         self.info_obj = git_bdiff.GitInfo(repo=self.repo_path)
     
-    def get_changed_files(self) -> Iterable[str]:
-        """Get list of files changed between base_branch and branch."""    
-        return self.bdiff_obj.files()
+    def get_changed_files(self) -> List[Path]:
+        """Get list of files changed between base_branch and branch."""
+        return [Path(f) for f in self.bdiff_obj.files()]   
+
     
     def is_branch(self) -> bool:
         """Check if we're looking at a branch"""
@@ -82,9 +85,9 @@ class FCMBdiffWrapper(CMSSystem):
         self.repo_path = repo_path
         self.bdiff_obj = fcm_bdiff.FCMBDiff(repo=self.repo_path)
 
-    def get_changed_files(self) -> Iterable[str]:
+    def get_changed_files(self) -> List[Path]:
         """Get list of files changed between base_branch and branch."""        
-        return self.bdiff_obj.files()
+        return [Path(f) for f in self.bdiff_obj.files()]
     
     def is_branch(self) -> bool:
         """Check if we're looking at a branch"""
@@ -160,14 +163,14 @@ class UMDP3_checker(StyleChecker):
         lines = file_path.read_text().splitlines()
         file_results = []
         for check_name, check_function in self.check_functions.items():
-            failures = check_function(lines)
-            passed = failures == 0
-            file_results.append(TestResult(
-                                checker_name=check_name,
-                                failure_count=failures,
-                                passed=passed,
-                                output="Not configured yet...",
-                            ))
+            file_results.append(check_function(lines))
+            # passed = failures == 0
+            # file_results.append(TestResult(
+            #                     checker_name=check_name,
+            #                     failure_count=failures,
+            #                     passed=passed,
+            #                     output="Not configured yet...",
+            #                 ))
         tests_failed=sum([0 if result.passed else 1 for result in file_results])
         return CheckResult(
             file_path=str(file_path),
@@ -223,7 +226,8 @@ class ExternalChecker(StyleChecker):
                     checker_name=test_name,
                     failure_count=1,
                     passed=False,
-                    output=f"Checker {test_name} timed out"
+                    output=f"Checker {test_name} timed out",
+                    errors={test_name: "TimeoutExpired"}
                 ))
                 tests_failed += 1
             except Exception as e:
@@ -231,15 +235,18 @@ class ExternalChecker(StyleChecker):
                     checker_name=test_name,
                     failure_count=1,
                     passed=False,
-                    output=str(e)
+                    output=str(e),
+                    errors={test_name: str(e)}
                 ))
                 tests_failed += 1
             else:
+                error_text = result.stderr if result.stderr else ""
                 file_results.append(TestResult(
                     checker_name=test_name,
                     failure_count=0 if result.returncode == 0 else 1,
                     passed=result.returncode == 0,
-                    output=result.stdout + result.stderr,
+                    output=result.stdout,
+                    errors={test_name: error_text} if error_text else {}
                     ))
                 if result.returncode != 0:
                     tests_failed += 1
@@ -247,7 +254,7 @@ class ExternalChecker(StyleChecker):
             file_path=str(file_path),
             tests_failed=tests_failed,
             all_passed=tests_failed == 0,
-            test_results=file_results
+            test_results=file_results,
             )
     
 
@@ -257,47 +264,21 @@ class ConformanceChecker:
 
     def __init__(self, 
                  cms: CMSSystem,
-                 checkers: List[StyleChecker],     
-                 #file_extensions: Set[str] = set(), 
+                 checkers: List[StyleChecker], 
                  max_workers: int = 8,
                  changed_files: List[Path] = [],
                  results: List[CheckResult] = []):
-        #self.cms = cms
         self.checkers = checkers
-        #self.file_extensions = file_extensions
         self.max_workers = max_workers
         self.changed_files = changed_files
         self.results = results
 
-    # def is_branch(self) -> bool:
-    #     """Check if we're looking at a branch"""
-    #     """ ToDo : Suspect this is redundant here, and the "main"
-    #     code should this from the CMSSystem class."""
-    #     return self.cms.is_branch()
-    
-    # def check_branch(self, branch: str, base_branch: str = "main"):
-    #     """Check all changed files on a branch."""
-    #     changed_files = self.cms.get_changed_files(branch)
-    #     filtered_files = []
-    #     count = 0
-    #     for file in changed_files:
-    #         count += 1
-    #         path = Path(file)
-    #         if not self.file_extensions or path.suffix in self.file_extensions:
-    #             filtered_files.append(path)
-    #     print(f"Started with {count} changed files.")
-    #     print(f"Filtered down to {len(filtered_files)} files")
-    #     return filtered_files
-        
     def check_files(self) -> None:
         """Run all checkers on given files in parallel.
-        ToDo : This looks to create a task for each (file, checker) pair.
-        Given each file would need to be opened multiple times, would it be
-        more efficient to have each file opened once, and all checkers run on it
-        before moving to the next file?"""
+        Each Thread runs all of a single checker's checks on a single file.
+        Then collects all results."""
         results = []
 
-        #tasks = self.changed_files
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
              future_to_task = {
                 executor.submit(checker.check, file_path): file_path
@@ -308,38 +289,47 @@ class ConformanceChecker:
              for future in concurrent.futures.as_completed(future_to_task):
                 result = future.result()
                 results.append(result)
-                #print(f"Completed check for file: {result.file_path}")
         self.results = results
         return
     
-    def print_results(self, fail_only: bool = False) -> bool:
+    def print_results(self, fail_only: bool = False, full_volume: bool = False) -> bool:
         """Print results and return True if all checks passed."""
         all_passed = True
-        
         for result in self.results:
             file_status = "✓ PASS" if result.all_passed else "✗ FAIL"
             all_passed = all_passed and result.all_passed
-            print(f"\nResults for file : {result.file_path} : {file_status}")
+            print(f"\n{file_status:7s} file : {result.file_path:50s}\n")
             if fail_only and result.all_passed:
                 continue
             for test_result in result.test_results:
                 if fail_only and test_result.passed:
                     continue
-                print(f"  [{test_result.checker_name}] : ✗ FAIL")
-                print(f"      {test_result.output}")
+                if full_volume:
+                    print(" "*5 + "-" * 50 +
+                          " "*5 + f"\n     {test_result.checker_name} Output :\n" +
+                          " "*5 + f"{test_result.output}\n" + " "*5 + "-" * 50)
+                    if test_result.errors:
+                        print(" "*5 + "-=-" * 30)
+                        print(" "*5 + f" Std Error :")
+                        for count, (title, info) in enumerate(test_result.errors.items()):
+                            print(f"      {count:2} : {title} : {info}")
+                        print(" "*5 + "-=-" * 30)
+                else:
+                    print(f"     {test_result.checker_name:60s} : ✗ FAIL")
         return all_passed
 
 def process_arguments():
     """Process command line arguments.
     Somewhat a work in progress, but it's going to be needed eventually."""
+    print(sys.argv)
     parser = argparse.ArgumentParser(
         prog="umdp3_conformance.py",
         description="""UMDP3 Conformance Checker""",
         epilog="T-T-T-T-That's all folks !!")
     parser.add_argument("-f", "--file-types",
-                        type=List[str], nargs='+',
-                        default=["Fortran"],
+                        type=str, nargs='+',
                         choices=["Fortran", "Python"],
+                        default=["Fortran", "Python"],
                         help="File types to check, comma-separated")
     parser.add_argument("-p", "--path", type=str, default="./",
                         help="path to repository")
@@ -357,17 +347,56 @@ def which_cms_is_it(path: str) -> CMSSystem:
     if (repo_path / ".git").is_dir():
         return GitBdiffWrapper(repo_path)
     elif (repo_path / ".svn").is_dir():
-        # If we still want this to work reliably with FCM, it will need
-        # to also accept URLs and not just local paths.
+        """ToDo : If we still want this to work reliably with FCM, it will need
+           to also accept URLs and not just local paths."""
         return FCMBdiffWrapper(repo_path)
     else:
         raise RuntimeError("Unknown CMS type at path: " + str(path))
-    
+
+def create_style_checkers(file_types: List[str],
+                          changed_files: List[Path]
+                          ) -> List[StyleChecker]:
+    """Create style checkers based on requested file types."""
+    checkers = []
+    if "Fortran" in file_types:
+        file_extensions = {".f", ".for", ".f90",
+                           ".f95", ".f03", ".f08",
+                           ".F90"}
+        dispatch_tables = OldUMDP3Checks()
+        fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
+        fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
+        print("Configuring Fortran checkers:")
+        combined_checkers = fortran_diff_table | fortran_file_table
+        fortran_file_checker = UMDP3_checker.from_full_list(
+            "Fortran Checker",
+            file_extensions,
+            combined_checkers,
+            changed_files
+        )
+        checkers.append(fortran_file_checker)
+    if "Python" in file_types:
+        print("Setting up Python external checkers.")
+        file_extensions = {".py"}
+        python_checkers = {
+            "flake 8" : ["flake8", "-q"],
+            "black"   : ["black", "--check"],
+            "pylint"  : ["pylint", "-E"],
+            #"ruff"    : ["ruff", "check"],
+        }
+        python_file_checker = ExternalChecker(
+            "Python External Checkers",
+            file_extensions,
+            python_checkers,
+            changed_files
+        )
+        checkers.append(python_file_checker)
+    return checkers
+
 # Example usage
 if __name__ == "__main__":
     args = process_arguments()
 
-    # Configure CMS
+    # Configure CMS, and check we've been passed a branch
     cms = which_cms_is_it(args.path)
     branch_name = cms.get_branch_name()
     if not cms.is_branch():
@@ -381,103 +410,48 @@ if __name__ == "__main__":
         print("The files changed on this branch are:")
         for changed_file in cms.get_changed_files():
             print(f"  {changed_file}")
-    
-    file_extensions = set()
-    active_checkers = []
+
 
     # Configure checkers
     # ToDo : Uncertain as to how flexible this needs to be.
-    #  For now, just configure UMDP3 Fortran checkers if
-    #  the 'Fortran' file type is requested.
+    #  For now, just configure checkers based on file type requested.
     if args.checker_configs:
         # Load checkers from configuration file (not implemented)
         print("Checker configuration from file not implemented. - Yet!")
         pass
     else:
-        checkers = [
-        ]
+        checkers = []
     
-    if args.file_types:
-        # Filter checkers based on file types.
-        if "Fortran" in args.file_types:
-            file_extensions = {".f", ".for", ".f90",
-                               ".f95", ".f03", ".f08",
-                               ".F90"}
-            dispatch_tables = UMDP3DispatchTables()
-            fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
-            fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
-            print("Configuring Fortran checkers:")
-            checkers = fortran_diff_table | fortran_file_table
-            # fortran_file_checker = UMDP3_checker("Fortran Checker",
-            #                                      file_extensions,
-            #                                      checkers,
-            #                                      [Path(f) for f in cms.get_changed_files()])
-            fortran_file_checker = UMDP3_checker.from_full_list("Fortran Checker", file_extensions, checkers, [Path(f) for f in cms.get_changed_files()])
-                                                            
-            active_checkers.append(fortran_file_checker)
-    elif "Python" in args.file_types:
-        print("Setting up Python external checkers.")
-        file_extensions = {".py"}
-        """ToDo : To make this conform to type checking, there should be a way of making each check a dict item with name and a callable.
-        For now, just assume each checker is an external command represented as a list of strings."""
-        checkers = {
-            "flake 8" : ["flake8"],
-            "black"   : ["black", "--check"],
-            "pylint"  : ["pylint"],
-        }
-        python_file_checker = ExternalChecker("Python External Checkers",
-                                              file_extensions,
-                                              checkers,
-                                              [Path(f) for f in cms.get_changed_files()])
-        active_checkers.append(python_file_checker)
-    # file_extensions = {".py"}
-    # checkers = {
-    #     "flake 8" : ["flake8"],
-    #     "black"   : ["black", "--check"],
-    #     "pylint"  : ["pylint"],
-    # }
-    # python_file_checker = ExternalChecker("Python External Checkers",
-    #                                         file_extensions,
-    #                                         checkers,
-    #                                         [Path(f) for f in cms.get_changed_files()])
-    # active_checkers.append(python_file_checker)
-    # ToDo : Should probably create a list of style checkers based on
-    #  file types. Where each one filters out files it doesn't
-    #  care about. Then create a conformance checker for each
+    active_checkers = create_style_checkers(
+        args.file_types,
+        cms.get_changed_files()
+        )
+
+    # ToDo : Could create a conformance checker for each
     #  file type.
-    #  Current assumption is that we're only dealing
-    #  with Fortran files and the checkers are organised by file_types argument.
-    # Create conformance checker
+    #  Currently, just create a single conformance checker
+    #  with all active checkers.
     checker = ConformanceChecker(cms,
                                  active_checkers,
-                                 #file_extensions,
                                  max_workers=8,
                                  changed_files=[Path(f) for f in cms.get_changed_files()]
                                  )
 
-    # Check current branch
-
-    # checker.check_branch(args.branch, args.base_branch)
-    # for file in checker.changed_files:
-    #     print(file) 
     checker.check_files()
-    for result in checker.results:
-        if result.all_passed:
-            print(f"Result for {result.file_path} is : [OK]")
-        else:
-            print(f"Result for {result.file_path} is : [FAIL]")
 
+    # for result in checker.results:
+    #     if result.all_passed:
+    #         print(f"Result for {result.file_path} is : [OK]")
+    #     else:
+    #         print(f"Result for {result.file_path} is : [FAIL]")
+
+    """In this call, turning on 'full_volume' would provide more verbose
+       output on failures, if needed.
+       However, the volume of output from the python checkers can be
+       overwhelming, and that from the Fortran ones is practically
+       non-existant, so it's set False for now."""
+    all_passed = checker.print_results(fail_only=True, full_volume=True)
     print(f"Total files checked: {len(checker.results)}")
     print(f"Total files failed: {sum(1 for r in checker.results if not r.all_passed)}")
 
-    # for result in checker.results:
-    #     if not result.all_passed:
-    #         print(f"\nDetails for failed file: {result.file_path}")
-    #         for test_result in result.test_results:
-    #             if not test_result.passed:
-    #                 print(f"  Test: {test_result.checker_name} - Failures: {test_result.failure_count}")
-    #                 # print(f"    Output: {test_result.output}")
-    
-    #all_passed = checker.print_results(fail_only=True)
-    
-    #exit(0 if all_passed else 1)
+    exit(0 if all_passed else 1)

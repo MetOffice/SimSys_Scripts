@@ -16,9 +16,19 @@ from fortran_keywords import fortran_keywords
 from search_lists import (obsolescent_intrinsics, openmp_keywords, 
                           fortran_types, unseparated_keywords_list,
                           retired_ifdefs, deprecated_c_identifiers)
+from dataclasses import dataclass, field
 
 # Declare version
 VERSION = '13.5.0'
+
+@dataclass
+class TestResult:
+    """Result from running a single style checker test on a file."""
+    checker_name: str = "Unnamed Checker"
+    failure_count: int = 0
+    passed: bool = False
+    output: str = ""
+    errors: Dict = field(default_factory=Dict)
 
 class UMDP3:
     """UMDP3 compliance checker class"""
@@ -54,6 +64,14 @@ class UMDP3:
         with self._lock:
             self._extra_error_info[key] = value
 
+    def add_error_log(self, error_log: Dict, key: str = "no key", value: int = 0) -> Dict:
+        """Add extra error information to the dictionary"""
+        """ToDo: The usefulness of the information added has not been assesed, nor does it appear to be reported as yet."""
+        if key not in error_log:
+            error_log[key] = []
+        error_log[key].append(value)
+        return error_log
+
     def get_include_number(self) -> int:
         """Get number of files with variable declarations in includes"""
         """ToDo: At present, this is hardwired to zero and I don't think anything alters it along the way. Plus it doesn't seem to be called from anywhere..... So this getter is probably very redundant."""
@@ -82,15 +100,17 @@ class UMDP3:
     Although, a brief look seems to imply that there are two 'dispatch tables' one for full files and one for changed lines."""
 
     ### SCAN STOP ####
-    def capitulated_keywords(self, lines: List[str]) -> int:
+    def capitulated_keywords(self, lines: List[str]) -> TestResult:
+#    def capitulated_keywords(self, lines: List[str]) -> int:
         """Do some stuff, with print statements"""
         failures = 0
         line_count = 0
+        error_log = {}
         #print("Debug: In capitulated_keywords test")
         for line in lines:
             line_count += 1
             # Remove quoted strings and comments
-            if line.startswith("!"):
+            if line.lstrip(" ").startswith("!"):
                 continue
             clean_line = self.remove_quoted(line)
             clean_line = self.comment_line.sub("", clean_line)  # Remove comments
@@ -100,16 +120,25 @@ class UMDP3:
                 upcase = word.upper()
                 if upcase in fortran_keywords and word != upcase:
                     self.add_extra_error(f"lowercase keyword: {word}")
+                    error_log = self.add_error_log(error_log,
+                                                   f"capitulated keyword: {word}",
+                                                    line_count
+                                                   )
                     failures += 1
 
-        return line_count
+        return TestResult(checker_name="Capitulated Keywords", failure_count=failures, passed=(failures == 0),
+        output=f"Checked {line_count} lines, found {failures} failures.",
+        #errors=self.get_extra_error_information()
+        errors=error_log)
 
-    def capitalised_keywords(self, lines: List[str]) -> int:
+    def capitalised_keywords(self, lines: List[str]) -> TestResult:
         """Check for the presence of lowercase Fortran keywords, which are taken from an imported list 'fortran_keywords'."""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             # Remove quoted strings and comments
-            if line.startswith("!"):
+            if line.lstrip(" ").startswith("!"):
                 continue
             clean_line = self.remove_quoted(line)
             clean_line = self.comment_line.sub("", clean_line)  # Remove comments
@@ -120,35 +149,60 @@ class UMDP3:
                 if upcase in fortran_keywords and word != upcase:
                     self.add_extra_error(f"lowercase keyword: {word}")
                     failures += 1
+                    error_log = self.add_error_log(error_log,
+                                                   f"lowercase keyword: {word}",
+                                                    count + 1
+                                                   )
 
-        return failures
+        return TestResult(checker_name="Capitalised Keywords",                 failure_count=failures, passed=(failures == 0),
+        output=f"Checked {count+1} lines, found {failures} failures.",
+        errors=error_log)
     
-    def openmp_sentinels_in_column_one(self, lines: List[str]) -> int:
+    def openmp_sentinels_in_column_one(self, lines: List[str]) -> TestResult:
         """Check OpenMP sentinels are in column one"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if re.search(r'^\s+!\$OMP', line):
                 self.add_extra_error("OpenMP sentinel not in column 1")
                 failures += 1
-        return failures
+                error_log = self.add_error_log(error_log,
+                                    f"OpenMP sentinel not in column 1:",
+                                                    count + 1
+                                                   )
+        output=f"Checked {count+1} lines, found {failures} failures."
+        return TestResult(checker_name="Capitalised Keywords",
+                          failure_count=failures, passed=(failures == 0),
+                          output=output, errors=error_log)
 
-    def unseparated_keywords(self, lines: List[str]) -> int:
+    def unseparated_keywords(self, lines: List[str]) -> TestResult:
         """Check for omitted optional spaces in keywords"""
         failures = 0
-        
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
+            if line.lstrip(" ").startswith("!"):
+                continue
             clean_line = self.remove_quoted(line)
             for pattern in [f"\\b{kw}\\b" for kw in unseparated_keywords_list]:
                 if re.search(pattern, clean_line, re.IGNORECASE):
                     self.add_extra_error(f"unseparated keyword in line: {line.strip()}")
                     failures += 1
-        
-        return failures
+                    error_log = self.add_error_log(error_log,
+                                f"unseparated keyword in line: {line.strip()}",
+                                count + 1)
+        output=f"Checked {count+1} lines, found {failures} failures."
+        return TestResult(checker_name="Unseparated Keywords",
+                          failure_count=failures, passed=(failures == 0),
+                          output=output, errors=error_log)
 
-    def go_to_other_than_9999(self, lines: List[str]) -> int:
+    def go_to_other_than_9999(self, lines: List[str]) -> TestResult:
         """Check for GO TO statements other than 9999"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
@@ -157,28 +211,40 @@ class UMDP3:
                 if label != '9999':
                     self.add_extra_error(f"GO TO {label}")
                     failures += 1
-        
-        return failures
+                    error_log = self.add_error_log(error_log,
+                                f"GO TO {label}",
+                                count + 1)
+        output=f"Checked {count+1} lines, found {failures} failures."
+        return TestResult(checker_name="GO TO other than 9999",                 failure_count=failures, passed=(failures == 0),
+        output=output, errors=error_log)
 
-    def write_using_default_format(self, lines: List[str]) -> int:
+    def write_using_default_format(self, lines: List[str]) -> TestResult:
         """Check for WRITE without format"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
             if re.search(r'\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)', clean_line, re.IGNORECASE):
                 self.add_extra_error("WRITE(*,*) found")
                 failures += 1
-        
-        return failures
+                error_log = self.add_error_log(error_log,
+                                "WRITE(*,*) found",
+                                count + 1)
+        output=f"Checked {count+1} lines, found {failures} failures."
+        return TestResult(checker_name="WRITE using default format",                 failure_count=failures, passed=(failures == 0),
+        output=output, errors=error_log)
 
-    def lowercase_variable_names(self, lines: List[str]) -> int:
+    def lowercase_variable_names(self, lines: List[str]) -> TestResult:
         """Check for lowercase or CamelCase variable names only"""
         '''ToDo: This is a very simplistic check and will not detect many
         cases which break UMDP3. I suspect the Perl Predeccessor concattenated continuation lines prior to 'cleaning' and checking. Having identified a declaration, it also then scanned the rest of the file for that variable name in any case.'''
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
@@ -191,53 +257,83 @@ class UMDP3:
                     # print(f"Debug: Found UPPERCASE variable name: {clean_line}")
                     self.add_extra_error("UPPERCASE variable name")
                     failures += 1
+                    error_log = self.add_error_log(error_log,
+                                "UPPERCASE variable name",
+                                count + 1)
         
-        return failures
+        output=f"Checked {count+1} lines, found {failures} failures."
+        return TestResult(checker_name="Lowercase or CamelCase variable names only",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=output, errors=error_log)
 
-    def dimension_forbidden(self, lines: List[str]) -> int:
+    def dimension_forbidden(self, lines: List[str]) -> TestResult:
         """Check for use of dimension attribute"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
             if re.search(r'\bDIMENSION\b', clean_line, re.IGNORECASE):
                 self.add_extra_error("DIMENSION attribute used")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "DIMENSION attribute used",
+                                count + 1)
         
-        return failures
+        output=f"Checked {count+1} lines, found {failures} failures."
+        return TestResult(checker_name="Use of dimension attribute",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=output, errors=error_log)
 
-    def ampersand_continuation(self, lines: List[str]) -> int:
+    def ampersand_continuation(self, lines: List[str]) -> TestResult:
         """Check continuation lines shouldn't start with &"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if re.search(r'^\s*&', line):
                 self.add_extra_error("continuation line starts with &")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "continuation line starts with &",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Continuation lines shouldn't start with &",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def forbidden_keywords(self, lines: List[str]) -> int:
+    def forbidden_keywords(self, lines: List[str]) -> TestResult:
         """Check for use of EQUIVALENCE or PAUSE"""
         """ToDo: Can't believe this will allow a COMMON BLOCK....
         Need to check against what the original did.."""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
             if re.search(r'\b(EQUIVALENCE|PAUSE)\b', clean_line, re.IGNORECASE):
                 self.add_extra_error("forbidden keyword")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "forbidden keyword",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Use of forbidden keywords EQUIVALENCE or PAUSE",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def forbidden_operators(self, lines: List[str]) -> int:
+    def forbidden_operators(self, lines: List[str]) -> TestResult:
         """Check for older form of relational operators"""
         failures = 0
+        error_log = {}
+        count = -1
         old_operators = ['.GT.', '.GE.', '.LT.', '.LE.', '.EQ.', '.NE.']
         
-        for line in lines:
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
@@ -245,104 +341,170 @@ class UMDP3:
                 if op in clean_line.upper():
                     self.add_extra_error(f"old operator {op}")
                     failures += 1
+                    error_log = self.add_error_log(error_log,
+                                f"old operator {op}",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Use of older form of relational operator (.GT. etc.)",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def line_over_80chars(self, lines: List[str]) -> int:
+    def line_over_80chars(self, lines: List[str]) -> TestResult:
         """Check for lines longer than 80 characters"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if len(line.rstrip()) > 80:
                 self.add_extra_error("line too long")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "line too long",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Line longer than 80 characters",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def tab_detection(self, lines: List[str]) -> int:
+    def tab_detection(self, lines: List[str]) -> TestResult:
         """Check for tab characters"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if '\t' in line:
                 self.add_extra_error("tab character found")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "tab character found",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Line includes tab character",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def printstatus_mod(self, lines: List[str]) -> int:
+    def printstatus_mod(self, lines: List[str]) -> TestResult:
         """Check for use of printstatus_mod instead of umPrintMgr"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if re.search(r'\bUSE\s+printstatus_mod\b', line, re.IGNORECASE):
                 self.add_extra_error("printstatus_mod used")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "printstatus_mod used",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Use of printstatus_mod instead of umPrintMgr",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def printstar(self, lines: List[str]) -> int:
+    def printstar(self, lines: List[str]) -> TestResult:
         """Check for PRINT rather than umMessage and umPrint"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
             if re.search(r'\bPRINT\s*\*', clean_line, re.IGNORECASE):
                 self.add_extra_error("PRINT * used")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "PRINT * used",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Use of PRINT rather than umMessage and umPrint",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def write6(self, lines: List[str]) -> int:
+    def write6(self, lines: List[str]) -> TestResult:
         """Check for WRITE(6) rather than umMessage and umPrint"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
             if re.search(r'\bWRITE\s*\(\s*6\s*,', clean_line, re.IGNORECASE):
                 self.add_extra_error("WRITE(6) used")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "WRITE(6) used",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Use of WRITE(6) rather than umMessage and umPrint",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def um_fort_flush(self, lines: List[str]) -> int:
+    def um_fort_flush(self, lines: List[str]) -> TestResult:
         """Check for um_fort_flush rather than umPrintFlush"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if re.search(r'\bum_fort_flush\b', line):
                 self.add_extra_error("um_fort_flush used")
                 failures += 1
-        
-        return failures
+                error_log = self.add_error_log(error_log,
+                                "um_fort_flush used",
+                                count + 1)
+        return TestResult(checker_name="Use of um_fort_flush rather than umPrintFlush",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)        
 
-    def svn_keyword_subst(self, lines: List[str]) -> int:
+    def svn_keyword_subst(self, lines: List[str]) -> TestResult:
         """Check for Subversion keyword substitution"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if re.search(r'\$\w+\$', line):
                 self.add_extra_error("SVN keyword substitution")
                 failures += 1
-        
-        return failures
+                error_log = self.add_error_log(error_log,
+                                "SVN keyword substitution",
+                                count + 1)
+        return TestResult(checker_name="Subversion keyword substitution",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)        
 
-    def omp_missing_dollar(self, lines: List[str]) -> int:
+    def omp_missing_dollar(self, lines: List[str]) -> TestResult:
         """Check for !OMP instead of !$OMP"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if re.search(r'!\s*OMP\b', line) and not re.search(r'!\$OMP', line):
                 self.add_extra_error("!OMP without $")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "!OMP without $",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="!OMP without $",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def cpp_ifdef(self, lines: List[str]) -> int:
+    def cpp_ifdef(self, lines: List[str]) -> TestResult:
         """Check for #ifdef/#ifndef rather than #if defined()"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             if re.search(r'^\s*#\s*if(n)?def\b', line):
                 self.add_extra_error("#ifdef/#ifndef used")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "#ifdef/#ifndef used",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="#ifdef/#ifndef used",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
     def cpp_comment(self, lines: List[str]) -> int:
         """Check for Fortran comments in CPP directives"""
@@ -483,7 +645,7 @@ class UMDP3:
         """ToDo: This is a very simplistic check and will not detect many
         cases which break UMDP3. I suspect the Perl Predeccessor 
         did much more convoluted tests"""
-        comment_lines = [line.upper() for line in lines if line.startswith("!")]
+        comment_lines = [line.upper() for line in lines if line.lstrip(" ").startswith("!")]
         file_content = '\n'.join(comment_lines)
         if 'CROWN COPYRIGHT' in file_content or 'COPYRIGHT' in file_content:
             return 0

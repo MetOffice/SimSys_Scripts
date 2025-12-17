@@ -15,7 +15,7 @@ from umdp3 import UMDP3
 # Declare version
 VERSION = '13.5.0'
 
-class UMDP3DispatchTables:
+class OldUMDP3Checks:
     """Class containing dispatch tables for UMDP3 tests"""
     
     def __init__(self):
@@ -24,8 +24,8 @@ class UMDP3DispatchTables:
     def get_diff_dispatch_table_fortran(self) -> Dict[str, Callable]:
         """Get dispatch table for Fortran diff tests"""
         return {
-            'Lowercase Fortran keywords not permitted': self.umdp3.capitalised_keywords,
             # 'Captain Daves doomed test of destruction': self.umdp3.capitulated_keywords,
+            'Lowercase Fortran keywords not permitted': self.umdp3.capitalised_keywords,
             'OpenMP sentinels not in column one': self.umdp3.openmp_sentinels_in_column_one,
             'Omitted optional space in keywords': self.umdp3.unseparated_keywords,
             'GO TO other than 9999': self.umdp3.go_to_other_than_9999,
@@ -44,23 +44,23 @@ class UMDP3DispatchTables:
             'Used Subversion keyword substitution which is prohibited': self.umdp3.svn_keyword_subst,
             'Used !OMP instead of !$OMP': self.umdp3.omp_missing_dollar,
             'Used #ifdef or #ifndef rather than #if defined() or #if !defined()': self.umdp3.cpp_ifdef,
-            'Presence of fortran comment in CPP directive': self.umdp3.cpp_comment,
-            'Used an archaic fortran intrinsic function': self.umdp3.obsolescent_fortran_intrinsic,
-            'EXIT statements should be labelled': self.umdp3.exit_stmt_label,
-            'Intrinsic modules must be USEd with an INTRINSIC keyword specifier': self.umdp3.intrinsic_modules,
-            'READ statements should have an explicit UNIT= as their first argument': self.umdp3.read_unit_args,
+            # 'Presence of fortran comment in CPP directive': self.umdp3.cpp_comment,
+            # 'Used an archaic fortran intrinsic function': self.umdp3.obsolescent_fortran_intrinsic,
+            # 'EXIT statements should be labelled': self.umdp3.exit_stmt_label,
+            # 'Intrinsic modules must be USEd with an INTRINSIC keyword specifier': self.umdp3.intrinsic_modules,
+            # 'READ statements should have an explicit UNIT= as their first argument': self.umdp3.read_unit_args,
         }
     
     def get_file_dispatch_table_fortran(self, filename: str = "") -> Dict[str, Callable]:
         """Get dispatch table for Fortran file tests"""
         return {
-            'Warning - used an if-def due for retirement': self.umdp3.retire_if_def,
-            'File is missing at least one IMPLICIT NONE': self.umdp3.implicit_none,
-            'Never use STOP or CALL abort': self.umdp3.forbidden_stop,
-            'Use of Fortran function as a variable name': self.umdp3.intrinsic_as_variable,
-            'File missing crown copyright statement or agreement reference': self.umdp3.check_crown_copyright,
-            'File missing correct code owner comment': self.umdp3.check_code_owner,
-            'Used (/ 1,2,3 /) form of array initialisation, rather than [1,2,3] form': self.umdp3.array_init_form,
+            # 'Warning - used an if-def due for retirement': self.umdp3.retire_if_def,
+            # 'File is missing at least one IMPLICIT NONE': self.umdp3.implicit_none,
+            # 'Never use STOP or CALL abort': self.umdp3.forbidden_stop,
+            # 'Use of Fortran function as a variable name': self.umdp3.intrinsic_as_variable,
+            # 'File missing crown copyright statement or agreement reference': self.umdp3.check_crown_copyright,
+            # 'File missing correct code owner comment': self.umdp3.check_code_owner,
+            # 'Used (/ 1,2,3 /) form of array initialisation, rather than [1,2,3] form': self.umdp3.array_init_form,
         }
     
     def get_diff_dispatch_table_c(self) -> Dict[str, Callable]:
