@@ -57,7 +57,7 @@ DEPENDENCIES = {
 CLONE_DIR = os.path.join(os.environ["TMPDIR"], os.environ["USER"])
 MIRROR_PATH = "/data/users/gitassist/git_mirrors/"
 UMDIR = os.environ["UMDIR"]
-PROFILE = ". /etc/profile"
+CYLC = "bash -l cylc"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
 MONITORING_TIME = "00 06"
 
@@ -82,7 +82,7 @@ def create_git_clone_cron(repo):
 
     command = f"# Clone {repo} - every day at 23:30 #"
     length = len(command)
-    command = f"{length*'#'}\n{command}\n{length*'#'}\n30 23 * * * {PROFILE} ; "
+    command = f"{length*'#'}\n{command}\n{length*'#'}\n30 23 * * * "
     command += f"rm -rf {clone_path} ; "
     command += f"git clone {repo_mirror} {clone_path}"
     return command + "\n\n\n"
@@ -162,7 +162,7 @@ def generate_monitoring(name, suite, log_file):
     monitoring = generate_cron_timing_str(suite, "monitoring")
 
     monitoring += (
-        f"{PROFILE} ; module load scitools/default-current ; "
+        f"module load scitools/default-current ; "
         f"{script} {cylc_dir} >> {log_file} 2>&1"
     )
 
@@ -174,10 +174,9 @@ def generate_clean_commands(cylc_version, name, log_file):
     Generate the commands used to clean the suite
     """
     return (
-        f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
-        f"cylc stop --kill '{name}' >/dev/null 2>&1 ; sleep 10 ; "
-        f"cylc clean --timeout=7200 -y -q {name} "
+        f"{CYLC} stop --kill '{name}' >/dev/null 2>&1 ; sleep 10 ; "
+        f"{CYLC} clean --timeout=7200 -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
 
@@ -208,7 +207,7 @@ def generate_cylc_command(suite, wc_path, cylc_version, name):
 
     command = (
         f"export CYLC_VERSION={cylc_version} ; "
-        f"cylc vip -z g={suite['groups']} "
+        f"{CYLC} vip -z g={suite['groups']} "
         f"-n {name} "
         f"-S USE_MIRRORS=true "
     )
@@ -242,7 +241,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     # Set up the timing for this job
     cron_job = generate_cron_timing_str(suite, "main")
 
-    job_command = f"{PROFILE} ; "
+    job_command = " "
 
     # Begin rose-stem command
     job_command += generate_cylc_command(suite, wc_path, cylc_version, name)
