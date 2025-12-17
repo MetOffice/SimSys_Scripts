@@ -45,22 +45,22 @@ class OldUMDP3Checks:
             'Used !OMP instead of !$OMP': self.umdp3.omp_missing_dollar,
             'Used #ifdef or #ifndef rather than #if defined() or #if !defined()': self.umdp3.cpp_ifdef,
             # 'Presence of fortran comment in CPP directive': self.umdp3.cpp_comment,
-            # 'Used an archaic fortran intrinsic function': self.umdp3.obsolescent_fortran_intrinsic,
-            # 'EXIT statements should be labelled': self.umdp3.exit_stmt_label,
-            # 'Intrinsic modules must be USEd with an INTRINSIC keyword specifier': self.umdp3.intrinsic_modules,
-            # 'READ statements should have an explicit UNIT= as their first argument': self.umdp3.read_unit_args,
+            'Used an archaic fortran intrinsic function': self.umdp3.obsolescent_fortran_intrinsic,
+            'EXIT statements should be labelled': self.umdp3.exit_stmt_label,
+            'Intrinsic modules must be USEd with an INTRINSIC keyword specifier': self.umdp3.intrinsic_modules,
+            'READ statements should have an explicit UNIT= as their first argument': self.umdp3.read_unit_args,
         }
     
     def get_file_dispatch_table_fortran(self, filename: str = "") -> Dict[str, Callable]:
         """Get dispatch table for Fortran file tests"""
         return {
-            # 'Warning - used an if-def due for retirement': self.umdp3.retire_if_def,
-            # 'File is missing at least one IMPLICIT NONE': self.umdp3.implicit_none,
-            # 'Never use STOP or CALL abort': self.umdp3.forbidden_stop,
-            # 'Use of Fortran function as a variable name': self.umdp3.intrinsic_as_variable,
-            # 'File missing crown copyright statement or agreement reference': self.umdp3.check_crown_copyright,
-            # 'File missing correct code owner comment': self.umdp3.check_code_owner,
-            # 'Used (/ 1,2,3 /) form of array initialisation, rather than [1,2,3] form': self.umdp3.array_init_form,
+            'Warning - used an if-def due for retirement': self.umdp3.retire_if_def,
+            'File is missing at least one IMPLICIT NONE': self.umdp3.implicit_none,
+            'Never use STOP or CALL abort': self.umdp3.forbidden_stop,
+            'Use of Fortran function as a variable name': self.umdp3.intrinsic_as_variable,
+            'File missing crown copyright statement or agreement reference': self.umdp3.check_crown_copyright,
+            'File missing correct code owner comment': self.umdp3.check_code_owner,
+            'Used (/ 1,2,3 /) form of array initialisation, rather than [1,2,3] form': self.umdp3.array_init_form,
         }
     
     def get_diff_dispatch_table_c(self) -> Dict[str, Callable]:

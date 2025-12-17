@@ -524,10 +524,12 @@ class UMDP3:
         
         return failures
 
-    def obsolescent_fortran_intrinsic(self, lines: List[str]) -> int:
+    def obsolescent_fortran_intrinsic(self, lines: List[str]) -> TestResult:
         """Check for archaic Fortran intrinsic functions"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
@@ -535,28 +537,41 @@ class UMDP3:
                 if re.search(rf'\b{intrinsic}\b', clean_line, re.IGNORECASE):
                     self.add_extra_error(f"obsolescent intrinsic: {intrinsic}")
                     failures += 1
+                    error_log = self.add_error_log(error_log,
+                                f"obsolescent intrinsic: {intrinsic}",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="obsolescent intrinsic",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def exit_stmt_label(self, lines: List[str]) -> int:
+    def exit_stmt_label(self, lines: List[str]) -> TestResult:
         """Check that EXIT statements are labelled"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
             if re.search(r'\bEXIT\s*$', clean_line, re.IGNORECASE):
                 self.add_extra_error("unlabelled EXIT statement")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "unlabelled EXIT statement",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="unlabelled EXIT statement",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def intrinsic_modules(self, lines: List[str]) -> int:
+    def intrinsic_modules(self, lines: List[str]) -> TestResult:
         """Check intrinsic modules are USEd with INTRINSIC keyword"""
         failures = 0
         intrinsic_modules = ['ISO_C_BINDING', 'ISO_FORTRAN_ENV']
-        
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
@@ -565,13 +580,20 @@ class UMDP3:
                     not re.search(r'\bINTRINSIC\b', clean_line, re.IGNORECASE)):
                     self.add_extra_error(f"intrinsic module {module} without INTRINSIC")
                     failures += 1
+                    error_log = self.add_error_log(error_log,
+                                f"intrinsic module {module} without INTRINSIC",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="intrinsic modules",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def read_unit_args(self, lines: List[str]) -> int:
+    def read_unit_args(self, lines: List[str]) -> TestResult:
         """Check READ statements have explicit UNIT= as first argument"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
@@ -580,14 +602,21 @@ class UMDP3:
                 if not first_arg.upper().startswith('UNIT='):
                     self.add_extra_error("READ without explicit UNIT=")
                     failures += 1
+                    error_log = self.add_error_log(error_log,
+                                "READ without explicit UNIT=",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="read unit args",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def retire_if_def(self, lines: List[str]) -> int:
+    def retire_if_def(self, lines: List[str]) -> TestResult:
         """Check for if-defs due for retirement"""
         retired_ifdefs = ['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES', 'A12_2A',]
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)            
             if match := re.search(
@@ -600,93 +629,157 @@ class UMDP3:
                 if match.group(1) in retired_ifdefs:
                     self.add_extra_error(f"retired if-def: {match.group(1)}")
                     failures += 1
-        return failures
+                    error_log = self.add_error_log(error_log,
+                                f"retired if-def: {match.group(1)}",
+                                count + 1)
+        return TestResult(checker_name="retired if-def",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def implicit_none(self, lines: List[str]) -> int:
+    def implicit_none(self, lines: List[str]) -> TestResult:
         """Check file has at least one IMPLICIT NONE"""
+        error_log = {}
+        no_implicit_none = True
         for line in lines:
             if re.search(r'\bIMPLICIT\s+NONE\b', line, re.IGNORECASE):
-                return 0
+                no_implicit_none = False
+                break
         
-        self.add_extra_error("missing IMPLICIT NONE")
-        return 1
+        if no_implicit_none:
+            self.add_extra_error("missing IMPLICIT NONE")
+            error_log = self.add_error_log(error_log,
+                                "No IMPLICIT NONE found in file",
+                                0)
+        
+        return TestResult(checker_name="implicit none",                 
+                          failure_count=1 if no_implicit_none else 0,
+                          passed=not no_implicit_none,
+                          output="Checked for IMPLICIT NONE statement.", errors=error_log)
 
-    def forbidden_stop(self, lines: List[str]) -> int:
+    def forbidden_stop(self, lines: List[str]) -> TestResult:
         """Check for STOP or CALL abort"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
             
             if re.search(r'\b(STOP|CALL\s+abort)\b', clean_line, re.IGNORECASE):
                 self.add_extra_error("STOP or CALL abort used")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "STOP or CALL abort used",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="forbidden stop",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def intrinsic_as_variable(self, lines: List[str]) -> int:
+    def intrinsic_as_variable(self, lines: List[str]) -> TestResult:
         """Check for Fortran function used as variable name"""
         failures = 0
+        error_log = {}
+        count = -1
         # This would check for intrinsic function names used as variables
         # Simplified implementation
         # The AI said that - This needs to be compared to the Perl
         # as I doubt this does anything near what that did...
-        for line in lines:
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER)\s*.*::\s*(SIN|COS|LOG|EXP|TAN)\b', 
                         clean_line, re.IGNORECASE):
                 self.add_extra_error("intrinsic function used as variable")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "intrinsic function used as variable",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="intrinsic as variable",                 
+                          failure_count=failures, passed=(failures == 0),
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
-    def check_crown_copyright(self, lines: List[str]) -> int:
+    def check_crown_copyright(self, lines: List[str]) -> TestResult:
         """Check for crown copyright statement"""
         """ToDo: This is a very simplistic check and will not detect many
         cases which break UMDP3. I suspect the Perl Predeccessor 
         did much more convoluted tests"""
         comment_lines = [line.upper() for line in lines if line.lstrip(" ").startswith("!")]
         file_content = '\n'.join(comment_lines)
+        error_log = {}
+        found_copyright = False
         if 'CROWN COPYRIGHT' in file_content or 'COPYRIGHT' in file_content:
-            return 0
+            found_copyright = True
         
-        self.add_extra_error("missing copyright or crown copyright statement")
-        return 1
+        if not found_copyright:
+            self.add_extra_error("missing copyright or crown copyright statement")
+            error_log = self.add_error_log(error_log,
+                                "missing copyright or crown copyright statement",
+                                0)
+        return TestResult(checker_name="Crown Copyright Statement",                 
+                          failure_count=0 if found_copyright else 1,
+                          passed=found_copyright,
+                          output="Checked for crown copyright statement.", errors=error_log)
 
-    def check_code_owner(self, lines: List[str]) -> int:
+    def check_code_owner(self, lines: List[str]) -> TestResult:
         """Check for correct code owner comment"""
         """ToDo: oh wow is this test worthless. We don't even guarentee to put the wrds "code owner" in a file. Plus, that's before you take into account both returns were '0' - so it couldn't possibly fail (picard.gif)
         The Perl looks to have been designed to check the whole file, and turns various logicals on/off dependent on previously processed lines."""
         # Simplified check for code owner information
         file_content = '\n'.join(lines)
+        found_code_owner = False
+        error_log = {}
         if 'Code Owner:' in file_content or 'code owner' in file_content.lower():
             # print(f"Debug: Found {file_content.lower()}")
-            return 0
+            found_code_owner = True
+
         
         # This is often a warning rather than an error
-        return 1
+        if not found_code_owner:
+            self.add_extra_error("missing code owner comment")
+            error_log = self.add_error_log(error_log,
+                                "missing code owner comment",
+                                0)
+        return TestResult(checker_name="Code Owner Comment",                 
+                          failure_count=0 if found_code_owner else 1,
+                          passed=found_code_owner,
+                          output="Checked for code owner comment.", errors=error_log)
 
-    def array_init_form(self, lines: List[str]) -> int:
+    def array_init_form(self, lines: List[str]) -> TestResult:
         """Check for old array initialization form"""
         """ToDo: Another instance that assumes continuation lines are concatenated prior to executing the actual test to ensure both forward slashes are on the same line."""
         failures = 0
-        for line in lines:
+        error_log = {}
+        count = -1
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             if re.search(r'\(/.*?\/\)', clean_line):
                 self.add_extra_error("old array initialization form (/ /)")
                 failures += 1
+                error_log = self.add_error_log(error_log,
+                                "old array initialization form (/ /)",
+                                count + 1)
         
-        return failures
+        return TestResult(checker_name="Old Array Initialization Form",                 
+                          failure_count=failures,
+                          passed=(failures == 0),
+                          output="Checked for old array initialization form (/ /).", errors=error_log)
 
-    def line_trail_whitespace(self, lines: List[str]) -> int:
+    def line_trail_whitespace(self, lines: List[str]) -> TestResult:
         """Check for trailing whitespace"""
         failures = 0
-        for line in lines:
+        error_log = {}
+        for count, line in enumerate(lines):
             if re.search(r'\s+$', line):
                 self.add_extra_error("trailing whitespace")
                 failures += 1
-        
-        return failures
+                error_log = self.add_error_log(error_log,
+                                "trailing whitespace",
+                                count + 1)
+        return TestResult(checker_name="Trailing Whitespace",                 
+                          failure_count=failures,
+                          passed=(failures == 0),
+                          output="Checked for trailing whitespace.", errors=error_log)
 
     # C-specific tests
 
