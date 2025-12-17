@@ -117,8 +117,11 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     # Create a clean clone location
     loc.mkdir(parents=True)
 
+    gitignore = Path(repo_source) / ".gitignore"
+
     # Trailing slash required for rsync
-    command = f"rsync -av {repo_source}/ {loc}"
+    # Respect .gitignore for rsync
+    command = f"rsync -av {repo_source}/ {loc} --filter=':- {gitignore}'"
     run_command(command)
 
     # Fetch the main branch from origin
