@@ -76,7 +76,7 @@ class FCMBase:
             self._branch_info = self.get_branch_info(retries=self._retries)
             self._branch_url = self.get_url()
             self._parent = self.get_branch_parent()
- 
+
     def get_branch_name(self):
         """
         Get the branch name from the branch URL.
@@ -91,7 +91,7 @@ class FCMBase:
         else:
             raise FCMError("unable to get branch name")
         return result
-    
+
     def run_fcm_command(self, command, max_retries, snooze):
         """
         Run an fcm command, optionally retrying on failure.
@@ -164,7 +164,7 @@ class FCMBase:
             else:
                 raise Exception("Could not find Branch Parent field")
         return parent
-    
+
     def get_url(self):
         """
         Given the raw output from an fcm binfo command - which can be retrieved
@@ -219,7 +219,7 @@ class FCMBase:
             repos_rev = repos_rev.group("rev")
         else:
             raise Exception("Could not find Last Changed Rev field")
-        return repos_rev    
+        return repos_rev
 
 # --------------------------------------------------------------------
 class FCMBDiff(FCMBase):
@@ -234,7 +234,7 @@ class FCMBDiff(FCMBase):
         self.is_trunk = self.is_trunk_test(self._branch_url)
         self.is_branch = not self.is_trunk
         self.repos_root = self.get_repository_root()
-    
+
     @property
     def has_diverged(self):
         """Whether the branch has diverged from its parent.
@@ -301,7 +301,7 @@ class FCMBDiff(FCMBase):
             bdiff_files = [os.path.join(self._branch, bfile) for bfile in relative_paths]
 
         return bdiff_files
-    
+
     def get_bdiff_summarize(self, snooze=300, retries=0):
         """
         Extract the output of the branch diff command
@@ -314,11 +314,11 @@ class FCMBDiff(FCMBase):
 class FCMInfo(FCMBase):
     """Class to hold FCM branch information. Mirroring the functionality
     in the git_bdiff.GitBranchInfo class."""
-    
+
     def __init__(self, branch_info: str):
         super().__init__(self, repo=None)
         self.branch_name = self.get_branch_name()
-    
+
     def is_main(self) -> bool:
         """Return True if the branch is the main trunk."""
         return self.is_trunk_test(self._branch_url)

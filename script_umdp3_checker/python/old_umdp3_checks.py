@@ -9,7 +9,7 @@ Standalone version of the dispatch tables from UMDP3Job
 Python translation of the original Perl module
 """
 
-from typing import Dict, Callable, List
+from typing import Dict, Callable
 from umdp3 import UMDP3
 
 # Declare version
@@ -17,10 +17,10 @@ VERSION = '13.5.0'
 
 class OldUMDP3Checks:
     """Class containing dispatch tables for UMDP3 tests"""
-    
+
     def __init__(self):
         self.umdp3 = UMDP3()
-    
+
     def get_diff_dispatch_table_fortran(self) -> Dict[str, Callable]:
         """Get dispatch table for Fortran diff tests"""
         return {
@@ -50,7 +50,7 @@ class OldUMDP3Checks:
             'Intrinsic modules must be USEd with an INTRINSIC keyword specifier': self.umdp3.intrinsic_modules,
             'READ statements should have an explicit UNIT= as their first argument': self.umdp3.read_unit_args,
         }
-    
+
     def get_file_dispatch_table_fortran(self, filename: str = "") -> Dict[str, Callable]:
         """Get dispatch table for Fortran file tests"""
         return {
@@ -62,7 +62,7 @@ class OldUMDP3Checks:
             'File missing correct code owner comment': self.umdp3.check_code_owner,
             'Used (/ 1,2,3 /) form of array initialisation, rather than [1,2,3] form': self.umdp3.array_init_form,
         }
-    
+
     def get_diff_dispatch_table_c(self) -> Dict[str, Callable]:
         """Get dispatch table for C diff tests"""
         return {
@@ -70,7 +70,7 @@ class OldUMDP3Checks:
             'Line includes tab character': self.umdp3.tab_detection,
             'Fixed-width Integer format specifiers must have a space between themselves and the string delimiter (the " character)': self.umdp3.c_integral_format_specifiers,
         }
-    
+
     def get_file_dispatch_table_c(self) -> Dict[str, Callable]:
         """Get dispatch table for C file tests"""
         return {
@@ -85,7 +85,7 @@ class OldUMDP3Checks:
             'Used the #ifdef style of if-def, rather than the #if defined() style': self.umdp3.c_ifdef_defines,
             'C Unit does not end with a final newline character': self.umdp3.c_final_newline,
         }
-    
+
     def get_file_dispatch_table_all(self) -> Dict[str, Callable]:
         """Get dispatch table for universal file tests"""
         return {

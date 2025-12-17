@@ -352,7 +352,7 @@ test_retire_if_def_parameters = [
 ]
 @pytest.mark.parametrize("lines, expected_result", [data[:2] for data in test_retire_if_def_parameters],
                          ids=[data[2] for data in test_retire_if_def_parameters])
-def test_retire_if_def(lines, expected_result):     
+def test_retire_if_def(lines, expected_result):
     checker = UMDP3()
     result = checker.retire_if_def(lines)
     assert result == expected_result

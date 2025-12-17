@@ -27,7 +27,7 @@ def install_python_dependencies():
     """Install Python dependencies"""
     print("Installing Python dependencies...")
     try:
-        subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'], 
+        subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
                       check=True)
         print("✓ Python dependencies installed successfully")
         return True
@@ -42,20 +42,20 @@ def check_external_tools():
         'shellcheck': 'Shell script checker',
         'fcm': 'File and Configuration Management'
     }
-    
+
     missing_tools = []
-    
+
     for tool, description in tools.items():
         try:
-            subprocess.run([tool, '--version'], 
-                          stdout=subprocess.DEVNULL, 
-                          stderr=subprocess.DEVNULL, 
+            subprocess.run([tool, '--version'],
+                          stdout=subprocess.DEVNULL,
+                          stderr=subprocess.DEVNULL,
                           check=True)
             print(f"✓ {tool} is available ({description})")
         except (subprocess.CalledProcessError, FileNotFoundError):
             print(f"⚠ {tool} is not available ({description})")
             missing_tools.append(tool)
-    
+
     if missing_tools:
         print("\nMissing tools installation suggestions:")
         if 'shellcheck' in missing_tools:
@@ -65,7 +65,7 @@ def check_external_tools():
             print("  fcm: Please install FCM according to your system requirements")
         if 'pycodestyle' in missing_tools:
             print("  pycodestyle: pip install pycodestyle")
-    
+
     return len(missing_tools) == 0
 
 def make_executable():
@@ -105,33 +105,33 @@ def main():
     """Main setup function"""
     print("UMDP3 Python Checker Setup")
     print("=" * 40)
-    
+
     success = True
-    
+
     # Check Python version
     if not check_python_version():
         success = False
-    
+
     # Install Python dependencies
     if success and not install_python_dependencies():
         success = False
-    
+
     # Check external tools
     tools_available = check_external_tools()
     if not tools_available:
         print("\n⚠ Warning: Some external tools are missing.")
         print("The checker will still work but some features may be limited.")
-    
+
     # Make script executable
     make_executable()
-    
+
     # Create sample files
     create_sample_whitelist()
-    
+
     # Run tests
     if success:
         run_tests()
-    
+
     print("\n" + "=" * 40)
     if success:
         print("✓ Setup completed successfully!")

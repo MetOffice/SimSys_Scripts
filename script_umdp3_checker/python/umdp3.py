@@ -13,7 +13,7 @@ import re
 import threading
 from typing import List, Dict, Set
 from fortran_keywords import fortran_keywords
-from search_lists import (obsolescent_intrinsics, openmp_keywords, 
+from search_lists import (obsolescent_intrinsics, openmp_keywords,
                           fortran_types, unseparated_keywords_list,
                           retired_ifdefs, deprecated_c_identifiers)
 from dataclasses import dataclass, field
@@ -45,7 +45,7 @@ class UMDP3:
         then returned the count as well as adding 1 to this global var if any were found.
         This is either redundant and needs removing, or needs implementing properly."""
         self._number_of_files_with_variable_declarations_in_includes = 0
-        
+
     def reset_extra_error_information(self):
         """Reset extra error information :
         Appears to be used 'between' blocks of tests such as those on diffs and those on full files."""
@@ -82,13 +82,13 @@ class UMDP3:
         """ToDo: The original version replaced the quoted sections with a "blessed reference", presumably becuase they were 're-inserted' at some stage. No idea if that capability is still required."""
         # Simple implementation - remove single and double quoted strings
         result = line
-        
+
         # Remove double quoted strings
         result = re.sub(r'"[^"]*"', '', result)
-        
+
         # Remove single quoted strings
         result = re.sub(r"'[^']*'", '', result)
-        
+
         return result
 
     """Test functions :
@@ -157,7 +157,7 @@ class UMDP3:
         return TestResult(checker_name="Capitalised Keywords",                 failure_count=failures, passed=(failures == 0),
         output=f"Checked {count+1} lines, found {failures} failures.",
         errors=error_log)
-    
+
     def openmp_sentinels_in_column_one(self, lines: List[str]) -> TestResult:
         """Check OpenMP sentinels are in column one"""
         failures = 0
@@ -205,7 +205,7 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if match := re.search(r'\bGO\s*TO\s+(\d+)', clean_line, re.IGNORECASE):
                 label = match.group(1)
                 if label != '9999':
@@ -226,7 +226,7 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if re.search(r'\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)', clean_line, re.IGNORECASE):
                 self.add_extra_error("WRITE(*,*) found")
                 failures += 1
@@ -247,9 +247,9 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             # Simple check for UPPERCASE variable declarations
-            if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+', 
+            if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+',
                         clean_line, re.IGNORECASE):
                 # print(f"Debug: Found variable declaration line: {clean_line}")
                 clean_line = re.sub(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*', '', clean_line)
@@ -260,9 +260,9 @@ class UMDP3:
                     error_log = self.add_error_log(error_log,
                                 "UPPERCASE variable name",
                                 count + 1)
-        
+
         output=f"Checked {count+1} lines, found {failures} failures."
-        return TestResult(checker_name="Lowercase or CamelCase variable names only",                 
+        return TestResult(checker_name="Lowercase or CamelCase variable names only",
                           failure_count=failures, passed=(failures == 0),
                           output=output, errors=error_log)
 
@@ -274,16 +274,16 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if re.search(r'\bDIMENSION\b', clean_line, re.IGNORECASE):
                 self.add_extra_error("DIMENSION attribute used")
                 failures += 1
                 error_log = self.add_error_log(error_log,
                                 "DIMENSION attribute used",
                                 count + 1)
-        
+
         output=f"Checked {count+1} lines, found {failures} failures."
-        return TestResult(checker_name="Use of dimension attribute",                 
+        return TestResult(checker_name="Use of dimension attribute",
                           failure_count=failures, passed=(failures == 0),
                           output=output, errors=error_log)
 
@@ -299,8 +299,8 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "continuation line starts with &",
                                 count + 1)
-        
-        return TestResult(checker_name="Continuation lines shouldn't start with &",                 
+
+        return TestResult(checker_name="Continuation lines shouldn't start with &",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -314,15 +314,15 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if re.search(r'\b(EQUIVALENCE|PAUSE)\b', clean_line, re.IGNORECASE):
                 self.add_extra_error("forbidden keyword")
                 failures += 1
                 error_log = self.add_error_log(error_log,
                                 "forbidden keyword",
                                 count + 1)
-        
-        return TestResult(checker_name="Use of forbidden keywords EQUIVALENCE or PAUSE",                 
+
+        return TestResult(checker_name="Use of forbidden keywords EQUIVALENCE or PAUSE",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -332,11 +332,11 @@ class UMDP3:
         error_log = {}
         count = -1
         old_operators = ['.GT.', '.GE.', '.LT.', '.LE.', '.EQ.', '.NE.']
-        
+
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             for op in old_operators:
                 if op in clean_line.upper():
                     self.add_extra_error(f"old operator {op}")
@@ -344,8 +344,8 @@ class UMDP3:
                     error_log = self.add_error_log(error_log,
                                 f"old operator {op}",
                                 count + 1)
-        
-        return TestResult(checker_name="Use of older form of relational operator (.GT. etc.)",                 
+
+        return TestResult(checker_name="Use of older form of relational operator (.GT. etc.)",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -361,8 +361,8 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "line too long",
                                 count + 1)
-        
-        return TestResult(checker_name="Line longer than 80 characters",                 
+
+        return TestResult(checker_name="Line longer than 80 characters",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -378,8 +378,8 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "tab character found",
                                 count + 1)
-        
-        return TestResult(checker_name="Line includes tab character",                 
+
+        return TestResult(checker_name="Line includes tab character",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -395,8 +395,8 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "printstatus_mod used",
                                 count + 1)
-        
-        return TestResult(checker_name="Use of printstatus_mod instead of umPrintMgr",                 
+
+        return TestResult(checker_name="Use of printstatus_mod instead of umPrintMgr",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -408,15 +408,15 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if re.search(r'\bPRINT\s*\*', clean_line, re.IGNORECASE):
                 self.add_extra_error("PRINT * used")
                 failures += 1
                 error_log = self.add_error_log(error_log,
                                 "PRINT * used",
                                 count + 1)
-        
-        return TestResult(checker_name="Use of PRINT rather than umMessage and umPrint",                 
+
+        return TestResult(checker_name="Use of PRINT rather than umMessage and umPrint",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -428,15 +428,15 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if re.search(r'\bWRITE\s*\(\s*6\s*,', clean_line, re.IGNORECASE):
                 self.add_extra_error("WRITE(6) used")
                 failures += 1
                 error_log = self.add_error_log(error_log,
                                 "WRITE(6) used",
                                 count + 1)
-        
-        return TestResult(checker_name="Use of WRITE(6) rather than umMessage and umPrint",                 
+
+        return TestResult(checker_name="Use of WRITE(6) rather than umMessage and umPrint",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -452,9 +452,9 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "um_fort_flush used",
                                 count + 1)
-        return TestResult(checker_name="Use of um_fort_flush rather than umPrintFlush",                 
+        return TestResult(checker_name="Use of um_fort_flush rather than umPrintFlush",
                           failure_count=failures, passed=(failures == 0),
-                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)        
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
     def svn_keyword_subst(self, lines: List[str]) -> TestResult:
         """Check for Subversion keyword substitution"""
@@ -468,9 +468,9 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "SVN keyword substitution",
                                 count + 1)
-        return TestResult(checker_name="Subversion keyword substitution",                 
+        return TestResult(checker_name="Subversion keyword substitution",
                           failure_count=failures, passed=(failures == 0),
-                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)        
+                          output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
     def omp_missing_dollar(self, lines: List[str]) -> TestResult:
         """Check for !OMP instead of !$OMP"""
@@ -484,8 +484,8 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "!OMP without $",
                                 count + 1)
-        
-        return TestResult(checker_name="!OMP without $",                 
+
+        return TestResult(checker_name="!OMP without $",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -501,8 +501,8 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "#ifdef/#ifndef used",
                                 count + 1)
-        
-        return TestResult(checker_name="#ifdef/#ifndef used",                 
+
+        return TestResult(checker_name="#ifdef/#ifndef used",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -526,8 +526,8 @@ class UMDP3:
                     error_log = self.add_error_log(error_log,
                                     "Fortran comment in CPP directive",
                                     count + 1)
-        
-        return TestResult(checker_name="Fortran comment in CPP directive",                 
+
+        return TestResult(checker_name="Fortran comment in CPP directive",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -539,7 +539,7 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             for intrinsic in obsolescent_intrinsics:
                 if re.search(rf'\b{intrinsic}\b', clean_line, re.IGNORECASE):
                     self.add_extra_error(f"obsolescent intrinsic: {intrinsic}")
@@ -547,8 +547,8 @@ class UMDP3:
                     error_log = self.add_error_log(error_log,
                                 f"obsolescent intrinsic: {intrinsic}",
                                 count + 1)
-        
-        return TestResult(checker_name="obsolescent intrinsic",                 
+
+        return TestResult(checker_name="obsolescent intrinsic",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -560,15 +560,15 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if re.search(r'\bEXIT\s*$', clean_line, re.IGNORECASE):
                 self.add_extra_error("unlabelled EXIT statement")
                 failures += 1
                 error_log = self.add_error_log(error_log,
                                 "unlabelled EXIT statement",
                                 count + 1)
-        
-        return TestResult(checker_name="unlabelled EXIT statement",                 
+
+        return TestResult(checker_name="unlabelled EXIT statement",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -581,7 +581,7 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             for module in intrinsic_modules:
                 if (re.search(rf'\bUSE\s+(::)*\s*{module}\b', clean_line, re.IGNORECASE) and
                     not re.search(r'\bINTRINSIC\b', clean_line, re.IGNORECASE)):
@@ -590,8 +590,8 @@ class UMDP3:
                     error_log = self.add_error_log(error_log,
                                 f"intrinsic module {module} without INTRINSIC",
                                 count + 1)
-        
-        return TestResult(checker_name="intrinsic modules",                 
+
+        return TestResult(checker_name="intrinsic modules",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -603,7 +603,7 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if match := re.search(r'\bREAD\s*\(\s*([^,)]+)', clean_line, re.IGNORECASE):
                 first_arg = match.group(1).strip()
                 if not first_arg.upper().startswith('UNIT='):
@@ -612,8 +612,8 @@ class UMDP3:
                     error_log = self.add_error_log(error_log,
                                 "READ without explicit UNIT=",
                                 count + 1)
-        
-        return TestResult(checker_name="read unit args",                 
+
+        return TestResult(checker_name="read unit args",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -625,7 +625,7 @@ class UMDP3:
         count = -1
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r'!.*$', '', clean_line)            
+            clean_line = re.sub(r'!.*$', '', clean_line)
             if match := re.search(
                 r"^#(?:(?:ifn?def|"  # ifdef/ifndef
                 r"(?:el)?if\s*\S*?defined\s*\()"  # elif/if defined(
@@ -639,7 +639,7 @@ class UMDP3:
                     error_log = self.add_error_log(error_log,
                                 f"retired if-def: {match.group(1)}",
                                 count + 1)
-        return TestResult(checker_name="retired if-def",                 
+        return TestResult(checker_name="retired if-def",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -651,14 +651,14 @@ class UMDP3:
             if re.search(r'\bIMPLICIT\s+NONE\b', line, re.IGNORECASE):
                 no_implicit_none = False
                 break
-        
+
         if no_implicit_none:
             self.add_extra_error("missing IMPLICIT NONE")
             error_log = self.add_error_log(error_log,
                                 "No IMPLICIT NONE found in file",
                                 0)
-        
-        return TestResult(checker_name="implicit none",                 
+
+        return TestResult(checker_name="implicit none",
                           failure_count=1 if no_implicit_none else 0,
                           passed=not no_implicit_none,
                           output="Checked for IMPLICIT NONE statement.", errors=error_log)
@@ -671,15 +671,15 @@ class UMDP3:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r'!.*$', '', clean_line)
-            
+
             if re.search(r'\b(STOP|CALL\s+abort)\b', clean_line, re.IGNORECASE):
                 self.add_extra_error("STOP or CALL abort used")
                 failures += 1
                 error_log = self.add_error_log(error_log,
                                 "STOP or CALL abort used",
                                 count + 1)
-        
-        return TestResult(checker_name="forbidden stop",                 
+
+        return TestResult(checker_name="forbidden stop",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
@@ -694,22 +694,22 @@ class UMDP3:
         # as I doubt this does anything near what that did...
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
-            if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER)\s*.*::\s*(SIN|COS|LOG|EXP|TAN)\b', 
+            if re.search(r'^\s*(INTEGER|REAL|LOGICAL|CHARACTER)\s*.*::\s*(SIN|COS|LOG|EXP|TAN)\b',
                         clean_line, re.IGNORECASE):
                 self.add_extra_error("intrinsic function used as variable")
                 failures += 1
                 error_log = self.add_error_log(error_log,
                                 "intrinsic function used as variable",
                                 count + 1)
-        
-        return TestResult(checker_name="intrinsic as variable",                 
+
+        return TestResult(checker_name="intrinsic as variable",
                           failure_count=failures, passed=(failures == 0),
                           output=f"Checked {count+1} lines, found {failures} failures.", errors=error_log)
 
     def check_crown_copyright(self, lines: List[str]) -> TestResult:
         """Check for crown copyright statement"""
         """ToDo: This is a very simplistic check and will not detect many
-        cases which break UMDP3. I suspect the Perl Predeccessor 
+        cases which break UMDP3. I suspect the Perl Predeccessor
         did much more convoluted tests"""
         comment_lines = [line.upper() for line in lines if line.lstrip(" ").startswith("!")]
         file_content = '\n'.join(comment_lines)
@@ -717,13 +717,13 @@ class UMDP3:
         found_copyright = False
         if 'CROWN COPYRIGHT' in file_content or 'COPYRIGHT' in file_content:
             found_copyright = True
-        
+
         if not found_copyright:
             self.add_extra_error("missing copyright or crown copyright statement")
             error_log = self.add_error_log(error_log,
                                 "missing copyright or crown copyright statement",
                                 0)
-        return TestResult(checker_name="Crown Copyright Statement",                 
+        return TestResult(checker_name="Crown Copyright Statement",
                           failure_count=0 if found_copyright else 1,
                           passed=found_copyright,
                           output="Checked for crown copyright statement.", errors=error_log)
@@ -740,14 +740,14 @@ class UMDP3:
             # print(f"Debug: Found {file_content.lower()}")
             found_code_owner = True
 
-        
+
         # This is often a warning rather than an error
         if not found_code_owner:
             self.add_extra_error("missing code owner comment")
             error_log = self.add_error_log(error_log,
                                 "missing code owner comment",
                                 0)
-        return TestResult(checker_name="Code Owner Comment",                 
+        return TestResult(checker_name="Code Owner Comment",
                           failure_count=0 if found_code_owner else 1,
                           passed=found_code_owner,
                           output="Checked for code owner comment.", errors=error_log)
@@ -766,8 +766,8 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "old array initialization form (/ /)",
                                 count + 1)
-        
-        return TestResult(checker_name="Old Array Initialization Form",                 
+
+        return TestResult(checker_name="Old Array Initialization Form",
                           failure_count=failures,
                           passed=(failures == 0),
                           output="Checked for old array initialization form (/ /).", errors=error_log)
@@ -783,7 +783,7 @@ class UMDP3:
                 error_log = self.add_error_log(error_log,
                                 "trailing whitespace",
                                 count + 1)
-        return TestResult(checker_name="Trailing Whitespace",                 
+        return TestResult(checker_name="Trailing Whitespace",
                           failure_count=failures,
                           passed=(failures == 0),
                           output="Checked for trailing whitespace.", errors=error_log)
@@ -797,7 +797,7 @@ class UMDP3:
             if re.search(r'%\d+[dioxX]"', line):
                 self.add_extra_error("missing space in format specifier")
                 failures += 1
-        
+
         return failures
 
     def c_deprecated(self, lines: List[str]) -> int:
@@ -808,7 +808,7 @@ class UMDP3:
                 if re.search(rf'\b{identifier}\b', line):
                     self.add_extra_error(f"deprecated C identifier: {identifier}")
                     failures += 1
-        
+
         return failures
 
     def c_openmp_define_pair_thread_utils(self, lines: List[str]) -> int:
@@ -819,7 +819,7 @@ class UMDP3:
                 if not re.search(r'SHUM_USE_C_OPENMP_VIA_THREAD_UTILS', line):
                     self.add_extra_error("_OPENMP without SHUM_USE_C_OPENMP_VIA_THREAD_UTILS")
                     failures += 1
-        
+
         return failures
 
     def c_openmp_define_no_combine(self, lines: List[str]) -> int:
@@ -830,7 +830,7 @@ class UMDP3:
                 re.search(r'&&.*_OPENMP.*&&.*SHUM_USE_C_OPENMP_VIA_THREAD_UTILS', line)):
                 self.add_extra_error("OpenMP defines combined with third macro")
                 failures += 1
-        
+
         return failures
 
     def c_openmp_define_not(self, lines: List[str]) -> int:
@@ -840,25 +840,25 @@ class UMDP3:
             if re.search(r'!\s*defined\s*\(\s*_OPENMP\s*\)', line):
                 self.add_extra_error("!defined(_OPENMP) used")
                 failures += 1
-        
+
         return failures
 
     def c_protect_omp_pragma(self, lines: List[str]) -> int:
         """Check OMP pragma is protected with ifdef"""
         failures = 0
         in_openmp_block = False
-        
+
         for line in lines:
             if re.search(r'#\s*if.*_OPENMP', line):
                 in_openmp_block = True
             elif re.search(r'#\s*endif', line):
                 in_openmp_block = False
-            elif (re.search(r'#\s*pragma\s+omp', line) or 
+            elif (re.search(r'#\s*pragma\s+omp', line) or
                   re.search(r'#\s*include\s*<omp\.h>', line)):
                 if not in_openmp_block:
                     self.add_extra_error("unprotected OMP pragma/include")
                     failures += 1
-        
+
         return failures
 
     def c_ifdef_defines(self, lines: List[str]) -> int:
@@ -868,7 +868,7 @@ class UMDP3:
             if re.search(r'^\s*#\s*ifdef\b', line):
                 self.add_extra_error("#ifdef used instead of #if defined()")
                 failures += 1
-        
+
         return failures
 
     def c_final_newline(self, lines: List[str]) -> int:
@@ -876,5 +876,5 @@ class UMDP3:
         if lines and not lines[-1].endswith('\n'):
             self.add_extra_error("missing final newline")
             return 1
-        
+
         return 0

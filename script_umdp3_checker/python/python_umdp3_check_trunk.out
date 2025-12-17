@@ -13776,7 +13776,7 @@ File ../../../UM_Trunk//admin/branch_management/migrate_branch :
 File ../../../UM_Trunk//admin/code_styling/ampersands.py :
   line 10:80: E501 line too long (80 > 79 characters)
   line 477:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/code_styling/fstring_parse.py :
   line 9:80: E501 line too long (80 > 79 characters)
   line 85:13: E741 ambiguous variable name 'l'
@@ -13785,7 +13785,7 @@ File ../../../UM_Trunk//admin/code_styling/fstring_parse.py :
   line 322:80: E501 line too long (80 > 79 characters)
   line 365:74: E502 the backslash is redundant between brackets
   line 535:20: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/code_styling/indentation.py :
   line 11:80: E501 line too long (80 > 79 characters)
   line 48:36: E502 the backslash is redundant between brackets
@@ -13797,24 +13797,24 @@ File ../../../UM_Trunk//admin/code_styling/indentation.py :
   line 81:41: E502 the backslash is redundant between brackets
   line 82:34: E502 the backslash is redundant between brackets
   line 349:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/code_styling/styling.py :
   line 10:80: E501 line too long (80 > 79 characters)
   line 31:80: E501 line too long (80 > 79 characters)
   line 839:71: E502 the backslash is redundant between brackets
   line 906:71: E502 the backslash is redundant between brackets
   line 1141:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/code_styling/umdp3_fixer.py :
   line 11:80: E501 line too long (80 > 79 characters)
   line 202:17: E129 visually indented line with same indent as next logical line
   line 415:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/code_styling/whitespace.py :
   line 3:1: E266 too many leading '#' for block comment
   line 120:67: E502 the backslash is redundant between brackets
   line 275:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/codebrowser/UM.co2h :
   Line includes trailing whitespace character(s)
   Line includes trailing whitespace character(s)
@@ -13827,7 +13827,7 @@ File ../../../UM_Trunk//admin/codebrowser/run_code_browse :
 File ../../../UM_Trunk//admin/create_stdjobs.py :
   line 362:80: E501 line too long (80 > 79 characters)
   line 488:65: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/gcom_codebrowser/GCOM.f2h :
   Line includes trailing whitespace character(s)
   Line includes trailing whitespace character(s)
@@ -13993,24 +13993,24 @@ File ../../../UM_Trunk//admin/rose-stem/metagen.py :
   line 237:58: W291 trailing whitespace
   line 248:66: E228 missing whitespace around modulo operator
   line 251:29: W292 no newline at end of file
-  
+
   Line includes trailing whitespace character(s)
 File ../../../UM_Trunk//admin/rose-stem/monitoring.py :
   line 594:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/rose-stem/produce_resources.py :
   line 123:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/rose-stem/release_new_version.py :
   line 982:6: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/rose-stem/update_all.py :
   line 351:80: E501 line too long (83 > 79 characters)
   line 641:13: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/search_stash.py :
   line 256:51: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//admin/stash :
   Line includes trailing whitespace character(s)
   Line includes trailing whitespace character(s)
@@ -14102,7 +14102,7 @@ File ../../../UM_Trunk//admin/trunk_parse/trunk_parse.py :
   line 1081:5: E303 too many blank lines (2)
   line 1084:1: E305 expected 2 blank lines after class or function definition, found 1
   line 1085:11: W292 no newline at end of file
-  
+
   Line includes trailing whitespace character(s)
 File ../../../UM_Trunk//bin/um-crmstyle_coarse_grid :
   Line includes trailing whitespace character(s)
@@ -14121,20 +14121,20 @@ File ../../../UM_Trunk//fab/build_um_atmos.py :
   line 140:5: E115 expected an indented block (comment)
   line 149:70: W291 trailing whitespace
   line 172:19: W292 no newline at end of file
-  
+
   Line includes trailing whitespace character(s)
 File ../../../UM_Trunk//fab/configs/compilers.py :
   line 12:32: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//fab/configs/external_paths.py :
   line 9:50: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//fab/configs/extract_list_atmos.py :
   line 95:2: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//fab/configs/meto-spice-gcc-ifort/atmos-spice-gcc-ifort-um-rigorous-noomp.py :
   line 107:2: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//fcm-make/afw-hp-ifort/um-atmos-high.cfg :
   Line includes trailing whitespace character(s)
   Line includes trailing whitespace character(s)
@@ -14418,7 +14418,7 @@ File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/custom_monsoon
   line 21:9: E306 expected 1 blank line before a nested definition, found 0
   line 23:9: E306 expected 1 blank line before a nested definition, found 0
   line 25:13: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/output_naming.py :
   line 19:80: E501 line too long (91 > 79 characters)
   line 28:1: E302 expected 2 blank lines, found 1
@@ -14446,7 +14446,7 @@ File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/output_naming.
   line 122:80: E501 line too long (85 > 79 characters)
   line 123:80: E501 line too long (89 > 79 characters)
   line 126:28: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/output_streams.py :
   line 31:80: E501 line too long (91 > 79 characters)
   line 40:1: E302 expected 2 blank lines, found 1
@@ -14462,7 +14462,7 @@ File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/output_streams
   line 108:75: E225 missing whitespace around operator
   line 114:9: E303 too many blank lines (3)
   line 114:28: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/profile_names.py :
   line 25:80: E501 line too long (91 > 79 characters)
   line 34:1: E302 expected 2 blank lines, found 1
@@ -14488,11 +14488,11 @@ File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/profile_names.
   line 159:41: E128 continuation line under-indented for visual indent
   line 160:41: E128 continuation line under-indented for visual indent
   line 165:28: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_copy.py :
   line 56:16: E127 continuation line over-indented for visual indent
   line 117:28: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_handling_funcs.py :
   line 21:40: W605 invalid escape sequence '\('
   line 21:42: W605 invalid escape sequence '\d'
@@ -14513,7 +14513,7 @@ File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_handling
   line 53:5: E129 visually indented line with same indent as next logical line
   line 93:5: E129 visually indented line with same indent as next logical line
   line 189:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_indices.py :
   line 74:80: E501 line too long (91 > 79 characters)
   line 92:80: E501 line too long (83 > 79 characters)
@@ -14533,7 +14533,7 @@ File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_indices.
   line 1307:80: E501 line too long (82 > 79 characters)
   line 1383:1: E305 expected 2 blank lines after class or function definition, found 1
   line 1385:20: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_print.py :
   line 33:1: E402 module level import not at top of file
   line 214:33: E225 missing whitespace around operator
@@ -14548,25 +14548,25 @@ File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_print.py
   line 814:9: E722 do not use bare 'except'
   line 837:5: E722 do not use bare 'except'
   line 839:17: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_requests.py :
   line 228:36: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/macros/stash_testmask.py :
   line 21:1: E402 module level import not at top of file
   line 3349:9: E722 do not use bare 'except'
   line 3593:9: E722 do not use bare 'except'
   line 3678:13: E722 do not use bare 'except'
   line 3740:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/widget/cylc8_compat.py :
   line 18:80: E501 line too long (83 > 79 characters)
   line 43:80: E501 line too long (83 > 79 characters)
   line 63:12: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/widget/stash.py :
   line 897:49: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/widget/stash_parse.py :
   Line includes trailing whitespace character(s)
   line 15:1: E302 expected 2 blank lines, found 1
@@ -14574,14 +14574,14 @@ File ../../../UM_Trunk//rose-meta/um-atmos/HEAD/lib/python/widget/stash_parse.py
   line 39:1: E122 continuation line missing indentation or outdented
   line 40:80: E501 line too long (95 > 79 characters)
   line 151:27: W292 no newline at end of file
-  
+
   Line includes trailing whitespace character(s)
 File ../../../UM_Trunk//rose-meta/um-atmos/__init__.py :
   line 1:23: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-atmos/versions.py :
   line 33:36: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-createbc/HEAD/lib/python/macros/stash_ordering.py :
   line 41:17: E261 at least two spaces before inline comment
   line 42:17: E261 at least two spaces before inline comment
@@ -14625,36 +14625,36 @@ File ../../../UM_Trunk//rose-meta/um-createbc/HEAD/lib/python/macros/stash_order
   line 124:19: E128 continuation line under-indented for visual indent
   line 124:49: E202 whitespace before ')'
   line 140:36: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-createbc/HEAD/lib/python/widget/cylc8_compat.py :
   line 18:80: E501 line too long (83 > 79 characters)
   line 37:80: E501 line too long (83 > 79 characters)
   line 52:12: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-createbc/__init__.py :
   line 1:23: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-createbc/versions.py :
   line 33:36: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-fcm-make/HEAD/lib/python/widget/cylc8_compat.py :
   line 18:80: E501 line too long (83 > 79 characters)
   line 37:80: E501 line too long (83 > 79 characters)
   line 52:12: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-fcm-make/__init__.py :
   line 1:23: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-meta/um-fcm-make/versions.py :
   line 33:36: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/ana/mule_cumf.py :
   line 215:17: E131 continuation line unaligned for hanging indent
   line 225:17: E131 continuation line unaligned for hanging indent
   line 244:13: E722 do not use bare 'except'
   line 281:5: E303 too many blank lines (2)
   line 417:51: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/ana/um_stdout.py :
   line 17:19: W605 invalid escape sequence '\*'
   line 17:21: W605 invalid escape sequence '\s'
@@ -14669,7 +14669,7 @@ File ../../../UM_Trunk//rose-stem/ana/um_stdout.py :
   line 17:50: W605 invalid escape sequence '\*'
   line 271:9: E722 do not use bare 'except'
   line 379:37: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/coupled_n96_orca025_mct_technical_gc4/file/domain_def.xml :
   Line includes trailing whitespace character(s)
   Line includes trailing whitespace character(s)
@@ -14747,10 +14747,10 @@ File ../../../UM_Trunk//rose-stem/app/nemo_cice_glosea/file/cf_name_table.txt :
   Line includes trailing whitespace character(s)
 File ../../../UM_Trunk//rose-stem/app/rose_ana_n48_ga7_amip/ana/mule_nc_ff.py :
   line 167:72: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/rose_ana_n48_ga8_amip/ana/mule_nc_ff.py :
   line 167:72: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/rose_ana_n48_ga8_amip/ana/mule_wtrac.py :
   Line includes trailing whitespace character(s)
   line 14:80: E501 line too long (80 > 79 characters)
@@ -14787,26 +14787,26 @@ File ../../../UM_Trunk//rose-stem/app/rose_ana_n48_ga8_amip/ana/mule_wtrac.py :
   line 154:9: E303 too many blank lines (2)
   line 162:61: W291 trailing whitespace
   line 185:72: W292 no newline at end of file
-  
+
   Line includes trailing whitespace character(s)
 File ../../../UM_Trunk//rose-stem/app/rose_ana_n48_ga_amip_exp/ana/mule_nc_ff.py :
   line 167:72: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/rose_ana_seukv_eg/ana/mule_nc_ff.py :
   line 169:72: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/run_mule_tests/bin/test_genseed.py :
   line 17:43: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/run_mule_tests/bin/test_wafccb.py :
   line 19:80: E501 line too long (101 > 79 characters)
   line 65:1: E305 expected 2 blank lines after class or function definition, found 0
   line 114:28: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/script_apply_fortran_styling/bin/apply_fortran_styling.py :
   line 46:80: E501 line too long (112 > 79 characters)
   line 59:28: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/script_drhook_checker/bin/drhook_check.py :
   line 40:80: E501 line too long (113 > 79 characters)
   line 77:33: W605 invalid escape sequence '\.'
@@ -14836,7 +14836,7 @@ File ../../../UM_Trunk//rose-stem/app/script_drhook_checker/bin/drhook_check.py 
   line 689:45: W605 invalid escape sequence '\d'
   line 788:1: E305 expected 2 blank lines after class or function definition, found 1
   line 789:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/script_missing_macro/bin/validate_missing_macro.py :
   Line includes trailing whitespace character(s)
   line 63:25: E128 continuation line under-indented for visual indent
@@ -14857,7 +14857,7 @@ File ../../../UM_Trunk//rose-stem/app/script_missing_macro/bin/validate_missing_
   line 103:25: E128 continuation line under-indented for visual indent
   line 104:25: E128 continuation line under-indented for visual indent
   line 178:11: W292 no newline at end of file
-  
+
   Line includes trailing whitespace character(s)
 File ../../../UM_Trunk//rose-stem/app/script_nl_bcast_checker/bin/nl_bcast_check.py :
   line 45:1: E265 block comment should start with '# '
@@ -14959,7 +14959,7 @@ File ../../../UM_Trunk//rose-stem/app/script_nl_bcast_checker/bin/nl_bcast_check
   line 910:80: E501 line too long (80 > 79 characters)
   line 912:1: E305 expected 2 blank lines after class or function definition, found 1
   line 927:35: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/script_python_checker/bin/python_checker.py :
   Line includes trailing whitespace character(s)
   line 29:1: E265 block comment should start with '# '
@@ -14993,11 +14993,11 @@ File ../../../UM_Trunk//rose-stem/app/script_python_checker/bin/python_checker.p
   line 165:80: E501 line too long (80 > 79 characters)
   line 167:1: E305 expected 2 blank lines after class or function definition, found 1
   line 180:34: W292 no newline at end of file
-  
+
   Line includes trailing whitespace character(s)
 File ../../../UM_Trunk//rose-stem/app/script_site_validator/bin/site_validator.py :
   line 211:20: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/app/um_ga7_amip/bin/crun_archive.sh :
   Line includes trailing whitespace character(s)
   Line includes trailing whitespace character(s)
@@ -15022,13 +15022,13 @@ File ../../../UM_Trunk//rose-stem/bin/check_groups_coverage.py :
   line 209:80: E501 line too long (83 > 79 characters)
   line 230:80: E501 line too long (80 > 79 characters)
   line 251:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/bin/compiler_warnings.py :
   line 822:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/bin/compiler_warnings_allowlist.py :
   line 184:2: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/bin/lib_build_path_checker.py :
   line 17:15: E128 continuation line under-indented for visual indent
   line 17:36: E231 missing whitespace after ','
@@ -15043,12 +15043,12 @@ File ../../../UM_Trunk//rose-stem/bin/lib_build_path_checker.py :
   line 59:11: E225 missing whitespace around operator
   line 62:1: E305 expected 2 blank lines after class or function definition, found 1
   line 63:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/bin/rose_cylc_version_test.py :
   line 23:1: E302 expected 2 blank lines, found 1
   line 38:78: E502 the backslash is redundant between brackets
   line 64:11: W292 no newline at end of file
-  
+
 File ../../../UM_Trunk//rose-stem/legacy_sites/afw/graph-standard-linux.rc :
   Line includes trailing whitespace character(s)
   Line includes trailing whitespace character(s)
@@ -23051,7 +23051,7 @@ File ../../../UM_Trunk//src/utility/wafccb_library/icaoheight.F90 :
 
 
 
-[roddy.sharp@cazld000021 python]$ time python3 ./umdp3_check.py ../../../UM_Trunk/ ../file/whitelist_includes.txt > python_umdp3_check_trunk.out 
+[roddy.sharp@cazld000021 python]$ time python3 ./umdp3_check.py ../../../UM_Trunk/ ../file/whitelist_includes.txt > python_umdp3_check_trunk.out
 
 real	2m5.038s
 user	1m32.401s

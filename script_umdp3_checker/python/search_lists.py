@@ -8,7 +8,7 @@
 Lists of words for Fortran checks. Some to confirm they are found in the approved form, some to test for as the intention is that they should no longer appear in the code.
 """
 
-# Obsolescent Fortran intrinsics : These should not be used in new code and 
+# Obsolescent Fortran intrinsics : These should not be used in new code and
 # their use in existing code should be reviewed.
 obsolescent_intrinsics = {
     'ALOG',     'ALOG10',   'AMAX0',    'AMAX1',    'AMIN0',    'AMIN1',

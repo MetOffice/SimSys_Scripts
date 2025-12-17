@@ -10,7 +10,7 @@ If you're already using the Perl version, the Python version should be a drop-in
 # Old Perl command
 perl umdp3_check.pl . whitelist_includes.txt
 
-# New Python command  
+# New Python command
 python umdp3_check.py . whitelist_includes.txt
 ```
 
@@ -31,7 +31,7 @@ The arguments and behavior are identical.
 - Perl modules: threads, Text::Balanced, File::MimeInfo::Magic, IPC::Run
 - External tools: fcm, pycodestyle, shellcheck, perlcritic
 
-#### Python Version Required  
+#### Python Version Required
 
 - Python 3.8+
 - Python packages: python-magic, pycodestyle
@@ -69,7 +69,7 @@ All environment variables work identically:
 Both versions implement identical tests:
 
 - **Fortran Tests**: 20+ diff-based tests, 7 file-based tests
-- **C Tests**: 3 diff-based tests, 10 file-based tests  
+- **C Tests**: 3 diff-based tests, 10 file-based tests
 - **Universal Tests**: Trailing whitespace, line length, tabs
 - **External Tools**: pycodestyle, shellcheck, perl critic
 
@@ -106,7 +106,7 @@ Run both versions on the same branch and compare outputs:
 # Test with Perl version
 perl ../bin/umdp3_check.pl . ../file/whitelist_includes.txt > perl_output.txt
 
-# Test with Python version  
+# Test with Python version
 python umdp3_check.py . ../file/whitelist_includes.txt > python_output.txt
 
 # Compare outputs
@@ -138,7 +138,7 @@ The Python version includes a simplified Perl::Critic equivalent:
 - Configurable severity levels
 - Advanced Perl-specific analysis
 
-#### Python Version  
+#### Python Version
 
 - Basic Perl best practices checking
 - Checks for strict/warnings usage
@@ -193,7 +193,7 @@ Both versions provide the same information but with slight formatting difference
 # Error: No module named 'magic'
 pip install python-magic
 
-# Error: pycodestyle not found  
+# Error: pycodestyle not found
 pip install pycodestyle
 ```
 
@@ -264,7 +264,7 @@ Keep wrapper scripts that can switch between versions:
 if [ "$USE_PYTHON_UMDP3" = "1" ]; then
     python umdp3_check.py "$@"
 else
-    perl umdp3_check.pl "$@"  
+    perl umdp3_check.pl "$@"
 fi
 ```
 

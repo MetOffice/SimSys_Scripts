@@ -2,16 +2,16 @@ Testing branch /data/users/roddy.sharp/WorkingCopies/vn13.9_deliberate_umdp3_fai
 The following files have failed the UMDP3 compliance tests:
 File src/control/top_level/atm_step_4A.F90 :
   File is missing at least one IMPLICIT NONE
-  Line includes trailing whitespace character(s): 
+  Line includes trailing whitespace character(s):
     '  '
 File src/control/top_level/atmos_physics2.F90 :
   Lowercase Fortran keywords not permitted: END, IF
-  Line longer than 80 characters: 
-    ',yua(aocpl_p_rows)                                                                        &', 
+  Line longer than 80 characters:
+    ',yua(aocpl_p_rows)                                                                        &',
     '      CALL u_to_p (r_u, udims_s%i_start,udims_s%i_end, udims_s%j_start,udims_s%j_end, pdims%i_start,pdims%i_end, pdims%j_start,pdims%j_end, model_levels, r_u_p)'
   Omitted optional space in keywords: ENDDO, ENDSELECT, ENDIF
-  Line includes trailing whitespace character(s): 
-    '            r_u_p(i,j,k) = r_u(i,j,k)              ', 
+  Line includes trailing whitespace character(s):
+    '            r_u_p(i,j,k) = r_u(i,j,k)              ',
     '            r_v_p(i,j,k) = r_v(i,j,k)              '
 File src/control/top_level/filename_generation_mod.F90 :
   Lowercase Fortran keywords not permitted: DIMENSION, INTEGER
