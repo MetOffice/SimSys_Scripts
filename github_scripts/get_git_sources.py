@@ -120,16 +120,22 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
 
     exclude_dirs = (
         "applications/*/working",
+        "applications/*/test",
         "applications/*/bin",
         "science/*/working",
+        "science/*/test",
         "science/*/bin",
         "interfaces/*/working",
+        "interfaces/*/test",
         "interfaces/*/bin",
         "components/*/working",
+        "components/*/test",
         "components/*/bin",
         "infrastructure/*/working",
+        "infrastructure/*/test",
         "infrastructure/*/bin",
         "mesh_tools/*/working",
+        "mesh_tools/*/test",
         "mesh_tools/*/bin"
     )
 
