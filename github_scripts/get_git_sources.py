@@ -12,6 +12,7 @@ import subprocess
 from typing import Optional
 from pathlib import Path
 from shutil import rmtree
+import shlex
 
 
 def run_command(
@@ -24,7 +25,7 @@ def run_command(
     Outputs:
         - result object from subprocess.run
     """
-    command = command.split()
+    command = shlex.split(command)
     result = subprocess.run(
         command,
         capture_output=True,
@@ -117,8 +118,31 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     # Create a clean clone location
     loc.mkdir(parents=True)
 
+    exclude_dirs = (
+        "applications/*/working",
+        "applications/*/test",
+        "applications/*/bin",
+        "science/*/working",
+        "science/*/test",
+        "science/*/bin",
+        "interfaces/*/working",
+        "interfaces/*/test",
+        "interfaces/*/bin",
+        "components/*/working",
+        "components/*/test",
+        "components/*/bin",
+        "infrastructure/*/working",
+        "infrastructure/*/test",
+        "infrastructure/*/bin",
+        "mesh_tools/*/working",
+        "mesh_tools/*/test",
+        "mesh_tools/*/bin",
+    )
+
     # Trailing slash required for rsync
     command = f"rsync -av {repo_source}/ {loc}"
+    for item in exclude_dirs:
+        command = f"{command} --exclude '{item}'"
     run_command(command)
 
     # Fetch the main branch from origin
