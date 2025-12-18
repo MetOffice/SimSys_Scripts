@@ -7,16 +7,3 @@ __pycache__/
 *.swp
 .conda
 .idea
-script_umdp3_checker/Output/files_ending_in-c
-script_umdp3_checker/Output/files_ending_in-F90
-script_umdp3_checker/Output/files_ending_in-f90
-script_umdp3_checker/Output/files_ending_in-h
-script_umdp3_checker/Output/files_ending_in-sh
-script_umdp3_checker/Output/pl_BrWC_pass1.txt
-script_umdp3_checker/Output/py_BrWC_pass1.txt
-script_umdp3_checker/Output/selected_files_ending_in-c.txt
-script_umdp3_checker/Output/selected_files_ending_in-F90.txt
-script_umdp3_checker/Output/selected_files_ending_in-f90.txt
-script_umdp3_checker/Output/selected_files_ending_in-h.txt
-script_umdp3_checker/Output/selected_files_ending_in-sh.txt
-script_umdp3_checker/random_file_selekta.py
