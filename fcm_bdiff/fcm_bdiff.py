@@ -28,8 +28,10 @@ class FCMError(Exception):
             " ".join(self.args[0]), self.args[1].strip()
         )
 
+
 class FCMBase:
     """Class which generates a branch diff."""
+
     """
     This a modified (mangled) copy of the one Sam made in
     bdiff/git_bdiff.py, to allow current scripts to try and migrate to
@@ -151,14 +153,19 @@ class FCMBase:
         calling get_branch_info() - returns the Branch Parent Field
         """
         parent = re.search(
-            r"^Branch Parent:\s*(?P<parent>.*)$", self._branch_info, flags=re.MULTILINE
+            r"^Branch Parent:\s*(?P<parent>.*)$",
+            self._branch_info,
+            flags=re.MULTILINE,
         )
         if parent:
             parent = parent.group("parent")
         else:
             # Will end up here if _branch is the trunk. In which case we shold possibly return _branch?
             parent = re.search(
-                r"^URL:\s*(?P<parent>.*)$", self._branch_info, flags=re.MULTILINE)
+                r"^URL:\s*(?P<parent>.*)$",
+                self._branch_info,
+                flags=re.MULTILINE,
+            )
             if parent:
                 parent = parent.group("parent")
             else:
@@ -170,7 +177,9 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved
         by calling get_branch_info() - returns the URL field
         """
-        url = re.search(r"^URL:\s*(?P<url>.*)$", self._branch_info, flags=re.MULTILINE)
+        url = re.search(
+            r"^URL:\s*(?P<url>.*)$", self._branch_info, flags=re.MULTILINE
+        )
         if url:
             url = url.group("url")
         else:
@@ -199,7 +208,9 @@ class FCMBase:
         calling get_branch_info() - returns the Repository Root field
         """
         repos_root = re.search(
-            r"^Repository Root:\s*(?P<url>.*)\s*$", self._branch_info, flags=re.MULTILINE
+            r"^Repository Root:\s*(?P<url>.*)\s*$",
+            self._branch_info,
+            flags=re.MULTILINE,
         )
         if repos_root:
             repos_root = repos_root.group("url")
@@ -213,13 +224,16 @@ class FCMBase:
         calling get_branch_info() - returns the Last Changed Rev
         """
         repos_rev = re.search(
-            r"^Last Changed Rev:\s*(?P<rev>.*)\s*$", self._branch_info, flags=re.MULTILINE
+            r"^Last Changed Rev:\s*(?P<rev>.*)\s*$",
+            self._branch_info,
+            flags=re.MULTILINE,
         )
         if repos_rev:
             repos_rev = repos_rev.group("rev")
         else:
             raise Exception("Could not find Last Changed Rev field")
         return repos_rev
+
 
 # --------------------------------------------------------------------
 class FCMBDiff(FCMBase):
@@ -269,7 +283,8 @@ class FCMBDiff(FCMBase):
         bdiff_files = [
             bfile.split()[1]
             for bfile in bdiff_files
-            if bfile.split()[0].strip() == "M" or bfile.split()[0].strip() == "A"
+            if bfile.split()[0].strip() == "M"
+            or bfile.split()[0].strip() == "A"
         ]
 
         # Convert the file paths to be relative to the current URL; to do this
@@ -288,17 +303,23 @@ class FCMBDiff(FCMBase):
             # Allows for 'user directed' path reconstruction.
             # Particularly useful in rose stem.
             base = path_override
-            bdiff_files = [os.path.join(base, bfile) for bfile in relative_paths]
+            bdiff_files = [
+                os.path.join(base, bfile) for bfile in relative_paths
+            ]
         elif base_source_key in os.environ:
             # If running as a suite, the base path to the working copy can be used
             # However, unless the suite task is running on a machine with the same
             # path to the working copy, the task can't really make much use of
             # this.
             base = os.environ[base_source_key]
-            bdiff_files = [os.path.join(base, bfile) for bfile in relative_paths]
+            bdiff_files = [
+                os.path.join(base, bfile) for bfile in relative_paths
+            ]
         else:
             # Otherwise stick to the original path/URL to the branch
-            bdiff_files = [os.path.join(self._branch, bfile) for bfile in relative_paths]
+            bdiff_files = [
+                os.path.join(self._branch, bfile) for bfile in relative_paths
+            ]
 
         return bdiff_files
 
@@ -310,6 +331,7 @@ class FCMBDiff(FCMBase):
         """
         command = ["fcm", "bdiff", "--summarize", self._branch]
         return self.run_fcm_command(command, retries, snooze)
+
 
 class FCMInfo(FCMBase):
     """Class to hold FCM branch information. Mirroring the functionality

@@ -1,4 +1,0 @@
-python-magic==0.4.27
-pycodestyle>=2.8.0
-pylint>=2.15.0
-argparse>=1.4.0
