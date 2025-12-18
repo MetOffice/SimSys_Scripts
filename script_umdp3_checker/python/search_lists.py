@@ -52,7 +52,7 @@ unseparated_keywords_list = {
 }
 
 # Retired if-defs (placeholder - would be loaded from configuration)
-retired_ifdefs = set()
+retired_ifdefs = set(['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES', 'A12_2A',])
 
 # Deprecated C identifiers
 deprecated_c_identifiers = {

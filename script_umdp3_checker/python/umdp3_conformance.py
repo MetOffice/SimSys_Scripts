@@ -411,6 +411,10 @@ def create_style_checkers(file_types: List[str],
         )
         checkers.append(python_file_checker)
 
+    """ ToDo : Puting this here, with no file type filtering,
+        means it will always run on all changed files.
+        It might be better to add the dispatch table to all the other
+        checkers so it's only running on 'code' files."""
     all_file_dispatch_table = dispatch_tables.get_file_dispatch_table_all()
     generic_checker = UMDP3_checker("Generic File Checker",
                                     set(), all_file_dispatch_table,

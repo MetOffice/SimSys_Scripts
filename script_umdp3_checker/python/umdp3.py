@@ -8,7 +8,13 @@
 Package to contain functions which test for UMDP3 compliance.
 Python translation of the original Perl UMDP3.pm module.
 """
-
+"""
+ToDo : Several of the test functions are poor shadows of the original
+       Perl versions. They would benefit from improving to catch more
+       cases.
+       Equally, there could probably be more consistancly in how things like comments are stripped from the ends of lines
+       and/or full comment lines are skipped.
+"""
 import re
 import threading
 from typing import List, Dict, Set
@@ -24,14 +30,23 @@ VERSION = '13.5.0'
 @dataclass
 class TestResult:
     """Result from running a single style checker test on a file."""
+    """ToDo : unsure if both output and errors are required.
+       They make a bit more sense in the 'external_checkers' where
+       they hold stdout and stderr."""
     checker_name: str = "Unnamed Checker"
     failure_count: int = 0
     passed: bool = False
     output: str = ""
-    errors: Dict = field(default_factory=Dict)
+    errors: Dict = field(default_factory=dict)
 
 class UMDP3:
     """UMDP3 compliance checker class"""
+    """ToDO : This class could possibly be abandoned, or replaced
+       by a similar class at a different level. Presently only one
+       instance is created in such a way that the original
+       _extra_error_info can't be used to hold extra information
+       at a per file level. resulting in the need to pass error_log
+       back, which feels like a bodge."""
     # precompiled, regularly used search patterns.
     comment_line = re.compile(r"!.*$")
     word_splitter = re.compile(r"\b\w+\b")
@@ -66,7 +81,11 @@ class UMDP3:
 
     def add_error_log(self, error_log: Dict, key: str = "no key", value: int = 0) -> Dict:
         """Add extra error information to the dictionary"""
-        """ToDo: The usefulness of the information added has not been assesed, nor does it appear to be reported as yet."""
+        """ToDo: This is a bodge to get more detailed info about
+           the errors back to the calling program. The info is
+           useful, but is currently presented on a per-test basis
+           rather than a per-file which would be easier to read
+           and make use of."""
         if key not in error_log:
             error_log[key] = []
         error_log[key].append(value)
@@ -92,17 +111,14 @@ class UMDP3:
         return result
 
     """Test functions :
-        Each accepts a list of 'lines' to search and returns 0 for pass, >0
-        for fail, where the number returned is the count of occurrences of that
-        type of failure.
-    """
+        Each accepts a list of 'lines' to search and returns a
+        TestResult object containing all the information."""
     """ToDo: One thought here is each test should also be told whether it's being passed the contents of a full file, or just a selection of lines involved in a change as some of the tests appear to really only be useful if run on a full file (e.g. the Implicit none checker). Thus if only passed a selection of lines, these tests could be skipped/return 'pass' regardless.
     Although, a brief look seems to imply that there are two 'dispatch tables' one for full files and one for changed lines."""
 
-    ### SCAN STOP ####
     def capitulated_keywords(self, lines: List[str]) -> TestResult:
-#    def capitulated_keywords(self, lines: List[str]) -> int:
-        """Do some stuff, with print statements"""
+        """A fake test, put in for testing purposes.
+        Probably not needed any more, but left in case."""
         failures = 0
         line_count = 0
         error_log = {}
@@ -516,10 +532,6 @@ class UMDP3:
         for count, line in enumerate(lines):
             match = re.search(r'^\s*#if *(!)?defined\s*\(\s*\w+\s*\)(.*)', line) or re.search(r'^\s*#(else) *(.*)', line)
             if match:
-                # print(f"Debug: Found CPP directive line: {line}")
-                # print(f"Debug: match groups: {match.groups()}")
-                # print(f"Debug: match group(1): {match.group(1)}")
-                # print(f"Debug: match group(2): {match.group(2)}")
                 if re.search(r'.*!', match.group(2)):
                     self.add_extra_error("Fortran comment in CPP directive")
                     failures += 1
@@ -619,7 +631,7 @@ class UMDP3:
 
     def retire_if_def(self, lines: List[str]) -> TestResult:
         """Check for if-defs due for retirement"""
-        retired_ifdefs = ['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES', 'A12_2A',]
+        #retired_ifdefs = ['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES', 'A12_2A',]
         failures = 0
         error_log = {}
         count = -1

@@ -1,6 +1,25 @@
 import pytest
-from umdp3 import UMDP3
+import sys
+import os
+from pathlib import Path
 
+# Add the current directory to Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from umdp3 import UMDP3, TestResult
+from typing import Dict, Callable
+
+# Prevent pytest from trying to collect TestResult as more tests:
+TestResult.__test__ = False
+"""
+ToDo :
+      THere has been a LOT of refactoring in the umdp3 module since these
+      tests were written. To persuade them to 'work' for now, only two
+      attributes of the TestResult class are used - failure_count and
+      errors.
+      Something more rigorous should be done to bring these tests up to
+      date. Especially as errors is (I think) only checking for the presence
+      of a given string in the keys of the error log dict.
+"""
 keyword_data = [
     ("IF THEN END", 0, {}, "All UPPERCASE keywords"),
     ("if then end", 3, {"lowercase keyword: if"}, "All lowercase keywords"),
@@ -15,9 +34,9 @@ keyword_test_ids = [data[3] for data in keyword_data]
 def test_keywords(lines, expected_result, expected_errors):
     checker = UMDP3()
     result = checker.capitalised_keywords([lines])
-    assert result == expected_result
+    assert result.failure_count == expected_result
     for error in expected_errors:
-        assert error in checker.get_extra_error_information()
+        assert error in result.errors
 
 fake_code_block = [
         "PROGRAM test",
@@ -34,7 +53,7 @@ implicit_none_paramters = [
 def test_implicit_none(lines, expected_result):
     checker = UMDP3()
     result = checker.implicit_none(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 openmp_sentinels_parameters = [
     (["!$OMP PARALLEL"], 0, "OpenMP sentinel in column one"),
@@ -49,7 +68,7 @@ openmp_sentinels_parameters = [
 def test_openmp_sentinels_in_column_one(lines, expected_result):
     checker = UMDP3()
     result = checker.openmp_sentinels_in_column_one(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 unseparated_keywords_parameters = [
     (["ELSEIF", "ENDDO", "ENDSUBROUTINE"], 3, "All keywords unseparated"),
@@ -64,7 +83,7 @@ unseparated_keywords_parameters = [
 def test_unseparated_keywords(lines, expected_result):
     checker = UMDP3()
     result = checker.unseparated_keywords(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 go_to_other_than_9999_parameters = [
     (["      GO TO 1000", "      GO TO 2000"], 2, "All GO TO statements to labels other than 9999"),
@@ -77,7 +96,7 @@ go_to_other_than_9999_parameters = [
 def test_go_to_other_than_9999(lines, expected_result  ):
     checker = UMDP3()
     result = checker.go_to_other_than_9999(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 write_using_default_format_parameters = [
     (["      WRITE(*,*) 'Hello, World!'"], 1, "WRITE using default format"),
@@ -90,7 +109,7 @@ write_using_default_format_parameters = [
 def test_write_using_default_format(lines, expected_result):
     checker = UMDP3()
     result = checker.write_using_default_format(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_lowercase_variable_names_parameters = [
     (["INTEGER  :: lowercase_variable"], 0, "Lowercase variable name"),
@@ -105,7 +124,7 @@ test_lowercase_variable_names_parameters = [
 def test_lowercase_variable_names(lines, expected_result):
     checker = UMDP3()
     result = checker.lowercase_variable_names(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_dimension_forbidden_parameters = [
     (["REAL :: array(ARR_LEN)"], 0, "Dimension specified in variable declaration"),
@@ -118,7 +137,7 @@ test_dimension_forbidden_parameters = [
 def test_dimension_forbidden(lines, expected_result):
     checker = UMDP3()
     result = checker.dimension_forbidden(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_ampersand_continuation_parameters = [
     (["  PRINT *, 'This is a long line &", "  & that continues here'"], 1, "Ampersand continuation on both lines"),
@@ -130,7 +149,7 @@ test_ampersand_continuation_parameters = [
 def test_ampersand_continuation(lines, expected_result):
     checker = UMDP3()
     result = checker.ampersand_continuation(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_forbidden_keywords_parameters = [
     (["COMMON /BLOCK/ var1, var2"], 0, "Use of COMMON block"),
@@ -143,7 +162,7 @@ test_forbidden_keywords_parameters = [
 def test_forbidden_keywords(lines, expected_result):
     checker = UMDP3()
     result = checker.forbidden_keywords(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_forbidden_operators_parameters = [
     (["IF (x .GT. y) THEN"], 1, "Use of .GT. operator"),
@@ -161,7 +180,7 @@ test_forbidden_operators_parameters = [
 def test_forbidden_operators(lines, expected_result):
     checker = UMDP3()
     result = checker.forbidden_operators(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_line_over_80chars_parameters = [
     (["  PRINT *, 'This line is definitely way over the eighty character limit set by the UM coding standards'"], 1, "Line over 80 characters"),
@@ -172,7 +191,7 @@ test_line_over_80chars_parameters = [
 def test_line_over_80chars(lines, expected_result):
     checker = UMDP3()
     result = checker.line_over_80chars(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_tab_detection_parameters = [
     (["  PRINT *, 'This line has no tabs'"], 0, "No tabs"),
@@ -183,7 +202,7 @@ test_tab_detection_parameters = [
 def test_tab_detection(lines, expected_result):
     checker = UMDP3()
     result = checker.tab_detection(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_printstatus_mod_parameters = [
     (["  USE PrintStatus_mod"], 1, "Use of PRINTSTATUS_Mod"),
@@ -194,7 +213,7 @@ test_printstatus_mod_parameters = [
 def test_printstatus_mod(lines, expected_result):
     checker = UMDP3()
     result = checker.printstatus_mod(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_printstar_parameters = [
     (["  PRINT *, 'Hello, World!'"], 1, "Use of PRINT *"),
@@ -207,7 +226,7 @@ test_printstar_parameters = [
 def test_printstar(lines, expected_result):
     checker = UMDP3()
     result = checker.printstar(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_write6_parameters = [
     (["  WRITE(6,*) 'Hello, World!'"], 1, "Use of WRITE(6,*)"),
@@ -218,7 +237,7 @@ test_write6_parameters = [
 def test_write6(lines, expected_result):
     checker = UMDP3()
     result = checker.write6(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_um_fort_flush_parameters = [
     (["  CALL um_fort_flush()"], 1, "Use of um_fort_flush"),
@@ -229,7 +248,7 @@ test_um_fort_flush_parameters = [
 def test_um_fort_flush(lines, expected_result):
     checker = UMDP3()
     result = checker.um_fort_flush(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_svn_keyword_subst_parameters = [
     (["  ! $Id$"], 1, "Use of SVN keyword substitution"),
@@ -240,7 +259,7 @@ test_svn_keyword_subst_parameters = [
 def test_svn_keyword_subst(lines, expected_result):
     checker = UMDP3()
     result = checker.svn_keyword_subst(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_omp_missing_dollar_parameters = [
     (["!$OMP PARALLEL"], 0, "Correct OpenMP sentinel"),
@@ -251,7 +270,7 @@ test_omp_missing_dollar_parameters = [
 def test_omp_missing_dollar(lines, expected_result):
     checker = UMDP3()
     result = checker.omp_missing_dollar(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_cpp_ifdef_parameters = [
     (["#ifndef DEBUG"], 1, "Incorrect #ifndef"),
@@ -264,7 +283,7 @@ test_cpp_ifdef_parameters = [
 def test_cpp_ifdef(lines, expected_result):
     checker = UMDP3()
     result = checker.cpp_ifdef(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_cpp_comment_parameters = [
     #This test fails because the test is wrong - it needs fixing
@@ -279,7 +298,7 @@ test_cpp_comment_parameters = [
 def test_cpp_comment(lines, expected_result):
     checker = UMDP3()
     result = checker.cpp_comment(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_obsolescent_fortran_intrinsic_parameters = [
     (["  x = ALOG(2.0)"], 1, "Use of obsolescent intrinsic ALOG"),
@@ -295,7 +314,7 @@ test_obsolescent_fortran_intrinsic_parameters = [
 def test_obsolescent_fortran_intrinsic(lines, expected_result):
     checker = UMDP3()
     result = checker.obsolescent_fortran_intrinsic(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_exit_stmt_label_parameters = [
     (["      EXIT 10"], 0, "EXIT statement with label"),
@@ -307,7 +326,7 @@ test_exit_stmt_label_parameters = [
 def test_exit_stmt_label(lines, expected_result):
     checker = UMDP3()
     result = checker.exit_stmt_label(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_intrinsic_modules_parameters = [
     (["  USE ISO_C_BINDING"], 1, "Incorrect Use of ISO_C_BINDING module"),
@@ -321,7 +340,7 @@ test_intrinsic_modules_parameters = [
 def test_intrinsic_modules(lines, expected_result):
     checker = UMDP3()
     result = checker.intrinsic_modules(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_read_unit_args_parameters = [
     (["  READ(5,*) var"], 1, "READ without explicit UNIT="),
@@ -335,7 +354,7 @@ test_read_unit_args_parameters = [
 def test_read_unit_args(lines, expected_result):
     checker = UMDP3()
     result = checker.read_unit_args(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_retire_if_def_parameters = [
     (["#ifdef DEBUG"], 0, "Correct Use of #ifdef"),
@@ -355,7 +374,7 @@ test_retire_if_def_parameters = [
 def test_retire_if_def(lines, expected_result):
     checker = UMDP3()
     result = checker.retire_if_def(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_forbidden_stop_parameters = [
     (["  STOP 0"], 1, "Use of STOP statement"),
@@ -368,7 +387,7 @@ test_forbidden_stop_parameters = [
 def test_forbidden_stop(lines, expected_result):
     checker = UMDP3()
     result = checker.forbidden_stop(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_intrinsic_as_variable_parameters = [
     (["  INTEGER :: SIN"], 1, "Use of intrinsic name as variable"),
@@ -381,7 +400,7 @@ test_intrinsic_as_variable_parameters = [
 def test_intrinsic_as_variable(lines, expected_result):
     checker = UMDP3()
     result = checker.intrinsic_as_variable(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_check_crown_copyright_parameters = [
     (["! Crown copyright 2024"], 0, "Correct crown copyright statement"),
@@ -394,7 +413,7 @@ test_check_crown_copyright_parameters = [
 def test_check_crown_copyright(lines, expected_result):
     checker = UMDP3()
     result = checker.check_crown_copyright(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_check_code_owner_parameters = [
     (["! Code Owner: John Doe"], 0, "code owner statement"),
@@ -407,7 +426,7 @@ test_check_code_owner_parameters = [
 def test_check_code_owner(lines, expected_result):
     checker = UMDP3()
     result = checker.check_code_owner(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 
 test_array_init_form_parameters = [
@@ -420,7 +439,7 @@ test_array_init_form_parameters = [
 def test_array_init_form(lines, expected_result):
     checker = UMDP3()
     result = checker.array_init_form(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result
 
 test_line_trail_whitespace_parameters = [
     (["  PRINT *, 'Hello, World!  '"], 0, "Line 1 without trailing whitespace"),
@@ -434,4 +453,4 @@ test_line_trail_whitespace_parameters = [
 def test_line_trail_whitespace(lines, expected_result):
     checker = UMDP3()
     result = checker.line_trail_whitespace(lines)
-    assert result == expected_result
+    assert result.failure_count == expected_result

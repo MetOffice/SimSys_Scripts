@@ -17,8 +17,13 @@ from pathlib import Path
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from umdp3 import UMDP3
-from script_umdp3_checker.python.old_umdp3_checks import UMDP3DispatchTables
+from umdp3 import UMDP3, TestResult
+from old_umdp3_checks import OldUMDP3Checks
+from typing import Callable, Iterable, List, Dict, Set
+from dataclasses import dataclass, field
+
+# Prevent pytest from trying to collect TestResult as more tests:
+TestResult.__test__ = False
 
 def test_basic_functionality():
     """Test basic UMDP3 functionality"""
@@ -32,9 +37,9 @@ def test_basic_functionality():
         "This is a short line",
         "This is a very long line that exceeds eighty characters and should trigger a failure in the line length test"
     ]
-
+    expected = TestResult(checker_name="Line Length Check", failure_count=1, passed=False)
     result = umdp3.line_over_80chars(test_lines)
-    print(f"Line length test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
 
     # Test tab detection
     test_lines_tabs = [
@@ -43,7 +48,7 @@ def test_basic_functionality():
     ]
 
     result = umdp3.tab_detection(test_lines_tabs)
-    print(f"Tab detection test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(f"Tab detection test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
 
     # Test trailing whitespace
     test_lines_whitespace = [
@@ -52,7 +57,7 @@ def test_basic_functionality():
     ]
 
     result = umdp3.line_trail_whitespace(test_lines_whitespace)
-    print(f"Trailing whitespace test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(f"Trailing whitespace test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
 
     # Test IMPLICIT NONE check
     fortran_without_implicit = [
@@ -62,7 +67,7 @@ def test_basic_functionality():
     ]
 
     result = umdp3.implicit_none(fortran_without_implicit)
-    print(f"IMPLICIT NONE test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(f"IMPLICIT NONE test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
 
     fortran_with_implicit = [
         "PROGRAM test",
@@ -72,13 +77,13 @@ def test_basic_functionality():
     ]
 
     result = umdp3.implicit_none(fortran_with_implicit)
-    print(f"IMPLICIT NONE test (good): {'PASS' if result == 0 else 'FAIL'} (expected pass)")
+    print(f"IMPLICIT NONE test (good): {'PASS' if result.failure_count == 0 else 'FAIL'} (expected pass)")
 
 def test_dispatch_tables():
     """Test dispatch tables"""
     print("\nTesting dispatch tables...")
 
-    dispatch = UMDP3DispatchTables()
+    dispatch = OldUMDP3Checks()
 
     # Test getting dispatch tables
     fortran_diff = dispatch.get_diff_dispatch_table_fortran()
@@ -110,7 +115,7 @@ def test_fortran_specific():
     ]
 
     result = umdp3.obsolescent_fortran_intrinsic(fortran_old_intrinsics)
-    print(f"Obsolescent intrinsics test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(f"Obsolescent intrinsics test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
 
     # Test forbidden operators
     fortran_old_operators = [
@@ -119,7 +124,7 @@ def test_fortran_specific():
     ]
 
     result = umdp3.forbidden_operators(fortran_old_operators)
-    print(f"Forbidden operators test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(f"Forbidden operators test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
 
     # Test PRINT statement
     fortran_print = [
@@ -127,7 +132,7 @@ def test_fortran_specific():
     ]
 
     result = umdp3.printstar(fortran_print)
-    print(f"PRINT statement test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(f"PRINT statement test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
 
 def test_c_specific():
     """Test C-specific checks"""
