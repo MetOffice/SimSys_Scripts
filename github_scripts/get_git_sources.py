@@ -136,7 +136,7 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
         "infrastructure/*/bin",
         "mesh_tools/*/working",
         "mesh_tools/*/test",
-        "mesh_tools/*/bin"
+        "mesh_tools/*/bin",
     )
 
     # Trailing slash required for rsync
