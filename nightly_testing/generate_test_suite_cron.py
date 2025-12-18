@@ -26,7 +26,6 @@ Required:
 Optional:
 * revisions: heads to use the HoT for sub-repos, set to use the set revisions
 * vars: strings that follow the -S command on the command line
-* monitoring: Boolean, whether to run the monitoring script on this suite
 * cylc_version: Can be any string beginning 8 that is a valid cylc install
                 at the site, such that `export CYLC_VERSION=<cylc_version>`
                 works.
@@ -57,9 +56,8 @@ DEPENDENCIES = {
 CLONE_DIR = os.path.join(os.environ["TMPDIR"], os.environ["USER"])
 MIRROR_PATH = "/data/users/gitassist/git_mirrors/"
 UMDIR = os.environ["UMDIR"]
-PROFILE = ". /etc/profile"
+CYLC = "bash -l cylc"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
-MONITORING_TIME = "00 06"
 
 
 def run_command(command):
@@ -82,7 +80,7 @@ def create_git_clone_cron(repo):
 
     command = f"# Clone {repo} - every day at 23:30 #"
     length = len(command)
-    command = f"{length*'#'}\n{command}\n{length*'#'}\n30 23 * * * {PROFILE} ; "
+    command = f"{length*'#'}\n{command}\n{length*'#'}\n30 23 * * * "
     command += f"rm -rf {clone_path} ; "
     command += f"git clone {repo_mirror} {clone_path}"
     return command + "\n\n\n"
@@ -93,9 +91,7 @@ def generate_cron_timing_str(suite, mode):
     Return a string with the cron timing info included but no commands
     """
 
-    if mode == "monitoring":
-        cron = f"{MONITORING_TIME}"
-    elif mode == "main":
+    if mode == "main":
         cron = suite["cron_launch"]
     elif mode == "clean":
         cron = suite["cron_clean"]
@@ -104,17 +100,17 @@ def generate_cron_timing_str(suite, mode):
     cron += " * * "
 
     if suite["period"] == "weekly":
-        if mode == "main" or mode == "monitoring":
+        if mode == "main":
             cron += "1 "
         else:
             cron += "7 "
     elif suite["period"] == "nightly_all":
-        if mode == "main" or mode == "monitoring":
+        if mode == "main":
             cron += "1-5 "
         else:
             cron += "2-6 "
     else:
-        if mode == "main" or mode == "monitoring":
+        if mode == "main":
             cron += "2-5 "
         else:
             cron += "3-6 "
@@ -146,38 +142,14 @@ def generate_header(name, suite):
     return header
 
 
-def generate_monitoring(name, suite, log_file):
-    """
-    Generate the monitoring command cron job
-    Default to off if not specified in config
-    """
-
-    # Return empty string if not required - default to this state
-    if "monitoring" not in suite or not suite["monitoring"]:
-        return ""
-
-    script = os.path.join(UMDIR, "bin", "monitoring.py")
-    cylc_dir = os.path.expanduser(os.path.join("~", "cylc-run", name))
-
-    monitoring = generate_cron_timing_str(suite, "monitoring")
-
-    monitoring += (
-        f"{PROFILE} ; module load scitools/default-current ; "
-        f"{script} {cylc_dir} >> {log_file} 2>&1"
-    )
-
-    return monitoring + "\n"
-
-
 def generate_clean_commands(cylc_version, name, log_file):
     """
     Generate the commands used to clean the suite
     """
     return (
-        f"{PROFILE} ; "
         f"export CYLC_VERSION={cylc_version} ; "
-        f"cylc stop --kill '{name}' >/dev/null 2>&1 ; sleep 10 ; "
-        f"cylc clean --timeout=7200 -y -q {name} "
+        f"{CYLC} stop --kill '{name}' >/dev/null 2>&1 ; sleep 10 ; "
+        f"{CYLC} clean --timeout=7200 -y -q {name} "
         f">> {log_file} 2>&1\n"
     )
 
@@ -208,7 +180,7 @@ def generate_cylc_command(suite, wc_path, cylc_version, name):
 
     command = (
         f"export CYLC_VERSION={cylc_version} ; "
-        f"cylc vip -z g={suite['groups']} "
+        f"{CYLC} vip -z g={suite['groups']} "
         f"-n {name} "
         f"-S USE_MIRRORS=true "
     )
@@ -242,7 +214,7 @@ def generate_main_job(name, suite, log_file, wc_path, cylc_version):
     # Set up the timing for this job
     cron_job = generate_cron_timing_str(suite, "main")
 
-    job_command = f"{PROFILE} ; "
+    job_command = " "
 
     # Begin rose-stem command
     job_command += generate_cylc_command(suite, wc_path, cylc_version, name)
@@ -282,10 +254,9 @@ def generate_cron_job(suite_name, suite, log_file):
 
     header = generate_header(suite_name, suite)
     cron_job = generate_main_job(name, suite, log_file, wc_path, cylc_version)
-    monitoring = generate_monitoring(name, suite, log_file)
     clean_cron = generate_clean_cron(suite_name, suite, log_file, cylc_version)
 
-    return header + cron_job + monitoring + clean_cron
+    return header + cron_job + clean_cron
 
 
 def parse_cl_args():
