@@ -10,12 +10,11 @@ Test script for the Python UMDP3 checker
 """
 
 import sys
-import os
 import tempfile
 from pathlib import Path
 
 # Add the current directory to Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from umdp3 import UMDP3, TestResult
 from old_umdp3_checks import OldUMDP3Checks

@@ -4,9 +4,9 @@ import os
 from pathlib import Path
 
 # Add the current directory to Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from umdp3 import UMDP3, TestResult
-from typing import Dict, Callable
+
 
 # Prevent pytest from trying to collect TestResult as more tests:
 TestResult.__test__ = False

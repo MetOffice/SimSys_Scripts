@@ -7,7 +7,6 @@ import argparse
 # Add custom modules to Python path if needed
 # Add the repository root to access fcm_bdiff and git_bdiff packages
 import sys
-from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from github_scripts import git_bdiff
 import fcm_bdiff
