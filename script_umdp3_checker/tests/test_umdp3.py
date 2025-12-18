@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 # Prevent pytest from trying to collect TestResult as more tests:
 TestResult.__test__ = False
 
+
 def test_basic_functionality():
     """Test basic UMDP3 functionality"""
     print("Testing basic UMDP3 functionality...")
@@ -34,49 +35,52 @@ def test_basic_functionality():
     # Test line length check
     test_lines = [
         "This is a short line",
-        "This is a very long line that exceeds eighty characters and should trigger a failure in the line length test"
+        "This is a very long line that exceeds eighty characters and should trigger a failure in the line length test",
     ]
-    expected = TestResult(checker_name="Line Length Check", failure_count=1, passed=False)
+    expected = TestResult(
+        checker_name="Line Length Check", failure_count=1, passed=False
+    )
     result = umdp3.line_over_80chars(test_lines)
-    print(f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+    )
 
     # Test tab detection
-    test_lines_tabs = [
-        "Normal line",
-        "Line with\ttab"
-    ]
+    test_lines_tabs = ["Normal line", "Line with\ttab"]
 
     result = umdp3.tab_detection(test_lines_tabs)
-    print(f"Tab detection test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"Tab detection test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+    )
 
     # Test trailing whitespace
-    test_lines_whitespace = [
-        "Normal line",
-        "Line with trailing spaces   "
-    ]
+    test_lines_whitespace = ["Normal line", "Line with trailing spaces   "]
 
     result = umdp3.line_trail_whitespace(test_lines_whitespace)
-    print(f"Trailing whitespace test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"Trailing whitespace test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+    )
 
     # Test IMPLICIT NONE check
-    fortran_without_implicit = [
-        "PROGRAM test",
-        "INTEGER :: i",
-        "END PROGRAM"
-    ]
+    fortran_without_implicit = ["PROGRAM test", "INTEGER :: i", "END PROGRAM"]
 
     result = umdp3.implicit_none(fortran_without_implicit)
-    print(f"IMPLICIT NONE test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"IMPLICIT NONE test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+    )
 
     fortran_with_implicit = [
         "PROGRAM test",
         "IMPLICIT NONE",
         "INTEGER :: i",
-        "END PROGRAM"
+        "END PROGRAM",
     ]
 
     result = umdp3.implicit_none(fortran_with_implicit)
-    print(f"IMPLICIT NONE test (good): {'PASS' if result.failure_count == 0 else 'FAIL'} (expected pass)")
+    print(
+        f"IMPLICIT NONE test (good): {'PASS' if result.failure_count == 0 else 'FAIL'} (expected pass)"
+    )
+
 
 def test_dispatch_tables():
     """Test dispatch tables"""
@@ -100,6 +104,7 @@ def test_dispatch_tables():
     all_tests = dispatch.get_file_dispatch_table_all()
     print(f"Universal tests available: {len(all_tests)}")
 
+
 def test_fortran_specific():
     """Test Fortran-specific checks"""
     print("\nTesting Fortran-specific checks...")
@@ -107,31 +112,29 @@ def test_fortran_specific():
     umdp3 = UMDP3()
 
     # Test obsolescent intrinsics
-    fortran_old_intrinsics = [
-        "REAL :: x",
-        "x = ALOG(2.0)",
-        "y = DBLE(x)"
-    ]
+    fortran_old_intrinsics = ["REAL :: x", "x = ALOG(2.0)", "y = DBLE(x)"]
 
     result = umdp3.obsolescent_fortran_intrinsic(fortran_old_intrinsics)
-    print(f"Obsolescent intrinsics test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"Obsolescent intrinsics test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+    )
 
     # Test forbidden operators
-    fortran_old_operators = [
-        "IF (x .GT. y) THEN",
-        "  PRINT *, 'x is greater'"
-    ]
+    fortran_old_operators = ["IF (x .GT. y) THEN", "  PRINT *, 'x is greater'"]
 
     result = umdp3.forbidden_operators(fortran_old_operators)
-    print(f"Forbidden operators test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"Forbidden operators test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+    )
 
     # Test PRINT statement
-    fortran_print = [
-        "PRINT *, 'Hello world'"
-    ]
+    fortran_print = ["PRINT *, 'Hello world'"]
 
     result = umdp3.printstar(fortran_print)
-    print(f"PRINT statement test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"PRINT statement test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+    )
+
 
 def test_c_specific():
     """Test C-specific checks"""
@@ -141,21 +144,24 @@ def test_c_specific():
 
     # Test deprecated C identifiers
     c_deprecated = [
-        '#include <stdio.h>',
-        'char buffer[100];',
-        'gets(buffer);'  # deprecated function
+        "#include <stdio.h>",
+        "char buffer[100];",
+        "gets(buffer);",  # deprecated function
     ]
 
     result = umdp3.c_deprecated(c_deprecated)
-    print(f"Deprecated C identifiers test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"Deprecated C identifiers test: {'PASS' if result > 0 else 'FAIL'} (expected failure)"
+    )
 
     # Test format specifiers
-    c_format = [
-        'printf("%10d", value);'  # missing space
-    ]
+    c_format = ['printf("%10d", value);']  # missing space
 
     result = umdp3.c_integral_format_specifiers(c_format)
-    print(f"C format specifiers test: {'PASS' if result > 0 else 'FAIL'} (expected failure)")
+    print(
+        f"C format specifiers test: {'PASS' if result > 0 else 'FAIL'} (expected failure)"
+    )
+
 
 def create_test_files():
     """Create test files for full integration test"""
@@ -183,7 +189,7 @@ program test
 end program test
 """
 
-    with open(fortran_file, 'w') as f:
+    with open(fortran_file, "w") as f:
         f.write(fortran_content)
 
     # Create a test C file with issues
@@ -202,7 +208,7 @@ int main() {
 }
 """
 
-    with open(c_file, 'w') as f:
+    with open(c_file, "w") as f:
         f.write(c_content)
 
     # Create a test Python file
@@ -219,10 +225,11 @@ if __name__ == "__main__":
     test_function()
 """
 
-    with open(python_file, 'w') as f:
+    with open(python_file, "w") as f:
         f.write(python_content)
 
     return test_dir
+
 
 def main():
     """Main test function"""
@@ -246,6 +253,7 @@ def main():
     except Exception as e:
         print(f"Error during testing: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

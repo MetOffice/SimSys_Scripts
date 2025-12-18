@@ -177,9 +177,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved
         by calling get_branch_info() - returns the URL field
         """
-        url = re.search(
-            r"^URL:\s*(?P<url>.*)$", self._branch_info, flags=re.MULTILINE
-        )
+        url = re.search(r"^URL:\s*(?P<url>.*)$", self._branch_info, flags=re.MULTILINE)
         if url:
             url = url.group("url")
         else:
@@ -283,8 +281,7 @@ class FCMBDiff(FCMBase):
         bdiff_files = [
             bfile.split()[1]
             for bfile in bdiff_files
-            if bfile.split()[0].strip() == "M"
-            or bfile.split()[0].strip() == "A"
+            if bfile.split()[0].strip() == "M" or bfile.split()[0].strip() == "A"
         ]
 
         # Convert the file paths to be relative to the current URL; to do this
@@ -303,18 +300,14 @@ class FCMBDiff(FCMBase):
             # Allows for 'user directed' path reconstruction.
             # Particularly useful in rose stem.
             base = path_override
-            bdiff_files = [
-                os.path.join(base, bfile) for bfile in relative_paths
-            ]
+            bdiff_files = [os.path.join(base, bfile) for bfile in relative_paths]
         elif base_source_key in os.environ:
             # If running as a suite, the base path to the working copy can be used
             # However, unless the suite task is running on a machine with the same
             # path to the working copy, the task can't really make much use of
             # this.
             base = os.environ[base_source_key]
-            bdiff_files = [
-                os.path.join(base, bfile) for bfile in relative_paths
-            ]
+            bdiff_files = [os.path.join(base, bfile) for bfile in relative_paths]
         else:
             # Otherwise stick to the original path/URL to the branch
             bdiff_files = [
