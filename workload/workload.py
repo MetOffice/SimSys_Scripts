@@ -84,14 +84,12 @@ class ProjectData:
             cr = ""
             sr = ""
             if "code Review" in review:
-                cr = review["code Review"]
-                self.review_data.append((review["code Review"], review["repository"]))
+                cr = review["code Review"].strip()
+                self.review_data.append((cr, review["repository"]))
 
             if "sciTech Review" in review:
-                sr = review["sciTech Review"]
-                self.review_data.append(
-                    (review["sciTech Review"], review["repository"])
-                )
+                sr = review["sciTech Review"].strip()
+                self.review_data.append((sr, review["repository"]))
 
             if test and (cr or sr):
                 print(
