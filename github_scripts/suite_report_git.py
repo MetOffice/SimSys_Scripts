@@ -184,6 +184,8 @@ class SuiteReport(SuiteData):
 
         # Create Collapsed task tables
         for state in order:
+            if state == "succeeded":
+                continue
             emoji = state_emojis[state]
             tasks = parsed_tasks[state]
             if not tasks:

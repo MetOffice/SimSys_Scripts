@@ -9,6 +9,7 @@ Class containing helper methods for gathering data needed for a SuiteReport obje
 """
 
 import re
+import os
 import shutil
 import sqlite3
 import subprocess
@@ -309,9 +310,11 @@ class SuiteData:
                 match = re.search(r"INFO - Workflow: (\S+\/\w+)", line)
                 try:
                     workflow_id = match.group(1)
-                    return workflow_id
                 except IndexError:
                     continue
+
+            cylc_review = f"https://cylchub/services/cylc-review/{os.environ['USER']}/?suite={workflow_id.replace("/","%2")}"
+            return cylc_review
 
         return "unknown_workflow_id"
 
