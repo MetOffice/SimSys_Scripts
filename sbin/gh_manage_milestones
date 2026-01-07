@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+
+# ----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# ----------------------------------------------------------------------------
+
+# Script to create, update and close milestones in multiple GitHub repositories
+# Requires GitHub CLI: https://cli.github.com/ and Admin privileges to the repos
+
+set -euo pipefail
+
+usage() {
+  cat <<EOF
+Usage: ${0##*/} -t <title> [options]
+  -t <title>       Title of milestone to be created, updated or closed.
+  -c               Close milestone. Otherwise will create a new milestone or
+                   update an existing milestone.
+  -d <due on>      Milestone due date. Format: YYYY-MM-DDTHH:MM:SSZ
+  -p <description> Description of the milestone
+  -n               Dry Run, print actions without making changes
+  -h, --help       Show this help message
+
+Examples:
+  # Create a new milestone
+  ${0##*/} -t <title> [-d YYYY-MM-DDTHH:MM:SSZ] [-p <description>]
+
+  # Update all milestones with a new date
+  ${0##*/} -t <title> -d <YYYY-MM-DDTHH:MM:SSZ>
+
+  # Close a milestone
+  ${0##*/} -t <title> -c
+EOF
+  exit 1
+}
+
+# -- Defaults
+STATE="open"
+TITLE=""
+DUE=""
+DESC=""
+DRY_RUN=0
+
+# -- Parse options
+while getopts "t:d:p:cnh-:" opt; do
+  case $opt in
+    t) TITLE="$OPTARG" ;;
+    c) STATE="closed" ;;
+    d) DUE="$OPTARG" ;;
+    p) DESC="$OPTARG" ;;
+    n) DRY_RUN=1 ;;
+    h) usage ;;
+    -) [ "$OPTARG" = "help" ] && usage ;;
+    *) usage ;;
+  esac
+done
+
+# -- Modify milestones in relevant repositories
+repos=(
+  "MetOffice/um"
+  "MetOffice/jules"
+  "MetOffice/lfric_apps"
+  "MetOffice/lfric_core"
+  "MetOffice/ukca"
+  "MetOffice/casim"
+  "MetOffice/socrates"
+  "MetOffice/um_doc"
+  "MetOffice/simulation-systems"
+  "MetOffice/SimSys_Scripts"
+  "MetOffice/git_playground"
+)
+#
+# -- Helper functions
+get_milestone_number(){
+  local repo_name="$1"
+
+  gh api /repos/${repo_name}/milestones --jq ".[] | select(.title == \"${TITLE}\") | .number"
+}
+
+run_command(){
+  local gh_command="$1"
+
+  if (( DRY_RUN )); then
+    echo "[DRY RUN] $gh_command"
+  else
+    eval "$gh_command"
+  fi
+}
+
+# -- Change milestone for each repository
+
+for repo in "${repos[@]}"; do
+  echo "Processing milestone in repository: $repo"
+
+
+  # -- If milestone exists then fetch the number
+  NUMBER=0
+  if [[ $(gh api /repos/${repo}/milestones --jq ".[] | select(.title == \"${TITLE}\")") ]]; then
+    NUMBER=$(get_milestone_number "${repo}")
+    echo "${TITLE} in ${repo} is milestone ${NUMBER}"
+  else
+    echo "Milestone does not exist in ${repo}"
+  fi
+
+  # -- Build GH command from optional arguments.
+  GH_COMMAND="gh api -f \"title=${TITLE}\""
+  if [[ ${DUE} ]]; then
+    GH_COMMAND=$GH_COMMAND" -f \"due_on=${DUE}\""
+  fi
+  if [[ ${DESC} ]]; then
+    GH_COMMAND=$GH_COMMAND" -f \"description=${DESC}\""
+  fi
+
+  if [[ "$STATE" == "open" ]]; then
+
+    if (( NUMBER )); then
+      echo "Updating milestone"
+      GH_COMMAND=$GH_COMMAND" --method PATCH"
+      GH_COMMAND=$GH_COMMAND" /repos/${repo}/milestones/${NUMBER}"
+      run_command "${GH_COMMAND}"
+    else
+      echo "Creating new milestone"
+      GH_COMMAND=$GH_COMMAND" --method POST"
+      GH_COMMAND=$GH_COMMAND" /repos/${repo}/milestones"
+      run_command "${GH_COMMAND}"
+    fi
+    
+  else
+
+    if (( NUMBER )); then
+      echo "Closing milestone"
+      GH_COMMAND=$GH_COMMAND" --method PATCH"
+      GH_COMMAND=$GH_COMMAND" /repos/${repo}/milestones/${NUMBER}"
+      GH_COMMAND=$GH_COMMAND" -f \"state=closed\""
+      run_command "${GH_COMMAND}"
+    fi
+  fi
+
+done
