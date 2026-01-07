@@ -74,8 +74,12 @@ repos=(
 # -- Helper functions
 get_milestone_number(){
   local repo_name="$1"
-
   gh api /repos/${repo_name}/milestones --jq ".[] | select(.title == \"${TITLE}\") | .number"
+}
+
+check_exists(){
+  local repo_name="$1"
+  gh api /repos/${repo_name}/milestones --jq ".[] | select(.title == \"${TITLE}\")"
 }
 
 run_command(){
@@ -88,6 +92,7 @@ run_command(){
   fi
 }
 
+
 # -- Change milestone for each repository
 
 for repo in "${repos[@]}"; do
@@ -96,7 +101,7 @@ for repo in "${repos[@]}"; do
 
   # -- If milestone exists then fetch the number
   NUMBER=0
-  if [[ $(gh api /repos/${repo}/milestones --jq ".[] | select(.title == \"${TITLE}\")") ]]; then
+  if [[ $(check_exists "${repo}") ]]; then
     NUMBER=$(get_milestone_number "${repo}")
     echo "${TITLE} in ${repo} is milestone ${NUMBER}"
   else
@@ -112,6 +117,7 @@ for repo in "${repos[@]}"; do
     GH_COMMAND=$GH_COMMAND" -f \"description=${DESC}\""
   fi
 
+  # -- Create or update the milestone
   if [[ "$STATE" == "open" ]]; then
 
     if (( NUMBER )); then
@@ -125,7 +131,8 @@ for repo in "${repos[@]}"; do
       GH_COMMAND=$GH_COMMAND" /repos/${repo}/milestones"
       run_command "${GH_COMMAND}"
     fi
-    
+
+  # -- Close the milestone
   else
 
     if (( NUMBER )); then
