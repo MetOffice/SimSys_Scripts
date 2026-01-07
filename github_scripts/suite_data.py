@@ -313,7 +313,12 @@ class SuiteData:
                 except IndexError:
                     continue
 
-            cylc_review = f"https://cylchub/services/cylc-review/{os.environ['USER']}/?suite={workflow_id.replace("/","%2")}"
+            suite_user = os.environ["USER"]
+            workflow_id_encoded = workflow_id.replace("/", "%2F")
+
+            cylc_review = f"""https://cylchub/services/cylc-review/
+            {suite_user}/?suite={workflow_id_encoded}"""
+
             return cylc_review
 
         return "unknown_workflow_id"
