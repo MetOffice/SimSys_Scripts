@@ -318,7 +318,7 @@ class SuiteData:
             workflow_id_encoded = workflow_id.replace("/", "%2F")
 
             cylc_review = f"""https://cylchub/services/cylc-review/
-            {suite_user}/?suite={workflow_id_encoded}"""
+            cycles/{suite_user}/?suite={workflow_id_encoded}"""
 
             return cylc_review
 
