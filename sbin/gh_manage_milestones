@@ -77,11 +77,6 @@ get_milestone_number(){
   gh api /repos/"${repo_name}"/milestones --jq ".[] | select(.title == \"${TITLE}\") | .number"
 }
 
-check_exists(){
-  local repo_name="$1"
-  gh api /repos/"${repo_name}"/milestones --jq ".[] | select(.title == \"${TITLE}\")"
-}
-
 run_command(){
   local gh_command="$1"
 
@@ -100,9 +95,8 @@ for repo in "${repos[@]}"; do
 
 
   # -- If milestone exists then fetch the number
-  NUMBER=0
-  if [[ $(check_exists "${repo}") ]]; then
-    NUMBER=$(get_milestone_number "${repo}")
+  NUMBER=$(get_milestone_number "${repo}")
+  if (( NUMBER )); then
     echo "${TITLE} in ${repo} is milestone ${NUMBER}"
   else
     echo "Milestone does not exist in ${repo}"
