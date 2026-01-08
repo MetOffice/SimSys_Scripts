@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+
+# ----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# ----------------------------------------------------------------------------
+
+# Add collaborator to a repository
+# gh api --method PUT /repos/:owner/:repo/collaborators/:username
+# Requires:
+#   GitHub CLI (gh): https://cli.github.com/
+#   Commandline JSON processor (jq): https://jqlang.org/
+#   Admin privileges to the repos
+
+# WARNINGS:
+# - This script modifies repository permissions. Use with caution.
+# - Always verify the current permissions before making changes.
+# - It also impacts API rate limits for the authenticated user.
+
+set -euo pipefail
+
+usage() {
+  cat <<EOF
+Usage: ${0##*/} -u <username> [-r <repo>] [options]
+  -u <username>    GitHub username to add/remove
+  -r <repo>        Repository name (if omitted, operate on all repos
+                   from ../git-migration/config.json)
+  -o <owner>       Repository owner (default: MetOffice)
+  -p <permission>  Permission (read, write, admin, maintain, triage;
+                   default: read)
+  -d               Remove user as collaborator instead of adding
+  -n               Print actions without making changes
+  -h, --help       Show this help message
+
+Examples:
+  # Add/Remove a user to/from all repositories defined in config.json
+  ${0##*/} -u <username> [-p <permission>]
+  ${0##*/} -u <username> -d
+
+  # Add/Remove a user to/from a specific repository
+  ${0##*/} -u <username> -r <repo> [-o <owner>] [-p <permission>]
+  ${0##*/} -u <username> -r <repo> -o <owner> -d
+
+EOF
+  exit 1
+}
+
+# -- Defaults
+PERMISSION="read"
+OWNER="MetOffice"
+DELETE=0
+CONFIG_JSON="$(dirname "${BASH_SOURCE[0]}")/../git-migration/config.json"
+REPOS=()
+DRY_RUN=0
+
+# -- Helper functions
+check_admin_permission() {
+  local repo_name="$1"
+  local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
+  local permission
+
+  # Returns 0 if user is admin, 1 otherwise
+  permission=$(gh api "${repo_api}/permission" --jq '.role_name' 2>/dev/null)
+  [[ "$permission" == "admin" ]]
+}
+
+remove_collaborator() {
+  local repo_name="$1"
+  local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
+
+  if (( DRY_RUN )); then
+    echo "[DRY-RUN] Would remove '${USERNAME}' from ${OWNER}/${repo_name}."
+  else
+    gh api --method DELETE "$repo_api" && \
+      echo "Removed '${USERNAME}' from ${OWNER}/${repo_name}." || \
+      echo "Failed to remove '${USERNAME}' from ${OWNER}/${repo_name}." >&2
+  fi
+}
+
+add_collaborator() {
+  local repo_name="$1"
+  local repo_api="/repos/${OWNER}/${repo_name}/collaborators/${USERNAME}"
+
+  if (( DRY_RUN )); then
+    echo "[DRY-RUN] Would add '${USERNAME}' to ${OWNER}/${repo_name} with" \
+      "permission '$PERMISSION'."
+  else
+    # PUT method is idempotent: adds user if new, updates permission if exists
+    # HTTP 201 = created (new), 204 = updated (existing)
+    if gh api --method PUT "$repo_api" -f permission="$PERMISSION" \
+       --silent 2>/dev/null; then
+      echo "Added/Updated '${USERNAME}' on ${OWNER}/${repo_name} with" \
+        "permission '$PERMISSION'."
+    else
+      echo "Failed to add '${USERNAME}' to ${OWNER}/${repo_name}." >&2
+      return 1
+    fi
+  fi
+}
+
+# -- Parse options
+while getopts "u:r:o:p:dnh-:" opt; do
+  case $opt in
+    u) USERNAME="$OPTARG" ;;
+    r) REPO="$OPTARG" ;;
+    o) OWNER="$OPTARG" ;;
+    p)
+      case $OPTARG in
+        read|pull) PERMISSION="read" ;;
+        write|push) PERMISSION="write" ;;
+        admin|maintain|triage) PERMISSION="$OPTARG" ;;
+        *) echo "Invalid permission: $OPTARG"; usage ;;
+      esac
+      ;;
+    d) DELETE=1 ;;
+    n) DRY_RUN=1 ;;
+    h) usage ;;
+    -) [ "$OPTARG" = "help" ] && usage ;;
+    *) usage ;;
+  esac
+done
+
+# -- Validate required args (username is mandatory)
+if [ -z "${USERNAME:-}" ]; then
+  usage
+fi
+
+# -- Populate REPOS array from config.json
+# Only populate REPOS from config.json if no explicit -r repo provided
+if [ -z "${REPO:-}" ]; then
+  if command -v jq >/dev/null 2>&1 && [ -f "$CONFIG_JSON" ]; then
+    mapfile -t REPOS < <(jq -r '.repo[].name' "$CONFIG_JSON")
+  else
+    REPOS=()
+  fi
+fi
+
+# -- Determine target repos
+TARGET_REPOS=()
+if [ -n "${REPO:-}" ]; then
+  TARGET_REPOS=("$REPO")
+else
+  # No repo provided: operate on all repos from config.json
+  if [ ${#REPOS[@]} -eq 0 ]; then
+    echo "No -r <repo> provided and repo list empty/unavailable." >&2
+    echo "Make sure 'jq' is installed and config exists at: $CONFIG_JSON" >&2
+    exit 1
+  fi
+  TARGET_REPOS=("${REPOS[@]}")
+fi
+
+# -- Get current user once if needed for self-removal check
+CURRENT_USER=""
+if (( DELETE && !DRY_RUN )); then
+  CURRENT_USER=$(gh api user --jq '.login' 2>/dev/null)
+fi
+
+# -- Process each target repo
+for repo_name in "${TARGET_REPOS[@]}"; do
+  # Prevent users from removing themselves
+  if [[ -n "$CURRENT_USER" ]] && [[ "$CURRENT_USER" == "$USERNAME" ]]; then
+    echo "WARNING: Won't remove (${USERNAME}) from ${OWNER}/${repo_name}" >&2
+    echo "Skipping self-removal to prevent loss of your own access." >&2
+    continue
+  fi
+
+  # Check admin permission once before any operation (skip in dry-run mode)
+  if (( !DRY_RUN )) && check_admin_permission "$repo_name"; then
+    echo "WARNING: '${USERNAME}' has admin role on ${OWNER}/${repo_name}." >&2
+    echo "Skipping to prevent modification of admin permissions." >&2
+    continue
+  fi
+
+  if (( DELETE )); then
+    remove_collaborator "$repo_name"
+  else
+    add_collaborator "$repo_name"
+  fi
+done
