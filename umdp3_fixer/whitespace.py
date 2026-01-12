@@ -6,10 +6,10 @@
 # repository or they will be lost during the release process when the UM copy
 # is copied over.
 
-import sys
+# import sys
 import re
 import argparse
-from fstring_parse import *
+from fstring_parse import *  # noqa: F403
 
 # These 4 are defined globally for visibility. They are actually only used in
 # main or a single subroutine but actual text is not yet defined in stone...

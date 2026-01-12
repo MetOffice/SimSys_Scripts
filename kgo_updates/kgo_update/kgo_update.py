@@ -611,13 +611,13 @@ def main():
             "q to print all\n\n"
         )
         with open(script_path, "r") as f:
-            l = 0
+            line_count = 0
             print_all = False
             for line in f:
                 print(line, end="")
-                l += 1
-                if l == 10 and not print_all:
-                    l = 0
+                line_count += 1
+                if line_count == 10 and not print_all:
+                    line_count = 0
                     key = input()
                     if key.lower() == "q":
                         print_all = True

@@ -10,7 +10,7 @@ UM repository. When making changes, please ensure the changes are made in the UM
 repository or they will be lost during the release process when the UM copy is
 copied over.
 
-This module contains various functions for parsing and manuipulating
+This module contains various functions for parsing and manipulating
 quoted strings in Fortran
 """
 import re
@@ -86,8 +86,8 @@ def replace_characters(line, locs, lens, replchar="X"):
     # Loop through locations and lengths and replace each character with the
     # replacement character character.
     for loc, ln in zip(*[locs, lens]):
-        for l in range(ln):
-            newline[loc + l] = replchar
+        for i in range(ln):
+            newline[loc + i] = replchar
 
     # Return the newline, joined back together as a string.
     return "".join(newline)
