@@ -40,7 +40,8 @@ jobs:
         # uses: super-linter/super-linter/slim@85f7611e0f7b53c8573cca84aa0ed4344f6f6a4d  # v7.2.1
         uses: super-linter/super-linter/slim@d5b0a2ab116623730dd094f15ddc1b6b25bf7b99 # v8.3.2
         env:
-          FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md|/linters/)
+          # FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md|/linters/)
+          FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md)
           IGNORE_GITIGNORED_FILES: true
           VALIDATE_BASH_EXEC: false
           VALIDATE_JAVASCRIPT_STANDARD: false
@@ -57,6 +58,7 @@ jobs:
           VALIDATE_SHELL_SHFMT: false
           VALIDATE_YAML_PRETTIER: false
           VALIDATE_YAML: false
+          PYTHON_RUFF_CONFIG_FILE: .github/linters/.ruff.toml # Path to Ruff config file
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ...
