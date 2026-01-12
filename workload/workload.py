@@ -22,15 +22,6 @@ ssd_repositories = [
     "growss",
 ]
 
-# Ideally get this list another way but for now hardcode it.
-other_reviewers = [
-    "MetBenjaminWent",
-    "jedbakerMO",
-    # Chris Maynard
-    # James CS
-    # Oakley Brunt
-]
-
 
 class ProjectData:
     """
@@ -265,14 +256,11 @@ def main(total: bool, test: bool, capture_project: bool):
     # Extract data from github about the reviews and team members.
     data = ProjectData(test, capture_project)
 
-    other_team = Team(test=test)
-    other_team.members = other_reviewers
-
     teams = {
         "SSD": Team("ssdteam", test),
         "CCD": Team("core-capability-development", test),
         "TCD": Team("toolscollabdev", test),
-        "Other": other_team,
+        "Other": Team("SimSysCodeReviewers", test),
     }
 
     # Create tables for each combination of reviewers and reposotories
@@ -287,7 +275,12 @@ def main(total: bool, test: bool, capture_project: bool):
     repo_list = lfric_repositories
     reviewers = []
     for team in teams.values():
-        reviewers += team.get_team_members()
+        members = team.get_team_members()
+        # Not using sets to deduplicate to preserve list order, keeping
+        # people in their teams.
+        for person in members:
+            if person not in reviewers:
+                reviewers.append(person)
     tables["LFRic"] = build_table(data, reviewers, repo_list)
 
     # Print tables
