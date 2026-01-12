@@ -58,7 +58,7 @@ jobs:
           # VALIDATE_SHELL_SHFMT: false
           # VALIDATE_YAML_PRETTIER: false
           # VALIDATE_YAML: false
-          PYTHON_RUFF_CONFIG_FILE: .github/linters/.ruff.toml # Path to Ruff config file
+          PYTHON_RUFF_CONFIG_FILE: .ruff.toml # Path to Ruff config file
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ...
