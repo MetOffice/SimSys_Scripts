@@ -22,7 +22,8 @@ ssd_repositories = [
     "growss",
 ]
 
-adminID = "MGEX82" # person in github teams as a central admin but not relevant here
+adminID = "MGEX82"  # person in github teams as a central admin but not relevant here
+
 
 class ProjectData:
     """
