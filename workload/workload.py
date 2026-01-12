@@ -22,6 +22,7 @@ ssd_repositories = [
     "growss",
 ]
 
+adminID = "MGEX82" # person in github teams as a central admin but not relevant here
 
 class ProjectData:
     """
@@ -43,7 +44,7 @@ class ProjectData:
         Retrieve data from GitHub API or a from a test file.
         """
         if test:
-            file = Path(__file__).with_name("test.json")
+            file = Path(__file__).parent / "test" / "test.json"
             with open(file) as f:
                 self.data = json.loads(f.read())
 
@@ -58,7 +59,7 @@ class ProjectData:
             self.data = json.loads(output.stdout)
 
             if capture:
-                file = Path(__file__).with_name("test.json")
+                file = Path(__file__).parent / "test" / "test.json"
                 with open(file, "w") as f:
                     json.dump(self.data, f)
                 print(
@@ -125,7 +126,8 @@ class Team:
         """
 
         if test:
-            file = Path(__file__).with_name(self.github_id + ".json")
+            team_file = self.github_id + ".json"
+            file = Path(__file__).parent / "test" / team_file
             with open(file) as f:
                 full_data = json.loads(f.read())
         else:
@@ -146,7 +148,9 @@ class Team:
             full_data = json.loads(output.stdout)
 
         for item in full_data:
-            self.members.append(item["login"])
+            person_id = item["login"]
+            if person_id != adminID:
+                self.members.append(person_id)
 
         self.members = sorted(self.members, key=str.lower)
 
