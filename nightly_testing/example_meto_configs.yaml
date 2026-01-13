@@ -1,105 +1,98 @@
 base:
-    cylc_run_path: /path/to/nightly/user/cylc-run
-    rose_bush_base_url: https://cylchub/services/cylc-review/taskjobs/umtest/?suite=
-    wiki_url: http://code.metoffice.gov.uk/trac/lfric_apps
-    logo_file: um_logo.png
-    families:
-        lfric_apps: BUILD,RUN,CHECK,PLOT,SCRIPTS,
-        um: BUILD,RECON,ATMOS,ROSE_ANA_COMPARISON,CREATEBC,SCRIPTS,
-        jules: FAB,LINUX,METO_EX1A,
-        ukca: SCRIPTS,
+  cylc_run_path: /path/to/nightly/user/cylc-run
+  rose_bush_base_url: https://cylchub/services/cylc-review/taskjobs/umtest/?suite=
+  wiki_url: http://code.metoffice.gov.uk/trac/lfric_apps
+  logo_file: um_logo.png
+  families:
+    lfric_apps: BUILD,RUN,CHECK,PLOT,SCRIPTS,
+    um: BUILD,RECON,ATMOS,ROSE_ANA_COMPARISON,CREATEBC,SCRIPTS,
+    jules: FAB,LINUX,METO_EX1A,
+    ukca: SCRIPTS,
 
 #######################
 # Lfric Apps Configs #
 #######################
 
 lfric_apps_set-revisions_nightly:
-    repo: lfric_apps
-    groups: all
-    revisions: set
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-    time_launch: 00:02
-    time_clean: 03:05
-    period: nightly_all
-
+  repo: lfric_apps
+  groups: all
+  revisions: set
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+  time_launch: 00:02
+  time_clean: 03:05
+  period: nightly_all
 
 lfric_apps_heads_nightly:
-    repo: lfric_apps
-    groups: all
-    revisions: heads
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-    time_launch: 00:30
-    time_clean: 03:35
-    period: nightly_all
-
+  repo: lfric_apps
+  groups: all
+  revisions: heads
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+  time_launch: 00:30
+  time_clean: 03:35
+  period: nightly_all
 
 lfric_apps_excd_heads_nightly:
-    repo: lfric_apps
-    groups: ex1a
-    revisions: heads
-    vars:
-        - HOUSEKEEPING=false
-        - USE_EXCD=true
-    time_launch: 04:30
-    time_clean: 04:50
-    period: nightly_all
-
+  repo: lfric_apps
+  groups: ex1a
+  revisions: heads
+  vars:
+    - HOUSEKEEPING=false
+    - USE_EXCD=true
+  time_launch: 04:30
+  time_clean: 04:50
+  period: nightly_all
 
 lfric_apps_set-revisions_next-cylc_nightly:
-    repo: lfric_apps
-    groups: developer
-    revisions: set
-    cylc_version: 8-next
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-    time_launch: 02:15
-    time_clean: 02:25
-    period: nightly_all
-
+  repo: lfric_apps
+  groups: developer
+  revisions: set
+  cylc_version: 8-next
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+  time_launch: 02:15
+  time_clean: 02:25
+  period: nightly_all
 
 lfric_apps_heads_weekly:
-    repo: lfric_apps
-    groups: lfric_atm_ex1a_weekly
-    revisions: heads
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-        - USE_EXCD=true
-    time_launch: 02:00
-    time_clean: 02:00
-    period: weekly
-
+  repo: lfric_apps
+  groups: lfric_atm_ex1a_weekly
+  revisions: heads
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+    - USE_EXCD=true
+  time_launch: 02:00
+  time_clean: 02:00
+  period: weekly
 
 ######################
 # LFRic Core Configs #
 ######################
 
 lfric_nightly:
-    repo: lfric
-    groups: all
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-    time_launch: 04:45
-    time_clean: 04:30
-    period: nightly_all
-
+  repo: lfric
+  groups: all
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+  time_launch: 04:45
+  time_clean: 04:30
+  period: nightly_all
 
 lfric_excd_nightly:
-    repo: lfric
-    groups: ex1a
-    vars:
-        - HOUSEKEEPING=false
-        - USE_EXCD=true
-    time_launch: 04:40
-    time_clean: 04:35
-    period: nightly_all
-
+  repo: lfric
+  groups: ex1a
+  vars:
+    - HOUSEKEEPING=false
+    - USE_EXCD=true
+  time_launch: 04:40
+  time_clean: 04:35
+  period: nightly_all
 
 ##############
 # UM Configs #
@@ -110,146 +103,137 @@ lfric_excd_nightly:
 ##################
 
 um_heads_all:
-    repo: um
-    groups: all
-    revisions: heads
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-    time_launch: 00:05
-    time_clean: 00:15
-    period: weekly
-
+  repo: um
+  groups: all
+  revisions: heads
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+  time_launch: 00:05
+  time_clean: 00:15
+  period: weekly
 
 um_set-revisions_all:
-    repo: um
-    groups: all
-    revisions: set
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-    time_launch: 00:45
-    time_clean: 00:30
-    period: weekly
-
+  repo: um
+  groups: all
+  revisions: set
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+  time_launch: 00:45
+  time_clean: 00:30
+  period: weekly
 
 um_excd_heads_all:
-    repo: um
-    groups: ex1a
-    revisions: heads
-    vars:
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-        - USE_EXCD=true
-    time_launch: 04:10
-    time_clean: 04:10
-    period: weekly
-
+  repo: um
+  groups: ex1a
+  revisions: heads
+  vars:
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+    - USE_EXCD=true
+  time_launch: 04:10
+  time_clean: 04:10
+  period: weekly
 
 um_heads_weekly-portio2b:
-    repo: um
-    groups: fcm_make_portio2b,compiler_warning_check
-    revisions: set
-    vars:
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-    time_launch: 06:00
-    time_clean: 05:45
-    period: weekly
-
+  repo: um
+  groups: fcm_make_portio2b,compiler_warning_check
+  revisions: set
+  vars:
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+  time_launch: 06:00
+  time_clean: 05:45
+  period: weekly
 
 um_exz_heads_weekly:
-    repo: um
-    groups: ex1a_cce_n48_ga8_amip_2day
-    revisions: heads
-    vars:
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-        - USE_EXZ=true
-    time_launch: 03:10
-    time_clean: 05:20
-    period: weekly
+  repo: um
+  groups: ex1a_cce_n48_ga8_amip_2day
+  revisions: heads
+  vars:
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+    - USE_EXZ=true
+  time_launch: 03:10
+  time_clean: 05:20
+  period: weekly
 
 ###################
 # Nightly Testing #
 ###################
 
 um_heads_nightly:
-    repo: um
-    groups: nightly
-    revisions: heads
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-    time_launch: 00:05
-    time_clean: 00:15
-    period: nightly
-
+  repo: um
+  groups: nightly
+  revisions: heads
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+  time_launch: 00:05
+  time_clean: 00:15
+  period: nightly
 
 um_set-revisions_nightly:
-    repo: um
-    groups: nightly
-    revisions: set
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-    time_launch: 00:45
-    time_clean: 00:30
-    period: nightly
-
+  repo: um
+  groups: nightly
+  revisions: set
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+  time_launch: 00:45
+  time_clean: 00:30
+  period: nightly
 
 um_excd_heads_nightly:
-    repo: um
-    groups: ex1a_nightly
-    revisions: heads
-    vars:
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-        - USE_EXCD=true
-    time_launch: 04:10
-    time_clean: 04:10
-    period: nightly
-
+  repo: um
+  groups: ex1a_nightly
+  revisions: heads
+  vars:
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+    - USE_EXCD=true
+  time_launch: 04:10
+  time_clean: 04:10
+  period: nightly
 
 um_set-revisions_next-cylc_nightly:
-    repo: um
-    groups: developer
-    cylc_version: 8-next
-    revisions: set
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-        - PREBUILDS=false
-    time_launch: 03:30
-    time_clean: 04:20
-    period: nightly_all
-
+  repo: um
+  groups: developer
+  cylc_version: 8-next
+  revisions: set
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+    - PREBUILDS=false
+  time_launch: 03:30
+  time_clean: 04:20
+  period: nightly_all
 
 #################
 # Jules Configs #
 #################
 
 jules_nightly:
-    repo: jules
-    groups: all,fab
-    vars:
-        - USE_EXAB=true
-        - HOUSEKEEPING=false
-    time_launch: 03:25
-    time_clean: 02:25
-    period: nightly_all
-
+  repo: jules
+  groups: all,fab
+  vars:
+    - USE_EXAB=true
+    - HOUSEKEEPING=false
+  time_launch: 03:25
+  time_clean: 02:25
+  period: nightly_all
 
 jules_excd_nightly:
-    repo: jules
-    groups: ex1a
-    vars:
-        - HOUSEKEEPING=false
-        - USE_EXCD=true
-    time_launch: 06:00
-    time_clean: 06:30
-    period: nightly_all
+  repo: jules
+  groups: ex1a
+  vars:
+    - HOUSEKEEPING=false
+    - USE_EXCD=true
+  time_launch: 06:00
+  time_clean: 06:30
+  period: nightly_all

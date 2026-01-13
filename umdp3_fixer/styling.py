@@ -16,7 +16,7 @@ Fortran source code
 """
 import re
 import sys
-from fstring_parse import *
+from fstring_parse import *  # noqa: F403
 
 CODE_REPLACEMENTS = [
     # Replace Fortran 77 style conditional keywords

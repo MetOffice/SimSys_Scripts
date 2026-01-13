@@ -11,7 +11,7 @@ on:
 
 concurrency:
   group: ${{ github.ref }}
-  cancel-in-progress:  ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions: read-all
 
@@ -19,16 +19,16 @@ jobs:
   check:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       max-parallel: 4
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.12", "3.14"]
 
     permissions:
-        contents: read
-        packages: read
-        statuses: write
+      contents: read
+      statuses: write
 
     steps:
       - name: Checkout current
@@ -36,24 +36,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Super-Linter
-        uses: super-linter/super-linter/slim@85f7611e0f7b53c8573cca84aa0ed4344f6f6a4d  # v7.2.1
+      - name: Super-Lint
+        uses: super-linter/super-linter/slim@d5b0a2ab116623730dd094f15ddc1b6b25bf7b99  # v8.3.2
         env:
-          FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md|/linters/)
+          # Once the codebase is perfectly linted/formatted, switch to validating only changed files
+          # VALIDATE_ALL_CODEBASE: false  # lint and format new or changed files only
+          FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md)
+          FIX_PYTHON_RUFF_FORMAT: true
+          FIX_PYTHON_RUFF: true
           IGNORE_GITIGNORED_FILES: true
-          VALIDATE_BASH_EXEC: false
-          VALIDATE_JAVASCRIPT_STANDARD: false
-          VALIDATE_JSCPD: false
-          VALIDATE_MARKDOWN_PRETTIER: false
-          VALIDATE_PYTHON_FLAKE8: false
-          VALIDATE_PYTHON_ISORT: false
-          VALIDATE_PYTHON_MYPY: false
-          VALIDATE_PYTHON_PYINK: false
-          VALIDATE_PYTHON_PYLINT: false
-          VALIDATE_PYTHON_RUFF: false
-          VALIDATE_SHELL_SHFMT: false
-          VALIDATE_YAML_PRETTIER: false
-          VALIDATE_YAML: false
+          VALIDATE_BASH: true
+          VALIDATE_CHECKOV: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GIT_LEAKS: true
+          VALIDATE_GIT_MERGE_CONFLICT_MARKERS: true
+          VALIDATE_JSON: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_NATURAL_LANGUAGE: true
+          VALIDATE_PERL: true
+          VALIDATE_PYTHON_RUFF_FORMAT: true
+          VALIDATE_PYTHON_RUFF: true
+          VALIDATE_YAML: true
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ...
