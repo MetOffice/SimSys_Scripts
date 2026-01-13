@@ -30,7 +30,7 @@ def run_command(
         command,
         capture_output=True,
         text=True,
-        timeout=600,
+        timeout=400,
         shell=False,
         check=False,
     )
