@@ -257,14 +257,14 @@ def main():
 
     filename = args.filename
     try:
-        with open(filename) as fortran_file:
-            raw_code = fortran_file.readlines()
-    except EnvironmentError:
+        with open(filename):
+            pass
+    except OSError:
         print(
-            'Error opening file. :\n     "{0:s}"\n'.format(filename)
-            + "I need a valid filename on which to work...."
+            f'Error opening file:\n     "{filename}"\n'
+            "I need a valid filename on which to work...."
         )
-        raise SystemExit
+        raise SystemExit(1)
 
     print("\nLooking at file :\n     {0:s}".format(filename))
     # re-open the fortran file, this time to write to it.
