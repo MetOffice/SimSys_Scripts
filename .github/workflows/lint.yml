@@ -28,9 +28,7 @@ jobs:
 
     permissions:
       contents: read
-      # packages: read
       statuses: write
-      checks: write
 
     steps:
       - name: Checkout current
@@ -50,7 +48,7 @@ jobs:
           VALIDATE_BASH: true
           VALIDATE_JSON: true
           VALIDATE_MARKDOWN: true
-          VALIDATE_PERL_CRITIC: true
+          VALIDATE_PERL: true
           VALIDATE_PYTHON_RUFF_FORMAT: true
           VALIDATE_PYTHON_RUFF: true
           VALIDATE_YAML: true
