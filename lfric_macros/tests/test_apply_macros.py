@@ -3,7 +3,7 @@ import subprocess
 
 import pytest
 
-from ..apply_macros import *
+from ..apply_macros import *  # noqa: F403
 
 # A macro that we want to find for these tests
 desired_macro = """class vn00_t001(MacroUpgrade):
@@ -171,11 +171,11 @@ def test_deduplicate_list():
 
 
 def test_match_python_imports():
-    assert match_python_import("import z") == True
-    assert match_python_import("from x import y") == True
-    assert match_python_import("from a import b.c") == True
-    assert match_python_import("import m as n") == True
-    assert match_python_import("false") == False
+    assert match_python_import("import z")
+    assert match_python_import("from x import y")
+    assert match_python_import("from a import b.c")
+    assert match_python_import("import m as n")
+    assert not match_python_import("false")
 
 
 # Remove appsdir
