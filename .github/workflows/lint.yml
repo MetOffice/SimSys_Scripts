@@ -17,7 +17,7 @@ permissions: read-all
 
 jobs:
   check:
-    name: Validate
+    name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
