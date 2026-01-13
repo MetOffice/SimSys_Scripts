@@ -17,13 +17,13 @@ permissions: read-all
 
 jobs:
   check:
-    name: Lint
+    name: Validate
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       max-parallel: 4
       fail-fast: false
       matrix:
-        # python-version: ["3.9", "3.12", "3.14"]
         python-version: ["3.9", "3.12", "3.14"]
 
     permissions:
@@ -36,10 +36,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Super-Linter
-        # uses: super-linter/super-linter/slim@85f7611e0f7b53c8573cca84aa0ed4344f6f6a4d  # v7.2.1
+      - name: Super-Lint
         uses: super-linter/super-linter/slim@d5b0a2ab116623730dd094f15ddc1b6b25bf7b99  # v8.3.2
         env:
+          # Once the codebase is perfectly linted/formatted, switch to validating only changed files
           # VALIDATE_ALL_CODEBASE: false  # lint and format new or changed files only
           FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md)
           FIX_PYTHON_RUFF_FORMAT: true
