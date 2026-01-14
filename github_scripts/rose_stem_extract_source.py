@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+
 """
 Clone sources for a rose-stem run for use with git bdiff module in scripts
 Only intended for use with rose-stem suites that have provided appropriate environment
@@ -11,14 +12,12 @@ variables
 """
 
 import os
-from datetime import datetime
 from pathlib import Path
 from ast import literal_eval
 from get_git_sources import clone_repo, clone_repo_mirror, sync_repo
-from typing import Dict
 
 
-def set_https(dependencies: Dict) -> Dict:
+def set_https(dependencies: dict) -> dict:
     """
     Change sources in a dependencies dictions to use https instead of ssh
     """
@@ -35,32 +34,41 @@ def set_https(dependencies: Dict) -> Dict:
 
 
 def main() -> None:
+    """
+    1. Read environment variables for:
+        SOURCE_DIRECTORY - location to clone sources,
+        DEPENDENCIES - dictionary of dependencies,
+        USE_TOKENS - whether to use tokens for https URLs,
+        USE_MIRRORS - whether to use local git mirrors,
+        GIT_MIRROR_LOC - location of local git mirrors
+    2. For each dependency in DEPENDENCIES, clone or sync the source
+    3. If USE_TOKENS is True, modify the source URLs to use https
+    4. If USE_MIRRORS is True, clone from local mirrors at GIT_MIRROR_LOC
+    """
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
 
-    dependencies: Dict = literal_eval(os.environ["DEPENDENCIES"])
+    dependencies: dict = literal_eval(os.environ["DEPENDENCIES"])
 
     if os.environ.get("USE_TOKENS", "False") == "True":
         dependencies = set_https(dependencies)
 
     for dependency, values in dependencies.items():
 
-        print(
-            f"Extracting {dependency} at time {datetime.now()} "
-            f"using source {values['source']} and ref {values['ref']}"
-        )
-
         loc = clone_loc / dependency
 
         if ".git" in values["source"]:
             if os.environ.get("USE_MIRRORS", "False") == "True":
                 mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
+                print(f"Cloning {dependency} from {mirror_loc} at ref {values['ref']}")
                 clone_repo_mirror(
                     values["source"], values["ref"], values["parent"], mirror_loc, loc
                 )
             else:
+                print(f"Cloning {dependency} from {values['source']} at ref {values['ref']}")
                 clone_repo(values["source"], values["ref"], loc)
         else:
+            print(f"Syncing {dependency} at ref {values['ref']}")
             sync_repo(values["source"], values["ref"], loc)
 
 
