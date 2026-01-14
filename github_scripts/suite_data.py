@@ -326,8 +326,10 @@ class SuiteData:
         workflow_id = self.get_workflow_id()
         suite_user = os.environ["USER"]
 
-        cylc_review = f"""[{workflow_id}](https://cylchub/services/cylc-review/cycles
-        /{suite_user}/?suite={workflow_id.replace("/","%2F")})"""
+        cylc_review = (
+            f"[{workflow_id}](https://cylchub/services/cylc-review/cycles"
+            f"/{suite_user}/?suite={workflow_id.replace("/","%2F")})"
+        )
 
         return cylc_review
 
