@@ -312,7 +312,6 @@ class SuiteData:
                 match = re.search(r"INFO - Workflow: (\S+\/\w+)", line)
                 try:
                     workflow_id = match.group(1)
-                    break
                 except IndexError:
                     continue
 
