@@ -17,7 +17,7 @@ to Fortran source code
 """
 import re
 import sys
-from fstring_parse import *
+from fstring_parse import *  # noqa: F403
 
 # Number of spaces of indent to apply per indentation level
 INDENT = 2
