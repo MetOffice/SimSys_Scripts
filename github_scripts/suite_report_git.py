@@ -183,10 +183,11 @@ class SuiteReport(SuiteData):
 
         # Create Collapsed task tables
         for state in order:
-            if state == "succeeded":
-                continue
             emoji = state_emojis[state]
             tasks = parsed_tasks[state]
+            if state == "succeeded":
+                continue
+            self.trac_log.append(f"{emoji} {state} tasks - {len(tasks)}")
             if not tasks:
                 continue
             if state == "pink failure":
