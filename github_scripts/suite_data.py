@@ -332,6 +332,7 @@ class SuiteData:
 
         return cylc_review
 
+
     def get_suite_starttime(self) -> str:
         """
         Read the suite starttime from the suite database
