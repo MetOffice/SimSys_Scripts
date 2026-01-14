@@ -187,8 +187,8 @@ class SuiteReport(SuiteData):
             emoji = state_emojis[state]
             tasks = parsed_tasks[state]
             if state == "succeeded":
+                self.trac_log.append(f"{emoji} {state} tasks - {len(tasks)}")
                 continue
-            self.trac_log.append(f"{emoji} {state} tasks - {len(tasks)}")
             if not tasks:
                 continue
             if state == "pink failure":
