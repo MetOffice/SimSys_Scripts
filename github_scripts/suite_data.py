@@ -316,15 +316,22 @@ class SuiteData:
                 except IndexError:
                     continue
 
-            suite_user = os.environ["USER"]
-            workflow_id_encoded = workflow_id.replace("/", "%2F")
-
-            cylc_review = f"""https://cylchub/services/cylc-review/
-            cycles/{suite_user}/?suite={workflow_id_encoded}"""
-
-            return cylc_review
+            return workflow_id
 
         return "unknown_workflow_id"
+
+    def generate_cylc_url(self) -> str:
+        """
+        Generate a markdown url to the cylc review page of a workflow
+        """
+        workflow_id = self.get_workflow_id()
+        suite_user = os.environ["USER"]
+
+        cylc_review = f"""[{workflow_id}](https://cylchub/services/cylc-review/cycles
+        /{suite_user}/?suite={workflow_id.replace("/","%2F")})"""
+
+        return cylc_review
+
 
     def get_suite_starttime(self) -> str:
         """

@@ -73,6 +73,7 @@ class SuiteReport(SuiteData):
         self.suite_user = suite_path.owner()
         self.suite_starttime: str = self.get_suite_starttime()
         self.workflow_id: str = self.get_workflow_id()
+        self.cylc_url: str = self.generate_cylc_url()
         self.task_states: Dict[str, str] = self.get_task_states()
         self.groups: List[str] = self.read_groups_run()
         self.rose_data: Dict[str, str] = self.read_rose_conf()
@@ -118,7 +119,7 @@ class SuiteReport(SuiteData):
         self.trac_log.extend(create_markdown_row("Item", "Value", header=True))
 
         rows = (
-            ("Suite Name", self.workflow_id),
+            ("Suite Name", self.cylc_url),
             ("Suite User", self.suite_user),
             ("Workflow Start", self.suite_starttime),
             ("Groups Run", ",".join(g for g in self.groups)),
