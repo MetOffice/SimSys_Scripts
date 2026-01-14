@@ -327,7 +327,7 @@ class SuiteData:
 
         cylc_review = (
             f"[{self.workflow_id}](https://cylchub/services/cylc-review/cycles"
-            f"/{suite_user}/?suite={self.workflow_id.replace("/","%2F")})"
+            f"/{suite_user}/?suite={self.workflow_id.replace('/','%2F')})"
         )
 
         return cylc_review
