@@ -323,12 +323,11 @@ class SuiteData:
         """
         Generate a markdown url to the cylc review page of a workflow
         """
-        workflow_id = self.get_workflow_id()
         suite_user = os.environ["USER"]
 
         cylc_review = (
-            f"[{workflow_id}](https://cylchub/services/cylc-review/cycles"
-            f"/{suite_user}/?suite={workflow_id.replace("/","%2F")})"
+            f"[{self.workflow_id}](https://cylchub/services/cylc-review/cycles"
+            f"/{suite_user}/?suite={self.workflow_id.replace("/","%2F")})"
         )
 
         return cylc_review
