@@ -7,14 +7,15 @@
 
 """
 Clone sources for a rose-stem run for use with git bdiff module in scripts
-Only intended for use with rose-stem suites that have provided appropriate environment
-variables
+Only intended for use with rose-stem suites that have provided appropriate
+environment variables
 """
 
 import os
 from pathlib import Path
 from ast import literal_eval
 from get_git_sources import clone_repo, clone_repo_mirror, sync_repo
+from datetime import datetime
 
 
 def set_https(dependencies: dict) -> dict:
@@ -47,28 +48,35 @@ def main() -> None:
     """
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
-
     dependencies: dict = literal_eval(os.environ["DEPENDENCIES"])
 
     if os.environ.get("USE_TOKENS", "False") == "True":
         dependencies = set_https(dependencies)
 
     for dependency, values in dependencies.items():
-
         loc = clone_loc / dependency
 
         if ".git" in values["source"]:
             if os.environ.get("USE_MIRRORS", "False") == "True":
                 mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
-                print(f"Cloning {dependency} from {mirror_loc} at ref {values['ref']}")
+                print(
+                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
+                    f"{dependency} from {mirror_loc} at ref {values['ref']}"
+                )
                 clone_repo_mirror(
                     values["source"], values["ref"], values["parent"], mirror_loc, loc
                 )
             else:
-                print(f"Cloning {dependency} from {values['source']} at ref {values['ref']}")
+                print(
+                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
+                    f"{dependency} from {values['source']} at ref {values['ref']}"
+                )
                 clone_repo(values["source"], values["ref"], loc)
         else:
-            print(f"Syncing {dependency} at ref {values['ref']}")
+            print(
+                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Syncing "
+                f"{dependency} at ref {values['ref']}"
+            )
             sync_repo(values["source"], values["ref"], loc)
 
 
