@@ -1,32 +1,69 @@
-# Description
+# PR Summary
 
-## Summary
+Sci/Tech Reviewer: <!-- SR id, filled by author when ready for review (e.g. @octocat) -->
+Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 
-_Briefly describe the feature being introduced._
+<!-- To be completed by the developer -->
 
-## Changes
+<!-- Provide a brief description of the changes in this PR, including any notes
+     useful for reviewers -->
 
-_List the major changes made in this pull request._
+<!-- List any linked PRs here
+- linked MetOffice/<REPO-NAME>#<pr-number>
+-->
 
-## Dependency
+<!-- List any blocking PRs or issues to be closed here
+- is blocked-by #pr-number
+- blocks #pr-number
+- closes #issue-number (auto-closes the issue)
+- fixes #issue-number (auto-closes the issue)
+- is related to #issue-number
+-->
 
-_List dependent changes. Can use build-group logic here._
+## Code Quality Checklist
 
-## Impact
+- [ ] I have performed a self-review of my own code
+- [ ] My code follows the project's [style guidelines](https://metoffice.github.io/lfric_core/how_to_contribute/index.html#how-to-contribute-index)
+- [ ] Comments have been included that aid understanding and enhance the readability of the code
+- [ ] My changes generate no new warnings
+- [ ] All automated checks in the CI pipeline have completed successfully
 
-_Discuss any potential impacts this feature may have on existing functionalities._
+## Testing
 
-## Issues addressed
+- [ ] This change has been tested appropriately (please describe)
 
-Resolves
+## Security Considerations
 
-_List issue(s) related to this PR._
+- [ ] I have reviewed my changes for potential security issues
+- [ ] Sensitive data is properly handled (if applicable)
+- [ ] Authentication and authorisation are properly implemented (if applicable)
 
-## Coordinated merge
+## AI Assistance and Attribution
 
-_Specify any coordinated merges here._
+- [ ] Some of the content of this change has been produced with the assistance of _Generative AI tool name_ (e.g., Met Office Github Copilot Enterprise, Github Copilot Personal, ChatGPT GPT-4, etc) and I have followed the [Simulation Systems AI policy](https://metoffice.github.io/simulation-systems/FurtherDetails/ai.html) (including attribution labels)
 
+<!-- If AI has been used, please provide more details here -->
 
-## Checklist
+# Sci/Tech Review
 
-- [ ] I have performed a self-review of my own changes
+<!-- To be completed by the Sci/Tech Reviewer -->
+<!-- May be skipped for trivial tickets -->
+
+- [ ] I understand this area of code and the changes being added
+- [ ] The proposed changes correspond to the pull request description
+- [ ] Documentation is sufficient (do documentation papers need updating)
+- [ ] Sufficient testing has been completed
+
+(_Please alert the code reviewer via a tag when you have approved the SR_)
+
+# Code Review
+
+<!-- To be completed by the Code Reviewer -->
+
+- [ ] All dependencies have been resolved
+- [ ] Related Issues have been properly linked and addressed
+- [ ] Code quality standards have been met
+- [ ] Tests are adequate and have passed
+- [ ] Security considerations have been addressed
+- [ ] Performance impact is acceptable
+
