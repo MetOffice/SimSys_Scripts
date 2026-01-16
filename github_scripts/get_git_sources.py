@@ -23,7 +23,7 @@ def run_command(
     command: str,
     check: bool = True,
     capture: bool = True,
-    timeout: int = 600
+    timeout: int = 300
 ) -> Optional[subprocess.CompletedProcess]:
     """
     Run a subprocess command and return the result object
