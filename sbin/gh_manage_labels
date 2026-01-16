@@ -59,6 +59,7 @@ labels=(
   "Discussion|#FBCA04|Issues that require some formal discussion"
   "cla-required|#b60205|The CLA has not yet been signed by the author of this PR - added by GA"
   "cla-signed|#0052cc|The CLA has been signed as part of this PR - added by GA"
+  "cla-modified|#F56F27|The CLA has been modified as part of this PR - added by GA"
 )
 
 # -- Add labels in relevant repositories
@@ -77,6 +78,7 @@ repos=(
   "MetOffice/um_meta"
   "MetOffice/socrates-spectral"
   "MetOffice/moci"
+  "MetOffice/monc"
 )
 
 # -- Extract labels and colors
