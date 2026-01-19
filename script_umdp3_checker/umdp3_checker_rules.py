@@ -163,7 +163,8 @@ class UMDP3Checker:
         )
 
     def capitalised_keywords(self, lines: List[str]) -> TestResult:
-        """Check for the presence of lowercase Fortran keywords, which are taken from an imported list 'fortran_keywords'."""
+        """Check for the presence of lowercase Fortran keywords, which are
+        taken from an imported list 'fortran_keywords'."""
         failures = 0
         error_log = {}
         count = -1

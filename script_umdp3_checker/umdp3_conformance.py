@@ -426,7 +426,7 @@ def create_style_checkers(
     file_types: List[str], changed_files: List[Path]
 ) -> List[StyleChecker]:
     """Create style checkers based on requested file types."""
-    dispatch_tables = OldUMDP3Checks()
+    dispatch_tables = CheckerDispatchTables()
     checkers = []
     if "Fortran" in file_types:
         file_extensions = {".f", ".for", ".f90", ".f95", ".f03", ".f08", ".F90"}
