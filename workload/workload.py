@@ -22,14 +22,7 @@ ssd_repositories = [
     "growss",
 ]
 
-# Ideally get this list another way but for now hardcode it.
-other_reviewers = [
-    "MetBenjaminWent",
-    "jedbakerMO",
-    # Chris Maynard
-    # James CS
-    # Oakley Brunt
-]
+adminID = "MGEX82"  # person in github teams as a central admin but not relevant here
 
 
 class ProjectData:
@@ -52,7 +45,7 @@ class ProjectData:
         Retrieve data from GitHub API or a from a test file.
         """
         if test:
-            file = Path(__file__).with_name("test.json")
+            file = Path(__file__).parent / "test" / "test.json"
             with open(file) as f:
                 self.data = json.loads(f.read())
 
@@ -67,7 +60,7 @@ class ProjectData:
             self.data = json.loads(output.stdout)
 
             if capture:
-                file = Path(__file__).with_name("test.json")
+                file = Path(__file__).parent / "test" / "test.json"
                 with open(file, "w") as f:
                     json.dump(self.data, f)
                 print(
@@ -84,14 +77,12 @@ class ProjectData:
             cr = ""
             sr = ""
             if "code Review" in review:
-                cr = review["code Review"]
-                self.review_data.append((review["code Review"], review["repository"]))
+                cr = review["code Review"].strip()
+                self.review_data.append((cr, review["repository"]))
 
             if "sciTech Review" in review:
-                sr = review["sciTech Review"]
-                self.review_data.append(
-                    (review["sciTech Review"], review["repository"])
-                )
+                sr = review["sciTech Review"].strip()
+                self.review_data.append((sr, review["repository"]))
 
             if test and (cr or sr):
                 print(
@@ -136,7 +127,8 @@ class Team:
         """
 
         if test:
-            file = Path(__file__).with_name(self.github_id + ".json")
+            team_file = self.github_id + ".json"
+            file = Path(__file__).parent / "test" / team_file
             with open(file) as f:
                 full_data = json.loads(f.read())
         else:
@@ -157,7 +149,9 @@ class Team:
             full_data = json.loads(output.stdout)
 
         for item in full_data:
-            self.members.append(item["login"])
+            person_id = item["login"]
+            if person_id != adminID:
+                self.members.append(person_id)
 
         self.members = sorted(self.members, key=str.lower)
 
@@ -267,14 +261,11 @@ def main(total: bool, test: bool, capture_project: bool):
     # Extract data from github about the reviews and team members.
     data = ProjectData(test, capture_project)
 
-    other_team = Team(test=test)
-    other_team.members = other_reviewers
-
     teams = {
         "SSD": Team("ssdteam", test),
         "CCD": Team("core-capability-development", test),
         "TCD": Team("toolscollabdev", test),
-        "Other": other_team,
+        "Other": Team("SimSysCodeReviewers", test),
     }
 
     # Create tables for each combination of reviewers and reposotories
@@ -289,7 +280,12 @@ def main(total: bool, test: bool, capture_project: bool):
     repo_list = lfric_repositories
     reviewers = []
     for team in teams.values():
-        reviewers += team.get_team_members()
+        members = team.get_team_members()
+        # Not using sets to deduplicate to preserve list order, keeping
+        # people in their teams.
+        for person in members:
+            if person not in reviewers:
+                reviewers.append(person)
     tables["LFRic"] = build_table(data, reviewers, repo_list)
 
     # Print tables

@@ -6,10 +6,10 @@
 # repository or they will be lost during the release process when the UM copy
 # is copied over.
 
-import sys
+# import sys
 import re
 import argparse
-from fstring_parse import *
+from fstring_parse import *  # noqa: F403
 
 # These 4 are defined globally for visibility. They are actually only used in
 # main or a single subroutine but actual text is not yet defined in stone...
@@ -257,14 +257,14 @@ def main():
 
     filename = args.filename
     try:
-        with open(filename) as fortran_file:
-            raw_code = fortran_file.readlines()
-    except EnvironmentError:
+        with open(filename):
+            pass
+    except OSError:
         print(
-            'Error opening file. :\n     "{0:s}"\n'.format(filename)
-            + "I need a valid filename on which to work...."
+            f'Error opening file:\n     "{filename}"\n'
+            "I need a valid filename on which to work...."
         )
-        raise SystemExit
+        raise SystemExit(1)
 
     print("\nLooking at file :\n     {0:s}".format(filename))
     # re-open the fortran file, this time to write to it.
