@@ -12,6 +12,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from github_scripts import git_bdiff
 import fcm_bdiff
+from checker_dispatch_tables import CheckerDispatchTables
 from umdp3_checker_rules import TestResult
 import concurrent.futures
 
