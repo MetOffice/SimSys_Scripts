@@ -16,8 +16,8 @@ from pathlib import Path
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from umdp3 import UMDP3, TestResult
-from old_umdp3_checks import OldUMDP3Checks
+from umdp3_checker_rules import UMDP3Checker, TestResult
+from checker_dispatch_tables import CheckerDispatchTables
 from typing import Callable, Iterable, List, Dict, Set
 from dataclasses import dataclass, field
 
@@ -29,8 +29,8 @@ def test_basic_functionality():
     """Test basic UMDP3 functionality"""
     print("Testing basic UMDP3 functionality...")
 
-    # Initialize UMDP3
-    umdp3 = UMDP3()
+    # Initialize UMDP3Checker
+    umdp3_checker = UMDP3Checker()
 
     # Test line length check
     test_lines = [
@@ -40,7 +40,7 @@ def test_basic_functionality():
     expected = TestResult(
         checker_name="Line Length Check", failure_count=1, passed=False
     )
-    result = umdp3.line_over_80chars(test_lines)
+    result = umdp3_checker.line_over_80chars(test_lines)
     print(
         f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
@@ -48,7 +48,7 @@ def test_basic_functionality():
     # Test tab detection
     test_lines_tabs = ["Normal line", "Line with\ttab"]
 
-    result = umdp3.tab_detection(test_lines_tabs)
+    result = umdp3_checker.tab_detection(test_lines_tabs)
     print(
         f"Tab detection test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
@@ -56,7 +56,7 @@ def test_basic_functionality():
     # Test trailing whitespace
     test_lines_whitespace = ["Normal line", "Line with trailing spaces   "]
 
-    result = umdp3.line_trail_whitespace(test_lines_whitespace)
+    result = umdp3_checker.line_trail_whitespace(test_lines_whitespace)
     print(
         f"Trailing whitespace test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
@@ -64,7 +64,7 @@ def test_basic_functionality():
     # Test IMPLICIT NONE check
     fortran_without_implicit = ["PROGRAM test", "INTEGER :: i", "END PROGRAM"]
 
-    result = umdp3.implicit_none(fortran_without_implicit)
+    result = umdp3_checker.implicit_none(fortran_without_implicit)
     print(
         f"IMPLICIT NONE test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
@@ -76,7 +76,7 @@ def test_basic_functionality():
         "END PROGRAM",
     ]
 
-    result = umdp3.implicit_none(fortran_with_implicit)
+    result = umdp3_checker.implicit_none(fortran_with_implicit)
     print(
         f"IMPLICIT NONE test (good): {'PASS' if result.failure_count == 0 else 'FAIL'} (expected pass)"
     )
@@ -86,7 +86,7 @@ def test_dispatch_tables():
     """Test dispatch tables"""
     print("\nTesting dispatch tables...")
 
-    dispatch = OldUMDP3Checks()
+    dispatch = CheckerDispatchTables()
 
     # Test getting dispatch tables
     fortran_diff = dispatch.get_diff_dispatch_table_fortran()
@@ -109,12 +109,12 @@ def test_fortran_specific():
     """Test Fortran-specific checks"""
     print("\nTesting Fortran-specific checks...")
 
-    umdp3 = UMDP3()
+    umdp3_checker = UMDP3Checker()
 
     # Test obsolescent intrinsics
     fortran_old_intrinsics = ["REAL :: x", "x = ALOG(2.0)", "y = DBLE(x)"]
 
-    result = umdp3.obsolescent_fortran_intrinsic(fortran_old_intrinsics)
+    result = umdp3_checker.obsolescent_fortran_intrinsic(fortran_old_intrinsics)
     print(
         f"Obsolescent intrinsics test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
@@ -122,7 +122,7 @@ def test_fortran_specific():
     # Test forbidden operators
     fortran_old_operators = ["IF (x .GT. y) THEN", "  PRINT *, 'x is greater'"]
 
-    result = umdp3.forbidden_operators(fortran_old_operators)
+    result = umdp3_checker.forbidden_operators(fortran_old_operators)
     print(
         f"Forbidden operators test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
@@ -130,7 +130,7 @@ def test_fortran_specific():
     # Test PRINT statement
     fortran_print = ["PRINT *, 'Hello world'"]
 
-    result = umdp3.printstar(fortran_print)
+    result = umdp3_checker.printstar(fortran_print)
     print(
         f"PRINT statement test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
@@ -140,7 +140,7 @@ def test_c_specific():
     """Test C-specific checks"""
     print("\nTesting C-specific checks...")
 
-    umdp3 = UMDP3()
+    umdp3_checker = UMDP3Checker()
 
     # Test deprecated C identifiers
     c_deprecated = [
@@ -149,7 +149,7 @@ def test_c_specific():
         "gets(buffer);",  # deprecated function
     ]
 
-    result = umdp3.c_deprecated(c_deprecated)
+    result = umdp3_checker.c_deprecated(c_deprecated)
     print(
         f"Deprecated C identifiers test: {'PASS' if result > 0 else 'FAIL'} (expected failure)"
     )
@@ -157,7 +157,7 @@ def test_c_specific():
     # Test format specifiers
     c_format = ['printf("%10d", value);']  # missing space
 
-    result = umdp3.c_integral_format_specifiers(c_format)
+    result = umdp3_checker.c_integral_format_specifiers(c_format)
     print(
         f"C format specifiers test: {'PASS' if result > 0 else 'FAIL'} (expected failure)"
     )

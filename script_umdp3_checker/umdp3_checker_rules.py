@@ -47,7 +47,7 @@ class TestResult:
     errors: Dict = field(default_factory=dict)
 
 
-class UMDP3:
+class UMDP3Checker:
     """UMDP3 compliance checker class"""
 
     """ToDO : This class could possibly be abandoned, or replaced
