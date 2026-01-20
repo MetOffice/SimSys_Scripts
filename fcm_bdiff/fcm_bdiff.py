@@ -99,6 +99,7 @@ class FCMBase:
         """
         Run an fcm command, optionally retrying on failure.
         """
+        
         retries = 0
         while True:
             result = subprocess.run(
