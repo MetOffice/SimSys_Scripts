@@ -336,8 +336,10 @@ class FCMBDiff(FCMBase):
 
 
 class FCMInfo(FCMBase):
-    """Class to hold FCM branch information. Mirroring the functionality
-    in the git_bdiff.GitBranchInfo class."""
+    """
+    Class to hold FCM branch information. Mirroring the functionality
+    in the git_bdiff.GitBranchInfo class.
+    """
 
     def __init__(self, branch_info: str):
         super().__init__(self, repo=None)
