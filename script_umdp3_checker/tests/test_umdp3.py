@@ -162,6 +162,7 @@ def test_c_specific():
 
 def create_test_files():
     """Create test files for full integration test"""
+    
     print("\nCreating test files...")
 
     # Create temporary directory
