@@ -1,8 +1,8 @@
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file LICENSE
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 
 """
 Lists of words for Fortran checks. Some to confirm they are found in the approved form, some to test for as the intention is that they should no longer appear in the code.
