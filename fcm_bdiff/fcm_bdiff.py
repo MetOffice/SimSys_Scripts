@@ -87,6 +87,7 @@ class FCMBase:
         For now, define it to be the contants of the URL after .*/main/ has been
         stripped off. i.e. it will start with trunk/... or branches/...
         """
+        
         pattern = rf"{self.get_repository_root()}/main/(.*)$"
         match = re.match(pattern, self._branch_url)
         if match:
