@@ -8,12 +8,14 @@
 Standalone version of the dispatch tables from UMDP3Job
 Python translation of the original Perl module
 """
+
+from typing import Dict, Callable
+from umdp3_checker_rules import UMDP3Checker
+
 """
 ToDo : This list was checked to ensure it had something for each
        test in the original.
 """
-from typing import Dict, Callable
-from umdp3_checker_rules import UMDP3Checker
 
 # Declare version
 VERSION = "13.5.0"

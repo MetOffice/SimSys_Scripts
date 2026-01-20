@@ -18,8 +18,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from umdp3_checker_rules import UMDP3Checker, TestResult
 from checker_dispatch_tables import CheckerDispatchTables
-from typing import Callable, Iterable, List, Dict, Set
-from dataclasses import dataclass, field
 
 # Prevent pytest from trying to collect TestResult as more tests:
 TestResult.__test__ = False
@@ -37,9 +35,6 @@ def test_basic_functionality():
         "This is a short line",
         "This is a very long line that exceeds eighty characters and should trigger a failure in the line length test",
     ]
-    expected = TestResult(
-        checker_name="Line Length Check", failure_count=1, passed=False
-    )
     result = umdp3_checker.line_over_80chars(test_lines)
     print(
         f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"

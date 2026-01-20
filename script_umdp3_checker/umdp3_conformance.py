@@ -1,7 +1,7 @@
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, Iterable, List, Dict, Set
+from typing import Callable, List, Dict, Set
 from dataclasses import dataclass, field
 import argparse
 
@@ -353,7 +353,7 @@ class ConformanceChecker:
                     )
                     if test_result.errors:
                         print(" " * 5 + "-=-" * 30)
-                        print(" " * 5 + f" Std Error :")
+                        print(" " * 5 + " Std Error :")
                         for count, (title, info) in enumerate(
                             test_result.errors.items()
                         ):
