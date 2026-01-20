@@ -156,6 +156,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved by
         calling get_branch_info() - returns the Branch Parent Field
         """
+        
         parent = re.search(
             r"^Branch Parent:\s*(?P<parent>.*)$",
             self._branch_info,
