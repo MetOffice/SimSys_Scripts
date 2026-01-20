@@ -25,6 +25,7 @@ TestResult.__test__ = False
 
 def test_basic_functionality():
     """Test basic UMDP3 functionality"""
+    
     print("Testing basic UMDP3 functionality...")
 
     # Initialize UMDP3Checker
