@@ -12,7 +12,7 @@ the UM codebase in order to improve efficiency.
 """
 
 """
-ToDo: Current order may not be perfect, and could possibly be reviewed.
+TODO: Current order may not be perfect, and could possibly be reviewed.
 However, it is probably 'good enough' for now.
 """
 

@@ -22,7 +22,7 @@ from search_lists import (
 from dataclasses import dataclass, field
 
 """
-ToDo : Several of the test functions are poor shadows of the original
+TODO : Several of the test functions are poor shadows of the original
        Perl versions. They would benefit from improving to catch more
        cases.
        Equally, there could probably be more consistancly in how things
@@ -38,7 +38,8 @@ VERSION = "13.5.0"
 class TestResult:
     """Result from running a single style checker test on a file."""
 
-    """ToDo : unsure if both output and errors are required.
+    """
+    TODO : unsure if both output and errors are required.
        They make a bit more sense in the 'external_checkers' where
        they hold stdout and stderr."""
     checker_name: str = "Unnamed Checker"
@@ -51,7 +52,8 @@ class TestResult:
 class UMDP3Checker:
     """UMDP3 compliance checker class"""
 
-    """ToDO : This class could possibly be abandoned, or replaced
+    """
+    TODO : This class could possibly be abandoned, or replaced
        by a similar class at a different level. Presently only one
        instance is created in such a way that the original
        _extra_error_info can't be used to hold extra information
@@ -64,7 +66,8 @@ class UMDP3Checker:
     def __init__(self):
         self._extra_error_info = {}
         self._lock = threading.Lock()
-        """ToDo: The Perl version had a dodgy looking subroutine to calculate
+        """
+    TODO: The Perl version had a dodgy looking subroutine to calculate
         this, but I can't find where it was called from within the files in
         'bin'. It used all args as a 'list' - searched them for '#include' and
         then returned the count as well as adding 1 to this global var if any
@@ -86,7 +89,8 @@ class UMDP3Checker:
         Get extra error information. Dictionary with file names as the keys.
         """
         """
-        ToDo: I presume this is what's used when creating the report of the
+
+    TODO: I presume this is what's used when creating the report of the
         actual failures and not just the count. However, this information
         doesn't seem to be output as yet and will need implementing.
         """
@@ -95,7 +99,8 @@ class UMDP3Checker:
 
     def add_extra_error(self, key: str, value: str = ""):
         """Add extra error information to the dictionary"""
-        """ToDo: The usefulness of the information added has not been assesed,
+        """
+    TODO: The usefulness of the information added has not been assesed,
         nor does it appear to be reported as yet."""
         with self._lock:
             self._extra_error_info[key] = value
@@ -104,7 +109,8 @@ class UMDP3Checker:
         self, error_log: Dict, key: str = "no key", value: int = 0
     ) -> Dict:
         """Add extra error information to the dictionary"""
-        """ToDo: This is a bodge to get more detailed info about
+        """
+    TODO: This is a bodge to get more detailed info about
            the errors back to the calling program. The info is
            useful, but is currently presented on a per-test basis
            rather than a per-file which would be easier to read
@@ -116,14 +122,16 @@ class UMDP3Checker:
 
     def get_include_number(self) -> int:
         """Get number of files with variable declarations in includes"""
-        """ToDo: At present, this is hardwired to zero and I don't think
+        """
+    TODO: At present, this is hardwired to zero and I don't think
         anything alters it along the way. Plus it doesn't seem to be called
         from anywhere..... So this getter is probably very redundant."""
         return self._number_of_files_with_variable_declarations_in_includes
 
     def remove_quoted(self, line: str) -> str:
         """Remove quoted strings from a line"""
-        """ToDo: The original version replaced the quoted sections with a
+        """
+    TODO: The original version replaced the quoted sections with a
         "blessed reference", presumably becuase they were 're-inserted' at some
         stage. No idea if that capability is still required."""
         # Simple implementation - remove single and double quoted strings
@@ -140,7 +148,8 @@ class UMDP3Checker:
     """Test functions :
         Each accepts a list of 'lines' to search and returns a
         TestResult object containing all the information."""
-    """ToDo: One thought here is each test should also be told whether it's
+    """
+    TODO: One thought here is each test should also be told whether it's
     being passed the contents of a full file, or just a selection of lines
     involved in a change as some of the tests appear to really only be useful
     if run on a full file (e.g. the Implicit none checker). Thus if only passed
@@ -315,7 +324,8 @@ class UMDP3Checker:
 
     def lowercase_variable_names(self, lines: List[str]) -> TestResult:
         """Check for lowercase or CamelCase variable names only"""
-        """ToDo: This is a very simplistic check and will not detect many
+        """
+    TODO: This is a very simplistic check and will not detect many
         cases which break UMDP3. I suspect the Perl Predeccessor concattenated
         continuation lines prior to 'cleaning' and checking. Having identified
         a declaration, it also then scanned the rest of the file for that
@@ -406,7 +416,8 @@ class UMDP3Checker:
 
     def forbidden_keywords(self, lines: List[str]) -> TestResult:
         """Check for use of EQUIVALENCE or PAUSE"""
-        """ToDo: Can't believe this will allow a COMMON BLOCK....
+        """
+    TODO: Can't believe this will allow a COMMON BLOCK....
         Need to check against what the original did.."""
         failures = 0
         error_log = {}
@@ -651,7 +662,8 @@ class UMDP3Checker:
 
     def cpp_comment(self, lines: List[str]) -> TestResult:
         """Check for Fortran comments in CPP directives"""
-        """Todo: This looks like it will incorrectly fail # if !defined(X)
+        """
+    TODO: This looks like it will incorrectly fail # if !defined(X)
         How did the original do this test?"""
         failures = 0
         error_log = {}
@@ -900,7 +912,8 @@ class UMDP3Checker:
 
     def check_crown_copyright(self, lines: List[str]) -> TestResult:
         """Check for crown copyright statement"""
-        """ToDo: This is a very simplistic check and will not detect many
+        """
+    TODO: This is a very simplistic check and will not detect many
         cases which break UMDP3. I suspect the Perl Predeccessor
         did much more convoluted tests"""
         comment_lines = [
@@ -928,7 +941,8 @@ class UMDP3Checker:
 
     def check_code_owner(self, lines: List[str]) -> TestResult:
         """Check for correct code owner comment"""
-        """ToDo: oh wow is this test worthless. We don't even guarentee to put
+        """
+    TODO: oh wow is this test worthless. We don't even guarentee to put
         the wrds "code owner" in a file. Plus, that's before you take into
         account both returns were '0' - so it couldn't possibly fail
         (picard.gif)
@@ -958,7 +972,8 @@ class UMDP3Checker:
 
     def array_init_form(self, lines: List[str]) -> TestResult:
         """Check for old array initialization form"""
-        """ToDo: Another instance that assumes continuation lines are
+        """
+    TODO: Another instance that assumes continuation lines are
         concatenated prior to executing the actual test to ensure both forward
         slashes are on the same line."""
         failures = 0

@@ -10,7 +10,7 @@ from umdp3_checker_rules import UMDP3Checker, TestResult
 # Prevent pytest from trying to collect TestResult as more tests:
 TestResult.__test__ = False
 """
-ToDo :
+TODO :
       THere has been a LOT of refactoring in the umdp3 module since these
       tests were written. To persuade them to 'work' for now, only two
       attributes of the TestResult class are used - failure_count and

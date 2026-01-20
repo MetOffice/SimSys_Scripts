@@ -96,7 +96,8 @@ class FCMBdiffWrapper(CMSSystem):
 class StyleChecker(ABC):
     """Abstract base class for style checkers."""
 
-    """ ToDo: This is where it might be good to set up a threadsafe
+    """
+    TODO: This is where it might be good to set up a threadsafe
         class instance to hold the 'expanded' check outputs.
         One for each file being checked in parallel.
         Curently the UMDP3 class holds "_extra_error_info" which
@@ -194,7 +195,8 @@ class UMDP3_checker(StyleChecker):
 class ExternalChecker(StyleChecker):
     """Wrapper for external style checking tools."""
 
-    """ToDo : This is overriding the 'syle type hint from the base class.
+    """
+    TODO : This is overriding the 'syle type hint from the base class.
     As we're currently passing in a list of strings to pass to 'subcommand'.
     Ideally we should be making callable functions for each check, but that
     would require more refactoring of the code.
@@ -305,7 +307,9 @@ class ConformanceChecker:
         However, given that the number of files is likely to be small,
         and the number of checkers is also small, this should be acceptable
         for now.
-        ToDo : Might be good to have a threadsafe object for each file and
+        """
+        """
+        TODO : Might be good to have a threadsafe object for each file and
         allow multiple checks to be run at once on that file."""
         results = []
 
@@ -326,8 +330,9 @@ class ConformanceChecker:
 
     def print_results(self, print_volume: int = 3) -> bool:
         """Print results and return True if all checks passed.
-        ========================================================
-        ToDo: If an object encapsulating the data for each file is created"
+        ========================================================"""
+        """
+        TODO: If an object encapsulating the data for each file is created"
         it should contain the "in depth" printing method for file data.
         With this method presenting the summary and then looping over
         each file object to print its details at the desired verbosity."""
@@ -342,7 +347,7 @@ class ConformanceChecker:
             if print_volume < 4 and result.all_passed:
                 continue
             for test_result in result.test_results:
-                """ToDo : The output logic here is a bit of a mess."""
+                # TODO : The output logic here is a bit of a mess.
                 if print_volume < 5 and test_result.passed:
                     continue
                 if print_volume >= 4:
@@ -386,7 +391,8 @@ def process_arguments():
         default=["Fortran"],
         help="File types to check, comma-separated",
     )
-    """ ToDo : I /think/ the old version also checked '.h' files as Fortran.
+    """
+    TODO : I /think/ the old version also checked '.h' files as Fortran.
         Not sure if that is still needed."""
     parser.add_argument(
         "-p", "--path", type=str, default="./", help="path to repository"
@@ -424,7 +430,8 @@ def which_cms_is_it(path: str) -> CMSSystem:
     if (repo_path / ".git").is_dir():
         return GitBdiffWrapper(repo_path)
     elif (repo_path / ".svn").is_dir():
-        """ToDo : If we still want this to work reliably with FCM, it will need
+        """
+        TODO : If we still want this to work reliably with FCM, it will need
         to also accept URLs and not just local paths."""
         return FCMBdiffWrapper(repo_path)
     else:
@@ -464,7 +471,8 @@ def create_style_checkers(
         )
         checkers.append(python_file_checker)
 
-    """ ToDo : Puting this here, with no file type filtering,
+    """
+    TODO : Puting this here, with no file type filtering,
         means it will always run on all changed files.
         It might be better to add the dispatch table to all the other
         checkers so it's only running on 'code' files."""
@@ -500,7 +508,8 @@ if __name__ == "__main__":
                 print(f"  {changed_file}")
 
     # Configure checkers
-    """ ToDo : Uncertain as to how flexible this needs to be.
+    """
+    TODO : Uncertain as to how flexible this needs to be.
         For now, just configure checkers based on file type requested.
         Later, could add configuration files to specify which
         checkers to use for each file type."""
@@ -509,7 +518,7 @@ if __name__ == "__main__":
     active_checkers = create_style_checkers(args.file_types,
                                             cms.get_changed_files())
 
-    # ToDo : Could create a conformance checker for each
+    # TODO : Could create a conformance checker for each
     #  file type.
     #  Currently, just create a single conformance checker
     #  with all active checkers.

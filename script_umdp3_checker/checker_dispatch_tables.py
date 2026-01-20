@@ -13,8 +13,11 @@ from typing import Dict, Callable
 from umdp3_checker_rules import UMDP3Checker
 
 """
-ToDo : This list was checked to ensure it had something for each
+TODO : This list was checked to ensure it had something for each
        test in the original.
+TODO : This needs to be re-checked.
+TODO : And the tests need to be compared to the original Perl tests
+       to ensure they are equivalent.
 """
 
 # Declare version
