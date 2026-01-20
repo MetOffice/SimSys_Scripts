@@ -253,9 +253,12 @@ class FCMBDiff(FCMBase):
 
     @property
     def has_diverged(self):
-        """Whether the branch has diverged from its parent.
+        """
+        Whether the branch has diverged from its parent.
         Bit vague here, so we're going to check to see if 'parent' had
-        an '@' in it denoting it's a branch of <something>"""
+        an '@' in it denoting it's a branch of <something>
+        """
+        
         match = re.match(r".*@(\d+)$", self.parent)
         if match:
             return True
