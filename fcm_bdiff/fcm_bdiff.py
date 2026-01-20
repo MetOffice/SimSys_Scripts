@@ -212,6 +212,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved by
         calling get_branch_info() - returns the Repository Root field
         """
+        
         repos_root = re.search(
             r"^Repository Root:\s*(?P<url>.*)\s*$",
             self._branch_info,
