@@ -25,7 +25,7 @@ TestResult.__test__ = False
 
 def test_basic_functionality():
     """Test basic UMDP3 functionality"""
-    
+
     print("Testing basic UMDP3 functionality...")
 
     # Initialize UMDP3Checker
@@ -34,11 +34,14 @@ def test_basic_functionality():
     # Test line length check
     test_lines = [
         "This is a short line",
-        "This is a very long line that exceeds eighty characters and should trigger a failure in the line length test",
+        "This is a very long line that exceeds eighty characters and " +
+        "should trigger a failure in the line length test",
     ]
     result = umdp3_checker.line_over_80chars(test_lines)
     print(
-        f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+        "Line length test: " +
+        f"{'PASS' if result.failure_count > 0 else 'FAIL'}" +
+        " (expected failure)"
     )
 
     # Test tab detection
@@ -46,7 +49,9 @@ def test_basic_functionality():
 
     result = umdp3_checker.tab_detection(test_lines_tabs)
     print(
-        f"Tab detection test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+        "Tab detection test: " +
+        f"{'PASS' if result.failure_count > 0 else 'FAIL'}"
+        " (expected failure)"
     )
 
     # Test trailing whitespace
@@ -54,7 +59,9 @@ def test_basic_functionality():
 
     result = umdp3_checker.line_trail_whitespace(test_lines_whitespace)
     print(
-        f"Trailing whitespace test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+        "Trailing whitespace test: " +
+        f"{'PASS' if result.failure_count > 0 else 'FAIL'}" +
+        "(expected failure)"
     )
 
     # Test IMPLICIT NONE check
@@ -62,7 +69,9 @@ def test_basic_functionality():
 
     result = umdp3_checker.implicit_none(fortran_without_implicit)
     print(
-        f"IMPLICIT NONE test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+        "IMPLICIT NONE test: "
+        f"{'PASS' if result.failure_count > 0 else 'FAIL'}"
+        " (expected failure)"
     )
 
     fortran_with_implicit = [
@@ -74,13 +83,15 @@ def test_basic_functionality():
 
     result = umdp3_checker.implicit_none(fortran_with_implicit)
     print(
-        f"IMPLICIT NONE test (good): {'PASS' if result.failure_count == 0 else 'FAIL'} (expected pass)"
+        "IMPLICIT NONE test (good): "
+        f"{'PASS' if result.failure_count == 0 else 'FAIL'}"
+        " (expected pass)"
     )
 
 
 def test_dispatch_tables():
     """Test dispatch tables"""
-    
+
     print("\nTesting dispatch tables...")
 
     dispatch = CheckerDispatchTables()
@@ -104,7 +115,7 @@ def test_dispatch_tables():
 
 def test_fortran_specific():
     """Test Fortran-specific checks"""
-    
+
     print("\nTesting Fortran-specific checks...")
 
     umdp3_checker = UMDP3Checker()
@@ -112,9 +123,12 @@ def test_fortran_specific():
     # Test obsolescent intrinsics
     fortran_old_intrinsics = ["REAL :: x", "x = ALOG(2.0)", "y = DBLE(x)"]
 
-    result = umdp3_checker.obsolescent_fortran_intrinsic(fortran_old_intrinsics)
+    result = umdp3_checker.obsolescent_fortran_intrinsic(
+        fortran_old_intrinsics)
     print(
-        f"Obsolescent intrinsics test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+        "Obsolescent intrinsics test: "
+        f"{'PASS' if result.failure_count > 0 else 'FAIL'}"
+        " (expected failure)"
     )
 
     # Test forbidden operators
@@ -122,7 +136,9 @@ def test_fortran_specific():
 
     result = umdp3_checker.forbidden_operators(fortran_old_operators)
     print(
-        f"Forbidden operators test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+        "Forbidden operators test: "
+        f"{'PASS' if result.failure_count > 0 else 'FAIL'}"
+        " (expected failure)"
     )
 
     # Test PRINT statement
@@ -130,13 +146,15 @@ def test_fortran_specific():
 
     result = umdp3_checker.printstar(fortran_print)
     print(
-        f"PRINT statement test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
+        "PRINT statement test: "
+        f"{'PASS' if result.failure_count > 0 else 'FAIL'}"
+        " (expected failure)"
     )
 
 
 def test_c_specific():
     """Test C-specific checks"""
-    
+
     print("\nTesting C-specific checks...")
 
     umdp3_checker = UMDP3Checker()
@@ -150,7 +168,8 @@ def test_c_specific():
 
     result = umdp3_checker.c_deprecated(c_deprecated)
     print(
-        f"Deprecated C identifiers test: {'PASS' if result > 0 else 'FAIL'} (expected failure)"
+        "Deprecated C identifiers test: "
+        f"{'PASS' if result > 0 else 'FAIL'} (expected failure)"
     )
 
     # Test format specifiers
@@ -158,13 +177,14 @@ def test_c_specific():
 
     result = umdp3_checker.c_integral_format_specifiers(c_format)
     print(
-        f"C format specifiers test: {'PASS' if result > 0 else 'FAIL'} (expected failure)"
+        "C format specifiers test: "
+        f"{'PASS' if result > 0 else 'FAIL'} (expected failure)"
     )
 
 
 def create_test_files():
     """Create test files for full integration test"""
-    
+
     print("\nCreating test files...")
 
     # Create temporary directory
@@ -233,7 +253,7 @@ if __name__ == "__main__":
 
 def main():
     """Main test function"""
-    
+
     print("UMDP3 Python Translation Test Suite")
     print("=" * 40)
 
@@ -246,7 +266,8 @@ def main():
         # Create test files for demonstration
         test_dir = create_test_files()
         print(f"\nTest files created in: {test_dir}")
-        print("You can now run the main checker on these files to see it in action.")
+        print("You can now run the main checker on these files to see " +
+              "it in action.")
 
         print("\n" + "=" * 40)
         print("All tests completed successfully!")

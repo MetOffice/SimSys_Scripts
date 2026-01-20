@@ -181,7 +181,8 @@ class UMDP3_checker(StyleChecker):
         for check_name, check_function in self.check_functions.items():
             file_results.append(check_function(lines))
 
-        tests_failed = sum([0 if result.passed else 1 for result in file_results])
+        tests_failed = sum([0 if result.passed else 1 for result in
+                            file_results])
         return CheckResult(
             file_path=str(file_path),
             tests_failed=tests_failed,
@@ -193,7 +194,10 @@ class UMDP3_checker(StyleChecker):
 class ExternalChecker(StyleChecker):
     """Wrapper for external style checking tools."""
 
-    """ToDo : This is overriding the 'syle type hint from the base class. As we're currently passing in a list of strings to pass to 'subcommand'. Ideally we should be making callable functions for each check, but that would require more refactoring of the code.
+    """ToDo : This is overriding the 'syle type hint from the base class.
+    As we're currently passing in a list of strings to pass to 'subcommand'.
+    Ideally we should be making callable functions for each check, but that
+    would require more refactoring of the code.
     Is that a 'factory' method?"""
     check_commands: Dict[str, List[str]]
 
@@ -229,7 +233,8 @@ class ExternalChecker(StyleChecker):
         for test_name, command in self.check_commands.items():
             try:
                 cmd = command + [str(file_path)]
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+                result = subprocess.run(cmd, capture_output=True,
+                                        text=True, timeout=60)
             except subprocess.TimeoutExpired:
                 file_results.append(
                     TestResult(
@@ -329,7 +334,7 @@ class ConformanceChecker:
         all_passed = True
         for result in self.results:
             file_status = "✓ PASS" if result.all_passed else "✗ FAIL"
-            # Lousy variable names here - 'result' is the CheckResult for a file
+            # Lousy variable names here: 'result' is the CheckResult for a file
             # which had multiple tests, so result.all_passed is for that file.
             all_passed = all_passed and result.all_passed
             if print_volume >= 2:
@@ -387,13 +392,16 @@ def process_arguments():
         "-p", "--path", type=str, default="./", help="path to repository"
     )
     parser.add_argument(
-        "--max-workers", type=int, default=8, help="Maximum number of parallel workers"
+        "--max-workers", type=int, default=8,
+        help="Maximum number of parallel workers"
     )
     parser.add_argument(
-        "-v", "--verbose", action="count", default=0, help="Increase output verbosity"
+        "-v", "--verbose", action="count", default=0,
+        help="Increase output verbosity"
     )
     parser.add_argument(
-        "-q", "--quiet", action="count", default=0, help="Decrease output verbosity"
+        "-q", "--quiet", action="count", default=0,
+        help="Decrease output verbosity"
     )
     # The following are not yet implemented, but may become useful
     # branch and base branch could be used to configure the CMS diff
@@ -430,13 +438,15 @@ def create_style_checkers(
     dispatch_tables = CheckerDispatchTables()
     checkers = []
     if "Fortran" in file_types:
-        file_extensions = {".f", ".for", ".f90", ".f95", ".f03", ".f08", ".F90"}
+        file_extensions = {".f", ".for", ".f90", ".f95",
+                           ".f03", ".f08", ".F90"}
         fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
         fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
         print("Configuring Fortran checkers:")
         combined_checkers = fortran_diff_table | fortran_file_table
         fortran_file_checker = UMDP3_checker.from_full_list(
-            "Fortran Checker", file_extensions, combined_checkers, changed_files
+            "Fortran Checker", file_extensions,
+            combined_checkers, changed_files
         )
         checkers.append(fortran_file_checker)
     if "Python" in file_types:
@@ -449,7 +459,8 @@ def create_style_checkers(
             # "ruff"    : ["ruff", "check"],
         }
         python_file_checker = ExternalChecker(
-            "Python External Checkers", file_extensions, python_checkers, changed_files
+            "Python External Checkers", file_extensions,
+            python_checkers, changed_files
         )
         checkers.append(python_file_checker)
 
@@ -495,7 +506,8 @@ if __name__ == "__main__":
         checkers to use for each file type."""
     checkers = []
 
-    active_checkers = create_style_checkers(args.file_types, cms.get_changed_files())
+    active_checkers = create_style_checkers(args.file_types,
+                                            cms.get_changed_files())
 
     # ToDo : Could create a conformance checker for each
     #  file type.
@@ -512,6 +524,7 @@ if __name__ == "__main__":
 
     all_passed = checker.print_results(print_volume=args.volume)
     print(f"Total files checked: {len(checker.results)}")
-    print(f"Total files failed: {sum(1 for r in checker.results if not r.all_passed)}")
+    print(f"Total files failed: "
+          f"{sum(1 for r in checker.results if not r.all_passed)}")
 
     exit(0 if all_passed else 1)

@@ -43,7 +43,8 @@ def test_keywords(lines, expected_result, expected_errors):
         assert error in result.errors
 
 
-fake_code_block = ["PROGRAM test", "IMPLICIT NONE", "INTEGER :: i", "END PROGRAM"]
+fake_code_block = ["PROGRAM test", "IMPLICIT NONE",
+                   "INTEGER :: i", "END PROGRAM"]
 implicit_none_paramters = [
     (
         [line for line in fake_code_block if line != "IMPLICIT NONE"],
@@ -73,13 +74,15 @@ openmp_sentinels_parameters = [
         1,
         "One sentinel in column one, one not",
     ),
-    (["  !$OMP PARALLEL", "  !$OMP END PARALLEL"], 2, "No sentinels in column one"),
+    (["  !$OMP PARALLEL", "  !$OMP END PARALLEL"], 2,
+     "No sentinels in column one"),
     (
         ["! This is a comment", "  !$OMP PARALLEL"],
         1,
         "Comment line and sentinel not in column one",
     ),
-    (["!$OMP PARALLEL", "!$OMP END PARALLEL"], 0, "Both sentinels in column one"),
+    (["!$OMP PARALLEL", "!$OMP END PARALLEL"], 0,
+     "Both sentinels in column one"),
 ]
 
 
@@ -100,7 +103,8 @@ unseparated_keywords_parameters = [
     (["ELSE IF", "END PARRALEL DO", "END IF"], 0, "All keywords separated"),
     (["i=0", "i=i+1", "PRINT*,i"], 0, "No keywords"),
     (["PROGRAM test", "i=0", "ENDIF"], 1, "One keyword unseparated"),
-    (["i=0", "ENDPARALLELDO", "END DO"], 1, "One keyword unseparated in middle"),
+    (["i=0", "ENDPARALLELDO", "END DO"], 1,
+     "One keyword unseparated in middle"),
 ]
 
 
@@ -126,8 +130,10 @@ go_to_other_than_9999_parameters = [
         1,
         "One GO TO statement to label other than 9999",
     ),
-    (["      GO TO 9999", "      GO TO 9999"], 0, "All GO TO statements to label 9999"),
-    (["      PRINT *, 'Hello, World!'", "      i = i + 1"], 0, "No GO TO statements"),
+    (["      GO TO 9999", "      GO TO 9999"], 0,
+     "All GO TO statements to label 9999"),
+    (["      PRINT *, 'Hello, World!'", "      i = i + 1"], 0,
+     "No GO TO statements"),
 ]
 
 
@@ -195,9 +201,11 @@ def test_lowercase_variable_names(lines, expected_result):
 
 
 test_dimension_forbidden_parameters = [
-    (["REAL :: array(ARR_LEN)"], 0, "Dimension specified in variable declaration"),
+    (["REAL :: array(ARR_LEN)"], 0,
+     "Dimension specified in variable declaration"),
     (["REAL :: array"], 0, "No dimension specified in variable declaration"),
-    (["DIMENSION  matrix(5,5)"], 1, "Dimension specified for declared variable"),
+    (["DIMENSION  matrix(5,5)"], 1,
+     "Dimension specified for declared variable"),
     (
         ["INTEGER, DIMENSION(10) :: array"],
         1,
@@ -293,12 +301,14 @@ def test_forbidden_operators(lines, expected_result):
 test_line_over_80chars_parameters = [
     (
         [
-            "  PRINT *, 'This line is definitely way over the eighty character limit set by the UM coding standards'"
+            "  PRINT *, 'This line is definitely way over the eighty " +
+            "character limit set by the UM coding standards'"
         ],
         1,
         "Line over 80 characters",
     ),
-    (["  PRINT *, 'This line is within the limit'"], 0, "Line within 80 characters"),
+    (["  PRINT *, 'This line is within the limit'"], 0,
+     "Line within 80 characters"),
 ]
 
 
@@ -315,7 +325,8 @@ def test_line_over_80chars(lines, expected_result):
 
 test_tab_detection_parameters = [
     (["  PRINT *, 'This line has no tabs'"], 0, "No tabs"),
-    (["  PRINT *, 'This line has a tab\tcharacter'"], 1, "Line with tab character"),
+    (["  PRINT *, 'This line has a tab\tcharacter'"], 1,
+     "Line with tab character"),
 ]
 
 
@@ -457,7 +468,8 @@ test_cpp_comment_parameters = [
     # This test fails because the test is wrong - it needs fixing
     (["#if !defined(cpp)"], 0, "cpp directive without comment"),
     (["! This is a comment"], 0, "Fortran style comment"),
-    (["#if defined(cpp) ! some comment"], 1, "Fortran comment after cpp directive"),
+    (["#if defined(cpp) ! some comment"], 1,
+     "Fortran comment after cpp directive"),
     (["#else ! another comment"], 1, "Fortran comment after #else directive"),
     (["#else"], 0, "#else directive without comment"),
 ]
@@ -478,9 +490,12 @@ test_obsolescent_fortran_intrinsic_parameters = [
     (["  x = ALOG(2.0)"], 1, "Use of obsolescent intrinsic ALOG"),
     (["  y = DSIN(x)"], 1, "Use of obsolescent intrinsic DSIN"),
     (["  z = SIN(x)"], 0, "Use of non-obsolescent intrinsic SIN"),
-    (["  x = ALOG10(2.0)", "  y = DACOS(x)"], 2, "Use of two obsolescent intrinsics"),
-    (["  x = FLOAT(2)", "  z = SIN(x)"], 1, "Use of one obsolescent intrinsic"),
-    (["  y = DMAX1(x)", "  z = SIN(x)"], 1, "Use of one obsolescent intrinsic"),
+    (["  x = ALOG10(2.0)", "  y = DACOS(x)"], 2,
+     "Use of two obsolescent intrinsics"),
+    (["  x = FLOAT(2)", "  z = SIN(x)"], 1,
+     "Use of one obsolescent intrinsic"),
+    (["  y = DMAX1(x)", "  z = SIN(x)"], 1,
+     "Use of one obsolescent intrinsic"),
     (
         ["  a = DATAN2(2.0)", "  b = DSIN(a)", "  c = SIN(b)"],
         2,
@@ -525,8 +540,10 @@ test_intrinsic_modules_parameters = [
         0,
         "Correct Use of ISO_FORTRAN_ENV module",
     ),
-    (["  USE  :: ISO_FORTRAN_ENV"], 1, "Incorrect Use of ISO_FORTRAN_ENV module"),
-    (["  USE, INTRINSIC :: ISO_C_BINDING"], 0, "Correct Use of ISO_C_BINDING module"),
+    (["  USE  :: ISO_FORTRAN_ENV"], 1,
+     "Incorrect Use of ISO_FORTRAN_ENV module"),
+    (["  USE, INTRINSIC :: ISO_C_BINDING"], 0,
+     "Correct Use of ISO_C_BINDING module"),
     (
         ["  USE SOME_OTHER_MODULE"],
         0,
@@ -673,8 +690,10 @@ def test_check_code_owner(lines, expected_result):
 
 
 test_array_init_form_parameters = [
-    (["  INTEGER, DIMENSION(10) :: array = 0"], 0, "Array initialized using '='"),
-    (["  INTEGER, DIMENSION(10) :: array"], 0, "Array declared without initialization"),
+    (["  INTEGER, DIMENSION(10) :: array = 0"], 0,
+     "Array initialized using '='"),
+    (["  INTEGER, DIMENSION(10) :: array"], 0,
+     "Array declared without initialization"),
     (
         ["  INTEGER, DIMENSION(10) :: array = (/ (i, i=1,10) /)"],
         1,
@@ -695,9 +714,11 @@ def test_array_init_form(lines, expected_result):
 
 
 test_line_trail_whitespace_parameters = [
-    (["  PRINT *, 'Hello, World!  '"], 0, "Line 1 without trailing whitespace"),
+    (["  PRINT *, 'Hello, World!  '"], 0,
+     "Line 1 without trailing whitespace"),
     (["  PRINT *, 'Hello, World!'"], 0, "Line 2 without trailing whitespace"),
-    (["  PRINT *, 'Hello, World!   '  "], 1, "Line 1 with trailing whitespace"),
+    (["  PRINT *, 'Hello, World!   '  "], 1,
+     "Line 1 with trailing whitespace"),
     (
         ["  something = sin(coeff /2.0_rdef) +    & "],
         1,
