@@ -212,6 +212,12 @@ for repo in "${REPOS[@]}"; do
         echo "    → Skipping"
       fi
 
+    else
+
+      echo "Mode ${MODE} not recognised"
+      echo "Options: update, list, close or delete"
+      exit 0
+
     fi
 
     echo ""
