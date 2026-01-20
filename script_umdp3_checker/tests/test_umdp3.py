@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file LICENSE
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 
 """
 Test script for the Python UMDP3 checker
@@ -25,6 +25,7 @@ TestResult.__test__ = False
 
 def test_basic_functionality():
     """Test basic UMDP3 functionality"""
+    
     print("Testing basic UMDP3 functionality...")
 
     # Initialize UMDP3Checker
@@ -79,6 +80,7 @@ def test_basic_functionality():
 
 def test_dispatch_tables():
     """Test dispatch tables"""
+    
     print("\nTesting dispatch tables...")
 
     dispatch = CheckerDispatchTables()
@@ -102,6 +104,7 @@ def test_dispatch_tables():
 
 def test_fortran_specific():
     """Test Fortran-specific checks"""
+    
     print("\nTesting Fortran-specific checks...")
 
     umdp3_checker = UMDP3Checker()
@@ -133,6 +136,7 @@ def test_fortran_specific():
 
 def test_c_specific():
     """Test C-specific checks"""
+    
     print("\nTesting C-specific checks...")
 
     umdp3_checker = UMDP3Checker()
@@ -160,6 +164,7 @@ def test_c_specific():
 
 def create_test_files():
     """Create test files for full integration test"""
+    
     print("\nCreating test files...")
 
     # Create temporary directory
@@ -228,6 +233,7 @@ if __name__ == "__main__":
 
 def main():
     """Main test function"""
+    
     print("UMDP3 Python Translation Test Suite")
     print("=" * 40)
 

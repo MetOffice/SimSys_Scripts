@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# *********************************COPYRIGHT************************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *********************************COPYRIGHT************************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 """
 This module provides the functionality to return a list of local files to
 run tests on based on the branch-difference (to allow checking of only files
@@ -30,15 +30,16 @@ class FCMError(Exception):
 
 
 class FCMBase:
-    """Class which generates a branch diff."""
+    """Class which generates a branch diff.
 
-    """
     This a modified (mangled) copy of the one Sam made in
     bdiff/git_bdiff.py, to allow current scripts to try and migrate to
     getting information from an instance of the same class.
+
     Note that the version for Git has a small handful of methods, mostly
     internal and some propeties. These are kept as close as possible to
     version in git_bdiff.py.
+    
     Attributes used to navigate the horros of FCM and thus used in this
     package are therefore preceded with an '_' and shouldn't be what is
     being referred to outwith this class. Nor should the original
@@ -59,6 +60,7 @@ class FCMBase:
         kind of 'discovery' that was necessary for FCM that is hoped to
         become outdated with Git.
         """
+        
         # use_mirror checks for SOURCE_UM_MIRROR env var, and if set
         # redirects the branch to that value and sets retries.
         # Otherwise it returns the branch unchanged and retries=0
@@ -86,6 +88,7 @@ class FCMBase:
         For now, define it to be the contants of the URL after .*/main/ has been
         stripped off. i.e. it will start with trunk/... or branches/...
         """
+        
         pattern = rf"{self.get_repository_root()}/main/(.*)$"
         match = re.match(pattern, self._branch_url)
         if match:
@@ -98,6 +101,7 @@ class FCMBase:
         """
         Run an fcm command, optionally retrying on failure.
         """
+        
         retries = 0
         while True:
             result = subprocess.run(
@@ -152,6 +156,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved by
         calling get_branch_info() - returns the Branch Parent Field
         """
+        
         parent = re.search(
             r"^Branch Parent:\s*(?P<parent>.*)$",
             self._branch_info,
@@ -177,6 +182,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved
         by calling get_branch_info() - returns the URL field
         """
+        
         url = re.search(r"^URL:\s*(?P<url>.*)$", self._branch_info, flags=re.MULTILINE)
         if url:
             url = url.group("url")
@@ -189,6 +195,7 @@ class FCMBase:
         Given an FCM url, returns True if it appears to be pointing to the
         UM main trunk
         """
+        
         search = re.search(
             r"""
                         (svn://fcm\d+/\w+_svn/\w+/trunk|
@@ -205,6 +212,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved by
         calling get_branch_info() - returns the Repository Root field
         """
+        
         repos_root = re.search(
             r"^Repository Root:\s*(?P<url>.*)\s*$",
             self._branch_info,
@@ -221,6 +229,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved by
         calling get_branch_info() - returns the Last Changed Rev
         """
+        
         repos_rev = re.search(
             r"^Last Changed Rev:\s*(?P<rev>.*)\s*$",
             self._branch_info,
@@ -249,9 +258,12 @@ class FCMBDiff(FCMBase):
 
     @property
     def has_diverged(self):
-        """Whether the branch has diverged from its parent.
+        """
+        Whether the branch has diverged from its parent.
         Bit vague here, so we're going to check to see if 'parent' had
-        an '@' in it denoting it's a branch of <something>"""
+        an '@' in it denoting it's a branch of <something>
+        """
+        
         match = re.match(r".*@(\d+)$", self.parent)
         if match:
             return True
@@ -260,6 +272,7 @@ class FCMBDiff(FCMBase):
 
     def files(self):
         """Iterate over files changed on the branch."""
+        
         dem_danged_files = self._get_files()
         for line in dem_danged_files:
             if line != "":
@@ -322,13 +335,16 @@ class FCMBDiff(FCMBase):
         (if the branch is the mirror, allow for a few retries in case
         it hasn't picked up the latest commit yet)
         """
+        
         command = ["fcm", "bdiff", "--summarize", self._branch]
         return self.run_fcm_command(command, retries, snooze)
 
 
 class FCMInfo(FCMBase):
-    """Class to hold FCM branch information. Mirroring the functionality
-    in the git_bdiff.GitBranchInfo class."""
+    """
+    Class to hold FCM branch information. Mirroring the functionality
+    in the git_bdiff.GitBranchInfo class.
+    """
 
     def __init__(self, branch_info: str):
         super().__init__(self, repo=None)
@@ -336,4 +352,5 @@ class FCMInfo(FCMBase):
 
     def is_main(self) -> bool:
         """Return True if the branch is the main trunk."""
+        
         return self.is_trunk_test(self._branch_url)
