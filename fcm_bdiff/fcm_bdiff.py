@@ -30,15 +30,16 @@ class FCMError(Exception):
 
 
 class FCMBase:
-    """Class which generates a branch diff."""
+    """Class which generates a branch diff.
 
-    """
     This a modified (mangled) copy of the one Sam made in
     bdiff/git_bdiff.py, to allow current scripts to try and migrate to
     getting information from an instance of the same class.
+
     Note that the version for Git has a small handful of methods, mostly
     internal and some propeties. These are kept as close as possible to
     version in git_bdiff.py.
+    
     Attributes used to navigate the horros of FCM and thus used in this
     package are therefore preceded with an '_' and shouldn't be what is
     being referred to outwith this class. Nor should the original
