@@ -229,6 +229,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved by
         calling get_branch_info() - returns the Last Changed Rev
         """
+        
         repos_rev = re.search(
             r"^Last Changed Rev:\s*(?P<rev>.*)\s*$",
             self._branch_info,
