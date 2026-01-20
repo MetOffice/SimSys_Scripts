@@ -347,4 +347,5 @@ class FCMInfo(FCMBase):
 
     def is_main(self) -> bool:
         """Return True if the branch is the main trunk."""
+        
         return self.is_trunk_test(self._branch_url)
