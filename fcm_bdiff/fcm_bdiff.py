@@ -182,6 +182,7 @@ class FCMBase:
         Given the raw output from an fcm binfo command - which can be retrieved
         by calling get_branch_info() - returns the URL field
         """
+        
         url = re.search(r"^URL:\s*(?P<url>.*)$", self._branch_info, flags=re.MULTILINE)
         if url:
             url = url.group("url")
