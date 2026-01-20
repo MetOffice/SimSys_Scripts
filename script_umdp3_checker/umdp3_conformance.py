@@ -1,7 +1,7 @@
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, Iterable, List, Dict, Set
+from typing import Callable, List, Dict, Set
 from dataclasses import dataclass, field
 import argparse
 
@@ -12,8 +12,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from github_scripts import git_bdiff
 import fcm_bdiff
-from old_umdp3_checks import OldUMDP3Checks
-from umdp3 import TestResult
+from checker_dispatch_tables import CheckerDispatchTables
+from umdp3_checker_rules import TestResult
 import concurrent.futures
 
 """
@@ -353,7 +353,7 @@ class ConformanceChecker:
                     )
                     if test_result.errors:
                         print(" " * 5 + "-=-" * 30)
-                        print(" " * 5 + f" Std Error :")
+                        print(" " * 5 + " Std Error :")
                         for count, (title, info) in enumerate(
                             test_result.errors.items()
                         ):
@@ -427,7 +427,7 @@ def create_style_checkers(
     file_types: List[str], changed_files: List[Path]
 ) -> List[StyleChecker]:
     """Create style checkers based on requested file types."""
-    dispatch_tables = OldUMDP3Checks()
+    dispatch_tables = CheckerDispatchTables()
     checkers = []
     if "Fortran" in file_types:
         file_extensions = {".f", ".for", ".f90", ".f95", ".f03", ".f08", ".F90"}

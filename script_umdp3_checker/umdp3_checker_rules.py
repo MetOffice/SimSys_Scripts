@@ -8,6 +8,19 @@
 Package to contain functions which test for UMDP3 compliance.
 Python translation of the original Perl UMDP3.pm module.
 """
+
+import re
+import threading
+from typing import List, Dict
+from fortran_keywords import fortran_keywords
+from search_lists import (
+    obsolescent_intrinsics,
+    unseparated_keywords_list,
+    retired_ifdefs,
+    deprecated_c_identifiers,
+)
+from dataclasses import dataclass, field
+
 """
 ToDo : Several of the test functions are poor shadows of the original
        Perl versions. They would benefit from improving to catch more
@@ -15,19 +28,6 @@ ToDo : Several of the test functions are poor shadows of the original
        Equally, there could probably be more consistancly in how things like comments are stripped from the ends of lines
        and/or full comment lines are skipped.
 """
-import re
-import threading
-from typing import List, Dict, Set
-from fortran_keywords import fortran_keywords
-from search_lists import (
-    obsolescent_intrinsics,
-    openmp_keywords,
-    fortran_types,
-    unseparated_keywords_list,
-    retired_ifdefs,
-    deprecated_c_identifiers,
-)
-from dataclasses import dataclass, field
 
 # Declare version
 VERSION = "13.5.0"
@@ -47,7 +47,7 @@ class TestResult:
     errors: Dict = field(default_factory=dict)
 
 
-class UMDP3:
+class UMDP3Checker:
     """UMDP3 compliance checker class"""
 
     """ToDO : This class could possibly be abandoned, or replaced
@@ -163,7 +163,8 @@ class UMDP3:
         )
 
     def capitalised_keywords(self, lines: List[str]) -> TestResult:
-        """Check for the presence of lowercase Fortran keywords, which are taken from an imported list 'fortran_keywords'."""
+        """Check for the presence of lowercase Fortran keywords, which are
+        taken from an imported list 'fortran_keywords'."""
         failures = 0
         error_log = {}
         count = -1
@@ -202,7 +203,7 @@ class UMDP3:
                 self.add_extra_error("OpenMP sentinel not in column 1")
                 failures += 1
                 error_log = self.add_error_log(
-                    error_log, f"OpenMP sentinel not in column 1:", count + 1
+                    error_log, "OpenMP sentinel not in column 1:", count + 1
                 )
         output = f"Checked {count+1} lines, found {failures} failures."
         return TestResult(

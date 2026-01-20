@@ -1,0 +1,15 @@
+extends: default
+ignore: |
+  .venv/
+  .svn/
+rules:
+  comments:
+    level: warning
+    require-starting-space: true
+    min-spaces-from-content: 1
+  document-start: disable
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  line-length: disable
+  truthy: disable

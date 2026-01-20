@@ -1,11 +1,10 @@
 import pytest
 import sys
-import os
 from pathlib import Path
 
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from umdp3 import UMDP3, TestResult
+from umdp3_checker_rules import UMDP3Checker, TestResult
 
 
 # Prevent pytest from trying to collect TestResult as more tests:
@@ -37,7 +36,7 @@ keyword_test_ids = [data[3] for data in keyword_data]
     ids=keyword_test_ids,
 )
 def test_keywords(lines, expected_result, expected_errors):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.capitalised_keywords([lines])
     assert result.failure_count == expected_result
     for error in expected_errors:
@@ -61,7 +60,7 @@ implicit_none_paramters = [
     ids=[data[2] for data in implicit_none_paramters],
 )
 def test_implicit_none(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.implicit_none(lines)
     assert result.failure_count == expected_result
 
@@ -90,7 +89,7 @@ openmp_sentinels_parameters = [
     ids=[data[2] for data in openmp_sentinels_parameters],
 )
 def test_openmp_sentinels_in_column_one(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.openmp_sentinels_in_column_one(lines)
     assert result.failure_count == expected_result
 
@@ -111,7 +110,7 @@ unseparated_keywords_parameters = [
     ids=[data[2] for data in unseparated_keywords_parameters],
 )
 def test_unseparated_keywords(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.unseparated_keywords(lines)
     assert result.failure_count == expected_result
 
@@ -138,7 +137,7 @@ go_to_other_than_9999_parameters = [
     ids=[data[2] for data in go_to_other_than_9999_parameters],
 )
 def test_go_to_other_than_9999(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.go_to_other_than_9999(lines)
     assert result.failure_count == expected_result
 
@@ -157,7 +156,7 @@ write_using_default_format_parameters = [
     ids=[data[2] for data in write_using_default_format_parameters],
 )
 def test_write_using_default_format(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.write_using_default_format(lines)
     assert result.failure_count == expected_result
 
@@ -190,7 +189,7 @@ test_lowercase_variable_names_parameters = [
     ids=[data[2] for data in test_lowercase_variable_names_parameters],
 )
 def test_lowercase_variable_names(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.lowercase_variable_names(lines)
     assert result.failure_count == expected_result
 
@@ -213,7 +212,7 @@ test_dimension_forbidden_parameters = [
     ids=[data[2] for data in test_dimension_forbidden_parameters],
 )
 def test_dimension_forbidden(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.dimension_forbidden(lines)
     assert result.failure_count == expected_result
 
@@ -243,7 +242,7 @@ test_ampersand_continuation_parameters = [
     ids=[data[2] for data in test_ampersand_continuation_parameters],
 )
 def test_ampersand_continuation(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.ampersand_continuation(lines)
     assert result.failure_count == expected_result
 
@@ -262,7 +261,7 @@ test_forbidden_keywords_parameters = [
     ids=[data[2] for data in test_forbidden_keywords_parameters],
 )
 def test_forbidden_keywords(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.forbidden_keywords(lines)
     assert result.failure_count == expected_result
 
@@ -286,7 +285,7 @@ test_forbidden_operators_parameters = [
     ids=[data[2] for data in test_forbidden_operators_parameters],
 )
 def test_forbidden_operators(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.forbidden_operators(lines)
     assert result.failure_count == expected_result
 
@@ -309,7 +308,7 @@ test_line_over_80chars_parameters = [
     ids=[data[2] for data in test_line_over_80chars_parameters],
 )
 def test_line_over_80chars(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.line_over_80chars(lines)
     assert result.failure_count == expected_result
 
@@ -326,7 +325,7 @@ test_tab_detection_parameters = [
     ids=[data[2] for data in test_tab_detection_parameters],
 )
 def test_tab_detection(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.tab_detection(lines)
     assert result.failure_count == expected_result
 
@@ -343,7 +342,7 @@ test_printstatus_mod_parameters = [
     ids=[data[2] for data in test_printstatus_mod_parameters],
 )
 def test_printstatus_mod(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.printstatus_mod(lines)
     assert result.failure_count == expected_result
 
@@ -362,7 +361,7 @@ test_printstar_parameters = [
     ids=[data[2] for data in test_printstar_parameters],
 )
 def test_printstar(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.printstar(lines)
     assert result.failure_count == expected_result
 
@@ -379,7 +378,7 @@ test_write6_parameters = [
     ids=[data[2] for data in test_write6_parameters],
 )
 def test_write6(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.write6(lines)
     assert result.failure_count == expected_result
 
@@ -396,7 +395,7 @@ test_um_fort_flush_parameters = [
     ids=[data[2] for data in test_um_fort_flush_parameters],
 )
 def test_um_fort_flush(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.um_fort_flush(lines)
     assert result.failure_count == expected_result
 
@@ -413,7 +412,7 @@ test_svn_keyword_subst_parameters = [
     ids=[data[2] for data in test_svn_keyword_subst_parameters],
 )
 def test_svn_keyword_subst(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.svn_keyword_subst(lines)
     assert result.failure_count == expected_result
 
@@ -430,7 +429,7 @@ test_omp_missing_dollar_parameters = [
     ids=[data[2] for data in test_omp_missing_dollar_parameters],
 )
 def test_omp_missing_dollar(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.omp_missing_dollar(lines)
     assert result.failure_count == expected_result
 
@@ -449,7 +448,7 @@ test_cpp_ifdef_parameters = [
     ids=[data[2] for data in test_cpp_ifdef_parameters],
 )
 def test_cpp_ifdef(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.cpp_ifdef(lines)
     assert result.failure_count == expected_result
 
@@ -470,7 +469,7 @@ test_cpp_comment_parameters = [
     ids=[data[2] for data in test_cpp_comment_parameters],
 )
 def test_cpp_comment(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.cpp_comment(lines)
     assert result.failure_count == expected_result
 
@@ -496,7 +495,7 @@ test_obsolescent_fortran_intrinsic_parameters = [
     ids=[data[2] for data in test_obsolescent_fortran_intrinsic_parameters],
 )
 def test_obsolescent_fortran_intrinsic(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.obsolescent_fortran_intrinsic(lines)
     assert result.failure_count == expected_result
 
@@ -514,7 +513,7 @@ test_exit_stmt_label_parameters = [
     ids=[data[2] for data in test_exit_stmt_label_parameters],
 )
 def test_exit_stmt_label(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.exit_stmt_label(lines)
     assert result.failure_count == expected_result
 
@@ -542,7 +541,7 @@ test_intrinsic_modules_parameters = [
     ids=[data[2] for data in test_intrinsic_modules_parameters],
 )
 def test_intrinsic_modules(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.intrinsic_modules(lines)
     assert result.failure_count == expected_result
 
@@ -566,7 +565,7 @@ test_read_unit_args_parameters = [
     ids=[data[2] for data in test_read_unit_args_parameters],
 )
 def test_read_unit_args(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.read_unit_args(lines)
     assert result.failure_count == expected_result
 
@@ -592,7 +591,7 @@ test_retire_if_def_parameters = [
     ids=[data[2] for data in test_retire_if_def_parameters],
 )
 def test_retire_if_def(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.retire_if_def(lines)
     assert result.failure_count == expected_result
 
@@ -611,7 +610,7 @@ test_forbidden_stop_parameters = [
     ids=[data[2] for data in test_forbidden_stop_parameters],
 )
 def test_forbidden_stop(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.forbidden_stop(lines)
     assert result.failure_count == expected_result
 
@@ -630,7 +629,7 @@ test_intrinsic_as_variable_parameters = [
     ids=[data[2] for data in test_intrinsic_as_variable_parameters],
 )
 def test_intrinsic_as_variable(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.intrinsic_as_variable(lines)
     assert result.failure_count == expected_result
 
@@ -649,7 +648,7 @@ test_check_crown_copyright_parameters = [
     ids=[data[2] for data in test_check_crown_copyright_parameters],
 )
 def test_check_crown_copyright(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.check_crown_copyright(lines)
     assert result.failure_count == expected_result
 
@@ -668,7 +667,7 @@ test_check_code_owner_parameters = [
     ids=[data[2] for data in test_check_code_owner_parameters],
 )
 def test_check_code_owner(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.check_code_owner(lines)
     assert result.failure_count == expected_result
 
@@ -690,7 +689,7 @@ test_array_init_form_parameters = [
     ids=[data[2] for data in test_array_init_form_parameters],
 )
 def test_array_init_form(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.array_init_form(lines)
     assert result.failure_count == expected_result
 
@@ -714,6 +713,6 @@ test_line_trail_whitespace_parameters = [
     ids=[data[2] for data in test_line_trail_whitespace_parameters],
 )
 def test_line_trail_whitespace(lines, expected_result):
-    checker = UMDP3()
+    checker = UMDP3Checker()
     result = checker.line_trail_whitespace(lines)
     assert result.failure_count == expected_result
