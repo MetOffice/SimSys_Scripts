@@ -60,6 +60,7 @@ class FCMBase:
         kind of 'discovery' that was necessary for FCM that is hoped to
         become outdated with Git.
         """
+        
         # use_mirror checks for SOURCE_UM_MIRROR env var, and if set
         # redirects the branch to that value and sets retries.
         # Otherwise it returns the branch unchanged and retries=0
