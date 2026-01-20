@@ -231,6 +231,7 @@ if __name__ == "__main__":
 
 def main():
     """Main test function"""
+    
     print("UMDP3 Python Translation Test Suite")
     print("=" * 40)
 
