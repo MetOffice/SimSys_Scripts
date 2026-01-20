@@ -267,6 +267,7 @@ class FCMBDiff(FCMBase):
 
     def files(self):
         """Iterate over files changed on the branch."""
+        
         dem_danged_files = self._get_files()
         for line in dem_danged_files:
             if line != "":
