@@ -80,6 +80,7 @@ def test_basic_functionality():
 
 def test_dispatch_tables():
     """Test dispatch tables"""
+    
     print("\nTesting dispatch tables...")
 
     dispatch = CheckerDispatchTables()
