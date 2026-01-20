@@ -58,16 +58,16 @@ done
 
 # -- Modify milestones in relevant repositories
 repos=(
-  "MetOffice/um"
-  "MetOffice/jules"
-  "MetOffice/lfric_apps"
-  "MetOffice/lfric_core"
-  "MetOffice/ukca"
-  "MetOffice/casim"
-  "MetOffice/socrates"
-  "MetOffice/um_doc"
-  "MetOffice/simulation-systems"
-  "MetOffice/SimSys_Scripts"
+#  "MetOffice/um"
+#  "MetOffice/jules"
+#  "MetOffice/lfric_apps"
+#  "MetOffice/lfric_core"
+#  "MetOffice/ukca"
+#  "MetOffice/casim"
+#  "MetOffice/socrates"
+#  "MetOffice/um_doc"
+#  "MetOffice/simulation-systems"
+#  "MetOffice/SimSys_Scripts"
   "MetOffice/git_playground"
 )
 #
@@ -77,14 +77,18 @@ get_milestone_number(){
   gh api /repos/"${repo_name}"/milestones --jq ".[] | select(.title == \"${TITLE}\") | .number"
 }
 
-run_command(){
-  local gh_command="$1"
+run_gh_api(){
+  local method="$1"
+  local endpoint="$2"
+  shift 2
+  local -a api_args=("$@")
 
   if (( DRY_RUN )); then
-    echo "[DRY RUN] $gh_command"
-  else
-    eval "$gh_command"
+    echo "[DRY RUN] gh api --method ${method} ${endpoint} ${api_args[*]}"
+    return 0
   fi
+
+  gh api --method "${method}" "${endpoint}" "${api_args[@]}" > /dev/null
 }
 
 
@@ -103,38 +107,29 @@ for repo in "${repos[@]}"; do
   fi
 
   # -- Build GH command from optional arguments.
-  GH_COMMAND="gh api -f \"title=${TITLE}\""
-  if [[ ${DUE} ]]; then
-    GH_COMMAND=$GH_COMMAND" -f \"due_on=${DUE}\""
-  fi
-  if [[ ${DESC} ]]; then
-    GH_COMMAND=$GH_COMMAND" -f \"description=${DESC}\""
-  fi
+  gh_args=(-f "title=\"${TITLE}\"")
+  [[ -n "$DUE" ]] && gh_args+=(-f "due_on=${DUE}")
+  [[ -n "$DESC" ]] && gh_args+=(-f "description=\"${DESC}\"")
+
 
   # -- Create or update the milestone
   if [[ "$STATE" == "open" ]]; then
 
     if (( NUMBER )); then
       echo "Updating milestone"
-      GH_COMMAND=$GH_COMMAND" --method PATCH"
-      GH_COMMAND=$GH_COMMAND" /repos/${repo}/milestones/${NUMBER}"
-      run_command "${GH_COMMAND}"
+      run_gh_api PATCH "/repos/${repo}/milestones/${NUMBER}" "${gh_args[@]}"
     else
       echo "Creating new milestone"
-      GH_COMMAND=$GH_COMMAND" --method POST"
-      GH_COMMAND=$GH_COMMAND" /repos/${repo}/milestones"
-      run_command "${GH_COMMAND}"
+      run_gh_api POST "/repos/${repo}/milestones" "${gh_args[@]}"
     fi
 
   # -- Close the milestone
   else
 
     if (( NUMBER )); then
-      echo "Closing milestone"
-      GH_COMMAND=$GH_COMMAND" --method PATCH"
-      GH_COMMAND=$GH_COMMAND" /repos/${repo}/milestones/${NUMBER}"
-      GH_COMMAND=$GH_COMMAND" -f \"state=closed\""
-      run_command "${GH_COMMAND}"
+      echo "Closing milestone #${NUMBER}"
+      gh_args+=(-f "state=closed")
+      run_gh_api PATCH "/repos/${repo}/milestones/${NUMBER}" "${gh_args[@]}"
     fi
   fi
 
