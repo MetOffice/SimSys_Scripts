@@ -330,6 +330,7 @@ class FCMBDiff(FCMBase):
         (if the branch is the mirror, allow for a few retries in case
         it hasn't picked up the latest commit yet)
         """
+        
         command = ["fcm", "bdiff", "--summarize", self._branch]
         return self.run_fcm_command(command, retries, snooze)
 
