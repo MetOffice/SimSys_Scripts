@@ -4,17 +4,14 @@ from pathlib import Path
 from typing import Callable, List, Dict, Set
 from dataclasses import dataclass, field
 import argparse
+from checker_dispatch_tables import CheckerDispatchTables
+from umdp3_checker_rules import TestResult
+import concurrent.futures
 
 # Add custom modules to Python path if needed
 # Add the repository root to access fcm_bdiff and git_bdiff packages
 import sys
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from github_scripts import git_bdiff
-import fcm_bdiff
-from checker_dispatch_tables import CheckerDispatchTables
-from umdp3_checker_rules import TestResult
-import concurrent.futures
 
 """
 Framework and Classes to generate a list of files to check for style
@@ -55,6 +52,8 @@ class GitBdiffWrapper(CMSSystem):
     """Wrapper around git_bdiff to get changed files."""
 
     def __init__(self, repo_path: Path = Path(".")):
+        from github_scripts import git_bdiff
+
         self.repo_path = repo_path
         self.bdiff_obj = git_bdiff.GitBDiff(repo=self.repo_path)
         self.info_obj = git_bdiff.GitInfo(repo=self.repo_path)
@@ -77,6 +76,8 @@ class FCMBdiffWrapper(CMSSystem):
     """Wrapper around fcm_bdiff to get changed files."""
 
     def __init__(self, repo_path: Path = Path(".")):
+        from fcm_bdiff import fcm_bdiff
+
         self.repo_path = repo_path
         self.bdiff_obj = fcm_bdiff.FCMBDiff(repo=self.repo_path)
 
@@ -460,10 +461,10 @@ def create_style_checkers(
         print("Setting up Python external checkers.")
         file_extensions = {".py"}
         python_checkers = {
-            "flake 8": ["flake8", "-q"],
-            "black": ["black", "--check"],
-            "pylint": ["pylint", "-E"],
-            # "ruff"    : ["ruff", "check"],
+            # "flake 8":     ["flake8", "-q"],
+            # "black":       ["black", "--check"],
+            # "pylint":      ["pylint", "-E"],
+            "ruff":        ["ruff", "check"],
         }
         python_file_checker = ExternalChecker(
             "Python External Checkers", file_extensions,
