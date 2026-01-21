@@ -26,11 +26,11 @@ may be some cases which are missed. These lines will be left without applying
 the ampersand shifting, and will be flagged, optionally with a message in
 stdout.
 """
-import sys
+# import sys
 import re
-import traceback
+# import traceback
 from optparse import OptionParser
-from fstring_parse import *
+from fstring_parse import *  # noqa: F403
 
 # Default column in which to place ampersands.
 DEFAULT_COL = 80

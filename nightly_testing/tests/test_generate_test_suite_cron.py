@@ -1,5 +1,5 @@
 import pytest
-from generate_test_suite_cron import *
+from generate_test_suite_cron import *  # noqa: F403
 
 PROFILE = ". /etc/profile"
 

@@ -9,6 +9,7 @@ Class containing helper methods for gathering data needed for a SuiteReport obje
 """
 
 import re
+import os
 import shutil
 import sqlite3
 import subprocess
@@ -316,6 +317,21 @@ class SuiteData:
                     continue
 
         return "unknown_workflow_id"
+
+    def generate_cylc_url(self) -> str:
+        """
+        Generate a markdown url to the cylc review page of a workflow
+        """
+        suite_user = os.environ["USER"]
+        encoded_workflow_id = self.workflow_id.replace('/','%2F')
+
+        cylc_review = (
+            f"[{self.workflow_id}](https://cylchub/services/cylc-review/cycles"
+            f"/{suite_user}/?suite={encoded_workflow_id})"
+        )
+
+        return cylc_review
+
 
     def get_suite_starttime(self) -> str:
         """
