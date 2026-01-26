@@ -71,7 +71,7 @@ def main():
     with open(args.dependencies, "r") as stream:
         dependencies = yaml.safe_load(stream)
 
-    for dependency, opts in dependencies:
+    for dependency, opts in dependencies.items():
         if not opts.isinstance(list):
             opts = [opts]
 
