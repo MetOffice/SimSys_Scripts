@@ -72,7 +72,7 @@ def main():
         dependencies = yaml.safe_load(stream)
 
     for dependency, opts in dependencies.items():
-        if not opts.isinstance(list):
+        if not isinstance(opts, list):
             opts = [opts]
 
         for i, values in enumerate(opts):

@@ -25,7 +25,7 @@ def set_https(dependencies: dict) -> dict:
 
     print("Modifying Dependencies")
     for dependency, opts in dependencies.items():
-        if not opts.isinstance(list):
+        if not isinstance(opts, list):
             opts = [opts]
         for values in opts:
             if values["source"].startswith("git@github.com:"):
@@ -59,7 +59,7 @@ def main() -> None:
     for dependency, opts in dependencies.items():
         loc = clone_loc / dependency
 
-        if not opts.isinstance(list):
+        if not isinstance(opts, list):
             opts = [opts]
 
         for values in opts:
