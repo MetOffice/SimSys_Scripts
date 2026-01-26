@@ -209,7 +209,7 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     # Ignore errors - these are likely because the main branch already exists
     # Instead write them as warnings
     command = f"git -C {loc} fetch origin main:main"
-    result = run_command(command, check=False, rval=True)
+    result = run_command(command, check=False)
     if result.returncode:
         print("Warning - fetching main from origin resulted in an error")
         print("This is likely due to the main branch already existing")
