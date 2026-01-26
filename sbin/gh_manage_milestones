@@ -1,0 +1,228 @@
+#!/usr/bin/env bash
+
+# ----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# ----------------------------------------------------------------------------
+
+# Script to create, update and close milestones in multiple GitHub repositories
+# Requires GitHub CLI: https://cli.github.com/ and Admin privileges to the repos
+
+set -euo pipefail
+
+# -- Modify milestones in relevant repositories
+REPOS=(
+  "MetOffice/um"
+  "MetOffice/jules"
+  "MetOffice/lfric_apps"
+  "MetOffice/lfric_core"
+  "MetOffice/ukca"
+  "MetOffice/casim"
+  "MetOffice/socrates"
+  "MetOffice/um_doc"
+  "MetOffice/simulation-systems"
+  "MetOffice/SimSys_Scripts"
+  "MetOffice/git_playground"
+)
+
+usage() {
+  cat <<EOF
+Usage: ${0##*/} -t <title> [options]
+  -t <title>       Title of milestone to be created, updated, closed or deleted.
+  -m <mode>        Mode: update (default), list, close, delete. Update mode will
+                   create a milestone if it doesn't exist.
+  -s <state>       State to list. State can be: open (default), closed or all.
+  -d <due on>      Milestone due date. Format: YYYY-MM-DDTHH:MM:SSZ
+  -p <description> Description of the milestone
+  -n               Dry Run, print actions without making changes
+  -h, --help       Show this help message
+
+Examples:
+  # Create a new milestone
+  ${0##*/} -t <title> [-d YYYY-MM-DDTHH:MM:SSZ] [-p <description>]
+
+  # Update all milestones with a new date
+  ${0##*/} -t <title> -d <YYYY-MM-DDTHH:MM:SSZ>
+
+  # List all open milestones
+  ${0##*/} -m list
+
+  # List all milestones (open and closed)
+  ${0##*/} -m list -s all
+
+  # Close a milestone
+  ${0##*/} -t <title> -m close
+
+  # Delete a milestone (permanent)
+  ${0##*/} -t <title> -m delete
+EOF
+  exit 1
+}
+
+# -- Defaults
+MODE="update"
+STATE="open"
+TITLE=""
+DUE=""
+DESC=""
+DRY_RUN=0
+
+# -- Parse options
+while getopts "t:m:s:d:p:nh-:" opt; do
+  case $opt in
+    t) TITLE="$OPTARG" ;;
+    m) MODE="$OPTARG" ;;
+    s) STATE="$OPTARG" ;;
+    d) DUE="$OPTARG" ;;
+    p) DESC="$OPTARG" ;;
+    n) DRY_RUN=1 ;;
+    h) usage ;;
+    -) [ "$OPTARG" = "help" ] && usage ;;
+    *) usage ;;
+  esac
+done
+
+#
+# -- Helper functions
+get_milestone_number(){
+  local repo_name="$1"
+  gh api /repos/"${repo_name}"/milestones --jq ".[] | select(.title == \"${TITLE}\") | .number"
+}
+
+run_gh_api(){
+  local method="$1"
+  local endpoint="$2"
+  shift 2
+  local -a api_args=("$@")
+
+  if (( DRY_RUN )); then
+    echo "[DRY RUN] gh api --method ${method} ${endpoint} ${api_args[*]}"
+    return 0
+  fi
+
+  gh api --method "${method}" "${endpoint}" "${api_args[@]}" > /dev/null
+}
+
+confirm_deletion() {
+  if (( DRY_RUN )); then
+    return 0
+  fi
+
+  echo "WARNING: You are about to PERMANENTLY DELETE milestone '${TITLE}' from ${#REPOS[@]} repositories."
+  echo "This action CANNOT be undone."
+  echo ""
+  read -p "Type 'yes' to confirm deletion: " -r confirmation
+  echo ""
+
+  if [[ "$confirmation" != "yes" ]]; then
+    echo "Deletion cancelled."
+    exit 0
+  fi
+
+  echo "Proceeding with deletion..."
+  echo ""
+}
+
+list_milestones() {
+  local repo="$1"
+  local state="$2"
+
+  local milestones
+  milestones=$(gh api "/repos/${repo}/milestones?state=${state}&per_page=100" \
+    --jq '.[] | "  #\(.number) \(.title) [\(.state)] (\(.open_issues) open / \(.closed_issues) closed)" +
+    (if .due_on then " - Due: \(.due_on)" else "" end)' 2>/dev/null)
+
+  if [[ -n "$milestones" ]]; then
+    echo "$milestones"
+  else
+    echo "  No milestones found"
+  fi
+  echo ""
+}
+
+
+#
+# ----
+#
+
+
+# Check deletion once for all repos
+if [[ "$MODE" == "delete" ]]; then
+  confirm_deletion
+fi
+
+
+# -- Change milestone for each repository
+
+for repo in "${REPOS[@]}"; do
+  echo "$repo"
+
+  # -- List all milestones in requested state
+  if [[ "$MODE" == "list" ]]; then
+
+    echo "    → Listing milestones (state: ${STATE})"
+    list_milestones "${repo}" "${STATE}"
+
+  else
+    # -- All other modes act on specific milestones.
+    # -- If milestone exists then fetch the number
+    number=$(get_milestone_number "${repo}")
+    if (( number )); then
+      echo "    → Found existing milestone ${TITLE} #${number}"
+    else
+      echo "    → Milestone does not exist"
+    fi
+
+    # -- Build GH command from optional arguments.
+    gh_args=(-f "title=\"${TITLE}\"")
+    [[ -n "$DUE" ]] && gh_args+=(-f "due_on=${DUE}")
+    [[ -n "$DESC" ]] && gh_args+=(-f "description=\"${DESC}\"")
+
+
+    # -- Create or update the milestone
+    if [[ "$MODE" == "update" ]]; then
+
+      if (( number )); then
+        echo "    → Updating milestone #${number}"
+        run_gh_api PATCH "/repos/${repo}/milestones/${number}" "${gh_args[@]}"
+      else
+        echo "    → Creating new milestone"
+        run_gh_api POST "/repos/${repo}/milestones" "${gh_args[@]}"
+      fi
+
+    # -- Close the milestone
+    elif [[ "$MODE" == "close" ]]; then
+
+      if (( number )); then
+        echo "    → Closing milestone #${number}"
+        gh_args+=(-f "state=closed")
+        run_gh_api PATCH "/repos/${repo}/milestones/${number}" "${gh_args[@]}"
+      else
+        echo "    → Skipping"
+      fi
+
+    # -- Delete the milestone
+    elif [[ "$MODE" == "delete" ]]; then
+
+      if (( number )); then
+        echo "    → Deleting milestone #${number}"
+        run_gh_api DELETE "/repos/${repo}/milestones/${number}"
+      else
+        echo "    → Skipping"
+      fi
+
+    else
+
+      echo "Mode ${MODE} not recognised"
+      echo "Options: update, list, close or delete"
+      exit 0
+
+    fi
+
+    echo ""
+
+  fi
+
+
+done
