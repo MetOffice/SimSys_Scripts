@@ -24,12 +24,15 @@ def set_https(dependencies: dict) -> dict:
     """
 
     print("Modifying Dependencies")
-    for dependency, values in dependencies.items():
-        if values["source"].startswith("git@github.com:"):
-            source = dependencies[dependency]["source"]
-            dependencies[dependency]["source"] = source.replace(
-                "git@github.com:", "https://github.com/"
-            )
+    for dependency, opts in dependencies.items():
+        if not opts.isinstance(list):
+            opts = [opts]
+        for values in opts:
+            if values["source"].startswith("git@github.com:"):
+                source = dependencies[dependency]["source"]
+                dependencies[dependency]["source"] = source.replace(
+                    "git@github.com:", "https://github.com/"
+                )
 
     return dependencies
 
@@ -53,31 +56,35 @@ def main() -> None:
     if os.environ.get("USE_TOKENS", "False") == "True":
         dependencies = set_https(dependencies)
 
-    for dependency, values in dependencies.items():
+    for dependency, opts in dependencies.items():
         loc = clone_loc / dependency
 
-        if ".git" in values["source"]:
-            if os.environ.get("USE_MIRRORS", "False") == "True":
-                mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
-                print(
-                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
-                    f"{dependency} from {mirror_loc} at ref {values['ref']}"
-                )
-                clone_repo_mirror(
-                    values["source"], values["ref"], values["parent"], mirror_loc, loc
-                )
+        if not opts.isinstance(list):
+            opts = [opts]
+
+        for values in opts:
+            if ".git" in values["source"]:
+                if os.environ.get("USE_MIRRORS", "False") == "True":
+                    mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
+                    print(
+                        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
+                        f"{dependency} from {mirror_loc} at ref {values['ref']}"
+                    )
+                    clone_repo_mirror(
+                        values["source"], values["ref"], values["parent"], mirror_loc, loc
+                    )
+                else:
+                    print(
+                        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
+                        f"{dependency} from {values['source']} at ref {values['ref']}"
+                    )
+                    clone_repo(values["source"], values["ref"], loc)
             else:
                 print(
-                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
-                    f"{dependency} from {values['source']} at ref {values['ref']}"
+                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Syncing "
+                    f"{dependency} at ref {values['ref']}"
                 )
-                clone_repo(values["source"], values["ref"], loc)
-        else:
-            print(
-                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Syncing "
-                f"{dependency} at ref {values['ref']}"
-            )
-            sync_repo(values["source"], values["ref"], loc)
+                sync_repo(values["source"], values["ref"], loc)
 
 
 if __name__ == "__main__":
