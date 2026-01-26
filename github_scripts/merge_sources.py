@@ -27,6 +27,7 @@ def parse_args():
         "-d",
         "--dependencies",
         default=Path(__file__).parent,
+        type=Path,
         help="Path to the dependencies.yaml file"
     )
     parser.add_argument(
