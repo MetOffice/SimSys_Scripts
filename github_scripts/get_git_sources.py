@@ -1,8 +1,8 @@
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 """
 Helper functions for cloning git sources in command line builds
 """
@@ -13,6 +13,9 @@ from typing import Optional
 from pathlib import Path
 from shutil import rmtree
 import shlex
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_source(
@@ -38,7 +41,10 @@ def get_source(
 
 
 def run_command(
-    command: str, rval: bool = False, check: bool = True
+    command: str,
+    check: bool = True,
+    capture: bool = True,
+    timeout: int = 600
 ) -> Optional[subprocess.CompletedProcess]:
     """
     Run a subprocess command and return the result object
@@ -47,22 +53,31 @@ def run_command(
     Outputs:
         - result object from subprocess.run
     """
-    command = shlex.split(command)
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        timeout=300,
-        shell=False,
-        check=False,
-    )
-    if check and result.returncode:
-        print(result.stdout, end="\n\n\n")
-        raise RuntimeError(
-            f"[FAIL] Issue found running command {command}\n\n{result.stderr}"
+
+    args = shlex.split(command)
+
+    try:
+        # Note: text=True and capture_output=True have high overhead
+        # for large buffers. Use capture=False for fire-and-forget tasks.
+        result = subprocess.run(
+            args,
+            capture_output=capture,
+            text=capture,
+            timeout=timeout,
+            shell=False,
+            check=False
         )
-    if rval:
+        if check and result.returncode != 0:
+            err_msg = (result.stderr or "").strip()
+            logger.error(f"[FAIL] Command failed: {command}\nError: {err_msg}")
+            raise subprocess.CalledProcessError(
+                result.returncode, args, output=result.stdout, stderr=result.stderr
+            )
         return result
+
+    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+        logger.error(f"[FAIL] Execution error for '{args[0]}': {e}")
+        raise
 
 
 def clone_repo_mirror(
