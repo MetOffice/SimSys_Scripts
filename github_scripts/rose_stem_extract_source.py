@@ -14,27 +14,7 @@ environment variables
 import os
 from pathlib import Path
 from ast import literal_eval
-from get_git_sources import clone_repo, clone_repo_mirror, sync_repo
-from datetime import datetime
-
-
-def set_https(dependencies: dict) -> dict:
-    """
-    Change sources in a dependencies dictions to use https instead of ssh
-    """
-
-    print("Modifying Dependencies")
-    for dependency, opts in dependencies.items():
-        if not isinstance(opts, list):
-            opts = [opts]
-        for values in opts:
-            if values["source"].startswith("git@github.com:"):
-                source = dependencies[dependency]["source"]
-                dependencies[dependency]["source"] = source.replace(
-                    "git@github.com:", "https://github.com/"
-                )
-
-    return dependencies
+from get_git_sources import get_source, merge_source, set_https
 
 
 def main() -> None:
@@ -56,39 +36,38 @@ def main() -> None:
     if os.environ.get("USE_TOKENS", "False") == "True":
         dependencies = set_https(dependencies)
 
+    use_mirrors = False
+    if os.environ.get("USE_MIRRORS", "False") == "True":
+        use_mirrors = True
+
     for dependency, opts in dependencies.items():
         loc = clone_loc / dependency
 
         if not isinstance(opts, list):
             opts = [opts]
 
-        for values in opts:
-            if ".git" in values["source"]:
-                if os.environ.get("USE_MIRRORS", "False") == "True":
-                    mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
-                    print(
-                        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
-                        f"{dependency} from {mirror_loc} at ref {values['ref']}"
-                    )
-                    clone_repo_mirror(
-                        values["source"],
-                        values["ref"],
-                        values["parent"],
-                        mirror_loc,
-                        loc,
-                    )
-                else:
-                    print(
-                        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
-                        f"{dependency} from {values['source']} at ref {values['ref']}"
-                    )
-                    clone_repo(values["source"], values["ref"], loc)
-            else:
-                print(
-                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Syncing "
-                    f"{dependency} at ref {values['ref']}"
+        for i, values in enumerate(opts):
+            mirror_loc = Path(os.getenv("GIT_MIRROR_LOC", "")) / "MetOffice"
+
+            if i == 0:
+                get_source(
+                    values["source"],
+                    values["ref"],
+                    loc,
+                    dependency,
+                    use_mirrors,
+                    mirror_loc,
                 )
-                sync_repo(values["source"], values["ref"], loc)
+                continue
+
+            merge_source(
+                values["source"],
+                values["ref"],
+                dependency,
+                loc,
+                use_mirrors,
+                mirror_loc,
+            )
 
 
 if __name__ == "__main__":

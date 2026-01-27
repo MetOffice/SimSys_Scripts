@@ -9,6 +9,7 @@ Helper functions for cloning git sources in command line builds
 
 import re
 import subprocess
+from datetime import datetime
 from typing import Optional
 from pathlib import Path
 from shutil import rmtree
@@ -69,14 +70,23 @@ def get_source(
 
     if ".git" in source:
         if use_mirrors:
+            print(
+                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
+                f"{repo} from {mirror_loc} at ref {ref}"
+            )
             mirror_loc = Path(mirror_loc) / "MetOffice" / repo
-            print(f"Cloning/Updating {repo} from mirror {mirror_loc} at ref {ref}")
             clone_repo_mirror(source, ref, mirror_loc, dest)
         else:
-            print(f"Cloning/Updating {repo} from {source} at ref {ref}")
+            print(
+                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
+                f"{repo} from {source} at ref {ref}"
+            )
             clone_repo(source, ref, dest)
     else:
-        print(f"Syncing {repo} at ref {ref}")
+        print(
+            f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Syncing "
+            f"{repo} at ref {ref}"
+        )
         sync_repo(source, ref, dest)
 
 
@@ -87,11 +97,16 @@ def merge_source(
     dest: Path,
     use_mirrors: bool = False,
     mirror_loc: Path = Path(""),
-):
+) -> None:
     """
     Merge git source into a local git clone. Assumes dest is a git clone that this
     source can be merged into.
     """
+
+    print(
+        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Merging "
+        f"{source} at ref {ref} into {repo}"
+    )
 
     if use_mirrors:
         remote_path = Path(mirror_loc) / "MetOffice" / repo
@@ -105,8 +120,49 @@ def merge_source(
         fetch = ref
 
     run_command(f"git -C {dest} fetch local {fetch}")
-    run_command(f"git -C {dest} merge FETCH_HEAD")
+    result = run_command(f"git -C {dest} merge --no-gpg-sign FETCH_HEAD", check=False)
+    if result.returncode:
+        unmerged_files = get_unmerged(dest)
+        if unmerged_files:
+            handle_merge_conflicts(source, ref, dest, repo)
+
+    # Remove the added remote
     run_command(f"git -C {dest} remote remove local")
+
+
+def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) -> None:
+    """
+    Attempt to mark merge conflicts as resolved in they are in rose-stem or
+    dependencies.yaml
+    If others remain then raise an error
+    """
+
+    # For suites, merge conflicts in these files/directories are unimportant so accept
+    # the current changes
+    for filepath in ("dependencies.yaml", "rose-stem"):
+        print(f"Ignoring merge conflicts in {filepath}")
+        run_command(f"git -C {loc} checkout --ours -- {filepath}")
+        run_command(f"git -C {loc} add {filepath}")
+
+    # Check if there are any remaining merge conflicts
+    unmerged = get_unmerged(loc)
+    if unmerged:
+        files = "\n".join(f for f in unmerged)
+        raise RuntimeError(
+            "\nA merge conflict has been identified while merging the following branch "
+            f"into the {dependency} source:\n\nsource: {source}\nref: {ref}\n\n"
+            f"with conflicting files:{files}"
+            "\n\nThese will need changing in the source branches to be useable together"
+        )
+
+
+def get_unmerged(loc: Path) -> list[str]:
+    """
+    Return list of unmerged files in a git clone
+    """
+
+    files = run_command(f"git -C {loc} --no-pager diff --name-only --diff-filter=U")
+    return files.stdout.split()
 
 
 def clone_repo_mirror(
@@ -258,3 +314,22 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     if repo_ref:
         command = f"git -C {loc} checkout {repo_ref}"
         run_command(command)
+
+
+def set_https(dependencies: dict) -> dict:
+    """
+    Change sources in a dependencies dictions to use https instead of ssh
+    """
+
+    print("Modifying Dependencies")
+    for dependency, opts in dependencies.items():
+        if not isinstance(opts, list):
+            opts = [opts]
+        for values in opts:
+            if values["source"].startswith("git@github.com:"):
+                source = dependencies[dependency]["source"]
+                dependencies[dependency]["source"] = source.replace(
+                    "git@github.com:", "https://github.com/"
+                )
+
+    return dependencies

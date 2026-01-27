@@ -12,9 +12,7 @@ import argparse
 import os
 import yaml
 from pathlib import Path
-from shutil import rmtree
-from tempfile import mkdtemp
-from get_git_sources import get_source, merge_source
+from get_git_sources import get_source, merge_source, set_https
 
 
 def parse_args():
@@ -48,6 +46,12 @@ def parse_args():
         default="/data/users/gitassist/git_mirrors",
         help="Location of github mirrors",
     )
+    parser.add_argument(
+        "--tokens",
+        action="store_true",
+        help="If true, https github sources will be used, requiring github "
+        "authentication via Personal Access Tokens",
+    )
     args = parser.parse_args()
     args.dependencies = args.dependencies.resolve()
     if args.dependencies.name != "dependencies.yaml":
@@ -67,17 +71,19 @@ def main():
 
     args = parse_args()
 
-    tempdir = Path(mkdtemp())
-
     with open(args.dependencies, "r") as stream:
         dependencies = yaml.safe_load(stream)
 
+    if args.tokens:
+        dependencies = set_https(dependencies)
+
     for dependency, opts in dependencies.items():
+        dest = args.path / dependency
+
         if not isinstance(opts, list):
             opts = [opts]
 
         for i, values in enumerate(opts):
-            dest = args.path / dependency
             if i == 0:
                 get_source(
                     values["source"],
@@ -96,8 +102,6 @@ def main():
                 args.mirrors,
                 args.mirror_loc,
             )
-
-    rmtree(tempdir)
 
 
 if __name__ == "__main__":
