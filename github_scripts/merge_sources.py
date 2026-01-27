@@ -10,32 +10,32 @@ Script to clone and merge git sources
 
 import argparse
 import os
-from pathlib import Path
 import yaml
+from pathlib import Path
+from shutil import rmtree
 from tempfile import mkdtemp
-from get_git_sources import get_source, run_command
+from get_git_sources import get_source, merge_source
+
 
 def parse_args():
     """
     Parse arguments
     """
 
-    parser = argparse.ArgumentParser(
-        description="Extract and merge git sources"
-    )
+    parser = argparse.ArgumentParser(description="Extract and merge git sources")
     parser.add_argument(
         "-d",
         "--dependencies",
         default=Path(__file__).parent,
         type=Path,
-        help="Path to the dependencies.yaml file"
+        help="Path to the dependencies.yaml file",
     )
     parser.add_argument(
         "-p",
         "--path",
         default=None,
         help="The path to extract the sources to. If part of a cylc suite, it will "
-        "default to $CYLC_WORKFLOW_SHARE_DIR/source, otherwise __file__/source"
+        "default to $CYLC_WORKFLOW_SHARE_DIR/source, otherwise __file__/source",
     )
     parser.add_argument(
         "-m",
@@ -59,6 +59,7 @@ def parse_args():
 
     return args
 
+
 def main():
     """
     Main Function
@@ -76,23 +77,20 @@ def main():
             opts = [opts]
 
         for i, values in enumerate(opts):
+            dest = args.path / dependency
             if i == 0:
-                dest = args.path / dependency
-            else:
-                dest = tempdir / dependency
-            get_source(
-                values["source"],
-                values["ref"],
-                dest,
-                dependency,
-                args.mirrors,
-                args.mirror_loc
-            )
-            if i == 0:
+                get_source(
+                    values["source"],
+                    values["ref"],
+                    dest,
+                    dependency,
+                    args.mirrors,
+                    args.mirror_loc,
+                )
                 continue
-            command = f"git -C {args.path / dependency} merge {tempdir / dependency}"
-            run_command(command)
+            merge_source(values["source"], values["ref"], dependency, dest, args.mirrors, args.mirror_loc)
 
+    rmtree(tempdir)
 
 
 if __name__ == "__main__":

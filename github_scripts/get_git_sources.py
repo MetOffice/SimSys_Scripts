@@ -18,33 +18,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_source(
-    source: str,
-    ref: str,
-    dest: Path,
-    repo: str,
-    use_mirrors: bool = False,
-    mirror_loc: Path = Path(""),
-) -> None:
-
-    if ".git" in source:
-        if use_mirrors:
-            mirror_loc = Path(mirror_loc) / "MetOffice" / repo
-            print(f"Cloning/Updating {repo} from mirror {mirror_loc} at ref {ref}")
-            clone_repo_mirror(source, ref, mirror_loc, dest)
-        else:
-            print(f"Cloning/Updating {repo} from {source} at ref {ref}")
-            clone_repo(source, ref, dest)
-    else:
-        print(f"Syncing {repo} at ref {ref}")
-        sync_repo(source, ref, dest)
-
-
 def run_command(
-    command: str,
-    check: bool = True,
-    capture: bool = True,
-    timeout: int = 600
+    command: str, check: bool = True, capture: bool = True, timeout: int = 600
 ) -> Optional[subprocess.CompletedProcess]:
     """
     Run a subprocess command and return the result object
@@ -57,15 +32,13 @@ def run_command(
     args = shlex.split(command)
 
     try:
-        # Note: text=True and capture_output=True have high overhead
-        # for large buffers. Use capture=False for fire-and-forget tasks.
         result = subprocess.run(
             args,
             capture_output=capture,
             text=capture,
             timeout=timeout,
             shell=False,
-            check=False
+            check=False,
         )
         if check and result.returncode != 0:
             err_msg = (result.stderr or "").strip()
@@ -80,16 +53,85 @@ def run_command(
         raise
 
 
+def get_source(
+    source: str,
+    ref: str,
+    dest: Path,
+    repo: str,
+    use_mirrors: bool = False,
+    mirror_loc: Path = Path(""),
+) -> None:
+    """
+    Call functions to clone or rsync git source
+    """
+
+    print(source, ref, dest, repo, use_mirrors, mirror_loc)
+
+    if ".git" in source:
+        if use_mirrors:
+            mirror_loc = Path(mirror_loc) / "MetOffice" / repo
+            print(f"Cloning/Updating {repo} from mirror {mirror_loc} at ref {ref}")
+            clone_repo_mirror(source, ref, mirror_loc, dest)
+        else:
+            print(f"Cloning/Updating {repo} from {source} at ref {ref}")
+            clone_repo(source, ref, dest)
+    else:
+        print(f"Syncing {repo} at ref {ref}")
+        sync_repo(source, ref, dest)
+
+
+def merge_source(source: str, ref: str, repo: str, dest: Path, use_mirrors: bool = False, mirror_loc: Path = Path("")):
+    """
+    Merge git source into a local git clone. Assumes dest is a git clone that this
+    source can be merged into.
+    """
+
+    if use_mirrors:
+        remote_path = Path(mirror_loc) / "MetOffice" / repo
+    else:
+        remote_path = source
+    run_command(f"git -C {dest} remote add local {remote_path}")
+
+    if use_mirrors:
+        fetch = determine_mirror_fetch(source, ref)
+    else:
+        fetch = ref
+
+    run_command(f"git -C {dest} fetch local {fetch}")
+    run_command(f"git -C {dest} merge FETCH_HEAD")
+
+
+def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
+    """
+    Determine the fetch ref for the git mirrors
+    """
+
+    repo_source = repo_source.removeprefix("git@github.com:")
+    user = repo_source.split("/")[0]
+    # Check that the user is different to the Upstream User
+    if "MetOffice" in user:
+        user = None
+
+    # If the ref is a hash then we don't need the fork user as part of the fetch.
+    # Equally, if the user is the Upstream User, it's not needed
+    if not user or re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref):
+        fetch = repo_ref
+    else:
+        fetch = f"{user}/{repo_ref}"
+
+    return fetch
+
 def clone_repo_mirror(
-    repo_source: str, repo_ref: str, mirror_loc: Path, loc: Path, parent: str = "MetOffice"
+    repo_source: str,
+    repo_ref: str,
+    mirror_loc: Path,
+    loc: Path,
 ) -> None:
     """
     Clone a repo source using a local git mirror.
     Assume the mirror is set up as per the Met Office
     - repo_source: ssh url of the source repository
     - repo_ref: git ref for the source. An empty string will get the default branch
-    - parent: Owner of the github repository being cloned (required to construct the
-              mirror path)
     - mirror_loc: path to the local git mirrors
     - loc: path to clone the repository to
     """
@@ -113,18 +155,7 @@ def clone_repo_mirror(
         run_command(f"git -C {loc} pull")
         return
 
-    repo_source = repo_source.removeprefix("git@github.com:")
-    user = repo_source.split("/")[0]
-    # Check that the user is different to the Upstream User
-    if user in parent.split("/")[0]:
-        user = None
-
-    # If the ref is a hash then we don't need the fork user as part of the fetch.
-    # Equally, if the user is the Upstream User, it's not needed
-    if not user or re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref):
-        fetch = repo_ref
-    else:
-        fetch = f"{user}/{repo_ref}"
+    fetch = determine_mirror_fetch(repo_source, repo_ref)
     commands = (
         f"git -C {loc} fetch origin {fetch}",
         f"git -C {loc} checkout FETCH_HEAD",
