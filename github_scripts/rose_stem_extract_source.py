@@ -71,7 +71,11 @@ def main() -> None:
                         f"{dependency} from {mirror_loc} at ref {values['ref']}"
                     )
                     clone_repo_mirror(
-                        values["source"], values["ref"], values["parent"], mirror_loc, loc
+                        values["source"],
+                        values["ref"],
+                        values["parent"],
+                        mirror_loc,
+                        loc,
                     )
                 else:
                     print(

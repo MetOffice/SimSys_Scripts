@@ -80,7 +80,14 @@ def get_source(
         sync_repo(source, ref, dest)
 
 
-def merge_source(source: str, ref: str, repo: str, dest: Path, use_mirrors: bool = False, mirror_loc: Path = Path("")):
+def merge_source(
+    source: str,
+    ref: str,
+    repo: str,
+    dest: Path,
+    use_mirrors: bool = False,
+    mirror_loc: Path = Path(""),
+):
     """
     Merge git source into a local git clone. Assumes dest is a git clone that this
     source can be merged into.
@@ -120,6 +127,7 @@ def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
         fetch = f"{user}/{repo_ref}"
 
     return fetch
+
 
 def clone_repo_mirror(
     repo_source: str,

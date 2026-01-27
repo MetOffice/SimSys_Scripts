@@ -88,7 +88,14 @@ def main():
                     args.mirror_loc,
                 )
                 continue
-            merge_source(values["source"], values["ref"], dependency, dest, args.mirrors, args.mirror_loc)
+            merge_source(
+                values["source"],
+                values["ref"],
+                dependency,
+                dest,
+                args.mirrors,
+                args.mirror_loc,
+            )
 
     rmtree(tempdir)
 
