@@ -120,11 +120,16 @@ def merge_source(
         fetch = ref
 
     run_command(f"git -C {dest} fetch local {fetch}")
-    result = run_command(f"git -C {dest} merge --no-gpg-sign FETCH_HEAD", check=False)
+    command = f"git -C {dest} mergee --no-gpg-sign FETCH_HEAD"
+    result = run_command(command, check=False)
     if result.returncode:
         unmerged_files = get_unmerged(dest)
         if unmerged_files:
             handle_merge_conflicts(source, ref, dest, repo)
+        else:
+            raise subprocess.CalledProcessError(
+                result.returncode, command, result.stdout, result.stderr
+            )
 
     # Remove the added remote
     run_command(f"git -C {dest} remote remove local")
