@@ -77,9 +77,9 @@ def main():
 
         for i, values in enumerate(opts):
             if i == 0:
-                dest = args.path
+                dest = args.path / dependency
             else:
-                dest = tempdir
+                dest = tempdir / dependency
             get_source(
                 values["source"],
                 values["ref"],

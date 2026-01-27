@@ -31,7 +31,7 @@ def get_source(
         if use_mirrors:
             mirror_loc = Path(mirror_loc) / "MetOffice" / repo
             print(f"Cloning/Updating {repo} from mirror {mirror_loc} at ref {ref}")
-            clone_repo_mirror(source, ref, repo, mirror_loc, dest)
+            clone_repo_mirror(source, ref, mirror_loc, dest)
         else:
             print(f"Cloning/Updating {repo} from {source} at ref {ref}")
             clone_repo(source, ref, dest)
@@ -81,7 +81,7 @@ def run_command(
 
 
 def clone_repo_mirror(
-    repo_source: str, repo_ref: str, parent: str, mirror_loc: Path, loc: Path
+    repo_source: str, repo_ref: str, mirror_loc: Path, loc: Path, parent: str = "MetOffice"
 ) -> None:
     """
     Clone a repo source using a local git mirror.
