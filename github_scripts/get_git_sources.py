@@ -106,27 +106,7 @@ def merge_source(
 
     run_command(f"git -C {dest} fetch local {fetch}")
     run_command(f"git -C {dest} merge FETCH_HEAD")
-
-
-def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
-    """
-    Determine the fetch ref for the git mirrors
-    """
-
-    repo_source = repo_source.removeprefix("git@github.com:")
-    user = repo_source.split("/")[0]
-    # Check that the user is different to the Upstream User
-    if "MetOffice" in user:
-        user = None
-
-    # If the ref is a hash then we don't need the fork user as part of the fetch.
-    # Equally, if the user is the Upstream User, it's not needed
-    if not user or re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref):
-        fetch = repo_ref
-    else:
-        fetch = f"{user}/{repo_ref}"
-
-    return fetch
+    run_command(f"git -C {dest} remote remove local")
 
 
 def clone_repo_mirror(
@@ -170,6 +150,27 @@ def clone_repo_mirror(
     )
     for command in commands:
         run_command(command)
+
+
+def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
+    """
+    Determine the fetch ref for the git mirrors
+    """
+
+    repo_source = repo_source.removeprefix("git@github.com:")
+    user = repo_source.split("/")[0]
+    # Check that the user is different to the Upstream User
+    if "MetOffice" in user:
+        user = None
+
+    # If the ref is a hash then we don't need the fork user as part of the fetch.
+    # Equally, if the user is the Upstream User, it's not needed
+    if not user or re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref):
+        fetch = repo_ref
+    else:
+        fetch = f"{user}/{repo_ref}"
+
+    return fetch
 
 
 def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
