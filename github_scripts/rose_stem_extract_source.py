@@ -36,9 +36,7 @@ def main() -> None:
     if os.environ.get("USE_TOKENS", "False") == "True":
         dependencies = set_https(dependencies)
 
-    use_mirrors = False
-    if os.environ.get("USE_MIRRORS", "False") == "True":
-        use_mirrors = True
+    use_mirrors = os.environ.get("USE_MIRRORS", "False") == "True"
 
     for dependency, opts in dependencies.items():
         loc = clone_loc / dependency
