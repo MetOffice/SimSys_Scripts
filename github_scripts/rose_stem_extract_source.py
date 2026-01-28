@@ -63,8 +63,8 @@ def main() -> None:
             merge_source(
                 values["source"],
                 values["ref"],
-                dependency,
                 loc,
+                dependency,
                 use_mirrors,
                 mirror_loc,
             )

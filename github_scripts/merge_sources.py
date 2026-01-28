@@ -97,8 +97,8 @@ def main():
             merge_source(
                 values["source"],
                 values["ref"],
-                dependency,
                 dest,
+                dependency,
                 args.mirrors,
                 args.mirror_loc,
             )

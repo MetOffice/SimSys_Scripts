@@ -93,8 +93,8 @@ def get_source(
 def merge_source(
     source: str,
     ref: str,
-    repo: str,
     dest: Path,
+    repo: str,
     use_mirrors: bool = False,
     mirror_loc: Path = Path(""),
 ) -> None:
