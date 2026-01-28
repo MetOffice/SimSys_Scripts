@@ -19,7 +19,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-logger.info("Git Source Extraction")
 
 
 def run_command(
