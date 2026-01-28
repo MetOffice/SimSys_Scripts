@@ -14,11 +14,12 @@ from typing import Optional
 from pathlib import Path
 from shutil import rmtree
 import shlex
+import sys
 import logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger.info("Git Source Extraction")
-# logger.setLevel(logging.INFO)
 
 
 def run_command(

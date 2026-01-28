@@ -10,7 +10,6 @@ Script to clone and merge git sources
 
 import argparse
 import os
-import logging
 import yaml
 from pathlib import Path
 from get_git_sources import get_source, merge_source, set_https
@@ -71,8 +70,6 @@ def main():
     """
 
     args = parse_args()
-
-    logging.basicConfig(level=logging.INFO)
 
     dependencies = yaml.safe_load(args.dependencies.read_text())
 
