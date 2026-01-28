@@ -134,26 +134,15 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     # Create a clean clone location
     loc.mkdir(parents=True)
 
-    exclude_dirs = (
-        "applications/*/working",
-        "applications/*/test",
-        "applications/*/bin",
-        "science/*/working",
-        "science/*/test",
-        "science/*/bin",
-        "interfaces/*/working",
-        "interfaces/*/test",
-        "interfaces/*/bin",
-        "components/*/working",
-        "components/*/test",
-        "components/*/bin",
-        "infrastructure/*/working",
-        "infrastructure/*/test",
-        "infrastructure/*/bin",
-        "mesh_tools/*/working",
-        "mesh_tools/*/test",
-        "mesh_tools/*/bin",
-    )
+    exclude_dirs = []
+    result = run_command(f"git -C {repo_source} --ignored -s")
+    for ignore_file in result.stdout.split():
+        ignore_file = ignore_file.strip()
+        if not ignore_file.startswith("!!"):
+            continue
+        ignore_file = ignore_file.removeprefix("!!")
+        ignore_file = ignore_file.strip()
+        exclude_dirs.append(ignore_file)
 
     # Trailing slash required for rsync
     command = f"rsync -av {repo_source}/ {loc}"
