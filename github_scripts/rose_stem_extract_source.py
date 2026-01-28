@@ -12,6 +12,7 @@ environment variables
 """
 
 import os
+import logging
 from pathlib import Path
 from ast import literal_eval
 from get_git_sources import get_source, merge_source, set_https
@@ -29,6 +30,8 @@ def main() -> None:
     3. If USE_TOKENS is True, modify the source URLs to use https
     4. If USE_MIRRORS is True, clone from local mirrors at GIT_MIRROR_LOC
     """
+
+    logging.basicConfig(level=logging.INFO)
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
     dependencies: dict = literal_eval(os.environ["DEPENDENCIES"])
