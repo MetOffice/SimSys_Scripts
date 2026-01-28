@@ -54,7 +54,7 @@ def parse_args():
     )
     args = parser.parse_args()
     args.dependencies = args.dependencies.resolve()
-    if args.dependencies.name != "dependencies.yaml":
+    if args.dependencies.is_dir():
         args.dependencies = args.dependencies / "dependencies.yaml"
 
     if not args.path:
