@@ -16,7 +16,9 @@ from shutil import rmtree
 import shlex
 import logging
 
+logging.basicConfig()
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def run_command(
