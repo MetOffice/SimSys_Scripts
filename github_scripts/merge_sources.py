@@ -71,8 +71,7 @@ def main():
 
     args = parse_args()
 
-    with open(args.dependencies, "r") as stream:
-        dependencies = yaml.safe_load(stream)
+    dependencies = yaml.safe_load(args.dependencies.read_text())
 
     if args.tokens:
         dependencies = set_https(dependencies)
