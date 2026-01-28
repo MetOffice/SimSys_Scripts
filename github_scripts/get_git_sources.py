@@ -66,24 +66,22 @@ def get_source(
     Call functions to clone or rsync git source
     """
 
-    print(source, ref, dest, repo, use_mirrors, mirror_loc)
-
     if ".git" in source:
         if use_mirrors:
-            print(
+            logger.info(
                 f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
                 f"{repo} from {mirror_loc} at ref {ref}"
             )
             mirror_loc = Path(mirror_loc) / "MetOffice" / repo
             clone_repo_mirror(source, ref, mirror_loc, dest)
         else:
-            print(
+            logger.info(
                 f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
                 f"{repo} from {source} at ref {ref}"
             )
             clone_repo(source, ref, dest)
     else:
-        print(
+        logger.info(
             f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Syncing "
             f"{repo} at ref {ref}"
         )
@@ -103,7 +101,7 @@ def merge_source(
     source can be merged into.
     """
 
-    print(
+    logger.info(
         f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Merging "
         f"{source} at ref {ref} into {repo}"
     )
@@ -145,7 +143,7 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
     # For suites, merge conflicts in these files/directories are unimportant so accept
     # the current changes
     for filepath in ("dependencies.yaml", "rose-stem"):
-        print(f"Ignoring merge conflicts in {filepath}")
+        logger.warning(f"Ignoring merge conflicts in {filepath}")
         run_command(f"git -C {loc} checkout --ours -- {filepath}")
         run_command(f"git -C {loc} add {filepath}")
 
@@ -312,9 +310,11 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     command = f"git -C {loc} fetch origin main:main"
     result = run_command(command, check=False)
     if result and result.returncode:
-        print("Warning - fetching main from origin resulted in an error")
-        print("This is likely due to the main branch already existing")
-        print(f"Error message:\n\n{result.stderr}")
+        logger.warning(
+            "Fetching main from origin resulted in an error."
+            "This is likely due to the main branch already existing"
+            f"\nError message:\n\n{result.stderr}"
+        )
 
     if repo_ref:
         command = f"git -C {loc} checkout {repo_ref}"
@@ -326,7 +326,7 @@ def set_https(dependencies: dict) -> dict:
     Change sources in a dependencies dictions to use https instead of ssh
     """
 
-    print("Modifying Dependencies")
+    logger.info("Modifying Dependencies to use https")
     for dependency, opts in dependencies.items():
         if not isinstance(opts, list):
             opts = [opts]
