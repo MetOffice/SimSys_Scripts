@@ -166,7 +166,7 @@ def parse_args():
     """
 
     parser = argparse.ArgumentParser(
-        "Create tables of review workload based on Simulation Systems Review Tracker"
+        "Create tables of review gh_review_project based on Simulation Systems Review Tracker"
     )
     parser.add_argument(
         "--total",
