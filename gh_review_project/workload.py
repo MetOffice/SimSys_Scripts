@@ -25,8 +25,6 @@ lfric_repositories = [
 
 adminID = "MGEX82"  # person in github teams as a central admin but not relevant here
 
-testfile = Path(__file__).parent / "test" / "test.json"
-
 
 class Team:
     """
@@ -168,6 +166,8 @@ def parse_args():
     Read command line args
     """
 
+    testfile = Path(__file__).parent / "test" / "test.json"
+
     parser = argparse.ArgumentParser(
         "Create tables of review workload based on Simulation Systems Review Tracker"
     )
@@ -193,7 +193,12 @@ def parse_args():
         "or use as input data.",
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    args.file = Path(args.file)
+    args.file = args.file.expanduser().resolve()
+
+    return args
 
 
 def main(total: bool, test: bool, capture_project: bool, file: Path):
