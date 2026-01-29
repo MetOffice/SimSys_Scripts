@@ -18,48 +18,63 @@ class ProjectData:
     """
     A class to hold GitHub project data
 
-    raw_data: dict Raw data from the project
     data: dict Data filtered to contain most needed pull request details,
                sorted by repository.
+    test: bool Run using test data and extra logging.
     """
 
-    def __init__(self, test: bool = False, capture: bool = False):
-        self.raw_data = {}
-        self.data = {}
+    def __init__(self, data: dict, test: bool = False):
+        self.data = data
+        self.test = test
 
-        self.fetch_project_data(test, capture)
-        self.extract_data()
-
-    def fetch_project_data(self, test: bool, capture: bool):
+    @classmethod
+    def from_github(cls, capture: bool = False, file: Path = None) -> "ProjectData":
         """
-        Retrieve data from GitHub API or a from a test file.
+        Retrieve data from GitHub API and initialise the class.
         """
-        if test:
-            file = Path(__file__).parent / "test" / "test.json"
-            with open(file) as f:
-                self.raw_data = json.loads(f.read())
+        command = "gh project item-list 376 -L 500 --owner MetOffice --format json"
+        output = subprocess.run(command.split(), capture_output=True, timeout=180)
+        if output.returncode:
+            raise RuntimeError(
+                "Error fetching GitHub Project data:  \n " + output.stderr.decode()
+            )
 
-        else:
-            command = "gh project item-list 376 -L 500 --owner MetOffice --format json"
-            output = subprocess.run(command.split(), capture_output=True, timeout=180)
-            if output.returncode:
-                raise RuntimeError(
-                    "Error fetching GitHub Project data:  \n " + output.stderr.decode()
-                )
+        raw_data = json.loads(output.stdout)
 
-            self.raw_data = json.loads(output.stdout)
-
-            if capture:
-                file = Path(__file__).parent / "test" / "test.json"
+        if capture:
+            if file:
                 with open(file, "w") as f:
-                    json.dump(self.raw_data, f)
+                    json.dump(raw_data, f)
                 print(
-                    "Project data saved to test.json. Use --test to run with"
-                    " the captured data."
+                    f"Project data saved to {file}."
                 )
+            else:
+                print("Unable to capture data as filename not specified.")
 
-    def extract_data(self):
-        for pr in self.raw_data["items"]:
+        data = cls._extract_data(raw_data)
+        return cls(data, test=False)
+
+    @classmethod
+    def from_file(cls, file: Path) -> "ProjectData":
+        """
+        Retrieve data from test file and initialise the class.
+        """
+        with open(file) as f:
+            raw_data = json.loads(f.read())
+
+        data = cls._extract_data(raw_data)
+        return cls(data, test=True)
+
+    @classmethod
+    def _extract_data(cls, raw_data: dict) -> dict:
+        """
+        Extract useful information from the raw data and
+        store it in a dictionary keyed by repository.
+        """
+
+        data = {}
+
+        for pr in raw_data["items"]:
             pull_request = {}
             pull_request["id"] = pr["id"]
             pull_request["title"] = pr["content"]["title"]
@@ -91,12 +106,14 @@ class ProjectData:
                 pull_request["scitech review"] = None
 
             repo = pr["content"]["repository"].replace("MetOffice/", "")
-            if repo in self.data:
-                self.data[repo].append(pull_request)
+            if repo in data:
+                data[repo].append(pull_request)
             else:
-                self.data[repo] = [pull_request]
+                data[repo] = [pull_request]
 
-    def get_reviewers_for_repo(self, repo: str, test: bool = False) -> list:
+        return data
+
+    def get_reviewers_for_repo(self, repo: str) -> list:
         """
         Return a list of reviewers for a given repository.
         """
@@ -107,8 +124,8 @@ class ProjectData:
 
         reviewers = []
 
-        if test:
-            print("\n=== Reviewers for repository " + repo)
+        if self.test:
+            print("\n=== Reviewers for " + repo)
 
         for pr in pull_requests:
             sr = pr["scitech review"]
@@ -119,7 +136,7 @@ class ProjectData:
             if cr:
                 reviewers.append(cr)
 
-            if test and (cr or sr):
+            if self.test and (cr or sr):
                 # Handle case where these are None
                 if not sr:
                     sr = ""

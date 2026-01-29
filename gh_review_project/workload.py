@@ -25,6 +25,7 @@ lfric_repositories = [
 
 adminID = "MGEX82"  # person in github teams as a central admin but not relevant here
 
+testfile = Path(__file__).parent / "test" / "test.json"
 
 class Team:
     """
@@ -111,8 +112,7 @@ def count_items(item_list: list) -> dict:
 
 
 def build_table(
-    data: ProjectData, reviewer_list: list, repos: list, test: bool
-) -> PrettyTable:
+    data: ProjectData, reviewer_list: list, repos: list) -> PrettyTable:
     """
     Build a pretty table from the data by extracting just the desired
     repositories and reviewers.
@@ -129,7 +129,7 @@ def build_table(
     totals = [0] * len(reviewer_list)
 
     for repo in repos:
-        review_count = count_items(data.get_reviewers_for_repo(repo, test))
+        review_count = count_items(data.get_reviewers_for_repo(repo))
 
         sorted_count = []
         for index, person in enumerate(reviewer_list):
@@ -186,14 +186,23 @@ def parse_args():
         action="store_true",
         help="Capture the current project status into the test file",
     )
+    parser.add_argument(
+        "--file",
+        default=testfile,
+        help="Filepath to test data for either capture the project status, "
+             "or use as input data.",
+    )
 
     return parser.parse_args()
 
 
-def main(total: bool, test: bool, capture_project: bool):
+def main(total: bool, test: bool, capture_project: bool, file: Path):
 
     # Extract data from github about the reviews and team members.
-    data = ProjectData(test, capture_project)
+    if test:
+        data = ProjectData.from_file(file)
+    else:
+        data = ProjectData.from_github(capture_project, file)
 
     teams = {
         "SSD": Team("ssdteam", test),
@@ -208,7 +217,7 @@ def main(total: bool, test: bool, capture_project: bool):
     ## Table for non-LFRic repositories
     repo_list = other_repo_list(data, lfric_repositories)
     reviewers = teams["SSD"].get_team_members()
-    tables["SSD"] = build_table(data, reviewers, repo_list, test)
+    tables["SSD"] = build_table(data, reviewers, repo_list)
 
     ## Table for LFRic repositories
     repo_list = lfric_repositories
@@ -220,7 +229,7 @@ def main(total: bool, test: bool, capture_project: bool):
         for person in members:
             if person not in reviewers:
                 reviewers.append(person)
-    tables["LFRic"] = build_table(data, reviewers, repo_list, test)
+    tables["LFRic"] = build_table(data, reviewers, repo_list)
 
     # Print tables
     for name, table in tables.items():
@@ -229,4 +238,4 @@ def main(total: bool, test: bool, capture_project: bool):
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.total, args.test, args.capture_project)
+    main(args.total, args.test, args.capture_project, args.file)
