@@ -45,9 +45,7 @@ class ProjectData:
             if file:
                 with open(file, "w") as f:
                     json.dump(raw_data, f)
-                print(
-                    f"Project data saved to {file}."
-                )
+                print(f"Project data saved to {file}.")
             else:
                 print("Unable to capture data as filename not specified.")
 

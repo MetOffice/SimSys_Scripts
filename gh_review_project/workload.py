@@ -27,6 +27,7 @@ adminID = "MGEX82"  # person in github teams as a central admin but not relevant
 
 testfile = Path(__file__).parent / "test" / "test.json"
 
+
 class Team:
     """
     A class to hold GitHub team data.
@@ -111,8 +112,7 @@ def count_items(item_list: list) -> dict:
     return count
 
 
-def build_table(
-    data: ProjectData, reviewer_list: list, repos: list) -> PrettyTable:
+def build_table(data: ProjectData, reviewer_list: list, repos: list) -> PrettyTable:
     """
     Build a pretty table from the data by extracting just the desired
     repositories and reviewers.
@@ -190,7 +190,7 @@ def parse_args():
         "--file",
         default=testfile,
         help="Filepath to test data for either capture the project status, "
-             "or use as input data.",
+        "or use as input data.",
     )
 
     return parser.parse_args()
