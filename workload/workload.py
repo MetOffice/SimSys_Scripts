@@ -1,108 +1,29 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+
+'''
+This script will read the details of pull requests from the Simulation Systems
+Review Tracker project and print tables of the number of reviews assigned to
+each reviewer.
+'''
+
 import argparse
 import json
 import subprocess
 from pathlib import Path
-
 from prettytable import PrettyTable
+
+from review_project import ProjectData
 
 lfric_repositories = [
     "lfric_apps",
     "lfric_core",
 ]
 
-ssd_repositories = [
-    "um",
-    "jules",
-    "socrates",
-    "casim",
-    "ukca",
-    "simulation-systems",
-    "SimSys_Scripts",
-    "git_playground",
-    "growss",
-]
-
 adminID = "MGEX82"  # person in github teams as a central admin but not relevant here
-
-
-class ProjectData:
-    """
-    A class to hold GitHub project data. The focus is on review information.
-
-    data: dict Raw data from the project
-    review_data: list Data filtered to contain a list of review tuples
-    """
-
-    def __init__(self, test: bool = False, capture: bool = False):
-        self.data = {}
-        self.review_data = []
-
-        self.fetch_project_data(test, capture)
-        self.filter_reviewers(test)
-
-    def fetch_project_data(self, test: bool, capture: bool):
-        """
-        Retrieve data from GitHub API or a from a test file.
-        """
-        if test:
-            file = Path(__file__).parent / "test" / "test.json"
-            with open(file) as f:
-                self.data = json.loads(f.read())
-
-        else:
-            command = "gh project item-list 376 -L 500 --owner MetOffice --format json"
-            output = subprocess.run(command.split(), capture_output=True, timeout=180)
-            if output.returncode:
-                raise RuntimeError(
-                    "Error fetching GitHub Project data:  \n " + output.stderr.decode()
-                )
-
-            self.data = json.loads(output.stdout)
-
-            if capture:
-                file = Path(__file__).parent / "test" / "test.json"
-                with open(file, "w") as f:
-                    json.dump(self.data, f)
-                print(
-                    "Project data saved to test.json. Use --test to run with"
-                    " the captured data."
-                )
-
-    def filter_reviewers(self, test: bool = False):
-        """
-        Filter the data to create a list of review tuples
-        """
-        all_reviews = self.data["items"]
-        for review in all_reviews:
-            cr = ""
-            sr = ""
-            if "code Review" in review:
-                cr = review["code Review"].strip()
-                self.review_data.append((cr, review["repository"]))
-
-            if "sciTech Review" in review:
-                sr = review["sciTech Review"].strip()
-                self.review_data.append((sr, review["repository"]))
-
-            if test and (cr or sr):
-                print(
-                    "SciTech:",
-                    f"{sr: <18}",
-                    "Code:",
-                    f"{cr: <18}",
-                    f"{review['repository']: <50}",
-                    review["title"],
-                )
-
-    def one_repo(self, repository: str) -> list:
-        """
-        Filter the review data to just that of one repository
-
-        repository: string Name of repository to include
-        return: list All reviewers that have reviews assigned in that repository
-                including duplicates.
-        """
-        return [x[0] for x in self.review_data if repository in x[1]]
 
 
 class Team:
@@ -161,6 +82,16 @@ class Team:
         """
         return self.members
 
+def other_repo_list(data: ProjectData, to_exclude: list) -> list:
+    """
+    Create a list of all repositories with data in the project, not including
+    any repositories that are found elsewhere.
+    """
+
+    all_repos = data.get_repositories()
+
+    return sorted(set(all_repos) - set(to_exclude))
+
 
 def count_items(item_list: list) -> dict:
     """
@@ -178,7 +109,7 @@ def count_items(item_list: list) -> dict:
     return count
 
 
-def build_table(data: ProjectData, reviewer_list: list, repos: list) -> PrettyTable:
+def build_table(data: ProjectData, reviewer_list: list, repos: list, test: bool) -> PrettyTable:
     """
     Build a pretty table from the data by extracting just the desired
     repositories and reviewers.
@@ -195,7 +126,7 @@ def build_table(data: ProjectData, reviewer_list: list, repos: list) -> PrettyTa
     totals = [0] * len(reviewer_list)
 
     for repo in repos:
-        review_count = count_items(data.one_repo(repo))
+        review_count = count_items(data.get_reviewers_for_repo(repo, test))
 
         sorted_count = []
         for index, person in enumerate(reviewer_list):
@@ -271,10 +202,10 @@ def main(total: bool, test: bool, capture_project: bool):
     # Create tables for each combination of reviewers and reposotories
     tables = {}
 
-    ## Table for SSD only repositories
-    repo_list = ssd_repositories
+    ## Table for non-LFRic repositories
+    repo_list = other_repo_list(data, lfric_repositories)
     reviewers = teams["SSD"].get_team_members()
-    tables["SSD"] = build_table(data, reviewers, repo_list)
+    tables["SSD"] = build_table(data, reviewers, repo_list, test)
 
     ## Table for LFRic repositories
     repo_list = lfric_repositories
@@ -286,7 +217,7 @@ def main(total: bool, test: bool, capture_project: bool):
         for person in members:
             if person not in reviewers:
                 reviewers.append(person)
-    tables["LFRic"] = build_table(data, reviewers, repo_list)
+    tables["LFRic"] = build_table(data, reviewers, repo_list, test)
 
     # Print tables
     for name, table in tables.items():
