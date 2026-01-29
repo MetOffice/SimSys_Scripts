@@ -4,11 +4,11 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-'''
+"""
 This script will read the details of pull requests from the Simulation Systems
 Review Tracker project and print tables of the number of reviews assigned to
 each reviewer.
-'''
+"""
 
 import argparse
 import json
@@ -82,6 +82,7 @@ class Team:
         """
         return self.members
 
+
 def other_repo_list(data: ProjectData, to_exclude: list) -> list:
     """
     Create a list of all repositories with data in the project, not including
@@ -109,7 +110,9 @@ def count_items(item_list: list) -> dict:
     return count
 
 
-def build_table(data: ProjectData, reviewer_list: list, repos: list, test: bool) -> PrettyTable:
+def build_table(
+    data: ProjectData, reviewer_list: list, repos: list, test: bool
+) -> PrettyTable:
     """
     Build a pretty table from the data by extracting just the desired
     repositories and reviewers.

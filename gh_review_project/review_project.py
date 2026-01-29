@@ -4,14 +4,15 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-'''
+"""
 Class and functions for interacting with the Simulation Systems Review Tracker
 Project.
-'''
+"""
 
 import json
 import subprocess
 from pathlib import Path
+
 
 class ProjectData:
     """
@@ -136,6 +137,6 @@ class ProjectData:
         return reviewers
 
     def get_repositories(self) -> list:
-        """ Return a list of repositories found in the project data."""
+        """Return a list of repositories found in the project data."""
 
         return list(self.data.keys())
