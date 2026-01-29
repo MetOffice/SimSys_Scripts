@@ -137,14 +137,12 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     exclude_dirs = []
     host, path = repo_source.split(":", 1)
     result = run_command(f"ssh {host} git -C {path} status --ignored -s")
-    for ignore_file in result.stdout.split():
+    for ignore_file in result.stdout.split("\n"):
         ignore_file = ignore_file.strip()
         if not ignore_file.startswith("!!"):
             continue
-        ignore_file = ignore_file.removeprefix("!!")
-        ignore_file = ignore_file.strip()
+        ignore_file = ignore_file.removeprefix("!!").strip()
         exclude_dirs.append(ignore_file)
-    print(exclude_dirs)
 
     # Trailing slash required for rsync
     command = f"rsync -av {repo_source}/ {loc}"
