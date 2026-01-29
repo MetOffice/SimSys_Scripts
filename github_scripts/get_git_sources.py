@@ -340,7 +340,7 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
 
 def set_https(dependencies: dict) -> dict:
     """
-    Change sources in a dependencies dictions to use https instead of ssh
+    Change sources in a dependencies dictionary to use https instead of ssh
     """
 
     logger.info("Modifying Dependencies to use https")
