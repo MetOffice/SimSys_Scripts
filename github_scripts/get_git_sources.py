@@ -56,6 +56,39 @@ def run_command(
         raise
 
 
+def validate_dependencies(dependencies: dict) -> None:
+    """
+    Check that the dependencies file dictionary matches format expectations.
+    Each dictionary value should be a list of dictionaries (or a single dictionary)
+    Those dictionaries should have a "source" and a "ref" key
+    """
+    for item, values in dependencies.items():
+        failed = False
+        if isinstance(values, dict):
+            values = [values]
+        if not isinstance(values, list):
+            failed = True
+        else:
+            for entry in values:
+                if not isinstance(entry, dict) or (
+                    "source" not in entry or "ref" not in entry
+                ):
+                    failed = True
+        if failed:
+            raise ValueError(
+                f"The dependency {item} does not contain a list of dictionaries (or a "
+                "single dictionary) with keys of 'source' and 'ref'.\nPlease edit your "
+                "dependencies.yaml file to satisfy this."
+            )
+
+
+def datetime_str() -> str:
+    """
+    Create and return a datetime string at the current time
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
 def get_source(
     source: str,
     ref: str,
@@ -71,22 +104,15 @@ def get_source(
     if ".git" in source:
         if use_mirrors:
             logger.info(
-                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
-                f"{repo} from {mirror_loc} at ref {ref}"
+                f"[{datetime_str()}] Cloning {repo} from {mirror_loc} at ref {ref}"
             )
             mirror_loc = Path(mirror_loc) / "MetOffice" / repo
             clone_repo_mirror(source, ref, mirror_loc, dest)
         else:
-            logger.info(
-                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
-                f"{repo} from {source} at ref {ref}"
-            )
+            logger.info(f"[{datetime_str()}] Cloning {repo} from {source} at ref {ref}")
             clone_repo(source, ref, dest)
     else:
-        logger.info(
-            f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Syncing "
-            f"{repo} at ref {ref}"
-        )
+        logger.info(f"[{datetime_str()}] Syncing {repo} at ref {ref}")
         sync_repo(source, ref, dest)
 
 
@@ -137,8 +163,8 @@ def merge_source(
 
 def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) -> None:
     """
-    Attempt to mark merge conflicts as resolved in they are in rose-stem or
-    dependencies.yaml
+    If merge conflicts are in `rose-stem/` or `dependencies.yaml` then accept the
+    current changes and mark as resolved.
     If others remain then raise an error
     """
 

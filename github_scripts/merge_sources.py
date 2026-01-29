@@ -12,7 +12,7 @@ import argparse
 import os
 import yaml
 from pathlib import Path
-from get_git_sources import get_source, merge_source, set_https
+from get_git_sources import get_source, merge_source, set_https, validate_dependencies
 import logging
 import sys
 
@@ -76,6 +76,7 @@ def main():
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
     dependencies = yaml.safe_load(args.dependencies.read_text())
+    validate_dependencies(dependencies)
 
     if args.tokens:
         dependencies = set_https(dependencies)
@@ -86,17 +87,18 @@ def main():
         if not isinstance(opts, list):
             opts = [opts]
 
-        for i, values in enumerate(opts):
-            if i == 0:
-                get_source(
-                    values["source"],
-                    values["ref"],
-                    dest,
-                    dependency,
-                    args.mirrors,
-                    args.mirror_loc,
-                )
-                continue
+        # Clone the first provided source
+        values = opts.pop(0)
+        get_source(
+            values["source"],
+            values["ref"],
+            dest,
+            dependency,
+            args.mirrors,
+            args.mirror_loc,
+        )
+        # For all other sources, attempt to merge into the first
+        for values in opts:
             merge_source(
                 values["source"],
                 values["ref"],

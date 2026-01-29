@@ -14,7 +14,7 @@ environment variables
 import os
 from pathlib import Path
 from ast import literal_eval
-from get_git_sources import get_source, merge_source, set_https
+from get_git_sources import get_source, merge_source, set_https, validate_dependencies
 import logging
 import sys
 
@@ -36,11 +36,13 @@ def main() -> None:
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
     dependencies: dict = literal_eval(os.environ["DEPENDENCIES"])
+    validate_dependencies(dependencies)
 
-    if os.environ.get("USE_TOKENS", "False") == "True":
+    if os.environ.get("USE_TOKENS", "false").lower() == "true":
         dependencies = set_https(dependencies)
 
-    use_mirrors = os.environ.get("USE_MIRRORS", "False") == "True"
+    use_mirrors = os.environ.get("USE_MIRRORS", "false").lower() == "true"
+    mirror_loc = Path(os.getenv("GIT_MIRROR_LOC", "")) / "MetOffice"
 
     for dependency, opts in dependencies.items():
         loc = clone_loc / dependency
@@ -48,20 +50,18 @@ def main() -> None:
         if not isinstance(opts, list):
             opts = [opts]
 
-        for i, values in enumerate(opts):
-            mirror_loc = Path(os.getenv("GIT_MIRROR_LOC", "")) / "MetOffice"
-
-            if i == 0:
-                get_source(
-                    values["source"],
-                    values["ref"],
-                    loc,
-                    dependency,
-                    use_mirrors,
-                    mirror_loc,
-                )
-                continue
-
+        # Clone the first provided source
+        values = opts.pop(0)
+        get_source(
+            values["source"],
+            values["ref"],
+            loc,
+            dependency,
+            use_mirrors,
+            mirror_loc,
+        )
+        # For all other sources, attempt to merge into the first
+        for values in opts:
             merge_source(
                 values["source"],
                 values["ref"],
