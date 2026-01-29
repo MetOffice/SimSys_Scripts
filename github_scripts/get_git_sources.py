@@ -135,7 +135,8 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     loc.mkdir(parents=True)
 
     exclude_dirs = []
-    result = run_command(f"git -C {repo_source} --ignored -s")
+    host, path = repo_source.split(":", 1)
+    result = run_command(f"ssh {host} git -C {repo_source} status --ignored -s")
     for ignore_file in result.stdout.split():
         ignore_file = ignore_file.strip()
         if not ignore_file.startswith("!!"):
