@@ -17,15 +17,14 @@ class ProjectData:
     """
     A class to hold GitHub project data
 
-    data: dict Raw data from the project
-    review_data: list Data filtered to contain a list of review tuples
-                 (reviewer, repository)
+    raw_data: dict Raw data from the project
+    data: dict Data filtered to contain most needed pull request details,
+               sorted by repository.
     """
 
     def __init__(self, test: bool = False, capture: bool = False):
         self.raw_data = {}
         self.data = {}
-        self.review_data = []
 
         self.fetch_project_data(test, capture)
         self.extract_data()
