@@ -22,10 +22,11 @@ from search_lists import (
 from dataclasses import dataclass, field
 
 """
-ToDo : Several of the test functions are poor shadows of the original
+TODO : Several of the test functions are poor shadows of the original
        Perl versions. They would benefit from improving to catch more
        cases.
-       Equally, there could probably be more consistancly in how things like comments are stripped from the ends of lines
+       Equally, there could probably be more consistancly in how things
+       like comments are stripped from the ends of lines
        and/or full comment lines are skipped.
 """
 
@@ -37,7 +38,8 @@ VERSION = "13.5.0"
 class TestResult:
     """Result from running a single style checker test on a file."""
 
-    """ToDo : unsure if both output and errors are required.
+    """
+    TODO : unsure if both output and errors are required.
        They make a bit more sense in the 'external_checkers' where
        they hold stdout and stderr."""
     checker_name: str = "Unnamed Checker"
@@ -50,7 +52,8 @@ class TestResult:
 class UMDP3Checker:
     """UMDP3 compliance checker class"""
 
-    """ToDO : This class could possibly be abandoned, or replaced
+    """
+    TODO : This class could possibly be abandoned, or replaced
        by a similar class at a different level. Presently only one
        instance is created in such a way that the original
        _extra_error_info can't be used to hold extra information
@@ -63,29 +66,42 @@ class UMDP3Checker:
     def __init__(self):
         self._extra_error_info = {}
         self._lock = threading.Lock()
-        """ToDo: The Perl version had a dodgy looking subroutine to calculate
+        """
+    TODO: The Perl version had a dodgy looking subroutine to calculate
         this, but I can't find where it was called from within the files in
         'bin'. It used all args as a 'list' - searched them for '#include' and
-        then returned the count as well as adding 1 to this global var if any were found.
-        This is either redundant and needs removing, or needs implementing properly."""
+        then returned the count as well as adding 1 to this global var if any
+        were found.
+        This is either redundant and needs removing, or needs implementing
+        properly."""
         self._number_of_files_with_variable_declarations_in_includes = 0
 
     def reset_extra_error_information(self):
         """Reset extra error information :
-        Appears to be used 'between' blocks of tests such as those on diffs and those on full files.
+        Appears to be used 'between' blocks of tests such as those on diffs and
+        those on full files.
         """
         with self._lock:
             self._extra_error_info = {}
 
     def get_extra_error_information(self) -> Dict:
-        """Get extra error information. Dictionary with file names as the keys."""
-        """ToDo: I presume this is what's used when creating the report of the actual failures and not just the count. However, this information doesn't seem to be output as yet and will need implementing."""
+        """
+        Get extra error information. Dictionary with file names as the keys.
+        """
+        """
+
+    TODO: I presume this is what's used when creating the report of the
+        actual failures and not just the count. However, this information
+        doesn't seem to be output as yet and will need implementing.
+        """
         with self._lock:
             return self._extra_error_info.copy()
 
     def add_extra_error(self, key: str, value: str = ""):
         """Add extra error information to the dictionary"""
-        """ToDo: The usefulness of the information added has not been assesed, nor does it appear to be reported as yet."""
+        """
+    TODO: The usefulness of the information added has not been assesed,
+        nor does it appear to be reported as yet."""
         with self._lock:
             self._extra_error_info[key] = value
 
@@ -93,7 +109,8 @@ class UMDP3Checker:
         self, error_log: Dict, key: str = "no key", value: int = 0
     ) -> Dict:
         """Add extra error information to the dictionary"""
-        """ToDo: This is a bodge to get more detailed info about
+        """
+    TODO: This is a bodge to get more detailed info about
            the errors back to the calling program. The info is
            useful, but is currently presented on a per-test basis
            rather than a per-file which would be easier to read
@@ -105,12 +122,18 @@ class UMDP3Checker:
 
     def get_include_number(self) -> int:
         """Get number of files with variable declarations in includes"""
-        """ToDo: At present, this is hardwired to zero and I don't think anything alters it along the way. Plus it doesn't seem to be called from anywhere..... So this getter is probably very redundant."""
+        """
+    TODO: At present, this is hardwired to zero and I don't think
+        anything alters it along the way. Plus it doesn't seem to be called
+        from anywhere..... So this getter is probably very redundant."""
         return self._number_of_files_with_variable_declarations_in_includes
 
     def remove_quoted(self, line: str) -> str:
         """Remove quoted strings from a line"""
-        """ToDo: The original version replaced the quoted sections with a "blessed reference", presumably becuase they were 're-inserted' at some stage. No idea if that capability is still required."""
+        """
+    TODO: The original version replaced the quoted sections with a
+        "blessed reference", presumably becuase they were 're-inserted' at some
+        stage. No idea if that capability is still required."""
         # Simple implementation - remove single and double quoted strings
         result = line
 
@@ -125,8 +148,15 @@ class UMDP3Checker:
     """Test functions :
         Each accepts a list of 'lines' to search and returns a
         TestResult object containing all the information."""
-    """ToDo: One thought here is each test should also be told whether it's being passed the contents of a full file, or just a selection of lines involved in a change as some of the tests appear to really only be useful if run on a full file (e.g. the Implicit none checker). Thus if only passed a selection of lines, these tests could be skipped/return 'pass' regardless.
-    Although, a brief look seems to imply that there are two 'dispatch tables' one for full files and one for changed lines."""
+    """
+    TODO: One thought here is each test should also be told whether it's
+    being passed the contents of a full file, or just a selection of lines
+    involved in a change as some of the tests appear to really only be useful
+    if run on a full file (e.g. the Implicit none checker). Thus if only passed
+    a selection of lines, these tests could be skipped/return 'pass'
+    regardless.
+    Although, a brief look seems to imply that there are two 'dispatch tables'
+    one for full files and one for changed lines."""
 
     def capitulated_keywords(self, lines: List[str]) -> TestResult:
         """A fake test, put in for testing purposes.
@@ -141,7 +171,7 @@ class UMDP3Checker:
             if line.lstrip(" ").startswith("!"):
                 continue
             clean_line = self.remove_quoted(line)
-            clean_line = self.comment_line.sub("", clean_line)  # Remove comments
+            clean_line = self.comment_line.sub("", clean_line)
 
             # Check for lowercase keywords
             for word in self.word_splitter.findall(clean_line):
@@ -173,8 +203,7 @@ class UMDP3Checker:
             if line.lstrip(" ").startswith("!"):
                 continue
             clean_line = self.remove_quoted(line)
-            clean_line = self.comment_line.sub("", clean_line)  # Remove comments
-
+            clean_line = self.comment_line.sub("", clean_line)
             # Check for lowercase keywords
             for word in self.word_splitter.findall(clean_line):
                 upcase = word.upper()
@@ -225,7 +254,8 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             for pattern in [f"\\b{kw}\\b" for kw in unseparated_keywords_list]:
                 if re.search(pattern, clean_line, re.IGNORECASE):
-                    self.add_extra_error(f"unseparated keyword in line: {line.strip()}")
+                    self.add_extra_error(f"unseparated keyword in line: "
+                                         f"{line.strip()}")
                     failures += 1
                     error_log = self.add_error_log(
                         error_log,
@@ -250,7 +280,8 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if match := re.search(r"\bGO\s*TO\s+(\d+)", clean_line, re.IGNORECASE):
+            if match := re.search(r"\bGO\s*TO\s+(\d+)", clean_line,
+                                  re.IGNORECASE):
                 label = match.group(1)
                 if label != "9999":
                     self.add_extra_error(f"GO TO {label}")
@@ -276,10 +307,12 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if re.search(r"\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)", clean_line, re.IGNORECASE):
+            if re.search(r"\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)", clean_line,
+                         re.IGNORECASE):
                 self.add_extra_error("WRITE(*,*) found")
                 failures += 1
-                error_log = self.add_error_log(error_log, "WRITE(*,*) found", count + 1)
+                error_log = self.add_error_log(error_log, "WRITE(*,*) found",
+                                               count + 1)
         output = f"Checked {count+1} lines, found {failures} failures."
         return TestResult(
             checker_name="WRITE using default format",
@@ -291,8 +324,12 @@ class UMDP3Checker:
 
     def lowercase_variable_names(self, lines: List[str]) -> TestResult:
         """Check for lowercase or CamelCase variable names only"""
-        """ToDo: This is a very simplistic check and will not detect many
-        cases which break UMDP3. I suspect the Perl Predeccessor concattenated continuation lines prior to 'cleaning' and checking. Having identified a declaration, it also then scanned the rest of the file for that variable name in any case."""
+        """
+    TODO: This is a very simplistic check and will not detect many
+        cases which break UMDP3. I suspect the Perl Predeccessor concattenated
+        continuation lines prior to 'cleaning' and checking. Having identified
+        a declaration, it also then scanned the rest of the file for that
+        variable name in any case."""
         failures = 0
         error_log = {}
         count = -1
@@ -306,14 +343,16 @@ class UMDP3Checker:
                 clean_line,
                 re.IGNORECASE,
             ):
-                # print(f"Debug: Found variable declaration line: {clean_line}")
+                # print("Debug: Found variable declaration line: "
+                # f"{clean_line}")
                 clean_line = re.sub(
                     r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*",
                     "",
                     clean_line,
                 )
                 if re.search(r"[A-Z]{2,}", clean_line):
-                    # print(f"Debug: Found UPPERCASE variable name: {clean_line}")
+                    # print(f"Debug: Found UPPERCASE variable name: "
+                    # f"{clean_line}")
                     self.add_extra_error("UPPERCASE variable name")
                     failures += 1
                     error_log = self.add_error_log(
@@ -377,7 +416,8 @@ class UMDP3Checker:
 
     def forbidden_keywords(self, lines: List[str]) -> TestResult:
         """Check for use of EQUIVALENCE or PAUSE"""
-        """ToDo: Can't believe this will allow a COMMON BLOCK....
+        """
+    TODO: Can't believe this will allow a COMMON BLOCK....
         Need to check against what the original did.."""
         failures = 0
         error_log = {}
@@ -386,7 +426,8 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if re.search(r"\b(EQUIVALENCE|PAUSE)\b", clean_line, re.IGNORECASE):
+            if re.search(r"\b(EQUIVALENCE|PAUSE)\b", clean_line,
+                         re.IGNORECASE):
                 self.add_extra_error("forbidden keyword")
                 failures += 1
                 error_log = self.add_error_log(
@@ -421,7 +462,8 @@ class UMDP3Checker:
                     )
 
         return TestResult(
-            checker_name="Use of older form of relational operator (.GT. etc.)",
+            checker_name="Use of older form of relational operator " +
+            "(.GT. etc.)",
             failure_count=failures,
             passed=(failures == 0),
             output=f"Checked {count+1} lines, found {failures} failures.",
@@ -437,7 +479,8 @@ class UMDP3Checker:
             if len(line.rstrip()) > 80:
                 self.add_extra_error("line too long")
                 failures += 1
-                error_log = self.add_error_log(error_log, "line too long", count + 1)
+                error_log = self.add_error_log(error_log, "line too long",
+                                               count + 1)
 
         return TestResult(
             checker_name="Line longer than 80 characters",
@@ -501,7 +544,8 @@ class UMDP3Checker:
             if re.search(r"\bPRINT\s*\*", clean_line, re.IGNORECASE):
                 self.add_extra_error("PRINT * used")
                 failures += 1
-                error_log = self.add_error_log(error_log, "PRINT * used", count + 1)
+                error_log = self.add_error_log(error_log, "PRINT * used",
+                                               count + 1)
 
         return TestResult(
             checker_name="Use of PRINT rather than umMessage and umPrint",
@@ -523,7 +567,8 @@ class UMDP3Checker:
             if re.search(r"\bWRITE\s*\(\s*6\s*,", clean_line, re.IGNORECASE):
                 self.add_extra_error("WRITE(6) used")
                 failures += 1
-                error_log = self.add_error_log(error_log, "WRITE(6) used", count + 1)
+                error_log = self.add_error_log(error_log, "WRITE(6) used",
+                                               count + 1)
 
         return TestResult(
             checker_name="Use of WRITE(6) rather than umMessage and umPrint",
@@ -579,10 +624,12 @@ class UMDP3Checker:
         error_log = {}
         count = -1
         for count, line in enumerate(lines):
-            if re.search(r"!\s*OMP\b", line) and not re.search(r"!\$OMP", line):
+            if (re.search(r"!\s*OMP\b", line) and
+                    not re.search(r"!\$OMP", line)):
                 self.add_extra_error("!OMP without $")
                 failures += 1
-                error_log = self.add_error_log(error_log, "!OMP without $", count + 1)
+                error_log = self.add_error_log(error_log, "!OMP without $",
+                                               count + 1)
 
         return TestResult(
             checker_name="!OMP without $",
@@ -615,7 +662,8 @@ class UMDP3Checker:
 
     def cpp_comment(self, lines: List[str]) -> TestResult:
         """Check for Fortran comments in CPP directives"""
-        """Todo: This looks like it will incorrectly fail # if !defined(X)
+        """
+    TODO: This looks like it will incorrectly fail # if !defined(X)
         How did the original do this test?"""
         failures = 0
         error_log = {}
@@ -629,7 +677,8 @@ class UMDP3Checker:
                     self.add_extra_error("Fortran comment in CPP directive")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, "Fortran comment in CPP directive", count + 1
+                        error_log, "Fortran comment in CPP directive",
+                        count + 1
                     )
 
         return TestResult(
@@ -654,7 +703,8 @@ class UMDP3Checker:
                     self.add_extra_error(f"obsolescent intrinsic: {intrinsic}")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, f"obsolescent intrinsic: {intrinsic}", count + 1
+                        error_log, f"obsolescent intrinsic: {intrinsic}",
+                        count + 1
                     )
 
         return TestResult(
@@ -702,8 +752,10 @@ class UMDP3Checker:
             for module in intrinsic_modules:
                 if re.search(
                     rf"\bUSE\s+(::)*\s*{module}\b", clean_line, re.IGNORECASE
-                ) and not re.search(r"\bINTRINSIC\b", clean_line, re.IGNORECASE):
-                    self.add_extra_error(f"intrinsic module {module} without INTRINSIC")
+                ) and not re.search(r"\bINTRINSIC\b", clean_line,
+                                    re.IGNORECASE):
+                    self.add_extra_error(
+                        f"intrinsic module {module} without INTRINSIC")
                     failures += 1
                     error_log = self.add_error_log(
                         error_log,
@@ -728,7 +780,8 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if match := re.search(r"\bREAD\s*\(\s*([^,)]+)", clean_line, re.IGNORECASE):
+            if match := re.search(r"\bREAD\s*\(\s*([^,)]+)", clean_line,
+                                  re.IGNORECASE):
                 first_arg = match.group(1).strip()
                 if not first_arg.upper().startswith("UNIT="):
                     self.add_extra_error("READ without explicit UNIT=")
@@ -747,7 +800,8 @@ class UMDP3Checker:
 
     def retire_if_def(self, lines: List[str]) -> TestResult:
         """Check for if-defs due for retirement"""
-        # retired_ifdefs = ['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES', 'A12_2A',]
+        # retired_ifdefs = ['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES',
+        # 'A12_2A',]
         failures = 0
         error_log = {}
         count = -1
@@ -761,13 +815,16 @@ class UMDP3Checker:
                 line,
                 re.IGNORECASE,
             ):
-                # # The above match either returns [None, SYMBOL] or [SYMBOL, None]
-                # SYMBOL = [x for x in match.groups() if x] # reduce to a list of 1 element
+                # # The above match either returns [None, SYMBOL] or
+                # [SYMBOL, None]
+                # SYMBOL = [x for x in match.groups() if x] # reduce to a
+                # list of 1 element
                 if match.group(1) in retired_ifdefs:
                     self.add_extra_error(f"retired if-def: {match.group(1)}")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, f"retired if-def: {match.group(1)}", count + 1
+                        error_log, f"retired if-def: {match.group(1)}",
+                        count + 1
                     )
         return TestResult(
             checker_name="retired if-def",
@@ -809,7 +866,8 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if re.search(r"\b(STOP|CALL\s+abort)\b", clean_line, re.IGNORECASE):
+            if re.search(r"\b(STOP|CALL\s+abort)\b", clean_line,
+                         re.IGNORECASE):
                 self.add_extra_error("STOP or CALL abort used")
                 failures += 1
                 error_log = self.add_error_log(
@@ -835,11 +893,9 @@ class UMDP3Checker:
         # as I doubt this does anything near what that did...
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
-            if re.search(
-                r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER)\s*.*::\s*(SIN|COS|LOG|EXP|TAN)\b",
-                clean_line,
-                re.IGNORECASE,
-            ):
+            check = (r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER)\s*.*:" +
+                     r":\s*(SIN|COS|LOG|EXP|TAN)\b")
+            if re.search(check, clean_line, re.IGNORECASE, ):
                 self.add_extra_error("intrinsic function used as variable")
                 failures += 1
                 error_log = self.add_error_log(
@@ -856,7 +912,8 @@ class UMDP3Checker:
 
     def check_crown_copyright(self, lines: List[str]) -> TestResult:
         """Check for crown copyright statement"""
-        """ToDo: This is a very simplistic check and will not detect many
+        """
+    TODO: This is a very simplistic check and will not detect many
         cases which break UMDP3. I suspect the Perl Predeccessor
         did much more convoluted tests"""
         comment_lines = [
@@ -869,7 +926,8 @@ class UMDP3Checker:
             found_copyright = True
 
         if not found_copyright:
-            self.add_extra_error("missing copyright or crown copyright statement")
+            self.add_extra_error(
+                "missing copyright or crown copyright statement")
             error_log = self.add_error_log(
                 error_log, "missing copyright or crown copyright statement", 0
             )
@@ -883,20 +941,27 @@ class UMDP3Checker:
 
     def check_code_owner(self, lines: List[str]) -> TestResult:
         """Check for correct code owner comment"""
-        """ToDo: oh wow is this test worthless. We don't even guarentee to put the wrds "code owner" in a file. Plus, that's before you take into account both returns were '0' - so it couldn't possibly fail (picard.gif)
-        The Perl looks to have been designed to check the whole file, and turns various logicals on/off dependent on previously processed lines."""
+        """
+    TODO: oh wow is this test worthless. We don't even guarentee to put
+        the wrds "code owner" in a file. Plus, that's before you take into
+        account both returns were '0' - so it couldn't possibly fail
+        (picard.gif)
+        The Perl looks to have been designed to check the whole file, and turns
+        various logicals on/off dependent on previously processed lines."""
         # Simplified check for code owner information
         file_content = "\n".join(lines)
         found_code_owner = False
         error_log = {}
-        if "Code Owner:" in file_content or "code owner" in file_content.lower():
+        if ("Code Owner:" in file_content or
+                "code owner" in file_content.lower()):
             # print(f"Debug: Found {file_content.lower()}")
             found_code_owner = True
 
         # This is often a warning rather than an error
         if not found_code_owner:
             self.add_extra_error("missing code owner comment")
-            error_log = self.add_error_log(error_log, "missing code owner comment", 0)
+            error_log = self.add_error_log(error_log,
+                                           "missing code owner comment", 0)
         return TestResult(
             checker_name="Code Owner Comment",
             failure_count=0 if found_code_owner else 1,
@@ -907,7 +972,10 @@ class UMDP3Checker:
 
     def array_init_form(self, lines: List[str]) -> TestResult:
         """Check for old array initialization form"""
-        """ToDo: Another instance that assumes continuation lines are concatenated prior to executing the actual test to ensure both forward slashes are on the same line."""
+        """
+    TODO: Another instance that assumes continuation lines are
+        concatenated prior to executing the actual test to ensure both forward
+        slashes are on the same line."""
         failures = 0
         error_log = {}
         count = -1
@@ -965,7 +1033,8 @@ class UMDP3Checker:
         for line in lines:
             for identifier in deprecated_c_identifiers:
                 if re.search(rf"\b{identifier}\b", line):
-                    self.add_extra_error(f"deprecated C identifier: {identifier}")
+                    self.add_extra_error(
+                        f"deprecated C identifier: {identifier}")
                     failures += 1
 
         return failures
@@ -992,7 +1061,8 @@ class UMDP3Checker:
             ) or re.search(
                 r"&&.*_OPENMP.*&&.*SHUM_USE_C_OPENMP_VIA_THREAD_UTILS", line
             ):
-                self.add_extra_error("OpenMP defines combined with third macro")
+                self.add_extra_error(
+                    "OpenMP defines combined with third macro")
                 failures += 1
 
         return failures
