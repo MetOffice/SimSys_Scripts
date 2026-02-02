@@ -16,7 +16,6 @@ from pathlib import Path
 from ast import literal_eval
 from get_git_sources import get_source, merge_source, set_https, validate_dependencies
 import logging
-import sys
 
 
 def main() -> None:
@@ -32,7 +31,7 @@ def main() -> None:
     4. If USE_MIRRORS is True, clone from local mirrors at GIT_MIRROR_LOC
     """
 
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(level=logging.INFO)
 
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
     dependencies: dict = literal_eval(os.environ["DEPENDENCIES"])
@@ -42,7 +41,7 @@ def main() -> None:
         dependencies = set_https(dependencies)
 
     use_mirrors = os.environ.get("USE_MIRRORS", "false").lower() == "true"
-    mirror_loc = Path(os.getenv("GIT_MIRROR_LOC", "")) / "MetOffice"
+    mirror_loc = Path(os.getenv("GIT_MIRROR_LOC", ""))
 
     for dependency, opts in dependencies.items():
         loc = clone_loc / dependency

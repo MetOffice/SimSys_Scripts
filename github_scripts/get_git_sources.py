@@ -14,11 +14,9 @@ from typing import Optional
 from pathlib import Path
 from shutil import rmtree
 import shlex
-import sys
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
 def run_command(
