@@ -44,10 +44,17 @@ class ProjectData:
         "Changes Requested",
     ]
 
-    def __init__(self, data: dict, test: bool = False, milestones: list = None):
+    def __init__(
+        self,
+        data: list,
+        test: bool = False,
+        milestones: list = None,
+        repos: list = None,
+    ):
         self.data = data
         self.test = test
         self.milestones = milestones
+        self.repos = repos
 
     @classmethod
     def from_github(cls, capture: bool = False, file: Path = None) -> "ProjectData":
@@ -67,8 +74,8 @@ class ProjectData:
             else:
                 print("Unable to capture data as filename not specified.")
 
-        data, milestones = cls._extract_data(raw_data)
-        return cls(data=data, test=False, milestones=milestones)
+        data, milestones, repositories = cls._extract_data(raw_data)
+        return cls(data=data, test=False, milestones=milestones, repos=repositories)
 
     @classmethod
     def from_file(cls, file: Path) -> "ProjectData":
@@ -78,25 +85,29 @@ class ProjectData:
         with open(file) as f:
             raw_data = json.loads(f.read())
 
-        data, milestones = cls._extract_data(raw_data)
-        return cls(data=data, test=True, milestones=milestones)
+        data, milestones, repositories = cls._extract_data(raw_data)
+        return cls(data=data, test=True, milestones=milestones, repos=repositories)
 
     @classmethod
     def _extract_data(cls, raw_data: dict) -> (dict, list):
         """
         Extract useful information from the raw data and
-        store it in a dictionary keyed by repository.
+        store it in a list of PullRequest objects.
         """
 
-        data = defaultdict(list)
+        data = []
         milestones = set("None")
+        repositories = set()
 
         for pr in raw_data["items"]:
             pull_request = PullRequest(
                 id=pr["id"],
                 number=pr["content"]["number"],
                 title=pr["content"]["title"],
+                repo=pr["content"]["repository"].replace("MetOffice/", ""),
             )
+
+            repositories.add(pull_request.repo)
 
             if "status" in pr:
                 pull_request.status = pr["status"]
@@ -114,18 +125,15 @@ class ProjectData:
             if "sciTech Review" in pr:
                 pull_request.scitechReview = pr["sciTech Review"]
 
-            pull_request.repo = pr["content"]["repository"].replace("MetOffice/", "")
-            data[pull_request.repo].append(pull_request)
+            data.append(pull_request)
 
-        return data, milestones
+        return data, milestones, repositories
 
     def get_reviewers_for_repo(self, repo: str) -> list:
         """
         Return a list of reviewers for a given repository.
         """
-        if repo in self.data:
-            pull_requests = self.data[repo]
-        else:
+        if repo not in self.repos:
             return []
 
         reviewers = []
@@ -133,36 +141,37 @@ class ProjectData:
         if self.test:
             print("\n=== Reviewers for " + repo)
 
-        for pr in pull_requests:
-            sr = pr.scitechReview
-            if sr:
-                reviewers.append(sr)
+        for pr in self.data:
+            if pr.repo == repo:
+                sr = pr.scitechReview
+                if sr:
+                    reviewers.append(sr)
 
-            cr = pr.codeReview
-            if cr:
-                reviewers.append(cr)
+                cr = pr.codeReview
+                if cr:
+                    reviewers.append(cr)
 
-            if self.test and (cr or sr):
-                # Handle case where these are None
-                if not sr:
-                    sr = ""
-                if not cr:
-                    cr = ""
+                if self.test and (cr or sr):
+                    # Handle case where these are None
+                    if not sr:
+                        sr = ""
+                    if not cr:
+                        cr = ""
 
-                print(
-                    "SciTech:",
-                    f"{sr: <18}",
-                    "Code:",
-                    f"{cr: <18}",
-                    pr.title,
-                )
+                    print(
+                        "SciTech:",
+                        f"{sr: <18}",
+                        "Code:",
+                        f"{cr: <18}",
+                        pr.title,
+                    )
 
         return reviewers
 
     def get_repositories(self) -> list:
         """Return a list of repositories found in the project data."""
 
-        return list(self.data.keys())
+        return self.repos
 
     def get_by_milestone(self, status: str = "all") -> dict:
         """
@@ -175,18 +184,17 @@ class ProjectData:
 
         milestone_data = defaultdict(dict)
 
-        for repo in self.data:
-            for pr in self.data[repo]:
-                if (
-                    pr.status == status
-                    or status == "all"
-                    or (status == "open" and pr.status in self.open_states)
-                    or (status == "closed" and pr.status not in self.open_states)
-                ):
-                    milestone = pr.milestone
-                    if not milestone_data[milestone]:
-                        milestone_data[milestone] = defaultdict(list)
-                    milestone_data[milestone][repo].append(pr)
+        for pr in self.data:
+            if (
+                pr.status == status
+                or status == "all"
+                or (status == "open" and pr.status in self.open_states)
+                or (status == "closed" and pr.status not in self.open_states)
+            ):
+                milestone = pr.milestone
+                if not milestone_data[milestone]:
+                    milestone_data[milestone] = defaultdict(list)
+                milestone_data[milestone][pr.repo].append(pr)
 
         return milestone_data
 
@@ -204,12 +212,14 @@ class ProjectData:
 
 class PullRequest:
 
-    def __init__(self, id: str = None, number: str = None, title: str = None):
+    def __init__(
+        self, id: str = None, number: str = None, title: str = None, repo: str = None
+    ):
         self.id = id
         self.number = number
         self.title = title
+        self.repo = repo
 
-        self.repo = None
         self.status = None
         self.milestone = "None"
         self.assignee = None
