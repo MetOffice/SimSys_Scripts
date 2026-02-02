@@ -345,11 +345,12 @@ def set_https(dependencies: dict) -> dict:
     for dependency, opts in dependencies.items():
         if not isinstance(opts, list):
             opts = [opts]
-        for values in opts:
+        for i, values in enumerate(opts):
             if values["source"].startswith("git@github.com:"):
-                source = dependencies[dependency]["source"]
-                dependencies[dependency]["source"] = source.replace(
+                values["source"] = values["source"].replace(
                     "git@github.com:", "https://github.com/"
                 )
+                opts[i] = values
+        dependencies[dependency] = opts
 
     return dependencies
