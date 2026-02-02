@@ -50,18 +50,22 @@ def main() -> None:
         if not isinstance(opts, list):
             opts = [opts]
 
-        # Clone the first provided source
-        values = opts.pop(0)
-        get_source(
-            values["source"],
-            values["ref"],
-            loc,
-            dependency,
-            use_mirrors,
-            mirror_loc,
-        )
-        # For all other sources, attempt to merge into the first
-        for values in opts:
+        for i, values in enumerate(opts):
+            if values["ref"] is None:
+                values["ref"] = ""
+
+            # Clone the first provided source
+            if i == 0:
+                get_source(
+                    values["source"],
+                    values["ref"],
+                    loc,
+                    dependency,
+                    use_mirrors,
+                    mirror_loc,
+                )
+                continue
+            # For all other sources, attempt to merge into the first
             merge_source(
                 values["source"],
                 values["ref"],
