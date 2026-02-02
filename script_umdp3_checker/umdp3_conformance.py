@@ -302,16 +302,11 @@ class ConformanceChecker:
 
     def __init__(
         self,
-        cms: CMSSystem,
         checkers: List[StyleChecker],
         max_workers: int = 8,
-        changed_files: List[Path] = [],
-        results: List[CheckResult] = [],
     ):
         self.checkers = checkers
         self.max_workers = max_workers
-        self.changed_files = changed_files
-        self.results = results
 
     def check_files(self) -> None:
         """Run all checkers on given files in parallel.
@@ -327,9 +322,21 @@ class ConformanceChecker:
         """
         """
         TODO : Might be good to have a threadsafe object for each file and
-        allow multiple checks to be run at once on that file."""
+        allow multiple checks to be run at once on that file.
+        """
+        """
+        TODO : Poor terminology makes discerning what is actually happening
+        here hard work. A 'checker' is an instance of a StyleChecker
+        (sub)class. Each of which has a list of checks to perform and a list of
+        files to perform them on. e.g. A UMDP3_checker for Fortran files. or
+        the ExternalChecker for Python files.
+        However, when the 'results' are collected, each result is for a single
+        file+check pair and holds no information about which 'checker' it was
+        part of. Thus some files can be checked by multiple checkers, and the
+        filename will appear multiple times in the output. Not Good!
+        """
         results = []
-
+        # print(f"About to use {len(self.checkers)} checkers")
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=self.max_workers
         ) as executor:
@@ -341,6 +348,7 @@ class ConformanceChecker:
 
             for future in concurrent.futures.as_completed(future_to_task):
                 result = future.result()
+                # print(f"Completed check for file: {result}")
                 results.append(result)
         self.results = results
         return
@@ -404,7 +412,7 @@ def process_arguments():
         "--file-types",
         type=str,
         nargs="+",
-        choices=["Fortran", "Python"],
+        choices=["Fortran", "Python", "Generic"],
         default=["Fortran"],
         help="File types to check, comma-separated",
     )
@@ -466,8 +474,10 @@ def create_style_checkers(
                            ".f03", ".f08", ".F90"}
         fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
         fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
+        generic_file_table = dispatch_tables.get_file_dispatch_table_all()
         print("Configuring Fortran checkers:")
-        combined_checkers = fortran_diff_table | fortran_file_table
+        combined_checkers = fortran_diff_table | fortran_file_table | \
+            generic_file_table
         fortran_file_checker = UMDP3_checker.from_full_list(
             "Fortran Checker", file_extensions,
             combined_checkers, changed_files
@@ -487,17 +497,13 @@ def create_style_checkers(
             python_checkers, changed_files
         )
         checkers.append(python_file_checker)
-
-    """
-    TODO : Puting this here, with no file type filtering,
-        means it will always run on all changed files.
-        It might be better to add the dispatch table to all the other
-        checkers so it's only running on 'code' files."""
-    all_file_dispatch_table = dispatch_tables.get_file_dispatch_table_all()
-    generic_checker = UMDP3_checker(
-        "Generic File Checker", set(), all_file_dispatch_table, changed_files
-    )
-    checkers.append(generic_checker)
+    if "Generic" in file_types or file_types == []:
+        all_file_dispatch_table = dispatch_tables.get_file_dispatch_table_all()
+        generic_checker = UMDP3_checker(
+            "Generic File Checker", set(), all_file_dispatch_table,
+            changed_files
+        )
+        checkers.append(generic_checker)
 
     return checkers
 
@@ -532,18 +538,19 @@ if __name__ == "__main__":
         checkers to use for each file type."""
     checkers = []
 
+    full_file_paths = [f"{args.path}/{f}" for f in cms.get_changed_files()]
+    # print(f"Full file paths are : {full_file_paths}")
+    full_file_paths = [Path(f) for f in full_file_paths]
     active_checkers = create_style_checkers(args.file_types,
-                                            cms.get_changed_files())
+                                            full_file_paths)
 
     # TODO : Could create a conformance checker for each
     #  file type.
     #  Currently, just create a single conformance checker
     #  with all active checkers.
     checker = ConformanceChecker(
-        cms,
         active_checkers,
         max_workers=args.max_workers,
-        changed_files=[Path(f) for f in cms.get_changed_files()],
     )
 
     checker.check_files()
