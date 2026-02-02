@@ -347,8 +347,7 @@ def set_https(dependencies: dict) -> dict:
             opts = [opts]
         for i, values in enumerate(opts):
             if values["source"].startswith("git@github.com:"):
-                source = values["source"]
-                values["source"] = source.replace(
+                values["source"] = values["source"].replace(
                     "git@github.com:", "https://github.com/"
                 )
                 opts[i] = values
