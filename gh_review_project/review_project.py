@@ -8,10 +8,13 @@
 Class and functions for interacting with the Simulation Systems Review Tracker
 Project.
 """
+from __future__ import annotations
 
 import json
 import subprocess
 from pathlib import Path
+import shlex
+from collections import defaultdict
 
 
 class ProjectData:
@@ -28,12 +31,12 @@ class ProjectData:
         self.test = test
 
     @classmethod
-    def from_github(cls, capture: bool = False, file: Path = None) -> "ProjectData":
+    def from_github(cls, capture: bool = False, file: Path = None) -> ProjectData:
         """
         Retrieve data from GitHub API and initialise the class.
         """
         command = "gh project item-list 376 -L 500 --owner MetOffice --format json"
-        output = subprocess.run(command.split(), capture_output=True, timeout=180)
+        output = subprocess.run(shlex.split(command), capture_output=True, timeout=180)
         if output.returncode:
             raise RuntimeError(
                 "Error fetching GitHub Project data:  \n " + output.stderr.decode()
@@ -53,7 +56,7 @@ class ProjectData:
         return cls(data, test=False)
 
     @classmethod
-    def from_file(cls, file: Path) -> "ProjectData":
+    def from_file(cls, file: Path) -> ProjectData:
         """
         Retrieve data from test file and initialise the class.
         """
@@ -70,7 +73,7 @@ class ProjectData:
         store it in a dictionary keyed by repository.
         """
 
-        data = {}
+        data = defaultdict(list)
 
         for pr in raw_data["items"]:
             pull_request = {}
@@ -104,10 +107,7 @@ class ProjectData:
                 pull_request["scitech review"] = None
 
             repo = pr["content"]["repository"].replace("MetOffice/", "")
-            if repo in data:
-                data[repo].append(pull_request)
-            else:
-                data[repo] = [pull_request]
+            data[repo].append(pull_request)
 
         return data
 
