@@ -13,17 +13,26 @@ set -euo pipefail
 
 # -- Modify milestones in relevant repositories
 REPOS=(
-  "MetOffice/um"
+  "MetOffice/casim"
+  "MetOffice/gcom"
+  "MetOffice/git_playground"
+  "MetOffice/growss"
   "MetOffice/jules"
   "MetOffice/lfric_apps"
   "MetOffice/lfric_core"
-  "MetOffice/ukca"
-  "MetOffice/casim"
-  "MetOffice/socrates"
-  "MetOffice/um_doc"
+  "MetOffice/moci"
+  "MetOffice/mule"
+  "MetOffice/rose_picker"
+  "MetOffice/shumlib"
   "MetOffice/simulation-systems"
   "MetOffice/SimSys_Scripts"
-  "MetOffice/git_playground"
+  "MetOffice/socrates"
+  "MetOffice/socrates-spectral"
+  "MetOffice/ukca"
+  "MetOffice/um"
+  "MetOffice/um_aux"
+  "MetOffice/um_doc"
+  "MetOffice/um_meta"
 )
 
 usage() {
@@ -175,9 +184,9 @@ for repo in "${REPOS[@]}"; do
     fi
 
     # -- Build GH command from optional arguments.
-    gh_args=(-f "title=\"${TITLE}\"")
+    gh_args=(-f "title=${TITLE}")
     [[ -n "$DUE" ]] && gh_args+=(-f "due_on=${DUE}")
-    [[ -n "$DESC" ]] && gh_args+=(-f "description=\"${DESC}\"")
+    [[ -n "$DESC" ]] && gh_args+=(-f "description=${DESC}")
 
 
     # -- Create or update the milestone
