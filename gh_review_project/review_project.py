@@ -12,6 +12,7 @@ Project.
 import json
 import subprocess
 from pathlib import Path
+from collections import defaultdict
 
 
 class ProjectData:
@@ -23,9 +24,18 @@ class ProjectData:
     test: bool Run using test data and extra logging.
     """
 
-    def __init__(self, data: dict, test: bool = False):
+    open_states = [
+        "In Progress",
+        "SciTech Review",
+        "Code Review",
+        "Approved",
+        "Changes Requested",
+    ]
+
+    def __init__(self, data: dict, test: bool = False, milestones: list = None):
         self.data = data
         self.test = test
+        self.milestones = milestones
 
     @classmethod
     def from_github(cls, capture: bool = False, file: Path = None) -> "ProjectData":
@@ -49,8 +59,8 @@ class ProjectData:
             else:
                 print("Unable to capture data as filename not specified.")
 
-        data = cls._extract_data(raw_data)
-        return cls(data, test=False)
+        data, milestones = cls._extract_data(raw_data)
+        return cls(data=data, test=False, milestones=milestones)
 
     @classmethod
     def from_file(cls, file: Path) -> "ProjectData":
@@ -60,8 +70,8 @@ class ProjectData:
         with open(file) as f:
             raw_data = json.loads(f.read())
 
-        data = cls._extract_data(raw_data)
-        return cls(data, test=True)
+        data, milestones = cls._extract_data(raw_data)
+        return cls(data=data, test=True, milestones=milestones)
 
     @classmethod
     def _extract_data(cls, raw_data: dict) -> dict:
@@ -70,7 +80,8 @@ class ProjectData:
         store it in a dictionary keyed by repository.
         """
 
-        data = {}
+        data = defaultdict(list)
+        milestones = set()
 
         for pr in raw_data["items"]:
             pull_request = {}
@@ -86,7 +97,9 @@ class ProjectData:
             if "milestone" in pr:
                 pull_request["milestone"] = pr["milestone"]["title"]
             else:
-                pull_request["milestone"] = None
+                pull_request["milestone"] = "None"
+
+            milestones.add(pull_request["milestone"])
 
             if "assignee" in pr:
                 pull_request["assignee"] = pr["assignees"]
@@ -104,12 +117,9 @@ class ProjectData:
                 pull_request["scitech review"] = None
 
             repo = pr["content"]["repository"].replace("MetOffice/", "")
-            if repo in data:
-                data[repo].append(pull_request)
-            else:
-                data[repo] = [pull_request]
+            data[repo].append(pull_request)
 
-        return data
+        return data, milestones
 
     def get_reviewers_for_repo(self, repo: str) -> list:
         """
@@ -155,3 +165,29 @@ class ProjectData:
         """Return a list of repositories found in the project data."""
 
         return list(self.data.keys())
+
+    def get_by_milestone(self, status: str = "all") -> dict:
+        """
+        Return pull requests organized by milestone and repository. These can
+        be filtered by status.
+
+        status: str Status to include. Valid values are any project status
+                    values and all, open or closed
+        """
+
+        milestone_data = defaultdict(dict)
+
+        for repo in self.data:
+            for pr in self.data[repo]:
+                if (
+                    pr["status"] == status
+                    or status == "all"
+                    or (status == "open" and pr["status"] in self.open_states)
+                    or (status == "closed" and pr["status"] not in self.open_states)
+                ):
+                    milestone = pr["milestone"]
+                    if not milestone_data[milestone]:
+                        milestone_data[milestone] = defaultdict(list)
+                    milestone_data[milestone][repo].append(pr)
+
+        return milestone_data
