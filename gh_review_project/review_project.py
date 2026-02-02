@@ -31,9 +31,10 @@ class ProjectData:
     """
     A class to hold GitHub project data
 
-    data: dict Data filtered to contain most needed pull request details,
-               sorted by repository.
+    data: list raw_data turned into a list of PullRequest objects.
     test: bool Run using test data and extra logging.
+    milestones: list All milestones currently used in the project
+    repos: list All repositories currectly represented in the project
     """
 
     open_states = [
@@ -92,11 +93,13 @@ class ProjectData:
     def _extract_data(cls, raw_data: dict) -> (dict, list):
         """
         Extract useful information from the raw data and
-        store it in a list of PullRequest objects.
+        store it in a list of PullRequest objects. Also extract a list of
+        milestones and repositories found in the project.
         """
 
         data = []
-        milestones = set("None")
+        milestones = set()
+        milestones.add("None")
         repositories = set()
 
         for pr in raw_data["items"]:
@@ -182,7 +185,9 @@ class ProjectData:
                     values and all, open or closed
         """
 
-        milestone_data = defaultdict(dict)
+        milestone_data = {}
+        for milestone in self.milestones:
+            milestone_data[milestone] = defaultdict(list)
 
         for pr in self.data:
             if (
@@ -191,10 +196,7 @@ class ProjectData:
                 or (status == "open" and pr.status in self.open_states)
                 or (status == "closed" and pr.status not in self.open_states)
             ):
-                milestone = pr.milestone
-                if not milestone_data[milestone]:
-                    milestone_data[milestone] = defaultdict(list)
-                milestone_data[milestone][pr.repo].append(pr)
+                milestone_data[pr.milestone][pr.repo].append(pr)
 
         return milestone_data
 
