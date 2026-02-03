@@ -82,7 +82,7 @@ class ProjectData:
                 print("Unable to capture data as filename not specified.")
 
         data = cls._extract_data(raw_data)
-        return cls(data=data, test=False)
+        return cls(data, test=False)
 
     @classmethod
     def from_file(cls, file: Path) -> ProjectData:
@@ -93,10 +93,10 @@ class ProjectData:
             raw_data = json.loads(f.read())
 
         data = cls._extract_data(raw_data)
-        return cls(data=data, test=True)
+        return cls(data, test=True)
 
     @classmethod
-    def _extract_data(cls, raw_data: dict) -> (dict, list):
+    def _extract_data(cls, raw_data: dict) -> list:
         """
         Extract useful information from the raw data and
         store it in a list of PullRequest objects. Also extract a list of
