@@ -87,6 +87,48 @@ def datetime_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def clone_and_merge(
+    dependency: str, opts: list | dict, loc: Path, use_mirrors: bool, mirror_loc: Path
+) -> None:
+    """
+    Wrapper script for calling get_source and merge_source for a single dependency
+
+    dependency: name of the dependency
+    opts: dict or list of dicts for a dependency in the dependencies file
+    loc: path to location to clone to
+    use_mirrors: bool, use local git mirrors if true
+    mirror_loc: path to local git mirrors
+    """
+
+    if not isinstance(opts, list):
+        opts = [opts]
+
+    for i, values in enumerate(opts):
+        if values["ref"] is None:
+            values["ref"] = ""
+
+        # Clone the first provided source
+        if i == 0:
+            get_source(
+                values["source"],
+                values["ref"],
+                loc,
+                dependency,
+                use_mirrors,
+                mirror_loc,
+            )
+        # For all other sources, attempt to merge into the first
+        else:
+            merge_source(
+                values["source"],
+                values["ref"],
+                loc,
+                dependency,
+                use_mirrors,
+                mirror_loc,
+            )
+
+
 def get_source(
     source: str,
     ref: str,
@@ -104,7 +146,10 @@ def get_source(
             logger.info(
                 f"[{datetime_str()}] Cloning {repo} from {mirror_loc} at ref {ref}"
             )
-            mirror_loc = Path(mirror_loc) / "MetOffice" / repo
+            mirror_repo = repo
+            if "jules-internal" in source:
+                mirror_repo = "jules-internal"
+            mirror_loc = Path(mirror_loc) / "MetOffice" / mirror_repo
             clone_repo_mirror(source, ref, mirror_loc, dest)
         else:
             logger.info(f"[{datetime_str()}] Cloning {repo} from {source} at ref {ref}")
@@ -304,8 +349,12 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     loc.mkdir(parents=True)
 
     exclude_dirs = []
-    host, path = repo_source.split(":", 1)
-    result = run_command(f"ssh {host} git -C {path} status --ignored -s")
+    try:
+        host, path = repo_source.split(":", 1)
+        result = run_command(f"ssh {host} git -C {path} status --ignored -s")
+    except ValueError:
+        # In case the path does not contain `host:` - see if it can be accessed locally
+        result = run_command(f"git -C {repo_source} status --ignored -s")
     for ignore_file in result.stdout.split("\n"):
         ignore_file = ignore_file.strip()
         if not ignore_file.startswith("!!"):
