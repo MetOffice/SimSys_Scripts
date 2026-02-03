@@ -346,7 +346,12 @@ def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     loc.mkdir(parents=True)
 
     exclude_dirs = []
-    host, path = repo_source.split(":", 1)
+    try:
+        host, path = repo_source.split(":", 1)
+        result = run_command(f"ssh {host} git -C {path} status --ignored -s")
+    except ValueError:
+        # In case the path does not contain `host:` - see if it can be accessed locally
+        result = run_command(f"git -C {path} status --ignored -s")
     result = run_command(f"ssh {host} git -C {path} status --ignored -s")
     for ignore_file in result.stdout.split("\n"):
         ignore_file = ignore_file.strip()
