@@ -50,14 +50,14 @@ class ProjectData:
     def __init__(
         self,
         data: list,
-        test: bool = False,
-        milestones: list = None,
-        repos: list = None,
+        test: bool = False
     ):
         self.data = data
         self.test = test
-        self.milestones = milestones
-        self.repos = repos
+
+        # Extract these once as useful lists
+        self.milestones = self._extract_milestones()
+        self.repos = self._extract_repositories()
 
     @classmethod
     def from_github(cls, capture: bool = False, file: Path = None) -> ProjectData:
@@ -81,8 +81,8 @@ class ProjectData:
             else:
                 print("Unable to capture data as filename not specified.")
 
-        data, milestones, repositories = cls._extract_data(raw_data)
-        return cls(data=data, test=False, milestones=milestones, repos=repositories)
+        data = cls._extract_data(raw_data)
+        return cls(data=data, test=False)
 
     @classmethod
     def from_file(cls, file: Path) -> ProjectData:
@@ -92,8 +92,8 @@ class ProjectData:
         with open(file) as f:
             raw_data = json.loads(f.read())
 
-        data, milestones, repositories = cls._extract_data(raw_data)
-        return cls(data=data, test=True, milestones=milestones, repos=repositories)
+        data = cls._extract_data(raw_data)
+        return cls(data=data, test=True)
 
     @classmethod
     def _extract_data(cls, raw_data: dict) -> (dict, list):
@@ -104,9 +104,6 @@ class ProjectData:
         """
 
         data = []
-        milestones = set()
-        milestones.add("None")
-        repositories = set()
 
         for pr in raw_data["items"]:
             pull_request = PullRequest(
@@ -116,14 +113,11 @@ class ProjectData:
                 repo=pr["content"]["repository"].replace("MetOffice/", ""),
             )
 
-            repositories.add(pull_request.repo)
-
             if "status" in pr:
                 pull_request.status = pr["status"]
 
             if "milestone" in pr:
                 pull_request.milestone = pr["milestone"]["title"]
-                milestones.add(pull_request.milestone)
 
             if "assignee" in pr:
                 pull_request.assignee = pr["assignees"]
@@ -136,7 +130,21 @@ class ProjectData:
 
             data.append(pull_request)
 
-        return data, milestones, repositories
+        return data
+
+    def _extract_milestones(self) -> set:
+        milestones = set()
+        for pr in self.data:
+            milestones.add(pr.milestone)
+
+        return milestones
+
+    def _extract_repositories(self) -> set:
+        repositories = set()
+        for pr in self.data:
+            repositories.add(pr.repo)
+
+        return repositories
 
     def get_reviewers_for_repo(self, repo: str) -> list:
         """
@@ -160,12 +168,12 @@ class ProjectData:
                 if cr:
                     reviewers.append(cr)
 
-            if self.test and (cr or sr):
-                # Handle case where these are None
-                if not sr:
-                    sr = ""
-                if not cr:
-                    cr = ""
+                if self.test and (cr or sr):
+                    # Handle case where these are None
+                    if not sr:
+                        sr = ""
+                    if not cr:
+                        cr = ""
 
                     print(
                         "SciTech:",
