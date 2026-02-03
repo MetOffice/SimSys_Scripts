@@ -8,10 +8,12 @@
 Classes and functions for interacting with the Simulation Systems Review Tracker
 Project.
 """
+from __future__ import annotations
 
 import json
 import subprocess
 from pathlib import Path
+import shlex
 from collections import defaultdict
 
 project_id = 376
@@ -19,7 +21,7 @@ project_owner = "MetOffice"
 
 
 def run_command(command: str) -> subprocess.CompletedProcess:
-    output = subprocess.run(command.split(), capture_output=True, timeout=180)
+    output = subprocess.run(shlex.split(command), capture_output=True, timeout=180)
 
     if output.returncode:
         raise RuntimeError(output.stderr.decode())
@@ -58,7 +60,7 @@ class ProjectData:
         self.repos = repos
 
     @classmethod
-    def from_github(cls, capture: bool = False, file: Path = None) -> "ProjectData":
+    def from_github(cls, capture: bool = False, file: Path = None) -> ProjectData:
         """
         Retrieve data from GitHub API and initialise the class.
         """
@@ -83,7 +85,7 @@ class ProjectData:
         return cls(data=data, test=False, milestones=milestones, repos=repositories)
 
     @classmethod
-    def from_file(cls, file: Path) -> "ProjectData":
+    def from_file(cls, file: Path) -> ProjectData:
         """
         Retrieve data from test file and initialise the class.
         """
