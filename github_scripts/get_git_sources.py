@@ -146,7 +146,10 @@ def get_source(
             logger.info(
                 f"[{datetime_str()}] Cloning {repo} from {mirror_loc} at ref {ref}"
             )
-            mirror_loc = Path(mirror_loc) / "MetOffice" / repo
+            mirror_repo = repo
+            if "jules-internal" in source:
+                mirror_repo = "jules-internal"
+            mirror_loc = Path(mirror_loc) / "MetOffice" / mirror_repo
             clone_repo_mirror(source, ref, mirror_loc, dest)
         else:
             logger.info(f"[{datetime_str()}] Cloning {repo} from {source} at ref {ref}")
