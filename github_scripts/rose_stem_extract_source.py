@@ -14,24 +14,8 @@ environment variables
 import os
 from pathlib import Path
 from ast import literal_eval
-from get_git_sources import clone_repo, clone_repo_mirror, sync_repo
-from datetime import datetime
-
-
-def set_https(dependencies: dict) -> dict:
-    """
-    Change sources in a dependencies dictions to use https instead of ssh
-    """
-
-    print("Modifying Dependencies")
-    for dependency, values in dependencies.items():
-        if values["source"].startswith("git@github.com:"):
-            source = dependencies[dependency]["source"]
-            dependencies[dependency]["source"] = source.replace(
-                "git@github.com:", "https://github.com/"
-            )
-
-    return dependencies
+from get_git_sources import get_source, merge_source, set_https, validate_dependencies
+import logging
 
 
 def main() -> None:
@@ -47,37 +31,48 @@ def main() -> None:
     4. If USE_MIRRORS is True, clone from local mirrors at GIT_MIRROR_LOC
     """
 
+    logging.basicConfig(level=logging.INFO)
+
     clone_loc = Path(os.environ["SOURCE_DIRECTORY"])
     dependencies: dict = literal_eval(os.environ["DEPENDENCIES"])
+    validate_dependencies(dependencies)
 
-    if os.environ.get("USE_TOKENS", "False") == "True":
+    if os.environ.get("USE_TOKENS", "false").lower() == "true":
         dependencies = set_https(dependencies)
 
-    for dependency, values in dependencies.items():
+    use_mirrors = os.environ.get("USE_MIRRORS", "false").lower() == "true"
+    mirror_loc = Path(os.getenv("GIT_MIRROR_LOC", ""))
+
+    for dependency, opts in dependencies.items():
         loc = clone_loc / dependency
 
-        if ".git" in values["source"]:
-            if os.environ.get("USE_MIRRORS", "False") == "True":
-                mirror_loc = Path(os.environ["GIT_MIRROR_LOC"]) / values["parent"]
-                print(
-                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
-                    f"{dependency} from {mirror_loc} at ref {values['ref']}"
+        if not isinstance(opts, list):
+            opts = [opts]
+
+        for i, values in enumerate(opts):
+            if values["ref"] is None:
+                values["ref"] = ""
+
+            # Clone the first provided source
+            if i == 0:
+                get_source(
+                    values["source"],
+                    values["ref"],
+                    loc,
+                    dependency,
+                    use_mirrors,
+                    mirror_loc,
                 )
-                clone_repo_mirror(
-                    values["source"], values["ref"], values["parent"], mirror_loc, loc
-                )
-            else:
-                print(
-                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cloning "
-                    f"{dependency} from {values['source']} at ref {values['ref']}"
-                )
-                clone_repo(values["source"], values["ref"], loc)
-        else:
-            print(
-                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Syncing "
-                f"{dependency} at ref {values['ref']}"
+                continue
+            # For all other sources, attempt to merge into the first
+            merge_source(
+                values["source"],
+                values["ref"],
+                loc,
+                dependency,
+                use_mirrors,
+                mirror_loc,
             )
-            sync_repo(values["source"], values["ref"], loc)
 
 
 if __name__ == "__main__":

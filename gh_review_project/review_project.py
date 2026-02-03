@@ -160,12 +160,12 @@ class ProjectData:
                 if cr:
                     reviewers.append(cr)
 
-                if self.test and (cr or sr):
-                    # Handle case where these are None
-                    if not sr:
-                        sr = ""
-                    if not cr:
-                        cr = ""
+            if self.test and (cr or sr):
+                # Handle case where these are None
+                if not sr:
+                    sr = ""
+                if not cr:
+                    cr = ""
 
                     print(
                         "SciTech:",
