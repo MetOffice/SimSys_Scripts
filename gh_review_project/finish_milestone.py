@@ -122,7 +122,6 @@ def report(closed: dict, milestone: str) -> None:
     print(f"{total} pull requests completed in {milestone}")
 
 
-
 def parse_args():
     """
     Read command line args

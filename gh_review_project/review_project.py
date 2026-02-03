@@ -47,11 +47,7 @@ class ProjectData:
         "Changes Requested",
     ]
 
-    def __init__(
-        self,
-        data: list,
-        test: bool = False
-    ):
+    def __init__(self, data: list, test: bool = False):
         self.data = data
         self.test = test
 
