@@ -67,6 +67,10 @@ class ProjectData:
 
         raw_data = json.loads(output.stdout)
 
+        # Remove body as is large before working with or storing data.
+        for pr in raw_data["items"]:
+            pr["content"].pop("body")
+
         if capture:
             if file:
                 with open(file, "w") as f:
