@@ -113,8 +113,14 @@ def report(closed: dict, milestone: str) -> None:
 
     print_banner(f"Pull requests completed for {milestone}")
 
+    total = 0
     for repo in closed:
-        print(f"{repo: <20} {len(closed[repo]): >3} pull requests")
+        count = len(closed[repo])
+        total += count
+        print(f"{repo: <20} {count: >3} pull requests")
+
+    print(f"{total} pull requests completed in {milestone}")
+
 
 
 def parse_args():
