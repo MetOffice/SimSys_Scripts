@@ -14,7 +14,7 @@ environment variables
 import os
 from pathlib import Path
 from ast import literal_eval
-from get_git_sources import get_source, merge_source, set_https, validate_dependencies
+from get_git_sources import clone_and_merge, set_https, validate_dependencies
 import logging
 
 
@@ -43,36 +43,9 @@ def main() -> None:
     use_mirrors = os.environ.get("USE_MIRRORS", "false").lower() == "true"
     mirror_loc = Path(os.getenv("GIT_MIRROR_LOC", ""))
 
-    for dependency, opts in dependencies.items():
+    for dependency, sources in dependencies.items():
         loc = clone_loc / dependency
-
-        if not isinstance(opts, list):
-            opts = [opts]
-
-        for i, values in enumerate(opts):
-            if values["ref"] is None:
-                values["ref"] = ""
-
-            # Clone the first provided source
-            if i == 0:
-                get_source(
-                    values["source"],
-                    values["ref"],
-                    loc,
-                    dependency,
-                    use_mirrors,
-                    mirror_loc,
-                )
-                continue
-            # For all other sources, attempt to merge into the first
-            merge_source(
-                values["source"],
-                values["ref"],
-                loc,
-                dependency,
-                use_mirrors,
-                mirror_loc,
-            )
+        clone_and_merge(dependency, sources, loc, use_mirrors, mirror_loc)
 
 
 if __name__ == "__main__":

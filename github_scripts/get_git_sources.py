@@ -87,6 +87,48 @@ def datetime_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def clone_and_merge(
+    dependency: str, opts: list | dict, loc: Path, use_mirrors: bool, mirror_loc: Path
+) -> None:
+    """
+    Wrapper script for calling get_source and merge_source for a single dependency
+
+    dependency: name of the dependency
+    opts: dict or list of dicts for a dependency in the dependencies file
+    loc: path to location to clone to
+    use_mirrors: bool, use local git mirrors if true
+    mirror_loc: path to local git mirrors
+    """
+
+    if not isinstance(opts, list):
+        opts = [opts]
+
+    for i, values in enumerate(opts):
+        if values["ref"] is None:
+            values["ref"] = ""
+
+        # Clone the first provided source
+        if i == 0:
+            get_source(
+                values["source"],
+                values["ref"],
+                loc,
+                dependency,
+                use_mirrors,
+                mirror_loc,
+            )
+        # For all other sources, attempt to merge into the first
+        else:
+            merge_source(
+                values["source"],
+                values["ref"],
+                loc,
+                dependency,
+                use_mirrors,
+                mirror_loc,
+            )
+
+
 def get_source(
     source: str,
     ref: str,
