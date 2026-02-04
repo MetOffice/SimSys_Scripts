@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 
 """
-Class and functions for interacting with the Simulation Systems Review Tracker
+Classes and functions for interacting with the Simulation Systems Review Tracker
 Project.
 """
 from __future__ import annotations
@@ -16,33 +16,62 @@ from pathlib import Path
 import shlex
 from collections import defaultdict
 
+project_id = 376
+project_owner = "MetOffice"
+
+
+def run_command(command: str) -> subprocess.CompletedProcess:
+    output = subprocess.run(shlex.split(command), capture_output=True, timeout=180)
+
+    if output.returncode:
+        raise RuntimeError(output.stderr.decode())
+
+    return output
+
 
 class ProjectData:
     """
     A class to hold GitHub project data
 
-    data: dict Data filtered to contain most needed pull request details,
-               sorted by repository.
+    data: list raw_data turned into a list of PullRequest objects.
     test: bool Run using test data and extra logging.
+    milestones: list All milestones currently used in the project
+    repos: list All repositories currectly represented in the project
     """
 
-    def __init__(self, data: dict, test: bool = False):
+    open_states = [
+        "In Progress",
+        "SciTech Review",
+        "Code Review",
+        "Approved",
+        "Changes Requested",
+    ]
+
+    def __init__(
+        self,
+        data: list,
+        test: bool = False
+    ):
         self.data = data
         self.test = test
+
+        # Extract these once as useful lists
+        self.milestones = self._extract_milestones()
+        self.repos = self._extract_repositories()
 
     @classmethod
     def from_github(cls, capture: bool = False, file: Path = None) -> ProjectData:
         """
         Retrieve data from GitHub API and initialise the class.
         """
-        command = "gh project item-list 376 -L 500 --owner MetOffice --format json"
-        output = subprocess.run(shlex.split(command), capture_output=True, timeout=180)
-        if output.returncode:
-            raise RuntimeError(
-                "Error fetching GitHub Project data:  \n " + output.stderr.decode()
-            )
+        command = f"gh project item-list {project_id} -L 500 --owner {project_owner} --format json"
+        output = run_command(command)
 
         raw_data = json.loads(output.stdout)
+
+        # Remove body as is large before working with or storing data.
+        for pr in raw_data["items"]:
+            pr["content"].pop("body")
 
         if capture:
             if file:
@@ -67,57 +96,61 @@ class ProjectData:
         return cls(data, test=True)
 
     @classmethod
-    def _extract_data(cls, raw_data: dict) -> dict:
+    def _extract_data(cls, raw_data: dict) -> list:
         """
         Extract useful information from the raw data and
-        store it in a dictionary keyed by repository.
+        store it in a list of PullRequest objects. Also extract a list of
+        milestones and repositories found in the project.
         """
 
-        data = defaultdict(list)
+        data = []
 
         for pr in raw_data["items"]:
-            pull_request = {}
-            pull_request["id"] = pr["id"]
-            pull_request["title"] = pr["content"]["title"]
-            pull_request["number"] = pr["content"]["number"]
+            pull_request = PullRequest(
+                id=pr["id"],
+                number=pr["content"]["number"],
+                title=pr["content"]["title"],
+                repo=pr["content"]["repository"].replace("MetOffice/", ""),
+            )
 
             if "status" in pr:
-                pull_request["status"] = pr["status"]
-            else:
-                pull_request["status"] = None
+                pull_request.status = pr["status"]
 
             if "milestone" in pr:
-                pull_request["milestone"] = pr["milestone"]["title"]
-            else:
-                pull_request["milestone"] = None
+                pull_request.milestone = pr["milestone"]["title"]
 
             if "assignee" in pr:
-                pull_request["assignee"] = pr["assignees"]
-            else:
-                pull_request["assignee"] = None
+                pull_request.assignee = pr["assignees"]
 
             if "code Review" in pr:
-                pull_request["code review"] = pr["code Review"]
-            else:
-                pull_request["code review"] = None
+                pull_request.codeReview = pr["code Review"]
 
             if "sciTech Review" in pr:
-                pull_request["scitech review"] = pr["sciTech Review"]
-            else:
-                pull_request["scitech review"] = None
+                pull_request.scitechReview = pr["sciTech Review"]
 
-            repo = pr["content"]["repository"].replace("MetOffice/", "")
-            data[repo].append(pull_request)
+            data.append(pull_request)
 
         return data
+
+    def _extract_milestones(self) -> set:
+        milestones = set()
+        for pr in self.data:
+            milestones.add(pr.milestone)
+
+        return milestones
+
+    def _extract_repositories(self) -> set:
+        repositories = set()
+        for pr in self.data:
+            repositories.add(pr.repo)
+
+        return repositories
 
     def get_reviewers_for_repo(self, repo: str) -> list:
         """
         Return a list of reviewers for a given repository.
         """
-        if repo in self.data:
-            pull_requests = self.data[repo]
-        else:
+        if repo not in self.repos:
             return []
 
         reviewers = []
@@ -125,33 +158,102 @@ class ProjectData:
         if self.test:
             print("\n=== Reviewers for " + repo)
 
-        for pr in pull_requests:
-            sr = pr["scitech review"]
-            if sr:
-                reviewers.append(sr)
+        for pr in self.data:
+            if pr.repo == repo:
+                sr = pr.scitechReview
+                if sr:
+                    reviewers.append(sr)
 
-            cr = pr["code review"]
-            if cr:
-                reviewers.append(cr)
+                cr = pr.codeReview
+                if cr:
+                    reviewers.append(cr)
 
-            if self.test and (cr or sr):
-                # Handle case where these are None
-                if not sr:
-                    sr = ""
-                if not cr:
-                    cr = ""
+                if self.test and (cr or sr):
+                    # Handle case where these are None
+                    if not sr:
+                        sr = ""
+                    if not cr:
+                        cr = ""
 
-                print(
-                    "SciTech:",
-                    f"{sr: <18}",
-                    "Code:",
-                    f"{cr: <18}",
-                    pr["title"],
-                )
+                    print(
+                        "SciTech:",
+                        f"{sr: <18}",
+                        "Code:",
+                        f"{cr: <18}",
+                        pr.title,
+                    )
 
         return reviewers
 
     def get_repositories(self) -> list:
         """Return a list of repositories found in the project data."""
 
-        return list(self.data.keys())
+        return self.repos
+
+    def get_by_milestone(self, status: str = "all") -> dict:
+        """
+        Return pull requests organized by milestone and repository. These can
+        be filtered by status.
+
+        status: str Status to include. Valid values are any project status
+                    values and all, open or closed
+        """
+
+        milestone_data = {}
+        for milestone in self.milestones:
+            milestone_data[milestone] = defaultdict(list)
+
+        for pr in self.data:
+            if (
+                pr.status == status
+                or status == "all"
+                or (status == "open" and pr.status in self.open_states)
+                or (status == "closed" and pr.status not in self.open_states)
+            ):
+                milestone_data[pr.milestone][pr.repo].append(pr)
+
+        return milestone_data
+
+    def archive_milestone(self, milestone: str, dry_run: bool = False) -> None:
+
+        print(f"Archiving all completed pull requests for {milestone}")
+
+        dry_run = dry_run | self.test  # if test data, or a dryrun, then dummy commands
+
+        closed_prs = self.get_by_milestone(status="closed")[milestone]
+        for repo in closed_prs:
+            for pr in closed_prs[repo]:
+                pr.archive(dry_run)
+
+
+class PullRequest:
+
+    def __init__(
+        self, id: str = None, number: str = None, title: str = None, repo: str = None
+    ):
+        self.id = id
+        self.number = number
+        self.title = title
+        self.repo = repo
+
+        self.status = None
+        self.milestone = "None"
+        self.assignee = None
+        self.scitechReview = None
+        self.codeReview = None
+
+    def archive(self, dry_run: bool = False):
+        """
+        Archive this pull request from the project.
+
+        dry_run: If true, print the command used rather than archiving.
+        """
+
+        command = f"gh project item-archive {project_id} --owner {project_owner} --id {self.id}"
+        message = f"Archiving #{self.number} in {self.repo}"
+
+        if dry_run:
+            print(f"[DRY RUN] {message: <40} {command}")
+        else:
+            print(message)
+            run_command(command)
