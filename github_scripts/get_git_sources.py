@@ -60,24 +60,27 @@ def validate_dependencies(dependencies: dict) -> None:
     Each dictionary value should be a list of dictionaries (or a single dictionary)
     Those dictionaries should have a "source" and a "ref" key
     """
+    if not isinstance(dependencies, dict):
+        raise TypeError(
+            "The dependencies object should be a dict with keys as source repositories"
+        )
     for item, values in dependencies.items():
-        failed = False
+        err_message = (
+            f"The dependency {item} does not contain a list of dictionaries (or a "
+            "single dictionary) with keys of 'source' and 'ref'.\nPlease edit your "
+            "dependencies.yaml file to satisfy this."
+        )
+
         if isinstance(values, dict):
             values = [values]
         if not isinstance(values, list):
-            failed = True
-        else:
-            for entry in values:
-                if not isinstance(entry, dict) or (
-                    "source" not in entry or "ref" not in entry
-                ):
-                    failed = True
-        if failed:
-            raise ValueError(
-                f"The dependency {item} does not contain a list of dictionaries (or a "
-                "single dictionary) with keys of 'source' and 'ref'.\nPlease edit your "
-                "dependencies.yaml file to satisfy this."
-            )
+            raise TypeError(err_message)
+
+        for entry in values:
+            if not isinstance(entry, dict):
+                raise TypeError(err_message)
+            if "source" not in entry or "ref" not in entry:
+                raise ValueError(err_message)
 
 
 def datetime_str() -> str:
@@ -288,6 +291,7 @@ def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
     """
 
     repo_source = repo_source.removeprefix("git@github.com:")
+    repo_source = repo_source.removeprefix("https://github.com/")
     user = repo_source.split("/")[0]
     # Check that the user is different to the Upstream User
     if "MetOffice" in user:
