@@ -91,7 +91,11 @@ def datetime_str() -> str:
 
 
 def clone_and_merge(
-    dependency: str, opts: Union[list, dict], loc: Path, use_mirrors: bool, mirror_loc: Path
+    dependency: str,
+    opts: Union[list, dict],
+    loc: Path,
+    use_mirrors: bool,
+    mirror_loc: Path,
 ) -> None:
     """
     Wrapper script for calling get_source and merge_source for a single dependency
@@ -217,6 +221,9 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
     # For suites, merge conflicts in these files/directories are unimportant so accept
     # the current changes
     for filepath in ("dependencies.yaml", "rose-stem"):
+        full_path = loc / filepath
+        if not full_path.exists():
+            continue
         logger.warning(f"Ignoring merge conflicts in {filepath}")
         run_command(f"git -C {loc} checkout --ours -- {filepath}")
         run_command(f"git -C {loc} add {filepath}")
@@ -242,6 +249,20 @@ def get_unmerged(loc: Path) -> list[str]:
     return files.stdout.split()
 
 
+def check_existing(loc: Path) -> None:
+    """
+    If the repository exists and isn't a git repo, exit now as we don't want to
+    overwrite it
+    """
+
+    if loc.exists():
+        if not Path(loc / ".git").exists():
+            raise FileExistsError(
+                f"The destination, '{loc}', already exists but isn't a git directory. "
+                "Exiting so as to not overwrite it."
+            )
+
+
 def clone_repo_mirror(
     repo_source: str,
     repo_ref: str,
@@ -257,15 +278,8 @@ def clone_repo_mirror(
     - loc: path to clone the repository to
     """
 
-    # If the repository exists and isn't a git repo, exit now as we don't want to
-    # overwrite it
     if loc.exists():
-        if not Path(loc / ".git").exists():
-            raise RuntimeError(
-                f"The destination for the clone of {repo_source} already exists but "
-                "isn't a git directory. Exiting so as to not overwrite it."
-            )
-
+        check_existing(loc)
     # Clone if the repo doesn't exist
     else:
         command = f"git clone {mirror_loc} {loc}"
@@ -332,6 +346,7 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
         for command in commands:
             run_command(command)
     else:
+        check_existing(loc)
         commands = (
             f"git -C {loc} fetch origin {repo_ref}",
             f"git -C {loc} checkout FETCH_HEAD",
@@ -340,10 +355,12 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
             run_command(command)
 
 
-def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
+def sync_repo(repo_source: Union[str, Path], repo_ref: str, loc: Path) -> None:
     """
     Rsync a local git clone and checkout the provided ref
     """
+
+    repo_source = str(repo_source)
 
     # Remove if this clone already exists
     if loc.exists():

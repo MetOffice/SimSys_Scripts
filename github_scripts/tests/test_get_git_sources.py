@@ -8,10 +8,149 @@ Unit tests for get_git_sources
 """
 
 import os
+import socket
 import subprocess
+from shlex import split
+from pathlib import Path
 import pytest
 
-from ..get_git_sources import validate_dependencies, determine_mirror_fetch, set_https
+from ..get_git_sources import (
+    validate_dependencies,
+    determine_mirror_fetch,
+    set_https,
+    clone_repo,
+    clone_repo_mirror,
+    sync_repo,
+    check_existing,
+    merge_source,
+)
+
+
+@pytest.fixture(scope="session")
+def setup_sources(tmpdir_factory):
+    """
+    Setup a tempdir for cloning into, a mirror of SimSys_Scripts and a local clone of
+    SimSys_Scripts
+    Use SimSys_Scripts as a public repo
+    """
+
+    location = tmpdir_factory.mktemp("data")
+    print(location)
+    os.chdir(location)
+
+    # Setup local mirror
+    subprocess.run(
+        split("git clone --mirror https://github.com/MetOffice/SimSys_Scripts.git"),
+        check=True,
+    )
+
+    # Create local clone
+    subprocess.run(
+        split("git clone https://github.com/MetOffice/SimSys_Scripts.git"), check=True
+    )
+    subprocess.run(split("git -C SimSys_Scripts checkout 2025.12.1"))
+
+    # Create a non-git repo to test check_existing
+    existing = Path(location) / "empty_dir"
+    existing.mkdir()
+
+    # Create 2 clones with conflicting commits
+    for i in range(2):
+        subprocess.run(split(f"cp -r SimSys_Scripts merge{i}"), check=True)
+        subprocess.run(split(f"git -C merge{i} switch -c merge{i}"), check=True)
+        with open(f"merge{i}/merge.txt", "w") as f:
+            f.write(f"merge{i}")
+        subprocess.run(split(f"git -C merge{i} add merge.txt"), check=True)
+        subprocess.run(
+            split(f"git -C merge{i} commit -a -m 'merge conflict'"), check=True
+        )
+
+    return Path(location)
+
+
+def test_clone_repo(setup_sources):
+    """
+    Test cloning from a github source
+    """
+
+    output_loc = setup_sources / "github_clone"
+    assert (
+        clone_repo(
+            "https://github.com/MetOffice/SimSys_Scripts.git", "2025.12.1", output_loc
+        )
+        is None
+    )
+    assert Path(output_loc / ".git").is_dir() is True
+
+
+def test_clone_repo_mirror(setup_sources):
+    """
+    Test rsyncing a local clone
+    """
+
+    output_loc = setup_sources / "mirror_clone"
+    mirror_loc = setup_sources / "SimSys_Scripts.git"
+    assert (
+        clone_repo_mirror(
+            "https://github.com/MetOffice/SimSys_Scripts.git",
+            "2025.12.1",
+            mirror_loc,
+            output_loc,
+        )
+        is None
+    )
+    assert Path(output_loc / ".git").is_dir() is True
+
+
+def test_sync_repo(setup_sources):
+    """
+    Test cloning from a github source
+    """
+
+    source_loc = setup_sources / "SimSys_Scripts"
+    output_loc = setup_sources / "sync_clone_hostname"
+    hostname = socket.gethostname()
+    assert sync_repo(f"{hostname}:{source_loc}", "2025.12.1", output_loc) is None
+    assert Path(output_loc / ".git").is_dir() is True
+
+    output_loc = setup_sources / "sync_clone"
+    assert sync_repo(source_loc, "2025.12.1", output_loc) is None
+    assert Path(output_loc / ".git").is_dir() is True
+
+
+def test_merge_sources(setup_sources):
+    """
+    Test merge_source
+    """
+
+    target_clone = setup_sources / "SimSys_Scripts"
+
+    assert (
+        merge_source(
+            "https://github.com/MetOffice/SimSys_Scripts.git",
+            "main",
+            target_clone,
+            "SimSys_Scripts",
+        )
+        is None
+    )
+    assert (
+        merge_source(setup_sources / "merge0", "merge0", target_clone, "SimSys_Scripts")
+        is None
+    )
+    with pytest.raises(RuntimeError):
+        merge_source(setup_sources / "merge1", "merge1", target_clone, "SimSys_Scripts")
+
+
+def test_check_exists(setup_sources):
+    """
+    Test check_existing
+    """
+
+    assert check_existing(setup_sources / "SimSys_Scripts") is None
+
+    with pytest.raises(FileExistsError):
+        check_existing(setup_sources / "empty_dir")
 
 
 def test_validate_dependencies():
