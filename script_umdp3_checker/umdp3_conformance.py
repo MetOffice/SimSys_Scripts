@@ -384,7 +384,6 @@ class ConformanceChecker:
             if print_volume >= 3 and not result.all_passed:
                 print(" " * 4 + line_2(86))
             for test_result in result.test_results:
-                # TODO : The output logic here is a bit of a mess.
                 if print_volume < 5 and test_result.passed:
                     continue
                 if print_volume >= 3 and not test_result.passed:
