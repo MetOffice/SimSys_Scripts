@@ -167,7 +167,7 @@ def get_source(
 
 
 def merge_source(
-    source: str,
+    source: Union[Path, str],
     ref: str,
     dest: Path,
     repo: str,
