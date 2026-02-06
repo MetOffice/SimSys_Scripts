@@ -20,6 +20,8 @@ from ..apply_macros import (
     split_macros,
     match_python_import,
     deduplicate_list,
+    read_versions_file,
+    read_python_imports
 )
 
 # A macro that we want to find for these tests
@@ -201,27 +203,45 @@ def test_parse_application_section():
     )
 
 
-def test_deduplicate_list():
-    assert deduplicate_list([1, 2, 3]) == [1, 2, 3]
-    assert deduplicate_list(
-        [
-            1,
-            2,
-            2,
-            3,
-            3,
-            3,
-        ]
-    ) == [1, 2, 3]
-    assert deduplicate_list([1, 2, 1, 3, 2]) == [1, 2, 3]
-
-
 def test_match_python_imports():
     assert match_python_import("import z")
     assert match_python_import("from x import y")
     assert match_python_import("from a import b.c")
     assert match_python_import("import m as n")
     assert not match_python_import("false")
+
+
+def test_read_versions_file():
+    """
+    Test read_versions_file
+    """
+
+    assert read_versions_file(os.path.join("tests", "test_meta_dir")) == ["# line 1\n", "# line 2\n"]
+
+
+def test_deduplicate_list():
+    """
+    Test deduplicate_list
+    """
+
+    before = [1,2,2,"a","b","b",{0:1,1:2},{0:1,1:2}]
+    after = [1,2,"a","b",{0:1,1:2},]
+
+    assert deduplicate_list(before) == after
+    assert deduplicate_list(after) == after
+
+
+def test_read_python_imports():
+    """
+    Test read_python_imports
+    """
+
+    test_file = os.path.join("tests", "test_meta_dir", "test_read_python_imports.py")
+    expected = set()
+    imports = (('shlex',), ('split',), None), (('pathlib',), ('PurePath',), None), ((), ('os',), None), (('pathlib',), ('Path',), None), ((), ('networkx',), 'nx')
+    for item in imports:
+        expected.add(item)
+    assert read_python_imports(test_file) == expected
 
 
 # Remove appsdir
