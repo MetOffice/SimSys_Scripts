@@ -235,7 +235,7 @@ def read_python_imports(path):
 
 def banner_print(message):
     """Print a simple banner message"""
-    print(f"\n{(len(message)+4)*'*'}\n* {message} *\n{(len(message)+4)*'*'}\n")
+    print(f"\n{(len(message) + 4) * '*'}\n* {message} *\n{(len(message) + 4) * '*'}\n")
 
 
 class ApplyMacros:
@@ -442,17 +442,16 @@ class ApplyMacros:
             author = "Unknown"
             pass
 
-        class_name = re.search(r"class (vn\d+_t\d+)", macro).group(1)
-
         # Search for the before tag
         # Raise an exception if these are missing
         try:
             before_tag = re.search(rf"BEFORE_TAG{TAG_REGEX}", macro).group(1)
             after_tag = re.search(rf"AFTER_TAG{TAG_REGEX}", macro).group(1)
+            class_name = re.search(r"class (vn\d+_t\d+)", macro).group(1)
         except AttributeError as exc:
             raise Exception(
-                "Couldn't find a Before/After tag for the requested "
-                f"macro in the file {version_file}"
+                "Couldn't find a Before/After tag or class name for the macro:\n\n "
+                f"{macro}\n\nin the file {version_file}"
             ) from exc
 
         # Finally extract the lines which are defining the commands run by the
@@ -600,6 +599,9 @@ class ApplyMacros:
             core_imp = os.path.join(self.core_source, imp)
             apps_imp = os.path.join(self.root_path, imp)
 
+        print(core_imp)
+        print(apps_imp)
+
         if os.path.exists(core_imp):
             return core_imp
         if os.path.exists(apps_imp):
@@ -739,11 +741,15 @@ class ApplyMacros:
 
         full_command = ""
         for meta_import in import_order:
+            print(meta_import)
             meta_import = self.get_full_import_path(meta_import)
+            print(meta_import)
+            print(self.target_macros)
             if (
                 meta_import in self.target_macros
                 and "commands" in self.target_macros[meta_import]
             ):
+                print("made it here")
                 # Add a comment labelling where these commands came from
                 # Check the comment hasn't already been added
                 if not re.search(
@@ -785,7 +791,7 @@ class ApplyMacros:
 
         with open(temppath, "a") as f:
             f.write(
-                f'class {macro["class_name"]}(MacroUpgrade):\n'
+                f"class {macro['class_name']}(MacroUpgrade):\n"
                 f'    """Upgrade macro for ticket {ticket_number} '
                 f'by {author}."""\n\n'
                 f'    BEFORE_TAG = "{macro["before_tag"]}"\n'
