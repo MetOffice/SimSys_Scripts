@@ -236,7 +236,7 @@ class UMDP3Checker:
                 )
         output = f"Checked {count+1} lines, found {failures} failures."
         return TestResult(
-            checker_name="Capitalised Keywords",
+            checker_name="OpenMP sentinels not in column one",
             failure_count=failures,
             passed=(failures == 0),
             output=output,
