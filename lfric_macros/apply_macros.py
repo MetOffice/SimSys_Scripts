@@ -599,8 +599,6 @@ class ApplyMacros:
             core_imp = os.path.join(self.core_source, imp)
             apps_imp = os.path.join(self.root_path, imp)
 
-        print(core_imp)
-        print(apps_imp)
 
         if os.path.exists(core_imp):
             return core_imp
@@ -741,15 +739,11 @@ class ApplyMacros:
 
         full_command = ""
         for meta_import in import_order:
-            print(meta_import)
             meta_import = self.get_full_import_path(meta_import)
-            print(meta_import)
-            print(self.target_macros)
             if (
                 meta_import in self.target_macros
                 and "commands" in self.target_macros[meta_import]
             ):
-                print("made it here")
                 # Add a comment labelling where these commands came from
                 # Check the comment hasn't already been added
                 if not re.search(
