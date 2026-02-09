@@ -367,7 +367,7 @@ class ConformanceChecker:
         """Print results and return True if all checks passed.
         ========================================================"""
         """
-        TODO: If an object encapsulating the data for each file is created"
+        TODO: If an object encapsulating the data for each file is created
         it should contain the "in depth" printing method for file data.
         With this method presenting the summary and then looping over
         each file object to print its details at the desired verbosity."""
@@ -624,8 +624,9 @@ if __name__ == "__main__":
     TODO : Uncertain as to how flexible this needs to be.
         For now, just configure checkers based on file type requested.
         Later, could add configuration files to specify which
-        checkers to use for each file type.
-    """
+        checkers to use for each file type."""
+    checkers = []
+
     active_checkers = create_style_checkers(args.file_types,
                                             full_file_paths)
 
