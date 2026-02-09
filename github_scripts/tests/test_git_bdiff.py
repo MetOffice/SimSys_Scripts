@@ -50,6 +50,9 @@ def git_repo(tmpdir_factory):
     location = tmpdir_factory.mktemp("data")
     os.chdir(location)
 
+    # Ensure the default branch is main
+    subprocess.run(["git", "config", "--global", "init.defaultBranch"], check=True)
+
     # Create the repo and add some files
     subprocess.run(["git", "init"], check=True)
     add_to_repo(0, 10, "Testing")
