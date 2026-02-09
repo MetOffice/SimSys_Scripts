@@ -100,7 +100,7 @@ class UMDP3Checker:
     def add_extra_error(self, key: str, value: str = ""):
         """Add extra error information to the dictionary"""
         """
-    TODO: The usefulness of the information added has not been assesed,
+    TODO: The usefulness of the information added has not been assessed,
         nor does it appear to be reported as yet."""
         with self._lock:
             self._extra_error_info[key] = value
