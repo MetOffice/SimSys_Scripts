@@ -1,0 +1,336 @@
+#!/usr/bin/env bash
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+#
+# Script to manage Git tags (add/delete/list).
+# Requires:
+#   GitHub CLI (gh): https://cli.github.com/
+#   Git command-line tool: https://git-scm.com/
+# Warnings:
+# - This script modifies Git tags. Use with caution.
+# - Always verify the current tags before making changes.
+
+set -euo pipefail
+# Colour codes for output
+GRN='\033[0;32m'
+RED='\033[0;31m'
+YLW='\033[0;33m'
+NC='\033[0m'
+
+# Default values
+DEFAULT_REPO="MetOffice/git_playground"
+REPO="${REPO:-$DEFAULT_REPO}"
+# Variables set by parse_args()
+REF=""
+TAG=""
+MESSAGE=""
+DRY_RUN=false
+
+usage() {
+  cat <<EOF
+Usage:
+  $(basename "$0") add <tag_name> <commit_ref> [options]
+  $(basename "$0") delete|del <tag_name> [options]
+  $(basename "$0") list|ls [options]
+
+Actions:
+  add       Create and push a new tag
+  delete    Delete a tag from the repository (alias: del)
+  list      List all tags in the repository (alias: ls)
+
+Arguments:
+  <tag_name>     Name of the tag to create or delete
+  <commit_ref>   Commit SHA, tag name, release name, or branch name
+
+Options:
+  --repo, -R REPO    Repository in format owner/repo (default: $DEFAULT_REPO)
+  --message MSG      Tag annotation message (for add action)
+  --dry-run, -n      Show what would be done without making changes
+
+Examples:
+  # Create tag from commit SHA
+  $(basename "$0") add v1.0.0 abc123def --repo MetOffice/git_playground
+
+  # Create tag from existing tag
+  $(basename "$0") add Test vn1.5 --repo MetOffice/git_playground
+
+  # Create tag from release
+  $(basename "$0") add Autumn2025 vn14.0 --repo MetOffice/um
+
+  # Create tag from branch
+  $(basename "$0") add Spring2026 main --repo MetOffice/SimSys_Scripts
+
+  # Delete tag
+  $(basename "$0") del 2025.12.0 --repo MetOffice/SimSys_Scripts
+
+  # List tags
+  $(basename "$0") ls --repo MetOffice/SimSys_Scripts
+
+Notes:
+  - REPO can be set via environment variable (default: $DEFAULT_REPO)
+  - All other parameters must be provided via command-line arguments
+  - Use --dry-run to preview changes before executing
+EOF
+  exit 1
+}
+
+cleanup() {
+  [[ -n "${WORK_TMP:-}" ]] && rm -rf "$WORK_TMP"
+}
+
+confirm() {
+  local message="$1"
+  local response
+  echo -en "${YLW}"
+  read -rp "$message (y/n): " response
+  echo -en "${NC}"
+
+  case "$response" in
+    [yY][eE][sS] | [yY])
+      return 0 ;;
+    *)
+      echo "Aborted..."
+      return 1 ;;
+  esac
+}
+
+run() {
+  local msg="$1"
+  shift
+  local timestamp
+  timestamp=$(date "+%F %T")
+
+  if "$@"; then
+    echo -e "[$timestamp] ${GRN}✓${NC} $msg succeeded."
+    return 0
+  else
+    echo -e "[$timestamp] ${RED}✗${NC} $msg failed."
+    return 1
+  fi
+}
+
+trap cleanup EXIT ERR SIGINT
+
+verify_tag() {
+  gh api "repos/${REPO}/git/refs/tags/${TAG}" >/dev/null 2>&1 && {
+    echo -e "${YLW}Tag '$TAG' exists in repository '$REPO'.${NC}"
+    return 0
+  }
+  return 1
+}
+
+verify_ref() {
+  local resolved_sha=""
+
+  # First, try to resolve as a commit SHA (handles both short and full)
+  if resolved_sha=$(gh api "repos/${REPO}/commits/${REF}" --jq '.sha' 2>/dev/null); then
+    REF="$resolved_sha"
+    echo -e "${GRN}Using commit SHA: $REF${NC}"
+    return 0
+  fi
+
+  # Try to resolve as a tag
+  if gh api "repos/${REPO}/git/refs/tags/${REF}" >/dev/null 2>&1; then
+    echo -e "${YLW}Resolving tag '$REF' to commit SHA...${NC}"
+    local tag_sha
+    tag_sha=$(gh api "repos/${REPO}/git/refs/tags/${REF}" --jq '.object.sha')
+
+    # Try to get tag object to determine if it's annotated
+    local tag_info
+    if tag_info=$(gh api "repos/${REPO}/git/tags/${tag_sha}" 2>/dev/null); then
+      # It's an annotated tag - get the commit SHA it points to
+      local tag_type
+      tag_type=$(echo "$tag_info" | jq -r '.object.type')
+
+      if [[ "$tag_type" == "commit" ]]; then
+        resolved_sha=$(echo "$tag_info" | jq -r '.object.sha')
+      else
+        echo -e "${RED}** Tag points to unexpected object type: $tag_type${NC}"
+        return 1
+      fi
+    else
+      # It's a lightweight tag - the SHA is the commit SHA
+      resolved_sha="$tag_sha"
+    fi
+
+    # Verify it's a full SHA and a valid commit
+    if resolved_sha=$(gh api "repos/${REPO}/commits/${resolved_sha}" --jq '.sha' 2>/dev/null); then
+      REF="$resolved_sha"
+      echo -e "${GRN}Resolved to commit: $REF${NC}"
+      return 0
+    else
+      echo -e "${RED}** Failed to verify commit SHA from tag${NC}"
+      return 1
+    fi
+  fi
+
+  # Try to resolve as a release
+  if gh api "repos/${REPO}/releases/tags/${REF}" >/dev/null 2>&1; then
+    echo -e "${YLW}Resolving release '$REF' to commit SHA...${NC}"
+    local target_ref
+    target_ref=$(gh api "repos/${REPO}/releases/tags/${REF}" --jq '.target_commitish')
+
+    # Resolve the target to full SHA
+    if resolved_sha=$(gh api "repos/${REPO}/commits/${target_ref}" --jq '.sha' 2>/dev/null); then
+      REF="$resolved_sha"
+      echo -e "${GRN}Resolved to commit: $REF${NC}"
+      return 0
+    else
+      echo -e "${RED}** Failed to resolve release target to commit SHA${NC}"
+      return 1
+    fi
+  fi
+
+  # Try as a branch name
+  if gh api "repos/${REPO}/git/refs/heads/${REF}" >/dev/null 2>&1; then
+    echo -e "${YLW}Resolving branch '$REF' to commit SHA...${NC}"
+    local branch_sha
+    branch_sha=$(gh api "repos/${REPO}/git/refs/heads/${REF}" --jq '.object.sha')
+
+    # Verify it's a full SHA
+    if resolved_sha=$(gh api "repos/${REPO}/commits/${branch_sha}" --jq '.sha' 2>/dev/null); then
+      REF="$resolved_sha"
+      echo -e "${GRN}Resolved to commit: $REF${NC}"
+      return 0
+    else
+      echo -e "${RED}** Failed to verify commit SHA from branch${NC}"
+      return 1
+    fi
+  fi
+
+  echo -e "${RED}** Reference '$REF' not found in repository '$REPO'.${NC}"
+  echo -e "${RED}** Tried: commit SHA, tag, release, and branch name.${NC}"
+  return 1
+}
+
+add_tag() {
+  [[ -z "$TAG" || -z "$REF" ]] && {
+    echo -e "${RED}** TAG and REF are required for add action.${NC}"
+    usage
+  }
+
+  verify_tag && exit 1
+  verify_ref || exit 1
+
+  local url="https://github.com/${REPO}.git"
+  local msg="${MESSAGE:-"Tagging $TAG @ $REF"}"
+
+  if [[ "$DRY_RUN" == true ]]; then
+    echo -e "${YLW}[DRY RUN] Would create tag with the following details:${NC}"
+    echo -e "  Repository: $REPO"
+    echo -e "  Tag name:   $TAG"
+    echo -e "  Commit SHA: $REF"
+    echo -e "  Message:    $msg"
+    echo -e "${YLW}[DRY RUN] No changes made.${NC}"
+    return 0
+  fi
+
+  WORK_TMP=$(mktemp -d -t tagman-XXXX)
+
+  pushd "$WORK_TMP" >/dev/null
+  run "Initialise temporary Git repository in $WORK_TMP" git init --bare --quiet
+  run "Add remote repository $url" git remote add origin "$url"
+  run "Fetch commit $REF" git fetch --quiet --depth 1 origin "$REF"
+  run "Create and sign tag '$TAG' at commit $REF" \
+    git tag --sign "$TAG" "$REF" --message "$msg"
+  run "Push '$TAG' to remote '$REPO'" git push --quiet origin "$TAG"
+  popd >/dev/null
+
+  echo -e "${GRN}Successfully created and pushed tag '$TAG' to '$REPO'.${NC}"
+}
+
+delete_tag() {
+  [[ -z "$TAG" ]] && {
+    echo -e "${RED}** TAG is required for delete action.${NC}"
+    usage
+  }
+
+  verify_tag || {
+    echo -e "${RED}** Tag '$TAG' does not exist in repository '$REPO'.${NC}"
+    return 1
+  }
+
+  if [[ "$DRY_RUN" == true ]]; then
+    echo -e "${YLW}[DRY RUN] Would delete tag with the following details:${NC}"
+    echo -e "  Repository: $REPO"
+    echo -e "  Tag name:   $TAG"
+    echo -e "${YLW}[DRY RUN] No changes made.${NC}"
+    return 0
+  fi
+
+  local url="https://github.com/${REPO}.git"
+
+  WORK_TMP=$(mktemp -d -t tagman-XXXX)
+
+  pushd "$WORK_TMP" >/dev/null
+  run "Initialise temporary Git repository in $WORK_TMP" git init --bare --quiet
+  run "Add remote repository $url" git remote add origin "$url"
+
+  if confirm "Are you sure you want to delete the tag '$TAG' from '$REPO'?"; then
+    run "Delete remote tag '$TAG' from '$REPO'" git push --quiet origin --delete "$TAG"
+    echo -e "${GRN}Successfully deleted tag '$TAG' from '$REPO'.${NC}"
+  fi
+  popd >/dev/null
+}
+
+list_tags() {
+  local url="https://github.com/${REPO}.git"
+  echo -e "${GRN}Listing tags from '$REPO':${NC}\n"
+  git ls-remote --tags --sort="-version:refname" "$url"
+}
+
+parse_args() {
+  [[ $# -eq 0 ]] && usage
+
+  ACTION="$1"
+  shift
+
+  case "$ACTION" in
+    add)
+      [[ $# -lt 2 ]] && usage
+      TAG="$1"
+      REF="$2"
+      shift 2
+      ;;
+    del|delete)
+      [[ $# -lt 1 ]] && usage
+      TAG="$1"
+      shift
+      ;;
+    ls|list)
+      # No arguments required
+      ;;
+    *)
+      echo -e "${RED}Unknown action: $ACTION${NC}"
+      usage
+      ;;
+  esac
+
+  # Parse optional flags
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -R|--repo) REPO="$2"; shift 2 ;;
+      --message) MESSAGE="$2"; shift 2 ;;
+      -n|--dry-run) DRY_RUN=true; shift ;;
+      *)
+        echo -e "${RED}Unknown option: $1${NC}"
+        usage ;;
+    esac
+  done
+}
+
+main() {
+  parse_args "$@"
+
+  case "$ACTION" in
+    add) add_tag ;;
+    del|delete) delete_tag ;;
+    ls|list) list_tags ;;
+     *) echo -e "${RED}Invalid action: $ACTION${NC}" ;;
+  esac
+}
+
+main "$@"
