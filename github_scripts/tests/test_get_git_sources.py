@@ -61,8 +61,12 @@ def setup_sources(tmpdir_factory):
         with open(f"merge{i}/merge.txt", "w") as f:
             f.write(f"merge{i}")
         subprocess.run(split(f"git -C merge{i} add merge.txt"), check=True)
+        # Set email/user for gh action testing
         subprocess.run(
-            split(f"git -C merge{i} commit -a -m 'merge conflict'"), check=True
+            split(
+                f"git -C merge{i} commit -a -m 'merge conflict' "
+                "-c user.name 'Testing' -c user.email 'testing'"
+            ), check=True
         )
 
     return Path(location)
