@@ -53,12 +53,14 @@ labels=(
   "Linked SOCRATES|#16d0cb|This PR is linked to a MetOffice/socrates PR"
   "Linked Mule|#00ffff|This PR is linked to a MetOffice/mule PR"
   "Linked Shumlib|#0080ff|This PR is linked to a MetOffice/shumlib PR"
+  "Linked Jedi|#839e75|This PR is linked to a Jedi PR - this will be managed by the DA team"
   "KGO|#9c27b0|This PR contains changes to KGO"
   "macro|#aaf0d1|This PR contains a metadata upgrade macro"
   "Accessibility|#1c96b9|Problems with the accessibility of the documentation"
   "Discussion|#FBCA04|Issues that require some formal discussion"
   "cla-required|#b60205|The CLA has not yet been signed by the author of this PR - added by GA"
   "cla-signed|#0052cc|The CLA has been signed as part of this PR - added by GA"
+  "optimisation|#DB4DFF|This PR adds optimisations or edits OpenMP code"
 )
 
 # -- Add labels in relevant repositories
