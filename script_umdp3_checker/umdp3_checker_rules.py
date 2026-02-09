@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 TODO : Several of the test functions are poor shadows of the original
        Perl versions. They would benefit from improving to catch more
        cases.
-       Equally, there could probably be more consistancly in how things
+       Equally, there could probably be more consistency in how things
        like comments are stripped from the ends of lines
        and/or full comment lines are skipped.
 """
