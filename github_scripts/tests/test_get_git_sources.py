@@ -66,7 +66,8 @@ def setup_sources(tmpdir_factory):
             split(
                 f"git -c user.name='Testing' -c user.email='Testing' -C merge{i} "
                 "commit -a -m 'merge conflict'"
-            ), check=True
+            ),
+            check=True,
         )
 
     return Path(location)

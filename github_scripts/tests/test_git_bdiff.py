@@ -27,7 +27,19 @@ def add_to_repo(start, end, message, mode="wt"):
             print(f"Lorem ipsum dolor sit amet {i}", file=fd)
 
     subprocess.run(["git", "add", "-A"], check=True)
-    subprocess.run(["git", "commit", "--no-gpg-sign", "-m", message], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name='Testing'",
+            "-c",
+            "user.email='Testing'commit",
+            "--no-gpg-sign",
+            "-m",
+            message,
+        ],
+        check=True,
+    )
 
 
 @pytest.fixture(scope="session")
