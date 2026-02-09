@@ -64,7 +64,7 @@ def setup_sources(tmpdir_factory):
         # Set email/user for gh action testing
         subprocess.run(
             split(
-                f"git -c user.name 'Testing' -c user.email 'testing' -C merge{i} "
+                f"git -c user.name='Testing' -c user.email='Testing' -C merge{i} "
                 "commit -a -m 'merge conflict'"
             ), check=True
         )
