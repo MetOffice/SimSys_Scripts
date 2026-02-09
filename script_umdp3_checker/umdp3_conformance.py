@@ -357,7 +357,7 @@ class ConformanceChecker:
         """Print results and return True if all checks passed.
         ========================================================"""
         """
-        TODO: If an object encapsulating the data for each file is created"
+        TODO: If an object encapsulating the data for each file is created
         it should contain the "in depth" printing method for file data.
         With this method presenting the summary and then looping over
         each file object to print its details at the desired verbosity."""
