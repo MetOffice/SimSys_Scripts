@@ -539,7 +539,6 @@ if __name__ == "__main__":
     checkers = []
 
     full_file_paths = [f"{args.path}/{f}" for f in cms.get_changed_files()]
-    # print(f"Full file paths are : {full_file_paths}")
     full_file_paths = [Path(f) for f in full_file_paths]
     active_checkers = create_style_checkers(args.file_types,
                                             full_file_paths)

@@ -343,16 +343,12 @@ class UMDP3Checker:
                 clean_line,
                 re.IGNORECASE,
             ):
-                # print("Debug: Found variable declaration line: "
-                # f"{clean_line}")
                 clean_line = re.sub(
                     r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*",
                     "",
                     clean_line,
                 )
                 if re.search(r"[A-Z]{2,}", clean_line):
-                    # print(f"Debug: Found UPPERCASE variable name: "
-                    # f"{clean_line}")
                     self.add_extra_error("UPPERCASE variable name")
                     failures += 1
                     error_log = self.add_error_log(
