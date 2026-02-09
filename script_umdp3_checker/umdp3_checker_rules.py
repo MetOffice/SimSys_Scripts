@@ -25,11 +25,7 @@ from dataclasses import dataclass, field
 TODO : Several of the test functions are poor shadows of the original
        Perl versions. They would benefit from improving to catch more
        cases.
-<<<<<<< HEAD
-       Equally, there could probably be more consistancly in how things
-=======
        Equally, there could probably be more consistency in how things
->>>>>>> 674ed15 (Tweaks to get VSCode's internal linters to quit whinging and make the… (#173))
        like comments are stripped from the ends of lines
        and/or full comment lines are skipped.
 """
@@ -104,11 +100,7 @@ class UMDP3Checker:
     def add_extra_error(self, key: str, value: str = ""):
         """Add extra error information to the dictionary"""
         """
-<<<<<<< HEAD
-    TODO: The usefulness of the information added has not been assesed,
-=======
     TODO: The usefulness of the information added has not been assessed,
->>>>>>> 674ed15 (Tweaks to get VSCode's internal linters to quit whinging and make the… (#173))
         nor does it appear to be reported as yet."""
         with self._lock:
             self._extra_error_info[key] = value
@@ -332,16 +324,8 @@ class UMDP3Checker:
 
     def lowercase_variable_names(self, lines: List[str]) -> TestResult:
         """Check for lowercase or CamelCase variable names only"""
-        """
-    TODO: This is a very simplistic check and will not detect many
-<<<<<<< HEAD
-        cases which break UMDP3. I suspect the Perl Predeccessor concattenated
-=======
-        cases which break UMDP3. I suspect the Perl Predecessor concatenated
->>>>>>> 674ed15 (Tweaks to get VSCode's internal linters to quit whinging and make the… (#173))
-        continuation lines prior to 'cleaning' and checking. Having identified
-        a declaration, it also then scanned the rest of the file for that
-        variable name in any case."""
+        """ToDo: This is a very simplistic check and will not detect many
+        cases which break UMDP3. I suspect the Perl Predeccessor concattenated continuation lines prior to 'cleaning' and checking. Having identified a declaration, it also then scanned the rest of the file for that variable name in any case."""
         failures = 0
         error_log = {}
         count = -1
@@ -355,22 +339,12 @@ class UMDP3Checker:
                 clean_line,
                 re.IGNORECASE,
             ):
-<<<<<<< HEAD
-                # print("Debug: Found variable declaration line: "
-                # f"{clean_line}")
-=======
->>>>>>> 674ed15 (Tweaks to get VSCode's internal linters to quit whinging and make the… (#173))
                 clean_line = re.sub(
                     r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*",
                     "",
                     clean_line,
                 )
                 if re.search(r"[A-Z]{2,}", clean_line):
-<<<<<<< HEAD
-                    # print(f"Debug: Found UPPERCASE variable name: "
-                    # f"{clean_line}")
-=======
->>>>>>> 674ed15 (Tweaks to get VSCode's internal linters to quit whinging and make the… (#173))
                     self.add_extra_error("UPPERCASE variable name")
                     failures += 1
                     error_log = self.add_error_log(
