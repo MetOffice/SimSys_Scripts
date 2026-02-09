@@ -252,7 +252,8 @@ class UMDP3Checker:
             if line.lstrip(" ").startswith("!"):
                 continue
             clean_line = self.remove_quoted(line)
-            for pattern in [f"\\b{kw}\\b" for kw in unseparated_keywords_list]:
+            for pattern in [f"\\b{kw}\\b" for kw in
+                            unseparated_keywords_list]:
                 if re.search(pattern, clean_line, re.IGNORECASE):
                     self.add_extra_error(f"unseparated keyword in line: "
                                          f"{line.strip()}")
@@ -324,8 +325,12 @@ class UMDP3Checker:
 
     def lowercase_variable_names(self, lines: List[str]) -> TestResult:
         """Check for lowercase or CamelCase variable names only"""
-        """ToDo: This is a very simplistic check and will not detect many
-        cases which break UMDP3. I suspect the Perl Predeccessor concattenated continuation lines prior to 'cleaning' and checking. Having identified a declaration, it also then scanned the rest of the file for that variable name in any case."""
+        """
+    TODO: This is a very simplistic check and will not detect many
+        cases which break UMDP3. I suspect the Perl Predecessor concatenated
+        continuation lines prior to 'cleaning' and checking. Having identified
+        a declaration, it also then scanned the rest of the file for that
+        variable name in any case."""
         failures = 0
         error_log = {}
         count = -1
