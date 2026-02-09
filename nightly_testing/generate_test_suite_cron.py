@@ -55,7 +55,7 @@ DEPENDENCIES = {
 
 CLONE_DIR = os.path.join(os.getenv("TMPDIR", "."), os.getenv("USER", "unknown"))
 MIRROR_PATH = "/data/users/gitassist/git_mirrors/"
-UMDIR = os.environ["UMDIR"]
+UMDIR = os.getenv("UMDIR", ".")
 CYLC = "bash -l cylc"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
 
