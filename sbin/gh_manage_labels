@@ -59,6 +59,7 @@ labels=(
   "Discussion|#FBCA04|Issues that require some formal discussion"
   "cla-required|#b60205|The CLA has not yet been signed by the author of this PR - added by GA"
   "cla-signed|#0052cc|The CLA has been signed as part of this PR - added by GA"
+  "optimisation|#DB4DFF|This PR adds optimisations or edits OpenMP code"
 )
 
 # -- Add labels in relevant repositories
