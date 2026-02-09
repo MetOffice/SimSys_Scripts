@@ -326,7 +326,7 @@ class UMDP3Checker:
         """Check for lowercase or CamelCase variable names only"""
         """
     TODO: This is a very simplistic check and will not detect many
-        cases which break UMDP3. I suspect the Perl Predeccessor concattenated
+        cases which break UMDP3. I suspect the Perl Predecessor concatenated
         continuation lines prior to 'cleaning' and checking. Having identified
         a declaration, it also then scanned the rest of the file for that
         variable name in any case."""
