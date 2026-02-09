@@ -243,7 +243,7 @@ class ApplyMacros:
     Object to hold data + methods to apply upgrade macros in lfric_apps
     """
 
-    def __init__(self, tag, cname, version, apps, core, jules):
+    def __init__(self, tag, cname, version, apps, core, jules, testing=False):
         self.tag = tag
         if cname:
             self.class_name = cname
@@ -252,13 +252,16 @@ class ApplyMacros:
             #  removed from the version
             self.class_name = tag.replace(".", "")
         self.temp_dirs = {}
-        self.root_path = get_root_path(apps)
+        if testing:
+            # Don't search for a git repo if testing
+            self.root_path = apps
+        else:
+            self.root_path = get_root_path(apps)
         self.core_source = self.get_dependency_paths(core, "lfric_core")
         # The Jules source is temporarily ignored as Jules Shared metadata has a
         # copy in LFRic, rather than using the Jules version. The LFRic build
         # system needs modifying to enable this
         # self.jules_source = self.get_dependency_paths(jules, "jules")
-        self.central_rose_meta = False
         self.set_rose_meta_path()
         if version is None:
             self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
@@ -278,20 +281,16 @@ class ApplyMacros:
     def set_rose_meta_path(self):
         """
         Set up the ROSE_META_PATH environment variable in order to use the Jules
-        and Core metadata. We also add the working copy root path as this should
+        and Core metadata. We also add the clone root path as this should
         allow the script to be run from anywhere.
         When Jules Shared from Jules is enabled, self.jules_source will need
         adding here
+        Edit 02/2026 - remove backwards compatibility support for pre central-metadata
         """
-        if os.path.isdir(os.path.join(self.root_path, "rose-meta")):
-            # For backwards compatibility with central rose-meta imports
-            rose_meta_path = (
-                f"{os.path.join(self.root_path, 'rose-meta')}:"
-                f"{os.path.join(self.core_source, 'rose-meta')}"
-            )
-            self.central_rose_meta = True
-        else:
-            rose_meta_path = f"{self.root_path}:{self.core_source}"
+        rose_meta_path = (
+            f"{os.path.join(self.root_path, 'rose-meta')}:"
+            f"{os.path.join(self.core_source, 'rose-meta')}"
+        )
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
     def parse_application_section(self, meta_dir):
@@ -413,10 +412,12 @@ class ApplyMacros:
             - str, stdout of find command looking for versions.py files
         """
 
+        meta_dirs = set()
         for dirpath, dirnames, filenames in os.walk(path, followlinks=True):
-            dirnames[:] = [d for d in dirnames if d not in [".svn"]]
+            dirnames[:] = [d for d in dirnames if d not in [".svn", ".git"]]
             if "versions.py" in filenames:
-                self.meta_dirs.add(dirpath)
+                meta_dirs.add(dirpath)
+        return meta_dirs
 
     def parse_macro(self, macro, meta_dir):
         """
@@ -591,14 +592,8 @@ class ApplyMacros:
 
         # TODO: Reinstate Jules checks when using Jules Metadata from Jules
 
-        # For backwards compatibility with central rose-meta imports
-        if self.central_rose_meta:
-            core_imp = os.path.join(self.core_source, "rose-meta", imp)
-            apps_imp = os.path.join(self.root_path, "rose-meta", imp)
-        else:
-            core_imp = os.path.join(self.core_source, imp)
-            apps_imp = os.path.join(self.root_path, imp)
-
+        core_imp = os.path.join(self.core_source, "rose-meta", imp)
+        apps_imp = os.path.join(self.root_path, "rose-meta", imp)
 
         if os.path.exists(core_imp):
             return core_imp
@@ -707,11 +702,7 @@ class ApplyMacros:
             - A list of meta imports in the correct order
         """
 
-        # If using central metadata, use the basename, otherwise the full path
-        if self.central_rose_meta:
-            app_name = os.path.basename(app)
-        else:
-            app_name = app
+        app_name = os.path.basename(app)
 
         import_list = [app_name]
 
@@ -945,13 +936,12 @@ class ApplyMacros:
         """
 
         # Get list of versions files to check - in both core and apps
-        # Duplicated for backwards compatibility with central rose-meta imports
-        if self.central_rose_meta:
+        self.meta_dirs = self.meta_dirs.union(
             self.find_meta_dirs(os.path.join(self.root_path, "rose-meta"))
+        )
+        self.meta_dirs = self.meta_dirs.union(
             self.find_meta_dirs(os.path.join(self.core_source, "rose-meta"))
-        else:
-            self.find_meta_dirs(self.root_path)
-            self.find_meta_dirs(self.core_source)
+        )
 
         for meta_dir in self.meta_dirs:
             print(
@@ -1052,6 +1042,20 @@ class ApplyMacros:
             )
         print(f"[PASS] {meta_dir} validated")
 
+    def get_rose_apps(self):
+        """
+        Return:
+            - list of paths to rose-stem apps in Apps, Core and Jules
+        """
+
+        apps_list = []
+        for item in (self.root_path, self.core_source):
+            app_dir = os.path.join(item, "rose-stem", "app")
+            if not os.path.exists(app_dir):
+                continue
+            apps_list += [os.path.join(app_dir, f) for f in os.listdir(app_dir)]
+        return set(apps_list)
+
     def apps_to_upgrade(self):
         """
         Loop over rose-stem apps, finding ones using metadata with an upgrade
@@ -1060,10 +1064,8 @@ class ApplyMacros:
             - list of paths to apps requiring upgrading
         """
         upgradeable_apps = []
-        app_dir_apps = os.path.join(self.root_path, "rose-stem", "app")
-        app_dir_core = os.path.join(self.core_source, "rose-stem", "app")
-        apps_list = [os.path.join(app_dir_apps, f) for f in os.listdir(app_dir_apps)]
-        apps_list += [os.path.join(app_dir_core, f) for f in os.listdir(app_dir_core)]
+        apps_list = self.get_rose_apps()
+
         for app_path in apps_list:
             # Ignore lfric_coupled_rivers as this is based on Jules-standalone
             # metadata which is not currently available

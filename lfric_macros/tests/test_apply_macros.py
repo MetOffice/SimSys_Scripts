@@ -7,12 +7,7 @@
 Unit tests for apply_macros
 """
 
-import os
-import shutil
-import subprocess
-import tempfile
-from shlex import split
-
+from os import path
 import pytest
 
 from ..apply_macros import (
@@ -21,8 +16,14 @@ from ..apply_macros import (
     match_python_import,
     deduplicate_list,
     read_versions_file,
-    read_python_imports
+    read_python_imports,
 )
+
+# Commonly used paths
+TEST_APPS_DIR = path.join("tests", "test_lfric_apps_dir")
+TEST_META_DIR = path.join(TEST_APPS_DIR, "rose-meta")
+TEST_ROSE_STEM = path.join(TEST_APPS_DIR, "rose-stem", "app")
+
 
 # A macro that we want to find for these tests
 desired_macro = """class vn00_t001(MacroUpgrade):
@@ -39,7 +40,7 @@ desired_macro = """class vn00_t001(MacroUpgrade):
 
 # A macro pre-existing in the file, forming part of the chain
 existing_macro = """class vn00_t000(MacroUpgrade):
-    # Upgrade macro for ticket #000 by <Test Author>.
+    # Upgrade macro for ticket #000 by <Previous Author>.
     BEFORE_TAG = "vn0.0"
     AFTER_TAG = "vn0.0_t000"
     def upgrade(self, config, meta_config=None):
@@ -67,35 +68,84 @@ test_versions_file = [f"{x}\n" for x in test_versions_file.split("\n")]
 # The expected result from split_macros for the versions
 expected_split_macros = [desired_macro, existing_macro]
 
-# ApplyMacros below requires an LFRic Apps working copy to work - check out the
-# head of the lfric_apps trunk for this purpose. The actual contents of the
-# working copy are not important for the purposes of the unit tests
-appsdir = tempfile.mkdtemp()
-result = subprocess.run(
-    split(f"git clone --depth 1 https://github.com/MetOffice/lfric_apps.git {appsdir}"),
-    check=False,
-    capture_output=True,
-    text=True,
-    timeout=120,
-)
-if result.returncode:
-    raise RuntimeError(
-        "Failed to clone LFRic Apps with error:\n",
-        result.stderr,
-    )
-
 # Create an instance of the apply_macros class
-# Pass a known directory in as the Jules and Core sources as these are not
-# required for testing
-applymacros = ApplyMacros("vn0.0_t001", None, None, appsdir, "/tmp", "/tmp")
+# Use /tmp for Core and Jules as these are not required for testing
+applymacros = ApplyMacros("vn0.0_t001", None, None, TEST_APPS_DIR, "/tmp", "/tmp", True)
+
+
+def test_read_versions_file():
+    """
+    Test read_versions_file
+    """
+
+    assert read_versions_file(
+        path.join(TEST_APPS_DIR, "rose-meta", "lfric-gungho")
+    ) == ["# line 1\n", "# line 2\n"]
+
+
+def test_find_meta_dirs():
+    result = applymacros.find_meta_dirs(path.join(TEST_APPS_DIR, "rose-meta"))
+    expected = set()
+    expected.add(path.join(TEST_META_DIR, "lfric-lfric_atm"))
+    expected.add(path.join(TEST_META_DIR, "lfric-gungho"))
+    expected.add(path.join(TEST_META_DIR, "lfric-driver"))
+    expected.add(path.join(TEST_META_DIR, "um-iau"))
+    expected.add(path.join(TEST_META_DIR, "lfric-transport"))
+    assert result == expected
+    applymacros.meta_dirs = result
 
 
 def test_split_macros():
-    m = split_macros(test_versions_file)
+    result = split_macros(test_versions_file)
     # Remove trailing newlines as these are unimportant
-    for i, item in enumerate(m):
-        m[i] = item.strip("\n")
-    assert m == expected_split_macros
+    for i, item in enumerate(result):
+        result[i] = item.strip("\n")
+    assert result == expected_split_macros
+
+
+def test_match_python_imports():
+    assert match_python_import("import z")
+    assert match_python_import("from x import y")
+    assert match_python_import("from a import b.c")
+    assert match_python_import("import m as n")
+    assert not match_python_import("false")
+
+
+def test_deduplicate_list():
+    """
+    Test deduplicate_list
+    """
+
+    before = [1, 2, 2, "a", "b", "b", {0: 1, 1: 2}, {0: 1, 1: 2}]
+    after = [
+        1,
+        2,
+        "a",
+        "b",
+        {0: 1, 1: 2},
+    ]
+
+    assert deduplicate_list(before) == after
+    assert deduplicate_list(after) == after
+
+
+def test_read_python_imports():
+    """
+    Test read_python_imports
+    """
+
+    test_file = path.join(TEST_APPS_DIR, "test_read_python_imports.py")
+    expected = set()
+    imports = (
+        (("shlex",), ("split",), None),
+        (("pathlib",), ("PurePath",), None),
+        ((), ("os",), None),
+        (("pathlib",), ("Path",), None),
+        ((), ("networkx",), "nx"),
+    )
+    for item in imports:
+        expected.add(item)
+    assert read_python_imports(test_file) == expected
 
 
 def test_find_macro():
@@ -113,44 +163,94 @@ def test_find_last_macro():
 
 
 def test_parse_macro():
-    applymacros.parsed_macros["meta_dir"] = applymacros.parse_macro(
-        desired_macro, "meta_dir"
-    )
-    expected_dict = {
-        "before_tag": "vn0.0_t000",
-        "after_tag": "vn0.0_t001",
-        "commands": (
-            "        self.add_setting(\n"
-            '            config, ["namelist:namelist1", "opt1"], "value1"\n'
-            "        )\n"
-        ),
-        "ticket_number": "#001",
-        "author": "Test Author",
-        "class_name": "vn00_t001",
-    }
-    assert applymacros.parsed_macros["meta_dir"] == expected_dict
+    for macro in (existing_macro, desired_macro):
+        applymacros.parsed_macros["meta_dir"].append(
+            applymacros.parse_macro(macro, "meta_dir")
+        )
+    expected_macros_list = [
+        {
+            "before_tag": "vn0.0",
+            "after_tag": "vn0.0_t000",
+            "commands": (
+                "        self.add_setting(\n"
+                '            config, ["namelist:namelist0", "opt0"], "value0"\n'
+                "        )\n"
+            ),
+            "ticket_number": "#000",
+            "author": "Previous Author",
+            "class_name": "vn00_t000",
+        },
+        {
+            "before_tag": "vn0.0_t000",
+            "after_tag": "vn0.0_t001",
+            "commands": (
+                "        self.add_setting(\n"
+                '            config, ["namelist:namelist1", "opt1"], "value1"\n'
+                "        )\n"
+            ),
+            "ticket_number": "#001",
+            "author": "Test Author",
+            "class_name": "vn00_t001",
+        },
+    ]
+    assert applymacros.parsed_macros["meta_dir"] == expected_macros_list
     with pytest.raises(Exception, match=r".*failed/versions.py"):
         applymacros.parse_macro("", "failed")
 
 
+def test_check_missing_macro():
+    macros = applymacros.parsed_macros["meta_dir"]
+    applymacros.parsed_macros[path.join(TEST_META_DIR, "lfric-gungho")] = macros
+    missing = applymacros.check_missing_macros(
+        path.join(TEST_META_DIR, "lfric-lfric_atm"), ["lfric-gungho"]
+    )
+    assert missing == ["vn0.0_t000"]
+    missing = applymacros.check_missing_macros(
+        path.join(TEST_META_DIR, "lfric-gungho"), []
+    )
+    assert missing == []
+
+
+def test_combine_missing_macros():
+    combined = applymacros.combine_missing_macros(
+        [path.join(TEST_META_DIR, "lfric-gungho")], ["vn0.0_t000"]
+    )
+    expected_combined = {
+        "vn0.0_t000": {
+            "before_tag": "vn0.0",
+            "after_tag": "vn0.0_t000",
+            "commands": (
+                "        self.add_setting(\n"
+                '            config, ["namelist:namelist0", "opt0"], "value0"\n'
+                "        )\n"
+            ),
+            "ticket_number": "#000",
+            "author": "Previous Author",
+            "class_name": "vn00_t000",
+        },
+    }
+    assert combined == expected_combined
+
+
 def test_read_meta_imports():
-    applymacros.parsed_macros["tests/test_meta_dir"] = {}
-    applymacros.parsed_macros["tests/test_meta_dir"]["imports"] = (
-        applymacros.read_meta_imports("tests/test_meta_dir")
+    applymacros.parsed_macros[TEST_APPS_DIR] = {}
+    applymacros.parsed_macros[TEST_APPS_DIR]["imports"] = applymacros.read_meta_imports(
+        path.join(TEST_APPS_DIR, "rose-meta", "lfric-gungho")
     )
     expected_imports = [
-        os.path.join(applymacros.root_path, "rose-meta", "lfric-gungho"),
-        os.path.join(applymacros.root_path, "rose-meta", "lfric-lfric_atm"),
+        path.join(applymacros.root_path, "rose-meta", "lfric-driver"),
+        path.join(applymacros.root_path, "rose-meta", "um-iau"),
     ]
-    assert (
-        applymacros.parsed_macros["tests/test_meta_dir"]["imports"] == expected_imports
-    )
+    assert applymacros.parsed_macros[TEST_APPS_DIR]["imports"] == expected_imports
 
     expected_meta = [
-        os.path.join(applymacros.root_path, "rose-meta", "lfric-lfric_atm")
+        path.join(applymacros.root_path, "rose-meta", "lfric-lfric_atm", "vn0.0")
     ]
     assert (
-        applymacros.read_meta_imports("tests/test_meta_dir/rose-app.conf", "meta")
+        applymacros.read_meta_imports(
+            path.join(TEST_APPS_DIR, "rose-stem", "app", "lfric_atm", "rose-app.conf"),
+            "meta",
+        )
         == expected_meta
     )
 
@@ -184,68 +284,78 @@ def test_combine_macros():
         "        # Commands From: rose-meta/importB\n        importB command\n"
     )
     result = applymacros.combine_macros(["importA", "importB"])
-    print(result)
-    print()
-    print(expected_combined)
     assert result == expected_combined
 
 
 def test_parse_application_section():
-    assert applymacros.parse_application_section("meta_dir/HEAD") == "meta_dir"
-    assert applymacros.parse_application_section("meta_dir/versions.py") == "meta_dir"
     assert (
-        applymacros.parse_application_section(f"{applymacros.root_path}/meta_dir")
+        applymacros.parse_application_section(path.join("meta_dir", "HEAD"))
         == "meta_dir"
     )
     assert (
-        applymacros.parse_application_section(f"{applymacros.core_source}/meta_dir")
+        applymacros.parse_application_section(path.join("meta_dir", "versions.py"))
+        == "meta_dir"
+    )
+    assert (
+        applymacros.parse_application_section(
+            path.join(applymacros.root_path, "meta_dir")
+        )
+        == "meta_dir"
+    )
+    assert (
+        applymacros.parse_application_section(
+            path.join(applymacros.core_source, "meta_dir")
+        )
         == "meta_dir"
     )
 
 
-def test_match_python_imports():
-    assert match_python_import("import z")
-    assert match_python_import("from x import y")
-    assert match_python_import("from a import b.c")
-    assert match_python_import("import m as n")
-    assert not match_python_import("false")
+def test_read_dependencies():
+    assert applymacros.read_dependencies("test_repo") == ("test_source", "test_ref")
 
 
-def test_read_versions_file():
-    """
-    Test read_versions_file
-    """
+def test_order_meta_dirs():
+    applymacros.target_macros = {
+        path.join(TEST_META_DIR, "lfric-driver"): {"imports": []},
+        path.join(TEST_META_DIR, "lfric-gungho"): {
+            "imports": [
+                path.join(TEST_META_DIR, "lfric-driver"),
+                path.join(TEST_META_DIR, "um-iau"),
+            ]
+        },
+        path.join(TEST_META_DIR, "um-iau"): {"imports": []},
+        path.join(TEST_META_DIR, "lfric-lfric_atm"): {
+            "imports": [path.join(TEST_META_DIR, "lfric-gungho")]
+        },
+        path.join(TEST_META_DIR, "lfric-transport"): {
+            "imports": [path.join(TEST_META_DIR, "lfric-gungho")]
+        },
+    }
+    order = applymacros.order_meta_dirs()
+    gungho = order.index(path.join(TEST_META_DIR, "lfric-gungho"))
+    lfric_atm = order.index(path.join(TEST_META_DIR, "lfric-lfric_atm"))
+    driver = order.index(path.join(TEST_META_DIR, "lfric-driver"))
+    um = order.index(path.join(TEST_META_DIR, "um-iau"))
+    assert gungho > driver
+    assert gungho > um
+    assert lfric_atm > gungho
 
-    assert read_versions_file(os.path.join("tests", "test_meta_dir")) == ["# line 1\n", "# line 2\n"]
 
-
-def test_deduplicate_list():
-    """
-    Test deduplicate_list
-    """
-
-    before = [1,2,2,"a","b","b",{0:1,1:2},{0:1,1:2}]
-    after = [1,2,"a","b",{0:1,1:2},]
-
-    assert deduplicate_list(before) == after
-    assert deduplicate_list(after) == after
-
-
-def test_read_python_imports():
-    """
-    Test read_python_imports
-    """
-
-    test_file = os.path.join("tests", "test_meta_dir", "test_read_python_imports.py")
+def test_get_rose_apps():
     expected = set()
-    imports = (('shlex',), ('split',), None), (('pathlib',), ('PurePath',), None), ((), ('os',), None), (('pathlib',), ('Path',), None), ((), ('networkx',), 'nx')
-    for item in imports:
-        expected.add(item)
-    assert read_python_imports(test_file) == expected
+    expected.add(path.join(TEST_ROSE_STEM, "gungho"))
+    expected.add(path.join(TEST_ROSE_STEM, "lfric_atm"))
+    expected.add(path.join(TEST_ROSE_STEM, "transport"))
+    assert applymacros.get_rose_apps() == expected
 
 
-# Remove appsdir
-@pytest.fixture(scope="session", autouse=True)
-def remove_tempdir():
-    yield
-    shutil.rmtree(appsdir)
+def test_apps_to_upgrade():
+    applymacros.sections_with_macro = [
+        path.join(TEST_META_DIR, "lfric-gungho"),
+        path.join(TEST_META_DIR, "lfric-lfric_atm"),
+    ]
+    expected = (
+        [path.join(TEST_ROSE_STEM, "gungho"), path.join(TEST_ROSE_STEM, "lfric_atm")],
+        [path.join(TEST_ROSE_STEM, "lfric_atm"), path.join(TEST_ROSE_STEM, "gungho")],
+    )
+    assert applymacros.apps_to_upgrade() in expected
