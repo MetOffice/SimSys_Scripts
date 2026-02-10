@@ -24,6 +24,7 @@ from ..get_git_sources import (
     merge_source,
 )
 
+
 @pytest.fixture(scope="session")
 def setup_sources(tmpdir_factory):
     """
@@ -59,7 +60,8 @@ def setup_sources(tmpdir_factory):
             f.write(f"merge{i}")
         subprocess.run(split(f"git -C merge{i} add merge.txt"), check=True)
         subprocess.run(
-            split(f"git  -C merge{i} commit -a -m 'merge conflict'"), check=True,
+            split(f"git  -C merge{i} commit -a -m 'merge conflict'"),
+            check=True,
         )
 
     return Path(location)

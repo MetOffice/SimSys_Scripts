@@ -20,7 +20,9 @@ from ..apply_macros import (
 )
 
 # Commonly used paths
-TEST_APPS_DIR = path.join("tests", "test_lfric_apps_dir")
+TEST_APPS_DIR = path.join(
+    path.dirname(path.dirname(path.abspath(__file__))), "tests", "test_lfric_apps_dir"
+)
 TEST_META_DIR = path.join(TEST_APPS_DIR, "rose-meta")
 TEST_ROSE_STEM = path.join(TEST_APPS_DIR, "rose-stem", "app")
 

@@ -29,8 +29,6 @@ jobs:
           pip install networkx
           pip install PyYAML
       - name: Test with pytest
-        env:
-          RUNNING_GH_ACTION: True
         run: |
           git config --global user.name 'Testing'
           git config --global user.email 'Testing'
