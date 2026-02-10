@@ -19,6 +19,11 @@ from ..git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo, GitBas
 # Disable warnings caused by the use of pytest fixtures
 # pylint: disable=redefined-outer-name
 
+# Check if running in an action and setup git if so
+if os.getenv("RUNNING_GH_ACTION", "False") == "True":
+    subprocess.run(split("git config --global user.email 'Testing'"))
+    subprocess.run(split("git config --global user.name 'Testing'"))
+
 
 def add_to_repo(start, end, message, mode="wt"):
     """Add and commit dummy files to a repo."""
@@ -43,11 +48,6 @@ def add_to_repo(start, end, message, mode="wt"):
 @pytest.fixture(scope="session")
 def git_repo(tmpdir_factory):
     """Create and populate a test git repo."""
-
-    # Check if running in an action and setup git if so
-    if os.getenv("RUNNING_GH_ACTION", "False") == "True":
-        subprocess.run(split("git config --global user.email 'Testing'"))
-        subprocess.run(split("git config --global user.name 'Testing'"))
 
     location = tmpdir_factory.mktemp("data")
     os.chdir(location)
