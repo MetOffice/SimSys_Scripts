@@ -13,7 +13,6 @@ This script will run the processes needed to close off and finish a milestone
         * Remaining open PRs and issues against this milestone
         * Closed PRs against this milestone
 """
-from collections import defaultdict
 from pathlib import Path
 import argparse
 from review_project import ProjectData
@@ -50,7 +49,7 @@ def still_open(open_prs: dict, current_milestone: str) -> int:
     return total
 
 
-def closed_other(closed_prs: dict, current_milestone: str) -> int:
+def closed_other(closed_prs: dict, current_milestone: str, dry_run: bool = False) -> int:
     """
     Report on closed pull requests not at the current milestone.
     """
@@ -63,24 +62,29 @@ def closed_other(closed_prs: dict, current_milestone: str) -> int:
         if milestone == current_milestone:
             continue
 
-        for repo in closed_prs[milestone]:
-            print(f"{repo} \n{'-' * len(repo)}")
-            for pr in closed_prs[milestone][repo]:
-                print(f"#{pr.number : <5} {pr.title}")
+        elif milestone == "None":
+            print(f"Setting pull requests with no milestone "
+                  f"to {current_milestone}")
+            for repo in closed_prs[milestone]:
+                for pr in closed_prs[milestone][repo]:
+                    pr.modify_milestone(current_milestone, dry_run)
 
-            count = len(closed_prs[milestone][repo])
-            print(
-                f"->   {count} closed pull request(s) in {repo} at milestone {milestone} \n"
-            )
-            total += count
+        else:
+            for repo in closed_prs[milestone]:
+                print(f"{repo} \n{'-' * len(repo)}")
+                for pr in closed_prs[milestone][repo]:
+                    print(f"#{pr.number : <5} {pr.title}")
 
-    if total == 0:
-        print(f"No closed pull requests not for {current_milestone} \n")
+                count = len(closed_prs[milestone][repo])
+                print(
+                    f"->   {count} closed pull request(s) in {repo} at milestone {milestone} \n"
+                )
+                total += count
 
     return total
 
 
-def check_ready(open_prs: dict, closed_prs: dict, milestone: str) -> None:
+def check_ready(data: ProjectData, milestone: str, dry_run: bool = False) -> None:
     """
     Check if the milestone is ready to be closed by confirming that:
       * all pull requests for this milestone have been completed
@@ -89,8 +93,10 @@ def check_ready(open_prs: dict, closed_prs: dict, milestone: str) -> None:
     Give the user the choice to continue regardless since there may be valid
     exceptions.
     """
-    total_open = still_open(open_prs[milestone], milestone)
-    total_other = closed_other(closed_prs, milestone)
+    open_prs = data.get_milestone(milestone=milestone, status="open")
+    closed_prs = data.get_all_milestones(status="closed")
+    total_open = still_open(open_prs, milestone)
+    total_other = closed_other(closed_prs, milestone, dry_run)
 
     if total_open or total_other:
         print("=" * 50)
@@ -106,12 +112,14 @@ def check_ready(open_prs: dict, closed_prs: dict, milestone: str) -> None:
             print("Unrecognised input, please select y or n")
 
 
-def report(closed: dict, milestone: str) -> None:
+def report(data: ProjectData, milestone: str) -> None:
     """
     Report on the pull requests completed in this milestone
     """
 
     print_banner(f"Pull requests completed for {milestone}")
+
+    closed = data.get_milestone(milestone=milestone, status="closed")
 
     total = 0
     for repo in closed:
@@ -179,12 +187,9 @@ def main(
     else:
         data = ProjectData.from_github(capture_project, file)
 
-    open_prs_by_milestones = data.get_by_milestone("open")
-    closed_prs_by_milestones = data.get_by_milestone("closed")
-
     # Process data and report on status
-    check_ready(open_prs_by_milestones, closed_prs_by_milestones, milestone)
-    report(closed_prs_by_milestones[milestone], milestone)
+    check_ready(data, milestone, dry)
+    report(data, milestone)
 
     # Archive pull requests at the milestone
     print_banner(f"Archiving Milestone {milestone}")
