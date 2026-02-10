@@ -112,12 +112,8 @@ def test_sync_repo(setup_sources):
     Test cloning from a github source
     """
 
+    # Cant test syncing with a hostname in github actions
     source_loc = setup_sources / "SimSys_Scripts"
-    output_loc = setup_sources / "sync_clone_hostname"
-    hostname = socket.gethostname()
-    assert sync_repo(f"{hostname}:{source_loc}", "2025.12.1", output_loc) is None
-    assert Path(output_loc / ".git").is_dir() is True
-
     output_loc = setup_sources / "sync_clone"
     assert sync_repo(source_loc, "2025.12.1", output_loc) is None
     assert Path(output_loc / ".git").is_dir() is True
