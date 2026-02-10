@@ -21,6 +21,7 @@ from ..git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo, GitBas
 
 # Check if running in an action and setup git if so
 if os.getenv("RUNNING_GH_ACTION", "False") == "True":
+    raise Exception("FROM HERE")
     subprocess.run(split("git config --global user.email 'Testing'"), check=True)
     subprocess.run(split("git config --global user.name 'Testing'"), check=True)
 
