@@ -24,12 +24,6 @@ from ..get_git_sources import (
     merge_source,
 )
 
-# Check if running in an action and setup git if so
-if os.getenv("RUNNING_GH_ACTION", "False") == "True":
-    subprocess.run(split("git config --global user.email 'Testing'"))
-    subprocess.run(split("git config --global user.name 'Testing'"))
-
-
 @pytest.fixture(scope="session")
 def setup_sources(tmpdir_factory):
     """

@@ -11,19 +11,12 @@ Test suite for git_bdiff module.
 import os
 import subprocess
 import pytest
-from shlex import split
 
 from ..git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo, GitBase
 
 
 # Disable warnings caused by the use of pytest fixtures
 # pylint: disable=redefined-outer-name
-
-# Check if running in an action and setup git if so
-if os.getenv("RUNNING_GH_ACTION", "False") == "True":
-    raise Exception("FROM HERE")
-    subprocess.run(split("git config --global user.email 'Testing'"), check=True)
-    subprocess.run(split("git config --global user.name 'Testing'"), check=True)
 
 
 def add_to_repo(start, end, message, mode="wt"):
