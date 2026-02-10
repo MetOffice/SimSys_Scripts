@@ -11,6 +11,7 @@ Test suite for git_bdiff module.
 import os
 import subprocess
 import pytest
+from shlex import split
 
 from ..git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo, GitBase
 
@@ -30,10 +31,6 @@ def add_to_repo(start, end, message, mode="wt"):
     subprocess.run(
         [
             "git",
-            "-c",
-            "user.name='Testing'",
-            "-c",
-            "user.email='Testing'",
             "commit",
             "--no-gpg-sign",
             "-m",
@@ -46,6 +43,11 @@ def add_to_repo(start, end, message, mode="wt"):
 @pytest.fixture(scope="session")
 def git_repo(tmpdir_factory):
     """Create and populate a test git repo."""
+
+    # Check if running in an action and setup git if so
+    if os.getenv("RUNNING_GH_ACTION", "False") == "True":
+        subprocess.run(split("git config --global user.email 'Testing'"))
+        subprocess.run(split("git config --global user.name 'Testing'"))
 
     location = tmpdir_factory.mktemp("data")
     os.chdir(location)

@@ -8,7 +8,6 @@ Unit tests for get_git_sources
 """
 
 import os
-import socket
 import subprocess
 from shlex import split
 from pathlib import Path
@@ -34,8 +33,12 @@ def setup_sources(tmpdir_factory):
     Use SimSys_Scripts as a public repo
     """
 
+    # Check if running in an action and setup git if so
+    if os.getenv("RUNNING_GH_ACTION", "False") == "True":
+        subprocess.run(split("git config --global user.email 'Testing'"))
+        subprocess.run(split("git config --global user.name 'Testing'"))
+
     location = tmpdir_factory.mktemp("data")
-    print(location)
     os.chdir(location)
 
     # Setup local mirror
@@ -61,13 +64,8 @@ def setup_sources(tmpdir_factory):
         with open(f"merge{i}/merge.txt", "w") as f:
             f.write(f"merge{i}")
         subprocess.run(split(f"git -C merge{i} add merge.txt"), check=True)
-        # Set email/user for gh action testing
         subprocess.run(
-            split(
-                f"git -c user.name='Testing' -c user.email='Testing' -C merge{i} "
-                "commit -a -m 'merge conflict'"
-            ),
-            check=True,
+            split(f"git  -C merge{i} commit -a -m 'merge conflict'"), check=True,
         )
 
     return Path(location)
