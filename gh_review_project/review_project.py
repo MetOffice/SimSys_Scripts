@@ -228,11 +228,11 @@ class ProjectData:
         milestone_data = defaultdict(list)
 
         for pr in self.pull_requests:
-            if (pr.milestone == milestone and
-               (pr.status == status
+            if pr.milestone == milestone and (
+                pr.status == status
                 or status == "all"
                 or (status == "open" and pr.status in self.open_states)
-                or (status == "closed" and pr.status not in self.open_states))
+                or (status == "closed" and pr.status not in self.open_states)
             ):
 
                 milestone_data[pr.repo].append(pr)

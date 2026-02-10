@@ -49,7 +49,9 @@ def still_open(open_prs: dict, current_milestone: str) -> int:
     return total
 
 
-def closed_other(closed_prs: dict, current_milestone: str, dry_run: bool = False) -> int:
+def closed_other(
+    closed_prs: dict, current_milestone: str, dry_run: bool = False
+) -> int:
     """
     Report on closed pull requests not at the current milestone.
     """
@@ -63,8 +65,7 @@ def closed_other(closed_prs: dict, current_milestone: str, dry_run: bool = False
             continue
 
         elif milestone == "None":
-            print(f"Setting pull requests with no milestone "
-                  f"to {current_milestone}")
+            print(f"Setting pull requests with no milestone " f"to {current_milestone}")
             for repo in closed_prs[milestone]:
                 for pr in closed_prs[milestone][repo]:
                     pr.modify_milestone(current_milestone, dry_run)
