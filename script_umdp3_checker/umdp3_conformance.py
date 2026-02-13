@@ -582,7 +582,6 @@ if __name__ == "__main__":
         For now, just configure checkers based on file type requested.
         Later, could add configuration files to specify which
         checkers to use for each file type."""
-    checkers = []
 
     active_checkers = create_style_checkers(args.file_types,
                                             full_file_paths)
