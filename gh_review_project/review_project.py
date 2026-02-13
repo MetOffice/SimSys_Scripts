@@ -40,17 +40,9 @@ class ProjectData:
     repos: list All repositories currectly represented in the project
     """
 
-    pr_open_states = [
-        "In Progress",
-        "SciTech Review",
-        "Code Review",
-        "Approved",
-        "Changes Requested",
-    ]
-
-    def __init__(self, project: int, pull_requests: list, test: bool = False):
+    def __init__(self, project: int, items: list, test: bool = False):
         self.project = project
-        self.pull_requests = pull_requests
+        self.project_items = items
         self.test = test
 
         # Extract these once as useful lists
@@ -58,7 +50,9 @@ class ProjectData:
         self.repos = self._extract_repositories()
 
     @classmethod
-    def from_github(cls, project: int, capture: bool = False, file: Path = None) -> ProjectData:
+    def from_github(
+        cls, project: int, capture: bool = False, file: Path = None
+    ) -> ProjectData:
         """
         Retrieve data from GitHub API and initialise the class.
 
@@ -83,8 +77,8 @@ class ProjectData:
             else:
                 print("Unable to capture data as filename not specified.")
 
-        pull_requests = cls._extract_data(raw_data)
-        return cls(project, pull_requests, test=False)
+        items = cls._extract_data(raw_data)
+        return cls(project, items, test=False)
 
     @classmethod
     def from_file(cls, project: int, file: Path) -> ProjectData:
@@ -96,8 +90,8 @@ class ProjectData:
         with open(file) as f:
             raw_data = json.loads(f.read())
 
-        pull_requests = cls._extract_data(raw_data)
-        return cls(project, pull_requests, test=True)
+        items = cls._extract_data(raw_data)
+        return cls(project, items, test=True)
 
     @classmethod
     def _extract_data(cls, raw_data: dict) -> list:
@@ -108,42 +102,51 @@ class ProjectData:
         raw_data: github data from the project
         """
 
-        pr_list = []
+        item_list = []
 
-        for pr in raw_data["items"]:
-            pull_request = PullRequest(
-                id=pr["id"],
-                number=pr["content"]["number"],
-                title=pr["content"]["title"],
-                repo=pr["content"]["repository"].replace("MetOffice/", ""),
-            )
+        for item_data in raw_data["items"]:
+            if item_data["content"]["type"] == "PullRequest":
+                item = PullRequest(
+                    id=item_data["id"],
+                    number=item_data["content"]["number"],
+                    title=item_data["content"]["title"],
+                    repo=item_data["content"]["repository"].replace("MetOffice/", ""),
+                )
 
-            if "status" in pr:
-                pull_request.status = pr["status"]
+                if "code Review" in item_data:
+                    item.codeReview = item_data["code Review"]
 
-            if "milestone" in pr:
-                pull_request.milestone = pr["milestone"]["title"]
+                if "sciTech Review" in item_data:
+                    item.scitechReview = item_data["sciTech Review"]
 
-            if "assignee" in pr:
-                pull_request.assignee = pr["assignees"]
+            elif item_data["content"]["type"] == "Issue":
+                item = Issue(
+                    id=item_data["id"],
+                    number=item_data["content"]["number"],
+                    title=item_data["content"]["title"],
+                    repo=item_data["content"]["repository"].replace("MetOffice/", ""),
+                )
 
-            if "code Review" in pr:
-                pull_request.codeReview = pr["code Review"]
+            if "status" in item_data:
+                item.status = item_data["status"]
 
-            if "sciTech Review" in pr:
-                pull_request.scitechReview = pr["sciTech Review"]
+            if "milestone" in item_data:
+                item.milestone = item_data["milestone"]["title"]
 
-            pr_list.append(pull_request)
+            if "assignee" in item_data:
+                item.assignee = item_data["assignees"]
 
-        return pr_list
+            item_list.append(item)
+
+        return item_list
 
     def _extract_milestones(self) -> set:
         """
         Create a set of milestones from the pull request data
         """
         milestones = set()
-        for pr in self.pull_requests:
-            milestones.add(pr.milestone)
+        for item in self.project_items:
+            milestones.add(item.milestone)
 
         return milestones
 
@@ -152,8 +155,8 @@ class ProjectData:
         Create a set of repositories from the pull request data
         """
         repositories = set()
-        for pr in self.pull_requests:
-            repositories.add(pr.repo)
+        for item in self.project_items:
+            repositories.add(item.repo)
 
         return repositories
 
@@ -169,30 +172,31 @@ class ProjectData:
         if self.test:
             print("\n=== Reviewers for " + repo)
 
-        for pr in self.pull_requests:
-            if pr.repo == repo:
-                sr = pr.scitechReview
-                if sr:
-                    reviewers.append(sr)
+        for item in self.project_items:
+            if isinstance(item, PullRequest):
+                if item.repo == repo:
+                    sr = item.scitechReview
+                    if sr:
+                        reviewers.append(sr)
 
-                cr = pr.codeReview
-                if cr:
-                    reviewers.append(cr)
+                    cr = item.codeReview
+                    if cr:
+                        reviewers.append(cr)
 
-                if self.test and (cr or sr):
-                    # Handle case where these are None
-                    if not sr:
-                        sr = ""
-                    if not cr:
-                        cr = ""
+                    if self.test and (cr or sr):
+                        # Handle case where these are None
+                        if not sr:
+                            sr = ""
+                        if not cr:
+                            cr = ""
 
-                    print(
-                        "SciTech:",
-                        f"{sr: <18}",
-                        "Code:",
-                        f"{cr: <18}",
-                        pr.title,
-                    )
+                        print(
+                            "SciTech:",
+                            f"{sr: <18}",
+                            "Code:",
+                            f"{cr: <18}",
+                            item.title,
+                        )
 
         return reviewers
 
@@ -229,50 +233,49 @@ class ProjectData:
 
         milestone_data = defaultdict(list)
 
-        for pr in self.pull_requests:
-            if pr.milestone == milestone and (
-                pr.status == status
+        for item in self.project_items:
+            if item.milestone == milestone and (
+                item.status == status
                 or status == "all"
-                or (status == "open" and pr.status in self.pr_open_states)
-                or (status == "closed" and pr.status not in self.pr_open_states)
+                or (status == "open" and item.status in item.open_states)
+                or (status == "closed" and item.status not in item.open_states)
             ):
 
-                milestone_data[pr.repo].append(pr)
+                milestone_data[item.repo].append(item)
         return milestone_data
 
     def archive_milestone(self, milestone: str, dry_run: bool = False) -> None:
         """
-        Archive all pull requests for a given milestone from the project.
+        Archive all items for a given milestone from the project.
 
         milestone: Title of milestone to archive
         dry_run: If true then dummy the commands
         """
 
-        print(f"Archiving all completed pull requests for {milestone}")
+        print(f"Archiving all completed items for {milestone}")
 
         dry_run = dry_run | self.test  # if test data, or a dryrun, then dummy commands
 
-        closed_prs = self.get_milestone(milestone=milestone, status="closed")
-        for repo in closed_prs:
-            for pr in closed_prs[repo]:
-                pr.archive(self.project, dry_run)
+        closed = self.get_milestone(milestone=milestone, status="closed")
+        for repo in closed:
+            for item in closed[repo]:
+                item.archive(self.project, dry_run)
 
 
-class PullRequest:
+class ProjectItem:
     """
-    Class for an individual pull request to hold key information and provide
-    functions to modify the pull request.
+    Base class for pull requests and issues
 
-    id: github ID for the pull request
-    number: number of the pull request in the repository
-    title: title of the pull request
-    repo: repository where the pull request is located
-    status: status of the pull request
+    id: github ID for the item
+    number: number of the item in the repository
+    title: title of the item
+    repo: repository where the item is located
+    status: status of the item
     milestone: title of the milestone
-    assignee: assignee of the pull request, which is the developer
-    scitechReview: user assigned to sciTech review the pull request
-    codeReview: user assigned to code review the pull request
     """
+
+    open_states = []
+    command_type = None
 
     def __init__(
         self, id: str = None, number: str = None, title: str = None, repo: str = None
@@ -285,17 +288,17 @@ class PullRequest:
         self.status = None
         self.milestone = "None"
         self.assignee = None
-        self.scitechReview = None
-        self.codeReview = None
 
     def archive(self, project: int, dry_run: bool = False) -> None:
         """
-        Archive this pull request from the project.
+        Archive this item from the project.
 
         dry_run: If true, print the command used rather than archiving.
         """
 
-        command = f"gh project item-archive {project} --owner {PROJECT_OWNER} --id {self.id}"
+        command = (
+            f"gh project item-archive {project} --owner {PROJECT_OWNER} --id {self.id}"
+        )
         message = f"Archiving #{self.number} in {self.repo}"
 
         if dry_run:
@@ -312,7 +315,7 @@ class PullRequest:
         dry_run, If true, print the command rather than making a change.
         """
 
-        command = f"gh pr edit {self.number} --repo='{PROJECT_OWNER}/{self.repo}' --milestone='{milestone}'"
+        command = f"gh {self.command_type} edit {self.number} --repo='{PROJECT_OWNER}/{self.repo}' --milestone='{milestone}'"
         message = f"Changing milestone for #{self.number} in {self.repo}"
 
         if dry_run:
@@ -322,3 +325,67 @@ class PullRequest:
             run_command(command)
 
         self.milestone = milestone
+
+    def add_comment(self, text: str, dry_run: bool = False) -> None:
+        """
+        Add a comment to this item
+
+        test: string to form the comment
+        dry_run: If true, print the command rather than making a change.
+        """
+
+        command = f"gh {self.command_type} comment {self.number} --repo='{PROJECT_OWNER}/{self.repo}' --body='{text}'"
+        message = f"Adding comment to #{self.number} in {self.repo}"
+
+        if dry_run:
+            print(f"[DRY RUN] {message: <50} {command}")
+        else:
+            print(message)
+            run_command(command)
+
+
+class PullRequest(ProjectItem):
+    """
+    Class for an individual pull request to hold key information and provide
+    functions to modify the pull request.
+
+
+    assignee: assignee of the pull request, which is the developer
+    scitechReview: user assigned to sciTech review the pull request
+    codeReview: user assigned to code review the pull request
+    """
+
+    open_states = [
+        "In Progress",
+        "SciTech Review",
+        "Code Review",
+        "Approved",
+        "Changes Requested",
+    ]
+
+    command_type = "pr"
+
+    def __init__(
+        self, id: str = None, number: str = None, title: str = None, repo: str = None
+    ):
+        super().__init__(id, number, title, repo)
+
+        self.scitechReview = None
+        self.codeReview = None
+
+
+class Issue:
+    """
+    Class for an individual issue to hold key information and provide
+    functions to modify the issue.
+
+    id: github ID for the pull request
+    number: number of the pull request in the repository
+    title: title of the pull request
+    repo: repository where the pull request is located
+    status: status of the pull request
+    milestone: title of the milestone
+    assignee: assignee of the pull request, which is the developer
+    """
+
+    open_states = ["New Issue", "Ready for Work", "In Progress", "In Review"]
