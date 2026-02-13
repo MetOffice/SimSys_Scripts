@@ -15,7 +15,7 @@ This script will run the processes needed to close off and finish a milestone
 """
 from pathlib import Path
 import argparse
-from review_project import ProjectData
+from review_project import ProjectData, REVIEW_ID, ISSUE_ID
 
 
 def print_banner(message: str) -> None:
@@ -184,9 +184,9 @@ def main(
 
     # Get milestone data
     if test:
-        data = ProjectData.from_file(file)
+        data = ProjectData.from_file(REVIEW_ID, file)
     else:
-        data = ProjectData.from_github(capture_project, file)
+        data = ProjectData.from_github(REVIEW_ID, capture_project, file)
 
     # Process data and report on status
     check_ready(data, milestone, dry)

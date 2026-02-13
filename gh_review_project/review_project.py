@@ -16,7 +16,8 @@ from pathlib import Path
 import shlex
 from collections import defaultdict
 
-PROJECT_ID = 376
+REVIEW_ID = 376
+ISSUE_ID = 418
 PROJECT_OWNER = "MetOffice"
 
 
@@ -39,7 +40,7 @@ class ProjectData:
     repos: list All repositories currectly represented in the project
     """
 
-    open_states = [
+    pr_open_states = [
         "In Progress",
         "SciTech Review",
         "Code Review",
@@ -47,7 +48,8 @@ class ProjectData:
         "Changes Requested",
     ]
 
-    def __init__(self, pull_requests: list, test: bool = False):
+    def __init__(self, project: int, pull_requests: list, test: bool = False):
+        self.project = project
         self.pull_requests = pull_requests
         self.test = test
 
@@ -56,7 +58,7 @@ class ProjectData:
         self.repos = self._extract_repositories()
 
     @classmethod
-    def from_github(cls, capture: bool = False, file: Path = None) -> ProjectData:
+    def from_github(cls, project: int, capture: bool = False, file: Path = None) -> ProjectData:
         """
         Retrieve data from GitHub API and initialise the class.
 
@@ -64,7 +66,7 @@ class ProjectData:
         file: Path to the test file to be written to.
         """
         print("Retrieving project data from GitHub")
-        command = f"gh project item-list {PROJECT_ID} -L 500 --owner {PROJECT_OWNER} --format json"
+        command = f"gh project item-list {project} -L 500 --owner {PROJECT_OWNER} --format json"
         output = run_command(command)
 
         raw_data = json.loads(output.stdout)
@@ -82,10 +84,10 @@ class ProjectData:
                 print("Unable to capture data as filename not specified.")
 
         pull_requests = cls._extract_data(raw_data)
-        return cls(pull_requests, test=False)
+        return cls(project, pull_requests, test=False)
 
     @classmethod
-    def from_file(cls, file: Path) -> ProjectData:
+    def from_file(cls, project: int, file: Path) -> ProjectData:
         """
         Retrieve data from test file and initialise the class.
 
@@ -95,7 +97,7 @@ class ProjectData:
             raw_data = json.loads(f.read())
 
         pull_requests = cls._extract_data(raw_data)
-        return cls(pull_requests, test=True)
+        return cls(project, pull_requests, test=True)
 
     @classmethod
     def _extract_data(cls, raw_data: dict) -> list:
@@ -231,8 +233,8 @@ class ProjectData:
             if pr.milestone == milestone and (
                 pr.status == status
                 or status == "all"
-                or (status == "open" and pr.status in self.open_states)
-                or (status == "closed" and pr.status not in self.open_states)
+                or (status == "open" and pr.status in self.pr_open_states)
+                or (status == "closed" and pr.status not in self.pr_open_states)
             ):
 
                 milestone_data[pr.repo].append(pr)
@@ -253,7 +255,7 @@ class ProjectData:
         closed_prs = self.get_milestone(milestone=milestone, status="closed")
         for repo in closed_prs:
             for pr in closed_prs[repo]:
-                pr.archive(dry_run)
+                pr.archive(self.project, dry_run)
 
 
 class PullRequest:
@@ -286,14 +288,14 @@ class PullRequest:
         self.scitechReview = None
         self.codeReview = None
 
-    def archive(self, dry_run: bool = False) -> None:
+    def archive(self, project: int, dry_run: bool = False) -> None:
         """
         Archive this pull request from the project.
 
         dry_run: If true, print the command used rather than archiving.
         """
 
-        command = f"gh project item-archive {PROJECT_ID} --owner {PROJECT_OWNER} --id {self.id}"
+        command = f"gh project item-archive {project} --owner {PROJECT_OWNER} --id {self.id}"
         message = f"Archiving #{self.number} in {self.repo}"
 
         if dry_run:
@@ -310,7 +312,7 @@ class PullRequest:
         dry_run, If true, print the command rather than making a change.
         """
 
-        command = f"gh pr edit {self.number} --repo='MetOffice/{self.repo}' --milestone='{milestone}'"
+        command = f"gh pr edit {self.number} --repo='{PROJECT_OWNER}/{self.repo}' --milestone='{milestone}'"
         message = f"Changing milestone for #{self.number} in {self.repo}"
 
         if dry_run:
