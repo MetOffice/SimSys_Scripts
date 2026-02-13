@@ -9,16 +9,17 @@
 # Requires:
 #   GitHub CLI (gh): https://cli.github.com/
 #   Git command-line tool: https://git-scm.com/
+#   jq for JSON parsing: https://stedolan.github.io/jq/
 # Warnings:
 # - This script modifies Git tags. Use with caution.
 # - Always verify the current tags before making changes.
 
 set -euo pipefail
 # Colour codes for output
-GRN='\033[0;32m'
-RED='\033[0;31m'
-YLW='\033[0;33m'
-NC='\033[0m'
+GRN='\033[0;32m'  # Green
+RED='\033[0;31m'  # Red
+YLW='\033[0;33m'  # Yellow
+NC='\033[0m' # No Color
 
 # Default values
 DEFAULT_REPO="MetOffice/git_playground"
