@@ -166,7 +166,7 @@ def parse_args():
     Read command line args
     """
 
-    testfile = Path(__file__).parent / "test" / "test.json"
+    testfile = Path(__file__).parent / "test" / "pr.json"
 
     parser = argparse.ArgumentParser(
         "Create tables of review workload based on Simulation Systems Review Tracker"

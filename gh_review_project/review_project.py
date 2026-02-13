@@ -374,7 +374,7 @@ class PullRequest(ProjectItem):
         self.codeReview = None
 
 
-class Issue:
+class Issue(ProjectItem):
     """
     Class for an individual issue to hold key information and provide
     functions to modify the issue.

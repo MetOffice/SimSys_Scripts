@@ -136,7 +136,7 @@ def parse_args():
     Read command line args
     """
 
-    testfile = Path(__file__).parent / "test" / "test.json"
+    testfile_path = Path(__file__).parent / "test"
 
     parser = argparse.ArgumentParser(
         "Archive milestone contents within the project and close the "
@@ -156,7 +156,7 @@ def parse_args():
     )
     parser.add_argument(
         "--file",
-        default=testfile,
+        default=testfile_path,
         help="Filepath to test data for either capturing the project status, "
         "or use as input data.",
     )
@@ -184,17 +184,19 @@ def main(
 
     # Get milestone data
     if test:
-        data = ProjectData.from_file(REVIEW_ID, file)
+        review_data = ProjectData.from_file(REVIEW_ID, file / "pr.json")
+        issue_data = ProjectData.from_file(ISSUE_ID, file / "issue.json")
     else:
-        data = ProjectData.from_github(REVIEW_ID, capture_project, file)
+        review_data = ProjectData.from_github(REVIEW_ID, capture_project, file/ "pr.json")
+        issue_data = ProjectData.from_github(ISSUE_ID, capture_project, file/ "issue.json")
 
     # Process data and report on status
-    check_ready(data, milestone, dry)
-    report(data, milestone)
+    check_ready(review_data, milestone, dry)
+    report(review_data, milestone)
 
     # Archive pull requests at the milestone
     print_banner(f"Archiving Milestone {milestone}")
-    data.archive_milestone(milestone, dry_run=dry)
+    review_data.archive_milestone(milestone, dry_run=dry)
 
     # Close milestones
     # TODO: run this command from here, rather than prompting user. Leaving
