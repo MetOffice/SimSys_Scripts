@@ -585,7 +585,7 @@ def get_files_to_check(path: str, full_check: bool,
     :param path: The top level path of the direcotry or clone of the
     repository to check.
     :type path: str
-    :param full_check: Logical to focre checking of all files in the
+    :param full_check: Logical to force checking of all files in the
     repository, rather than just the changed files.
     :type full_check: bool
     :param print_volume: Verbosity level for printing. Default is 3.
