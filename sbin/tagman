@@ -52,23 +52,11 @@ Options:
   --dry-run, -n      Show what would be done without making changes
 
 Examples:
-  # Create tag from commit SHA
-  $(basename "$0") add v1.0.0 abc123def --repo MetOffice/git_playground
-
-  # Create tag from existing tag
-  $(basename "$0") add Test vn1.5 --repo MetOffice/git_playground
-
-  # Create tag from release
-  $(basename "$0") add Autumn2025 vn14.0 --repo MetOffice/um
-
-  # Create tag from branch
-  $(basename "$0") add Spring2026 main --repo MetOffice/SimSys_Scripts
+  # Create tag from commit SHA or existing tag or release or branch
+  $(basename "$0") add Test abc123def|vn1.5|main --repo MetOffice/git_playground
 
   # Delete tag
   $(basename "$0") del 2025.12.0 --repo MetOffice/SimSys_Scripts
-
-  # List tags
-  $(basename "$0") ls --repo MetOffice/SimSys_Scripts
 
 Notes:
   - REPO can be set via environment variable (default: $DEFAULT_REPO)
