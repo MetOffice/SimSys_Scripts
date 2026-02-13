@@ -79,7 +79,9 @@ EOF
 }
 
 cleanup() {
-  [[ -n "${WORK_TMP:-}" ]] && rm -rf "$WORK_TMP"
+  if [[ -n "${WORK_TMP:-}" ]]; then
+    rm -rf "$WORK_TMP"
+  fi
 }
 
 confirm() {
@@ -89,8 +91,8 @@ confirm() {
   read -rp "$message (y/n): " response
   echo -en "${NC}"
 
-  case "$response" in
-    [yY][eE][sS] | [yY])
+  case "${response^^}" in  # Note: requires bash 4+ for ^^ operator
+    YES | Y)
       return 0 ;;
     *)
       echo "Aborted..."
@@ -116,10 +118,10 @@ run() {
 trap cleanup EXIT ERR SIGINT
 
 verify_tag() {
-  gh api "repos/${REPO}/git/refs/tags/${TAG}" >/dev/null 2>&1 && {
+  if gh api "repos/${REPO}/git/refs/tags/${TAG}" >/dev/null 2>&1; then
     echo -e "${YLW}Tag '$TAG' exists in repository '$REPO'.${NC}"
     return 0
-  }
+  fi
   return 1
 }
 
@@ -208,13 +210,13 @@ verify_ref() {
 }
 
 add_tag() {
-  [[ -z "$TAG" || -z "$REF" ]] && {
+  if [[ -z "$TAG" || -z "$REF" ]]; then
     echo -e "${RED}** TAG and REF are required for add action.${NC}"
     usage
-  }
+  fi
 
-  verify_tag && exit 1
-  verify_ref || exit 1
+  verify_tag && exit 1  # Tag already exists, exit with error
+  verify_ref || exit 1  # Reference resolution failed, exit with error
 
   local url="https://github.com/${REPO}.git"
   local msg="${MESSAGE:-"Tagging $TAG @ $REF"}"
@@ -244,15 +246,15 @@ add_tag() {
 }
 
 delete_tag() {
-  [[ -z "$TAG" ]] && {
+  if [[ -z "$TAG" ]]; then
     echo -e "${RED}** TAG is required for delete action.${NC}"
     usage
-  }
+  fi
 
-  verify_tag || {
+  if ! verify_tag; then
     echo -e "${RED}** Tag '$TAG' does not exist in repository '$REPO'.${NC}"
     return 1
-  }
+  fi
 
   if [[ "$DRY_RUN" == true ]]; then
     echo -e "${YLW}[DRY RUN] Would delete tag with the following details:${NC}"
@@ -284,20 +286,26 @@ list_tags() {
 }
 
 parse_args() {
-  [[ $# -eq 0 ]] && usage
+  if [[ $# -eq 0 ]]; then
+    usage
+  fi
 
   ACTION="$1"
   shift
 
   case "$ACTION" in
     add)
-      [[ $# -lt 2 ]] && usage
+      if [[ $# -lt 2 ]]; then
+        usage
+      fi
       TAG="$1"
       REF="$2"
       shift 2
       ;;
     del|delete)
-      [[ $# -lt 1 ]] && usage
+      if [[ $# -lt 1 ]]; then
+        usage
+      fi
       TAG="$1"
       shift
       ;;
