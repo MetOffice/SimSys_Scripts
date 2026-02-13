@@ -13,6 +13,9 @@
 # Warnings:
 # - This script modifies Git tags. Use with caution.
 # - Always verify the current tags before making changes.
+# - Anyone with push/write access to the repository can create or delete tags.
+#   Ensure you have the necessary permissions and understand the implications
+#   of modifying tags in a shared repository.
 
 set -euo pipefail
 # Colour codes for output
