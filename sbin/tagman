@@ -116,7 +116,7 @@ run() {
 trap cleanup EXIT ERR SIGINT
 
 verify_tag() {
-  gh api "repos/${REPO}/git/refs/tags/${TAG}" >/dev/null 2>&1 && {
+  if gh api "repos/${REPO}/git/refs/tags/${TAG}" >/dev/null 2>&1 ; then 
     echo -e "${YLW}Tag '$TAG' exists in repository '$REPO'.${NC}"
     return 0
   }
