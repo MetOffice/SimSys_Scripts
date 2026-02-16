@@ -130,7 +130,6 @@ def main():
 
     errors = []
     for meta_dir in macro_object.meta_dirs:
-
         before_tags = find_macro_tags("before", meta_dir, errors)
         after_tags = find_macro_tags("after", meta_dir, errors)
 

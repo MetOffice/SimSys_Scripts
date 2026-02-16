@@ -60,24 +60,27 @@ def validate_dependencies(dependencies: dict) -> None:
     Each dictionary value should be a list of dictionaries (or a single dictionary)
     Those dictionaries should have a "source" and a "ref" key
     """
+    if not isinstance(dependencies, dict):
+        raise TypeError(
+            "The dependencies object should be a dict with keys as source repositories"
+        )
     for item, values in dependencies.items():
-        failed = False
+        err_message = (
+            f"The dependency {item} does not contain a list of dictionaries (or a "
+            "single dictionary) with keys of 'source' and 'ref'.\nPlease edit your "
+            "dependencies.yaml file to satisfy this."
+        )
+
         if isinstance(values, dict):
             values = [values]
         if not isinstance(values, list):
-            failed = True
-        else:
-            for entry in values:
-                if not isinstance(entry, dict) or (
-                    "source" not in entry or "ref" not in entry
-                ):
-                    failed = True
-        if failed:
-            raise ValueError(
-                f"The dependency {item} does not contain a list of dictionaries (or a "
-                "single dictionary) with keys of 'source' and 'ref'.\nPlease edit your "
-                "dependencies.yaml file to satisfy this."
-            )
+            raise TypeError(err_message)
+
+        for entry in values:
+            if not isinstance(entry, dict):
+                raise TypeError(err_message)
+            if "source" not in entry or "ref" not in entry:
+                raise ValueError(err_message)
 
 
 def datetime_str() -> str:
@@ -88,7 +91,11 @@ def datetime_str() -> str:
 
 
 def clone_and_merge(
-    dependency: str, opts: Union[list, dict], loc: Path, use_mirrors: bool, mirror_loc: Path
+    dependency: str,
+    opts: Union[list, dict],
+    loc: Path,
+    use_mirrors: bool,
+    mirror_loc: Path,
 ) -> None:
     """
     Wrapper script for calling get_source and merge_source for a single dependency
@@ -160,7 +167,7 @@ def get_source(
 
 
 def merge_source(
-    source: str,
+    source: Union[Path, str],
     ref: str,
     dest: Path,
     repo: str,
@@ -214,6 +221,9 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
     # For suites, merge conflicts in these files/directories are unimportant so accept
     # the current changes
     for filepath in ("dependencies.yaml", "rose-stem"):
+        full_path = loc / filepath
+        if not full_path.exists():
+            continue
         logger.warning(f"Ignoring merge conflicts in {filepath}")
         run_command(f"git -C {loc} checkout --ours -- {filepath}")
         run_command(f"git -C {loc} add {filepath}")
@@ -239,6 +249,20 @@ def get_unmerged(loc: Path) -> list[str]:
     return files.stdout.split()
 
 
+def check_existing(loc: Path) -> None:
+    """
+    If the repository exists and isn't a git repo, exit now as we don't want to
+    overwrite it
+    """
+
+    if loc.exists():
+        if not Path(loc / ".git").exists():
+            raise FileExistsError(
+                f"The destination, '{loc}', already exists but isn't a git directory. "
+                "Exiting so as to not overwrite it."
+            )
+
+
 def clone_repo_mirror(
     repo_source: str,
     repo_ref: str,
@@ -254,15 +278,8 @@ def clone_repo_mirror(
     - loc: path to clone the repository to
     """
 
-    # If the repository exists and isn't a git repo, exit now as we don't want to
-    # overwrite it
     if loc.exists():
-        if not Path(loc / ".git").exists():
-            raise RuntimeError(
-                f"The destination for the clone of {repo_source} already exists but "
-                "isn't a git directory. Exiting so as to not overwrite it."
-            )
-
+        check_existing(loc)
     # Clone if the repo doesn't exist
     else:
         command = f"git clone {mirror_loc} {loc}"
@@ -288,6 +305,7 @@ def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
     """
 
     repo_source = repo_source.removeprefix("git@github.com:")
+    repo_source = repo_source.removeprefix("https://github.com/")
     user = repo_source.split("/")[0]
     # Check that the user is different to the Upstream User
     if "MetOffice" in user:
@@ -328,6 +346,7 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
         for command in commands:
             run_command(command)
     else:
+        check_existing(loc)
         commands = (
             f"git -C {loc} fetch origin {repo_ref}",
             f"git -C {loc} checkout FETCH_HEAD",
@@ -336,10 +355,12 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
             run_command(command)
 
 
-def sync_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
+def sync_repo(repo_source: Union[str, Path], repo_ref: str, loc: Path) -> None:
     """
     Rsync a local git clone and checkout the provided ref
     """
+
+    repo_source = str(repo_source)
 
     # Remove if this clone already exists
     if loc.exists():
