@@ -56,18 +56,19 @@ class ProjectData:
         """
         Retrieve data from GitHub API and initialise the class.
 
+        project: number of GitHub project
         capture: True if data should be stored to a test file.
         file: Path to the test file to be written to.
         """
-        print("Retrieving project data from GitHub")
+        print(f"Retrieving data from GitHub project {project}")
         command = f"gh project item-list {project} -L 500 --owner {PROJECT_OWNER} --format json"
         output = run_command(command)
 
         raw_data = json.loads(output.stdout)
 
         # Remove body as is large before working with or storing data.
-        for pr in raw_data["items"]:
-            pr["content"].pop("body")
+        for item in raw_data["items"]:
+            item["content"].pop("body")
 
         if capture:
             if file:
@@ -97,7 +98,7 @@ class ProjectData:
     def _extract_data(cls, raw_data: dict) -> list:
         """
         Extract useful information from the raw data and
-        store it in a list of PullRequest objects.
+        store it in a list of ProjectItem objects.
 
         raw_data: github data from the project
         """
@@ -126,6 +127,13 @@ class ProjectData:
                     title=item_data["content"]["title"],
                     repo=item_data["content"]["repository"].replace("MetOffice/", ""),
                 )
+
+                if "linked pull requests" in item_data:
+                    for pr in item_data["linked pull requests"]:
+                        # Store PR number, not whole link
+                        item.linked_prs.append(pr.split("/")[-1])
+            else:
+                raise Exception(f"Unknown item type {item_data['content']['type']}")
 
             if "status" in item_data:
                 item.status = item_data["status"]
@@ -260,6 +268,7 @@ class ProjectData:
         for repo in closed:
             for item in closed[repo]:
                 item.archive(self.project, dry_run)
+            print(f"Archived {len(closed[repo])} items for {repo}")
 
 
 class ProjectItem:
@@ -304,7 +313,6 @@ class ProjectItem:
         if dry_run:
             print(f"[DRY RUN] {message: <40} {command}")
         else:
-            print(message)
             run_command(command)
 
     def modify_milestone(self, milestone: str, dry_run: bool = False) -> None:
@@ -315,7 +323,12 @@ class ProjectItem:
         dry_run, If true, print the command rather than making a change.
         """
 
-        command = f"gh {self.command_type} edit {self.number} --repo='{PROJECT_OWNER}/{self.repo}' --milestone='{milestone}'"
+        command = f"gh {self.command_type} edit {self.number} --repo='{PROJECT_OWNER}/{self.repo}'"
+        if milestone:
+            command += f" --milestone='{milestone}'"
+        else:
+            command += f" --remove-milestone"
+
         message = f"Changing milestone for #{self.number} in {self.repo}"
 
         if dry_run:
@@ -338,6 +351,8 @@ class ProjectItem:
         message = f"Adding comment to #{self.number} in {self.repo}"
 
         if dry_run:
+            # text can be long, don't print it all
+            command = command.replace(f"--body='{text}", "--body='<comment text>'")
             print(f"[DRY RUN] {message: <50} {command}")
         else:
             print(message)
@@ -349,8 +364,6 @@ class PullRequest(ProjectItem):
     Class for an individual pull request to hold key information and provide
     functions to modify the pull request.
 
-
-    assignee: assignee of the pull request, which is the developer
     scitechReview: user assigned to sciTech review the pull request
     codeReview: user assigned to code review the pull request
     """
@@ -379,13 +392,16 @@ class Issue(ProjectItem):
     Class for an individual issue to hold key information and provide
     functions to modify the issue.
 
-    id: github ID for the pull request
-    number: number of the pull request in the repository
-    title: title of the pull request
-    repo: repository where the pull request is located
-    status: status of the pull request
-    milestone: title of the milestone
-    assignee: assignee of the pull request, which is the developer
+    linked pr: number of linked pull request
     """
 
     open_states = ["New Issue", "Ready for Work", "In Progress", "In Review"]
+
+    command_type = "issue"
+
+    def __init__(
+        self, id: str = None, number: str = None, title: str = None, repo: str = None
+    ):
+        super().__init__(id, number, title, repo)
+
+        self.linked_prs = []
