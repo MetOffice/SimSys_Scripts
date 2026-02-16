@@ -25,62 +25,28 @@ def print_banner(message: str) -> None:
     print("=" * len(message))
 
 
-def count_items(data: dict, message: str):
-    """
-    For a dictionary of pull requests or issues keyed by repository, count
-    per repo and return the total. Print details of items found.
-
-    data: dict, lists of project items keyed by repository
-    message: str, message to display
-    """
-
-    total = 0
-
-    for repo in data:
-        print(f"{repo} \n{'-'*len(repo)}")
-        for item in data[repo]:
-            print(f"{item.status: <18} #{item.number: <5} {item.title}")
-
-        count = len(data[repo])
-        print(f"->   {count} {message} in {repo} \n")
-        total += count
-
-    if total == 0:
-        print(f"No {message} \n")
-
-    return total
-
-
 def closed_other(
-    closed_prs: dict, current_milestone: str, dry_run: bool = False
-) -> int:
+    reviews: ProjectData, current_milestone: str, dry_run: bool = False
+) -> None:
     """
-    Report on closed pull requests not at the current milestone.
+    Set a milestone for closed PRs without one.
+
+    reviews: ProjectData from the Review Tracker Project
+    current_milestone: Milestone being closed
+    dry_run: If true, do not actually modify the milestone
     """
 
-    print_banner(f"Checking for closed pull requests not for {current_milestone}")
+    print_banner(f"Setting pull requests with no milestone to {current_milestone}")
 
-    total = 0
+    closed_prs = reviews.get_milestone(milestone="None", status="closed")
 
-    for milestone in closed_prs:
-        if milestone == current_milestone:
-            continue
-
-        elif milestone == "None":
-            print(f"Setting pull requests with no milestone to {current_milestone}")
-            for repo in closed_prs[milestone]:
-                for pr in closed_prs[milestone][repo]:
-                    pr.modify_milestone(current_milestone, dry_run)
-
-        else:
-            if len(closed_prs[milestone]):
-                total = count_items(closed_prs[milestone], "closed pull requests")
-
-    return total
+    for repo in closed_prs:
+        for pr in closed_prs[repo]:
+            pr.modify_milestone(current_milestone, dry_run)
 
 
 def check_ready(
-    reviews: ProjectData, issues: ProjectData, milestone: str, dry_run: bool = False
+    reviews: ProjectData, issues: ProjectData, milestone: str
 ) -> None:
     """
     Check if the milestone is ready to be closed by confirming that:
@@ -92,15 +58,24 @@ def check_ready(
     exceptions.
     """
     print_banner(f"Checking for open pull requests for {milestone}")
-    open_prs = reviews.get_milestone(milestone=milestone, status="open")
-    total_open = count_items(open_prs, "open pull requests")
-
-    closed_prs = reviews.get_all_milestones(status="closed")
-    total_other = closed_other(closed_prs, milestone, dry_run)
+    total_open = reviews.count_items(milestone=milestone, status="open", message="open pull requests")
+    if total_open == 0:
+        print("No open pull requests\n")
 
     print_banner(f"Checking for issues in review for {milestone}")
-    open_issues = issues.get_milestone(milestone=milestone, status="In Review")
-    total_issues_in_review = count_items(open_issues, "In Review issues")
+    total_issues_in_review = issues.count_items(milestone=milestone, status="In Review", message="In Review issues")
+    if total_issues_in_review == 0:
+        print("No issues in review\n")
+
+    print_banner(f"Checking for closed pull requests not set to {milestone}")
+    total_other = 0
+    for milestone in reviews.milestones:
+        if milestone == milestone:
+            continue
+        else:
+            total_other += reviews.count_items(milestone=milestone, status="closed", message="closed pull requests")
+    if total_other == 0:
+        print("All closed pull requests are in this milestone\n")
 
     if total_open or total_other or total_issues_in_review:
         print("=" * 50)
@@ -216,8 +191,11 @@ def main(
             ISSUE_ID, capture_project, file / "issue.json"
         )
 
+    # Set a milestone on closed PRs
+    closed_other(review_data, milestone, dry)
+
     # Process data and report on status
-    check_ready(review_data, issue_data, milestone, dry)
+    check_ready(review_data, issue_data, milestone)
 
     # Tidy outstanding issues
     tidy_issues(issue_data, milestone, dry)

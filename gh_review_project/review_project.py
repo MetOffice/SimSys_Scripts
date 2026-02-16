@@ -268,7 +268,31 @@ class ProjectData:
         for repo in closed:
             for item in closed[repo]:
                 item.archive(self.project, dry_run)
-            print(f"Archived {len(closed[repo])} items for {repo}")
+            print(f"-->   Archived {len(closed[repo])} items for {repo}")
+
+    def count_items(self, milestone: str, repository: str = "all", status:str = "all", message: str = None) -> int:
+        """
+        Count items filtered using the provided information. Print details of items found.
+
+        message: str, message to display. If none then assume no prints.
+        """
+
+        total = 0
+
+        data = self.get_milestone(milestone=milestone, status=status)
+
+        for repo in data:
+            if repo is repository or repository == "all":
+                if message:
+                    print(f"{repo} \n{'-' * len(repo)}")
+                    for item in data[repo]:
+                        print(f"{item.status: <18} #{item.number: <5} {item.title}")
+
+                count = len(data[repo])
+                total += count
+                print(f"->   {count} {message} in {repo} \n") if message else None
+
+        return total
 
 
 class ProjectItem:
