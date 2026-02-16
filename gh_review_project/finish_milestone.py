@@ -45,9 +45,7 @@ def closed_other(
             pr.modify_milestone(current_milestone, dry_run)
 
 
-def check_ready(
-    reviews: ProjectData, issues: ProjectData, milestone: str
-) -> None:
+def check_ready(reviews: ProjectData, issues: ProjectData, milestone: str) -> None:
     """
     Check if the milestone is ready to be closed by confirming that:
       * all pull requests for this milestone have been completed
@@ -58,12 +56,16 @@ def check_ready(
     exceptions.
     """
     print_banner(f"Checking for open pull requests for {milestone}")
-    total_open = reviews.count_items(milestone=milestone, status="open", message="open pull requests")
+    total_open = reviews.count_items(
+        milestone=milestone, status="open", message="open pull requests"
+    )
     if total_open == 0:
         print("No open pull requests\n")
 
     print_banner(f"Checking for issues in review for {milestone}")
-    total_issues_in_review = issues.count_items(milestone=milestone, status="In Review", message="In Review issues")
+    total_issues_in_review = issues.count_items(
+        milestone=milestone, status="In Review", message="In Review issues"
+    )
     if total_issues_in_review == 0:
         print("No issues in review\n")
 
@@ -73,7 +75,9 @@ def check_ready(
         if milestone == milestone:
             continue
         else:
-            total_other += reviews.count_items(milestone=milestone, status="closed", message="closed pull requests")
+            total_other += reviews.count_items(
+                milestone=milestone, status="closed", message="closed pull requests"
+            )
     if total_other == 0:
         print("All closed pull requests are in this milestone\n")
 
@@ -110,12 +114,14 @@ def report(data: ProjectData, milestone: str) -> None:
     print(f"{total} pull requests completed in {milestone}")
 
 
-def tidy_issues(data: ProjectData, milestone: str, dry_run: bool = False) -> None:
-    # Check for uncompleted issues at milestone, remove milestone and leave a comment
+def tidy_issues(issue_data: ProjectData, milestone: str, dry_run: bool = False) -> None:
+    """
+    Remove any outstanding open issues from the current milestone.
+    """
 
     print_banner(f"Removing uncompleted issues from {milestone}")
 
-    issues = data.get_milestone(milestone=milestone, status="open")
+    issues = issue_data.get_milestone(milestone=milestone, status="open")
     comment = (
         f"[Automatic Update]\n\nThe {milestone} milestone is being closed. "
         f"Please review this issue and either select a new milestone or "

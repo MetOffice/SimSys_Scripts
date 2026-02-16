@@ -3,7 +3,9 @@ from pathlib import Path
 from review_project import ProjectData, ISSUE_ID
 
 
-def remove_milestone(issue_data: ProjectData, milestone: str, dry_run: bool=False) -> int:
+def remove_milestone(
+    issue_data: ProjectData, milestone: str, dry_run: bool = False
+) -> int:
 
     open_issues = issue_data.get_milestone(milestone=milestone, status="open")
 

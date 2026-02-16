@@ -270,7 +270,13 @@ class ProjectData:
                 item.archive(self.project, dry_run)
             print(f"-->   Archived {len(closed[repo])} items for {repo}")
 
-    def count_items(self, milestone: str, repository: str = "all", status:str = "all", message: str = None) -> int:
+    def count_items(
+        self,
+        milestone: str,
+        repository: str = "all",
+        status: str = "all",
+        message: str = None,
+    ) -> int:
         """
         Count items filtered using the provided information. Print details of items found.
 
