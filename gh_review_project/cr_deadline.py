@@ -30,10 +30,11 @@ def parse_args():
     testfile_path = Path(__file__).parent / "test"
 
     parser = argparse.ArgumentParser(
-        "Clean up uncompleted issues from a milestone."
+        "Changes to the Simulation System projects required at the code"
+        "review deadline."
     )
 
-    parser.add_argument("--milestone", help="Milestone to archive and close.")
+    parser.add_argument("--milestone", help="Milestone being released")
     parser.add_argument(
         "--test",
         action="store_true",
