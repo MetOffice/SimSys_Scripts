@@ -56,7 +56,7 @@ class ProjectData:
         """
         Retrieve data from GitHub API and initialise the class.
 
-        project: number of GitHub project
+        project: GitHub Project ID Number
         capture: True if data should be stored to a test file.
         file: Path to the test file to be written to.
         """
