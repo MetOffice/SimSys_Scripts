@@ -125,9 +125,9 @@ def tidy_issues(issue_data: ProjectData, milestone: str, dry_run: bool = False) 
 
     issues = issue_data.get_milestone(milestone=milestone, status="open")
     comment = (
-        f"[Automatic Update]\n\nThe {milestone} milestone is being closed. "
+        f"[Bulk Update]\n\nThe {milestone} milestone is being closed. "
         f"Please review this issue and either select a new milestone or "
-        f"close it as appropriate. Please contact @MetOffice/ssdteam if "
+        f"close it as appropriate. Please contact MetOffice/ssdteam if "
         f"you think there has been an error.\n\n Thanks"
     )
     for repo in issues:

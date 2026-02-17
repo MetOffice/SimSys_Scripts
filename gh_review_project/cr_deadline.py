@@ -14,11 +14,11 @@ def remove_milestone(
     open_issues = issue_data.get_milestone(milestone=milestone, status="open")
 
     comment = (
-        f"[Automatic Update]\n\nThe Code Review deadline for the {milestone} has "
+        f"[Bulk Update]\n\nThe Code Review deadline for the {milestone} milestone has "
         f"passed. As this issue does not have a linked pull request it has been "
         f"removed from the milestone. Please review this issue and either select "
         f"a new milestone or close it as appropriate. Please contact "
-        f"@MetOffice/ssdteam if you think there has been an error.\n\n Thanks"
+        f"MetOffice/ssdteam if you think there has been an error.\n\n Thanks"
     )
 
     for repo in open_issues:
