@@ -20,7 +20,9 @@ conformance, and to run relevant style checkers on those files.
 
 
 ALLOWABLE_FILE_TYPES = ["Fortran", "Python", "Generic"]
-GROUP_FILE_TYPES = ["CI"]
+GROUP_FILE_TYPES = {
+    "CI": ["Fortran", "Python"],
+}
 # TODO: Generic /probably/ needs renaming.
 
 
@@ -417,7 +419,7 @@ def process_arguments():
         "--file-types",
         type=str,
         nargs="+",
-        choices=ALLOWABLE_FILE_TYPES + GROUP_FILE_TYPES,
+        choices=ALLOWABLE_FILE_TYPES + list(GROUP_FILE_TYPES.keys()),
         default=["Fortran"],
         help="File types to check, comma-separated",
     )
@@ -468,10 +470,10 @@ def which_cms_is_it(path: str) -> CMSSystem:
 
 def detangle_file_types(file_types: Set[str]) -> Set[str]:
     """Process file type arguments to handle 'group' types."""
-    if "CI" in file_types:
-        file_types.remove("CI")
-        file_types.add("Fortran")
-        file_types.add("Python")
+    for group, members in GROUP_FILE_TYPES.items():
+        if group in file_types:
+            file_types.remove(group)
+            file_types.update(members)
     return file_types
 
 
