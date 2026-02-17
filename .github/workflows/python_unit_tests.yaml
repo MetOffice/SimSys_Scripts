@@ -2,12 +2,15 @@ name: Python Unit Tests
 
 on:
   pull_request:
+    paths:
+      - '**.py'
+      - '.github/workflows/python_unit_tests.yaml'
   push:
+    paths:
+      - '**.py'
+      - '.github/workflows/python_unit_tests.yaml'
     branches: [main, 'releases/**']
   workflow_dispatch:
-  paths:
-    - '**.py'
-    - '.github/workflows/python_unit_tests.yaml'
 
 permissions: read-all
 
