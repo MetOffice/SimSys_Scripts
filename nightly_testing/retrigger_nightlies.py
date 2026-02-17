@@ -51,8 +51,7 @@ def check_for_workflow_params(conn):
     This is used as a proxy for whether a suite is cylc8 - if return True, it is
     """
     res = conn.execute(
-        "SELECT name FROM sqlite_master "
-        "WHERE type='table' AND name='workflow_params'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='workflow_params'"
     ).fetchall()
     if len(res) > 0:
         return True
@@ -102,7 +101,7 @@ def retrigger_suite(suite, tasks):
     print(f"\nTriggering Failed Tasks in {suite}")
     ntasks = len(tasks)
     for i, task in enumerate(tasks):
-        print(f"\rTask {i+1}/{ntasks}", end="", flush=True)
+        print(f"\rTask {i + 1}/{ntasks}", end="", flush=True)
         failed_command = f"cylc trigger {suite}//*/{task[0]}"
         if "next-cylc" in suite:
             failed_command = f"export CYLC_VERSION=8-next ; {failed_command}"
