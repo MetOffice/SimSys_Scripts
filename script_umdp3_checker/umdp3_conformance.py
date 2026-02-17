@@ -574,7 +574,7 @@ if __name__ == "__main__":
     log_volume = args.volume
 
     file_paths = get_files_to_check(args.path, args.fullcheck, log_volume)
-    full_file_paths = [Path(f"{args.path}/{f}") for f in file_paths]
+    full_file_paths = [Path(args.path) / f for f in file_paths]
 
     # Configure checkers
     """
