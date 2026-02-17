@@ -120,6 +120,7 @@ def test_merge_sources(setup_sources):
 
     target_clone = setup_sources / "SimSys_Scripts"
 
+    # Test Remote Source merges cleanly
     assert (
         merge_source(
             "https://github.com/MetOffice/SimSys_Scripts.git",
@@ -129,12 +130,17 @@ def test_merge_sources(setup_sources):
         )
         is None
     )
+    # Test Local Source Merges Cleanly
     assert (
         merge_source(setup_sources / "merge0", "merge0", target_clone, "SimSys_Scripts")
         is None
     )
+    # Test Local Source Doesn't Merge
     with pytest.raises(RuntimeError):
         merge_source(setup_sources / "merge1", "merge1", target_clone, "SimSys_Scripts")
+    # Test Local Source without ref raises error
+    with pytest.raises(Exception):
+        merge_source(setup_sources / "merge0", "", target_clone, "SimSys_Scripts")
 
 
 def test_check_exists(setup_sources):
