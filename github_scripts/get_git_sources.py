@@ -184,10 +184,16 @@ def merge_source(
         f"{source} at ref {ref} into {repo}"
     )
 
-    if ".git" in source and use_mirrors:
-        remote_path = Path(mirror_loc) / "MetOffice" / repo
-        fetch = determine_mirror_fetch(source, ref)
+    if ".git" in source:
+        if use_mirrors:
+            remote_path = Path(mirror_loc) / "MetOffice" / repo
+            fetch = determine_mirror_fetch(source, ref)
+        else:
+            remote_path = source
+            fetch = ref
     else:
+        if not ref:
+            raise Exception(f"Cannot merge local source '{source}' with empty ref")
         remote_path = source
         fetch = ref
 
