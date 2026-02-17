@@ -45,7 +45,9 @@ def closed_other(
             pr.modify_milestone(current_milestone, dry_run)
 
 
-def check_ready(reviews: ProjectData, issues: ProjectData, current_milestone: str) -> None:
+def check_ready(
+    reviews: ProjectData, issues: ProjectData, current_milestone: str
+) -> None:
     """
     Check if the milestone is ready to be closed by confirming that:
       * all pull requests for this milestone have been completed
