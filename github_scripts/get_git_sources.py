@@ -195,8 +195,8 @@ def merge_source(
         if not ref:
             raise Exception(
                 f"Cannot merge local source '{source}' with empty ref.\n"
-                "It is likely you desire a branch name which will always merge the "
-                "latest commits to a branch."
+                "Please enter a valid git ref - if you use a branch, then the latest "
+                "commit to that branch will be used."
             )
         remote_path = source
         fetch = ref
