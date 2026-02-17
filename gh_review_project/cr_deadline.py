@@ -6,6 +6,10 @@ from review_project import ProjectData, ISSUE_ID
 def remove_milestone(
     issue_data: ProjectData, milestone: str, dry_run: bool = False
 ) -> int:
+    """
+    Remove the milestone from all open issues that do not have any linked PRs
+    attached to them. Leave a comment explaining why.
+    """
 
     open_issues = issue_data.get_milestone(milestone=milestone, status="open")
 

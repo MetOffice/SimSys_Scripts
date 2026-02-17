@@ -45,7 +45,7 @@ def closed_other(
             pr.modify_milestone(current_milestone, dry_run)
 
 
-def check_ready(reviews: ProjectData, issues: ProjectData, milestone: str) -> None:
+def check_ready(reviews: ProjectData, issues: ProjectData, current_milestone: str) -> None:
     """
     Check if the milestone is ready to be closed by confirming that:
       * all pull requests for this milestone have been completed
@@ -55,24 +55,24 @@ def check_ready(reviews: ProjectData, issues: ProjectData, milestone: str) -> No
     Give the user the choice to continue regardless since there may be valid
     exceptions.
     """
-    print_banner(f"Checking for open pull requests for {milestone}")
+    print_banner(f"Checking for open pull requests for {current_milestone}")
     total_open = reviews.count_items(
-        milestone=milestone, status="open", message="open pull requests"
+        milestone=current_milestone, status="open", message="open pull requests"
     )
     if total_open == 0:
         print("No open pull requests\n")
 
-    print_banner(f"Checking for issues in review for {milestone}")
+    print_banner(f"Checking for issues in review for {current_milestone}")
     total_issues_in_review = issues.count_items(
-        milestone=milestone, status="In Review", message="In Review issues"
+        milestone=current_milestone, status="In Review", message="In Review issues"
     )
     if total_issues_in_review == 0:
         print("No issues in review\n")
 
-    print_banner(f"Checking for closed pull requests not set to {milestone}")
+    print_banner(f"Checking for closed pull requests not set to {current_milestone}")
     total_other = 0
     for milestone in reviews.milestones:
-        if milestone == milestone:
+        if milestone == current_milestone:
             continue
         else:
             total_other += reviews.count_items(
@@ -84,9 +84,9 @@ def check_ready(reviews: ProjectData, issues: ProjectData, milestone: str) -> No
     if total_open or total_other or total_issues_in_review:
         print("=" * 50)
         print(
-            f"{total_open} open pull request(s) in {milestone}. \n"
-            f"{total_other} closed pull request(s) not in {milestone}. \n"
-            f"{total_issues_in_review} issues in {milestone} with status In Review. "
+            f"{total_open} open pull request(s) in {current_milestone}. \n"
+            f"{total_other} closed pull request(s) not in {current_milestone}. \n"
+            f"{total_issues_in_review} issues in {current_milestone} with status In Review. "
         )
         cont = input("Would you like to continue with closing this milestone? (y/n) ")
 
