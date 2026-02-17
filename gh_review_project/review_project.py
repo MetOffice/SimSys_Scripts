@@ -382,7 +382,7 @@ class ProjectItem:
 
         if dry_run:
             # text can be long, don't print it all
-            command = command.replace(f"--body='{text}", "--body='<comment text>'")
+            command = command.replace(f"--body='{text}'", "--body=...")
             print(f"[DRY RUN] {message: <50} {command}")
         else:
             print(message)

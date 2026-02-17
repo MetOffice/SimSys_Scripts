@@ -18,6 +18,7 @@ def remove_milestone(
     )
 
     for repo in open_issues:
+        print(f"\nRemoving issues in {repo}")
         for issue in open_issues[repo]:
             if not issue.linked_prs:
                 issue.add_comment(comment, dry_run=dry_run)
