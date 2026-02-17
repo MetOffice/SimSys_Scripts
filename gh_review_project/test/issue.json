@@ -1,0 +1,4101 @@
+{
+  "items": [
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 34,
+        "repository": "MetOffice/growss",
+        "title": "Optimise build-docs workflow",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/growss/issues/34"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzghZfq0",
+      "labels": [
+        "enhancement",
+        "CI"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/growss/pull/37",
+        "https://github.com/MetOffice/growss/pull/38"
+      ],
+      "repository": "https://github.com/MetOffice/growss",
+      "status": "New Issue",
+      "title": "Optimise build-docs workflow"
+    },
+    {
+      "content": {
+        "number": 11,
+        "repository": "MetOffice/growss",
+        "title": "Update the README.md",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/growss/issues/11"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzghZfwQ",
+      "labels": [
+        "documentation"
+      ],
+      "repository": "https://github.com/MetOffice/growss",
+      "status": "New Issue",
+      "title": "Update the README.md"
+    },
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 29,
+        "repository": "MetOffice/growss",
+        "title": "Add Troubleshooting section",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/growss/issues/29"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzghZfwY",
+      "labels": [
+        "documentation"
+      ],
+      "repository": "https://github.com/MetOffice/growss",
+      "status": "New Issue",
+      "title": "Add Troubleshooting section"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 25,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Update Transmute PSyclone steps in line with adjustments",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/25"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzghfjfk",
+      "labels": [
+        "documentation"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Update Transmute PSyclone steps in line with adjustments"
+    },
+    {
+      "assignees": [
+        "yaswant"
+      ],
+      "content": {
+        "number": 499,
+        "repository": "MetOffice/simulation-systems",
+        "title": "Use reusable workflow to build and deploy docs",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/simulation-systems/issues/499"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzghhgJU",
+      "labels": [
+        ":blue_book:Documentation"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/simulation-systems/pull/500"
+      ],
+      "repository": "https://github.com/MetOffice/simulation-systems",
+      "status": "In Review",
+      "title": "Use reusable workflow to build and deploy docs"
+    },
+    {
+      "content": {
+        "number": 4,
+        "repository": "MetOffice/ukca",
+        "title": "Add GitHub Action to perform initial quality checks",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/ukca/issues/4"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgh3180",
+      "repository": "https://github.com/MetOffice/ukca",
+      "status": "New Issue",
+      "title": "Add GitHub Action to perform initial quality checks"
+    },
+    {
+      "content": {
+        "number": 2,
+        "repository": "MetOffice/casim",
+        "title": "Add GitHub Action to perform initial quality checks",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/casim/issues/2"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgh33mw",
+      "repository": "https://github.com/MetOffice/casim",
+      "status": "New Issue",
+      "title": "Add GitHub Action to perform initial quality checks"
+    },
+    {
+      "content": {
+        "number": 2,
+        "repository": "MetOffice/socrates",
+        "title": "Add GitHub Action to perform initial quality checks",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/socrates/issues/2"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgh33qY",
+      "repository": "https://github.com/MetOffice/socrates",
+      "status": "New Issue",
+      "title": "Add GitHub Action to perform initial quality checks"
+    },
+    {
+      "content": {
+        "number": 11,
+        "repository": "MetOffice/um",
+        "title": "Add GitHub Action to perform initial quality checks",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/11"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgh33uk",
+      "repository": "https://github.com/MetOffice/um",
+      "status": "New Issue",
+      "title": "Add GitHub Action to perform initial quality checks"
+    },
+    {
+      "content": {
+        "number": 143,
+        "repository": "MetOffice/SimSys_Scripts",
+        "title": "Update linting action",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/SimSys_Scripts/issues/143"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiBnMg",
+      "repository": "https://github.com/MetOffice/SimSys_Scripts",
+      "status": "Done",
+      "title": "Update linting action"
+    },
+    {
+      "content": {
+        "number": 2,
+        "repository": "MetOffice/moci",
+        "title": "Incorrect identification of Fortran namelist files as newlisp",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/2"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiBx2g",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Incorrect identification of Fortran namelist files as newlisp"
+    },
+    {
+      "assignees": [
+        "christophermaynard"
+      ],
+      "content": {
+        "number": 29,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Finish NG-ARCH tickets",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/29"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiHylk",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Finish NG-ARCH tickets"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 171,
+        "repository": "MetOffice/lfric_core",
+        "title": "Ensure correct interpretation of read frequency for files defined in iodef.xml",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/171"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiRphU",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_core/pull/203",
+        "https://github.com/MetOffice/lfric_core/pull/212"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "In Review",
+      "title": "Ensure correct interpretation of read frequency for files defined in iodef.xml"
+    },
+    {
+      "content": {
+        "number": 17,
+        "repository": "MetOffice/jules",
+        "title": "Setup CODEOWNERS",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/17"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiVM3o",
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Setup CODEOWNERS"
+    },
+    {
+      "content": {
+        "number": 173,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add lighthouse accessibility check for documentation",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/173"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiZUQ8",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Add lighthouse accessibility check for documentation"
+    },
+    {
+      "content": {
+        "number": 176,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add 32-bit tests for applications in the rose stem suite",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/176"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiZ8PQ",
+      "labels": [
+        "enhancement",
+        "good first issue"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Add 32-bit tests for applications in the rose stem suite"
+    },
+    {
+      "content": {
+        "number": 177,
+        "repository": "MetOffice/lfric_core",
+        "title": "Assess and possibly remove r_val and dp_val from constants_mod",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/177"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiaBX0",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Assess and possibly remove r_val and dp_val from constants_mod"
+    },
+    {
+      "content": {
+        "number": 7,
+        "repository": "MetOffice/um_doc",
+        "title": "Refresh doc contents for GitHub migration",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um_doc/issues/7"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgifwUY",
+      "repository": "https://github.com/MetOffice/um_doc",
+      "status": "New Issue",
+      "title": "Refresh doc contents for GitHub migration"
+    },
+    {
+      "content": {
+        "number": 181,
+        "repository": "MetOffice/lfric_core",
+        "title": "Provide support for running without OpenMP",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/181"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgigwcQ",
+      "labels": [
+        "bug",
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Provide support for running without OpenMP"
+    },
+    {
+      "assignees": [
+        "allynt"
+      ],
+      "content": {
+        "number": 183,
+        "repository": "MetOffice/lfric_core",
+        "title": "Ensure data variable in io_value_type is private",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/183"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgigzcQ",
+      "labels": [
+        "enhancement",
+        "Linked Apps"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Ensure data variable in io_value_type is private"
+    },
+    {
+      "assignees": [
+        "TeranIvy"
+      ],
+      "content": {
+        "number": 43,
+        "repository": "MetOffice/lfric_core",
+        "title": "Document PSyKAl design and rules/guidance for writing kernels for users",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/43"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2Dk",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Document PSyKAl design and rules/guidance for writing kernels for users"
+    },
+    {
+      "assignees": [
+        "andrewcoughtrie"
+      ],
+      "content": {
+        "number": 46,
+        "repository": "MetOffice/lfric_core",
+        "title": "Write simple_diffusion application tutorial",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/46"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2Do",
+      "labels": [
+        "documentation",
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Write simple_diffusion application tutorial"
+    },
+    {
+      "assignees": [
+        "andrewcoughtrie"
+      ],
+      "content": {
+        "number": 8,
+        "repository": "MetOffice/lfric_core",
+        "title": "Documentation of the io_demo application",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/8"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2Dw",
+      "labels": [
+        "documentation",
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Documentation of the io_demo application"
+    },
+    {
+      "content": {
+        "number": 115,
+        "repository": "MetOffice/lfric_core",
+        "title": "[Documentation]: Create stencil documentation",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/115"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2Eg",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "[Documentation]: Create stencil documentation"
+    },
+    {
+      "assignees": [
+        "andrewcoughtrie"
+      ],
+      "content": {
+        "number": 97,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add Sphinx linkcheck",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/97"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2Ek",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Add Sphinx linkcheck"
+    },
+    {
+      "content": {
+        "number": 107,
+        "repository": "MetOffice/lfric_core",
+        "title": "[Documentation]: Initiate documentation of driver component",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/107"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2Es",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "[Documentation]: Initiate documentation of driver component"
+    },
+    {
+      "content": {
+        "number": 133,
+        "repository": "MetOffice/lfric_core",
+        "title": "User documentation for driver component mesh support",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/133"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2E4",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "User documentation for driver component mesh support"
+    },
+    {
+      "content": {
+        "number": 151,
+        "repository": "MetOffice/lfric_core",
+        "title": "Change PR template section from \"Developer tags\" to \"Developer mentions\"",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/151"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2FM",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Change PR template section from \"Developer tags\" to \"Developer mentions\""
+    },
+    {
+      "assignees": [
+        "mike-hobson"
+      ],
+      "content": {
+        "number": 135,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add field UML diagrams to how it works documentation ",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/135"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2FQ",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Add field UML diagrams to how it works documentation "
+    },
+    {
+      "content": {
+        "number": 156,
+        "repository": "MetOffice/lfric_core",
+        "title": "[Documentation]: Standardise restructured text",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/156"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2Fo",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "[Documentation]: Standardise restructured text"
+    },
+    {
+      "assignees": [
+        "andrewcoughtrie"
+      ],
+      "content": {
+        "number": 163,
+        "repository": "MetOffice/lfric_core",
+        "title": "Update documentation for Key Value pairs",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/163"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig2Fw",
+      "labels": [
+        "documentation"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Update documentation for Key Value pairs"
+    },
+    {
+      "content": {
+        "number": 184,
+        "repository": "MetOffice/lfric_core",
+        "title": "Improvements to the way we use YAXT",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/184"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgig4FM",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Improvements to the way we use YAXT"
+    },
+    {
+      "assignees": [
+        "allynt"
+      ],
+      "content": {
+        "number": 45,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Use new io_value_type getter & setter",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/45"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgihA_c",
+      "labels": [
+        "enhancement",
+        "Linked Core"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Use new io_value_type getter & setter"
+    },
+    {
+      "assignees": [
+        "mo-snishimoto"
+      ],
+      "content": {
+        "number": 46,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Import of high order turbulence closure scheme",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/46"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgihCS0",
+      "labels": [
+        "enhancement",
+        "macro"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Import of high order turbulence closure scheme"
+    },
+    {
+      "content": {
+        "number": 47,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Additional PC2 optimisations for NG-ARCH",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/47"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgikjhg",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Progress",
+      "title": "Additional PC2 optimisations for NG-ARCH"
+    },
+    {
+      "assignees": [
+        "ukmo-juan-castillo"
+      ],
+      "content": {
+        "number": 48,
+        "repository": "MetOffice/lfric_apps",
+        "title": "lfric2lfric: generate lbcs in a regional mesh",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/48"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgik4Rc",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/55"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "Done",
+      "title": "lfric2lfric: generate lbcs in a regional mesh"
+    },
+    {
+      "assignees": [
+        "mike-hobson"
+      ],
+      "content": {
+        "number": 186,
+        "repository": "MetOffice/lfric_core",
+        "title": "Move mpi_mod unit test over to mpi_f08",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/186"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiorPA",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Move mpi_mod unit test over to mpi_f08"
+    },
+    {
+      "assignees": [
+        "Pierre-siddall",
+        "hsrumbold",
+        "maggiehendry"
+      ],
+      "content": {
+        "number": 21,
+        "repository": "MetOffice/jules",
+        "title": "Migrating the JULES Trac wiki pages to GitHub",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/21"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgio9Cs",
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Migrating the JULES Trac wiki pages to GitHub"
+    },
+    {
+      "content": {
+        "number": 60,
+        "repository": "MetOffice/lfric_apps",
+        "title": "lfric2lfric: processing W2 fields",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/60"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgipzvk",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/238"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "lfric2lfric: processing W2 fields"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 61,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Boundary Layer - bdy_expl2 optimisations",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/61"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiqAFQ",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Boundary Layer - bdy_expl2 optimisations"
+    },
+    {
+      "assignees": [
+        "tommbendall"
+      ],
+      "content": {
+        "number": 66,
+        "repository": "MetOffice/lfric_apps",
+        "title": "The sample_physics_wind_correction option is broken",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/66"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgis5_U",
+      "labels": [
+        "bug"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/69"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "Done",
+      "title": "The sample_physics_wind_correction option is broken"
+    },
+    {
+      "assignees": [
+        "tommbendall"
+      ],
+      "content": {
+        "number": 70,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Several gungho_model plotting scripts are broken",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/70"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgitubM",
+      "labels": [
+        "bug"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Several gungho_model plotting scripts are broken"
+    },
+    {
+      "assignees": [
+        "oakleybrunt"
+      ],
+      "content": {
+        "number": 73,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Investigation into failing multithreaded `lfric_atm` runs",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/73"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgivqms",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Investigation into failing multithreaded `lfric_atm` runs"
+    },
+    {
+      "assignees": [
+        "hsrumbold",
+        "maggiehendry"
+      ],
+      "content": {
+        "number": 23,
+        "repository": "MetOffice/jules",
+        "title": "Implement new irrigation scheme into standalone JULES",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/23"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgiv3VQ",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "In Progress",
+      "title": "Implement new irrigation scheme into standalone JULES"
+    },
+    {
+      "content": {
+        "number": 76,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Add PSyclone generated timing callipers",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/76"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgiwl7g",
+      "labels": [
+        "enhancement",
+        "Linked Core"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Add PSyclone generated timing callipers"
+    },
+    {
+      "content": {
+        "number": 196,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add PSyclone generated timing callipers",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/196"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiwmfY",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Add PSyclone generated timing callipers"
+    },
+    {
+      "assignees": [
+        "mo-rickywong"
+      ],
+      "content": {
+        "number": 197,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add method to retrieve a specified instance of a namelist that allows multiple instances",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/197"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgiwmp8",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Add method to retrieve a specified instance of a namelist that allows multiple instances"
+    },
+    {
+      "assignees": [
+        "mo-jmanners"
+      ],
+      "content": {
+        "number": 8,
+        "repository": "MetOffice/socrates",
+        "title": "Improve treatment of solar spectrum for correlated-k",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/socrates/issues/8"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgiw13s",
+      "labels": [
+        "enhancement",
+        "KGO"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/socrates",
+      "status": "New Issue",
+      "title": "Improve treatment of solar spectrum for correlated-k"
+    },
+    {
+      "assignees": [
+        "mike-hobson"
+      ],
+      "content": {
+        "number": 77,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Checkpointing wind (W2) fields",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/77"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgiyiVA",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Checkpointing wind (W2) fields"
+    },
+    {
+      "assignees": [
+        "mike-hobson"
+      ],
+      "content": {
+        "number": 199,
+        "repository": "MetOffice/lfric_core",
+        "title": "Checkpointing wind (W2) fields",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/199"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgiyi9o",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Checkpointing wind (W2) fields"
+    },
+    {
+      "assignees": [
+        "harry-shepherd"
+      ],
+      "content": {
+        "number": 8,
+        "repository": "MetOffice/moci",
+        "title": "Update infrastructure build suite to be git compatible",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/8"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgi0Hfw",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "In Progress",
+      "title": "Update infrastructure build suite to be git compatible"
+    },
+    {
+      "assignees": [
+        "mo-andymalcolm"
+      ],
+      "content": {
+        "number": 20,
+        "repository": "MetOffice/um",
+        "title": "Consolidate_nudging_changes",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/20"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgi4bGw",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/um/pull/22"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/um",
+      "status": "In Review",
+      "title": "Consolidate_nudging_changes"
+    },
+    {
+      "content": {
+        "number": 81,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Use of unallocated arrays in ukca_volcanic_so2",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/81"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjG6Bw",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Use of unallocated arrays in ukca_volcanic_so2"
+    },
+    {
+      "assignees": [
+        "tom-j-h"
+      ],
+      "content": {
+        "number": 85,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Align jedi_lfric_tests linear model/adjoint testing to adjoint_tests/linear_model",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/85"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjRaxk",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/156"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "Done",
+      "title": "Align jedi_lfric_tests linear model/adjoint testing to adjoint_tests/linear_model"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 86,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Update Transmute opt scripts with global.py changes",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/86"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjRa7Y",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Update Transmute opt scripts with global.py changes"
+    },
+    {
+      "content": {
+        "number": 87,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Incorrect adjoint semi-implicit timestep when reference_reset_time != dt",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/87"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjRgag",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Incorrect adjoint semi-implicit timestep when reference_reset_time != dt"
+    },
+    {
+      "assignees": [
+        "thomasmelvin"
+      ],
+      "content": {
+        "number": 88,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Decompose across multiple panels",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/88"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjRkF4",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Decompose across multiple panels"
+    },
+    {
+      "assignees": [
+        "sarahshannon-uor"
+      ],
+      "content": {
+        "number": 25,
+        "repository": "MetOffice/jules",
+        "title": "vn7.9 crash when using elevated tiles: elevation ancil read before ainfo/jules_vars association",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/25"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjRtVA",
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "vn7.9 crash when using elevated tiles: elevation ancil read before ainfo/jules_vars association"
+    },
+    {
+      "content": {
+        "number": 89,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Implement SST Anomaly functionality",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/89"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjSGFA",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Progress",
+      "title": "Implement SST Anomaly functionality"
+    },
+    {
+      "content": {
+        "number": 205,
+        "repository": "MetOffice/lfric_core",
+        "title": "Re-factor Configurator Python code.",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/205"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjSVJM",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Re-factor Configurator Python code."
+    },
+    {
+      "assignees": [
+        "Adrian-Lock"
+      ],
+      "content": {
+        "number": 91,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Remove old redundant UM code from ex_coef routine in boundary_layer and tidy",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/91"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjUnO8",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Remove old redundant UM code from ex_coef routine in boundary_layer and tidy"
+    },
+    {
+      "assignees": [
+        "pdearnshaw"
+      ],
+      "content": {
+        "number": 92,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Allow lfric_atm to compile for oasis coupled models",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/92"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjUtWU",
+      "labels": [
+        "bug"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Progress",
+      "title": "Allow lfric_atm to compile for oasis coupled models"
+    },
+    {
+      "assignees": [
+        "DrTVockerodtMO"
+      ],
+      "content": {
+        "number": 93,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Plumb adjoint lookup table caches into interface",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/93"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjU2NM",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Plumb adjoint lookup table caches into interface"
+    },
+    {
+      "content": {
+        "number": 206,
+        "repository": "MetOffice/lfric_core",
+        "title": "LFRic Core documentation (namelist_collection_type)",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/206"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjVEUY",
+      "labels": [
+        "documentation"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "LFRic Core documentation (namelist_collection_type)"
+    },
+    {
+      "content": {
+        "number": 54,
+        "repository": "MetOffice/growss",
+        "title": "Fix CR checker to identify code reviewer in PR body",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/growss/issues/54"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjYuqI",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/growss",
+      "status": "New Issue",
+      "title": "Fix CR checker to identify code reviewer in PR body"
+    },
+    {
+      "content": {
+        "number": 97,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Update the LFRic apps coupled configuration to use XIOS 2",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/97"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjZF8Y",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Update the LFRic apps coupled configuration to use XIOS 2"
+    },
+    {
+      "assignees": [
+        "mo-jmanners"
+      ],
+      "content": {
+        "number": 10,
+        "repository": "MetOffice/socrates",
+        "title": "Include spherical ice-crystal optical properties in ga9 spectral files",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/socrates/issues/10"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjZQtU",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/socrates",
+      "status": "New Issue",
+      "title": "Include spherical ice-crystal optical properties in ga9 spectral files"
+    },
+    {
+      "assignees": [
+        "alanjhewitt"
+      ],
+      "content": {
+        "number": 100,
+        "repository": "MetOffice/lfric_apps",
+        "title": "lfric_atm_nwp_gal9 loses bit comparison across NRUN-CRUN boundary",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/100"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjZc_A",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "lfric_atm_nwp_gal9 loses bit comparison across NRUN-CRUN boundary"
+    },
+    {
+      "assignees": [
+        "christophermaynard",
+        "oakleybrunt"
+      ],
+      "content": {
+        "number": 103,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Develop a performance profiling suite",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/103"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjb7zA",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Progress",
+      "title": "Develop a performance profiling suite"
+    },
+    {
+      "content": {
+        "number": 104,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Fix CrayPat profiling for `lfric_atm`",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/104"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjb_OM",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Fix CrayPat profiling for `lfric_atm`"
+    },
+    {
+      "assignees": [
+        "oakleybrunt"
+      ],
+      "content": {
+        "number": 105,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Reformat loading of modules in suite-config files for easier editing",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/105"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjcG0k",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Reformat loading of modules in suite-config files for easier editing"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 106,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Boundary Layer Umbrella",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/106"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjcHfc",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Boundary Layer Umbrella"
+    },
+    {
+      "assignees": [
+        "christophermaynard",
+        "mattatmet"
+      ],
+      "content": {
+        "number": 107,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Performance of colouring and tiling in gungho",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/107"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjcJ1M",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Performance of colouring and tiling in gungho"
+    },
+    {
+      "assignees": [
+        "cjohnson-pi"
+      ],
+      "content": {
+        "number": 108,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Add Split MoL-MoL transport in linear models",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/108"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjckcw",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Add Split MoL-MoL transport in linear models"
+    },
+    {
+      "assignees": [
+        "mo-pmol"
+      ],
+      "content": {
+        "number": 14,
+        "repository": "MetOffice/ukca",
+        "title": "Add PM diagnostics to the new UKCA Diagnostics Handling system.",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/ukca/issues/14"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjcu64",
+      "labels": [
+        "enhancement",
+        "Linked UM"
+      ],
+      "repository": "https://github.com/MetOffice/ukca",
+      "status": "New Issue",
+      "title": "Add PM diagnostics to the new UKCA Diagnostics Handling system."
+    },
+    {
+      "assignees": [
+        "oakleybrunt"
+      ],
+      "content": {
+        "number": 110,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Investigation into MPIIO tuning for output files",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/110"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjh8Ew",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Investigation into MPIIO tuning for output files"
+    },
+    {
+      "assignees": [
+        "cjohnson-pi"
+      ],
+      "content": {
+        "number": 111,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Run linear model as 32bit",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/111"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjiAyQ",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Run linear model as 32bit"
+    },
+    {
+      "assignees": [
+        "cjohnson-pi"
+      ],
+      "content": {
+        "number": 112,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Remove RAL settings from mesh configs",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/112"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjiBA4",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Remove RAL settings from mesh configs"
+    },
+    {
+      "assignees": [
+        "cjohnson-pi"
+      ],
+      "content": {
+        "number": 113,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Transport efficiency in linear model",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/113"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjiBeo",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Transport efficiency in linear model"
+    },
+    {
+      "assignees": [
+        "cjohnson-pi"
+      ],
+      "content": {
+        "number": 114,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Create a new adjoint model app",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/114"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjiCtU",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Create a new adjoint model app"
+    },
+    {
+      "assignees": [
+        "cjohnson-pi"
+      ],
+      "content": {
+        "number": 115,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Update linear integration tests configs",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/115"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjiD7E",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Update linear integration tests configs"
+    },
+    {
+      "content": {
+        "number": 116,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Add psycone transmute for UKCA glomap on archer site (ncas-ex)",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/116"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjiLio",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Add psycone transmute for UKCA glomap on archer site (ncas-ex)"
+    },
+    {
+      "assignees": [
+        "mo-alistairp"
+      ],
+      "content": {
+        "number": 213,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add GH_SCALAR_ARRAY to argument_mod",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/213"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjifS8",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Add GH_SCALAR_ARRAY to argument_mod"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 215,
+        "repository": "MetOffice/lfric_core",
+        "title": "Run LFRic-XIOS technical tests with XIOS 3",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/215"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjlrj0",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Run LFRic-XIOS technical tests with XIOS 3"
+    },
+    {
+      "content": {
+        "number": 118,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Enable reading of sea-ice ancils on categories",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/118"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjl2Cc",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Progress",
+      "title": "Enable reading of sea-ice ancils on categories"
+    },
+    {
+      "content": {
+        "number": 119,
+        "repository": "MetOffice/lfric_apps",
+        "title": "No environment setup instructions for Met Office users",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/119"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjl6K0",
+      "labels": [
+        "documentation"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "No environment setup instructions for Met Office users"
+    },
+    {
+      "content": {
+        "number": 216,
+        "repository": "MetOffice/lfric_core",
+        "title": "IO_Demo benchmark configuration",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/216"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjmJUA",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_core/pull/232"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "In Review",
+      "title": "IO_Demo benchmark configuration"
+    },
+    {
+      "assignees": [
+        "tom-j-h"
+      ],
+      "content": {
+        "number": 124,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Allow jelf adjoint test tolerance to be set via a namelist variable",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/124"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjplyw",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/132"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "Done",
+      "title": "Allow jelf adjoint test tolerance to be set via a namelist variable"
+    },
+    {
+      "assignees": [
+        "tom-j-h"
+      ],
+      "content": {
+        "number": 125,
+        "repository": "MetOffice/lfric_apps",
+        "title": "jelf adjoint tests initialised with realistic increments",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/125"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjpmCU",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/161"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "jelf adjoint tests initialised with realistic increments"
+    },
+    {
+      "assignees": [
+        "tom-j-h"
+      ],
+      "content": {
+        "number": 126,
+        "repository": "MetOffice/lfric_apps",
+        "title": "C224 adjoint tests in jelf",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/126"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjpmSA",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/163"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "C224 adjoint tests in jelf"
+    },
+    {
+      "content": {
+        "number": 127,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Floating-point precision conversions in jelf to allow 32-bit TLM/adjoint for use with JADA",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/127"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjpmt0",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/142"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "Done",
+      "title": "Floating-point precision conversions in jelf to allow 32-bit TLM/adjoint for use with JADA"
+    },
+    {
+      "assignees": [
+        "tom-j-h"
+      ],
+      "content": {
+        "number": 128,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Incorrect adjoint when using incremental wind interpolation in jelf",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/128"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjpnVo",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Incorrect adjoint when using incremental wind interpolation in jelf"
+    },
+    {
+      "assignees": [
+        "tom-j-h"
+      ],
+      "content": {
+        "number": 129,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Linear and adjoint boundary layer physics scheme",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/129"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjpnoI",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/182"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "Linear and adjoint boundary layer physics scheme"
+    },
+    {
+      "assignees": [
+        "tom-j-h"
+      ],
+      "content": {
+        "number": 130,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Overarching Issue for series of TLM/adjoint work",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/130"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjpojE",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Overarching Issue for series of TLM/adjoint work"
+    },
+    {
+      "assignees": [
+        "timgraham-Met"
+      ],
+      "content": {
+        "number": 134,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Issue with 32 bit compilation in coupled interface",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/134"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjqCoQ",
+      "labels": [
+        "bug"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Issue with 32 bit compilation in coupled interface"
+    },
+    {
+      "assignees": [
+        "mo-andymalcolm"
+      ],
+      "content": {
+        "number": 23,
+        "repository": "MetOffice/um",
+        "title": "Optimisations for climate diagnostics",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/23"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjqpw8",
+      "linked pull requests": [
+        "https://github.com/MetOffice/um/pull/24"
+      ],
+      "repository": "https://github.com/MetOffice/um",
+      "status": "In Review",
+      "title": "Optimisations for climate diagnostics"
+    },
+    {
+      "content": {
+        "number": 136,
+        "repository": "MetOffice/lfric_apps",
+        "title": "NG-ARCH: Loop blocking for vertical layers",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/136"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjs8B0",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Progress",
+      "title": "NG-ARCH: Loop blocking for vertical layers"
+    },
+    {
+      "content": {
+        "number": 219,
+        "repository": "MetOffice/lfric_core",
+        "title": "NG-ARCH: Loop blocking for vertical layers",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/219"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjs-08",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "In Progress",
+      "title": "NG-ARCH: Loop blocking for vertical layers"
+    },
+    {
+      "assignees": [
+        "caroduro"
+      ],
+      "content": {
+        "number": 28,
+        "repository": "MetOffice/jules",
+        "title": "Bug fix (Ticket #1545)",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/28"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjtlZ0",
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Bug fix (Ticket #1545)"
+    },
+    {
+      "assignees": [
+        "maggiehendry"
+      ],
+      "content": {
+        "number": 30,
+        "repository": "MetOffice/jules",
+        "title": "Web help urls in JULES metadata require updating",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/30"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjxQuI",
+      "labels": [
+        "bug",
+        "documentation",
+        "Accessibility"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Web help urls in JULES metadata require updating"
+    },
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 10,
+        "repository": "MetOffice/moci",
+        "title": "Update CI/CD pipeline",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/10"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjxbzw",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Update CI/CD pipeline"
+    },
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 11,
+        "repository": "MetOffice/moci",
+        "title": "Remove duplicated code",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/11"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjxcew",
+      "labels": [
+        "enhancement",
+        "help wanted"
+      ],
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Remove duplicated code"
+    },
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 12,
+        "repository": "MetOffice/moci",
+        "title": "Move shell out commands to a separate module/library",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/12"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjxdTk",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/moci/pull/19"
+      ],
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "In Review",
+      "title": "Move shell out commands to a separate module/library"
+    },
+    {
+      "assignees": [
+        "jennyhickson"
+      ],
+      "content": {
+        "number": 167,
+        "repository": "MetOffice/SimSys_Scripts",
+        "title": "Fix Compiler Warning Checker",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/SimSys_Scripts/issues/167"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjxmEg",
+      "labels": [
+        "bug",
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/SimSys_Scripts",
+      "status": "New Issue",
+      "title": "Fix Compiler Warning Checker"
+    },
+    {
+      "content": {
+        "number": 31,
+        "repository": "MetOffice/jules",
+        "title": "Purge Fortran Keywords as variables",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/31"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjxmy0",
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Purge Fortran Keywords as variables"
+    },
+    {
+      "content": {
+        "number": 15,
+        "repository": "MetOffice/ukca",
+        "title": "Purge Fortran keywords as variable.",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/ukca/issues/15"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjxnD8",
+      "repository": "https://github.com/MetOffice/ukca",
+      "status": "New Issue",
+      "title": "Purge Fortran keywords as variable."
+    },
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 14,
+        "repository": "MetOffice/moci",
+        "title": "Move pylint.rc out of utilities",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/14"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjxwpU",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/moci/pull/17"
+      ],
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "In Review",
+      "title": "Move pylint.rc out of utilities"
+    },
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 15,
+        "repository": "MetOffice/moci",
+        "title": "Add a Python linter",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/15"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjxzCo",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/moci/pull/20"
+      ],
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "In Review",
+      "title": "Add a Python linter"
+    },
+    {
+      "content": {
+        "number": 152,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Deprecate legacy timer",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/152"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgjycBk",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Deprecate legacy timer"
+    },
+    {
+      "content": {
+        "number": 225,
+        "repository": "MetOffice/lfric_core",
+        "title": "Deprecating Legacy Timer",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/225"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgjycko",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Deprecating Legacy Timer"
+    },
+    {
+      "assignees": [
+        "doucla"
+      ],
+      "content": {
+        "number": 32,
+        "repository": "MetOffice/jules",
+        "title": "Add minor reservoirs to hydrology (old ticket #1123)",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/32"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj0L1U",
+      "labels": [
+        "enhancement",
+        "Linked UM",
+        "macro"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Add minor reservoirs to hydrology (old ticket #1123)"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 25,
+        "repository": "MetOffice/um",
+        "title": "CoMorph convection scheme refactoring",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/25"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj45IY",
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/um",
+      "status": "New Issue",
+      "title": "CoMorph convection scheme refactoring"
+    },
+    {
+      "content": {
+        "number": 18,
+        "repository": "MetOffice/moci",
+        "title": "Implement common logging system",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/18"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj5Xx0",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Implement common logging system"
+    },
+    {
+      "assignees": [
+        "caroduro",
+        "mo-eddy"
+      ],
+      "content": {
+        "number": 33,
+        "repository": "MetOffice/jules",
+        "title": "New water table depth calculation (Ticket #1485)",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/33"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj722w",
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "New water table depth calculation (Ticket #1485)"
+    },
+    {
+      "assignees": [
+        "Adrian-Lock"
+      ],
+      "content": {
+        "number": 159,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Add new option for a smoother calculation of mixing length",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/159"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj8UIA",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Add new option for a smoother calculation of mixing length"
+    },
+    {
+      "assignees": [
+        "DanCopsey"
+      ],
+      "content": {
+        "number": 26,
+        "repository": "MetOffice/um",
+        "title": "Move the l_inland switch from the jules_rivers namelist to the jules_hydrology namelist",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/26"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj8Zds",
+      "labels": [
+        "Linked Jules",
+        "Linked Apps"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/um",
+      "status": "New Issue",
+      "title": "Move the l_inland switch from the jules_rivers namelist to the jules_hydrology namelist"
+    },
+    {
+      "assignees": [
+        "alanjhewitt"
+      ],
+      "content": {
+        "number": 160,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Extend RADAER functionality to allow several GLOMAP settings",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/160"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj8sV8",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Progress",
+      "title": "Extend RADAER functionality to allow several GLOMAP settings"
+    },
+    {
+      "assignees": [
+        "DanCopsey"
+      ],
+      "content": {
+        "number": 34,
+        "repository": "MetOffice/jules",
+        "title": "Inland basin flow coupling and use land fractions on rivers grid",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/34"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj9VVY",
+      "labels": [
+        "Linked UM",
+        "Linked Apps"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Inland basin flow coupling and use land fractions on rivers grid"
+    },
+    {
+      "content": {
+        "number": 164,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Unable to write out W2H fields with XIOS",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/164"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj9f8w",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Unable to write out W2H fields with XIOS"
+    },
+    {
+      "content": {
+        "number": 230,
+        "repository": "MetOffice/lfric_core",
+        "title": "Cyclic file reading with lfric_xios temporal controller",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/230"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj9_RU",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_core/pull/231"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "In Review",
+      "title": "Cyclic file reading with lfric_xios temporal controller"
+    },
+    {
+      "content": {
+        "number": 167,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Improve Stochastic Physics PSyclone Scripts by Grouping Functionalities into Reusable Functions",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/167"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgj-qFA",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Improve Stochastic Physics PSyclone Scripts by Grouping Functionalities into Reusable Functions"
+    },
+    {
+      "assignees": [
+        "yaswant"
+      ],
+      "content": {
+        "number": 168,
+        "repository": "MetOffice/lfric_apps",
+        "title": "TCD email in PR template is incorrect",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/168"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkAEj8",
+      "labels": [
+        "bug"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "TCD email in PR template is incorrect"
+    },
+    {
+      "assignees": [
+        "marcstring"
+      ],
+      "content": {
+        "number": 28,
+        "repository": "MetOffice/um",
+        "title": "Bug in STASH for the Gregorian Calendar",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/28"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkAeRg",
+      "linked pull requests": [
+        "https://github.com/MetOffice/um/pull/35"
+      ],
+      "repository": "https://github.com/MetOffice/um",
+      "status": "In Review",
+      "title": "Bug in STASH for the Gregorian Calendar"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 234,
+        "repository": "MetOffice/lfric_core",
+        "title": "Can we deprecate `dp_xios`?",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/234"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkA1Ic",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Can we deprecate `dp_xios`?"
+    },
+    {
+      "assignees": [
+        "alanjhewitt"
+      ],
+      "content": {
+        "number": 235,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add GLOMAP to model db",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/235"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkBDbU",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Add GLOMAP to model db"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 236,
+        "repository": "MetOffice/lfric_core",
+        "title": "Variable to read time value from netcdf files needs to be double precision regardless",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/236"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkBZM4",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Variable to read time value from netcdf files needs to be double precision regardless"
+    },
+    {
+      "content": {
+        "number": 29,
+        "repository": "MetOffice/um",
+        "title": "NCI rose-stem problems",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/29"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkC8qg",
+      "repository": "https://github.com/MetOffice/um",
+      "status": "New Issue",
+      "title": "NCI rose-stem problems"
+    },
+    {
+      "assignees": [
+        "tommbendall"
+      ],
+      "content": {
+        "number": 175,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Halos wrap around y-direction in some gungho vertical slice tests",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/175"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkFDXk",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Halos wrap around y-direction in some gungho vertical slice tests"
+    },
+    {
+      "content": {
+        "number": 239,
+        "repository": "MetOffice/lfric_core",
+        "title": "Halo exchange hangs for high-order W0 field on multigrid mesh in high-res runs",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/239"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkFJLw",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Halo exchange hangs for high-order W0 field on multigrid mesh in high-res runs"
+    },
+    {
+      "content": {
+        "number": 36,
+        "repository": "MetOffice/jules",
+        "title": "WIEMIP / PRIME version of jules",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/36"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkFw-o",
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "WIEMIP / PRIME version of jules"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 178,
+        "repository": "MetOffice/lfric_apps",
+        "title": "CoMorph convection scheme refactoring",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/178"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkGJEA",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "CoMorph convection scheme refactoring"
+    },
+    {
+      "content": {
+        "number": 240,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add Fab build script for Skeleton apps",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/240"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkHnjc",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_core/pull/246"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "In Review",
+      "title": "Add Fab build script for Skeleton apps"
+    },
+    {
+      "content": {
+        "number": 17,
+        "repository": "MetOffice/ukca",
+        "title": "Further ASAD refactoring",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/ukca/issues/17"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkIuNM",
+      "linked pull requests": [
+        "https://github.com/MetOffice/ukca/pull/18"
+      ],
+      "repository": "https://github.com/MetOffice/ukca",
+      "status": "In Review",
+      "title": "Further ASAD refactoring"
+    },
+    {
+      "content": {
+        "number": 37,
+        "repository": "MetOffice/jules",
+        "title": "Better Process For publishing JULES input data",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/37"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkIweE",
+      "labels": [
+        "backlog"
+      ],
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Better Process For publishing JULES input data"
+    },
+    {
+      "content": {
+        "number": 19,
+        "repository": "MetOffice/ukca",
+        "title": "Is it worth making better use of compressed Jacobian format?",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/ukca/issues/19"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkI6Yk",
+      "repository": "https://github.com/MetOffice/ukca",
+      "status": "New Issue",
+      "title": "Is it worth making better use of compressed Jacobian format?"
+    },
+    {
+      "content": {
+        "number": 20,
+        "repository": "MetOffice/ukca",
+        "title": "Predict timesteps for ASAD in advance",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/ukca/issues/20"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkJEYw",
+      "repository": "https://github.com/MetOffice/ukca",
+      "status": "New Issue",
+      "title": "Predict timesteps for ASAD in advance"
+    },
+    {
+      "assignees": [
+        "t00sa"
+      ],
+      "content": {
+        "number": 38,
+        "repository": "MetOffice/jules",
+        "title": "Remove include directives from Fortran source files",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/38"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkJa0Y",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "In Progress",
+      "title": "Remove include directives from Fortran source files"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 241,
+        "repository": "MetOffice/lfric_core",
+        "title": "A generic sleep implementation",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/241"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkJj0M",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "A generic sleep implementation"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 242,
+        "repository": "MetOffice/lfric_core",
+        "title": "Time interpolation of input data with XIOS temporal type",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/242"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkJmC4",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Time interpolation of input data with XIOS temporal type"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 243,
+        "repository": "MetOffice/lfric_core",
+        "title": "Complete implementation of time-varying reading with new temporal controller object",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/243"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkJmss",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Complete implementation of time-varying reading with new temporal controller object"
+    },
+    {
+      "content": {
+        "number": 21,
+        "repository": "MetOffice/moci",
+        "title": "Update rose-stem to run from Git",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/21"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkUkJ4",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Update rose-stem to run from Git"
+    },
+    {
+      "content": {
+        "number": 250,
+        "repository": "MetOffice/lfric_core",
+        "title": "Even spacing of DoFs for higher-order elements",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/250"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkVtCk",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Even spacing of DoFs for higher-order elements"
+    },
+    {
+      "assignees": [
+        "tommbendall"
+      ],
+      "content": {
+        "number": 185,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Kernels which write to W2 fields may not be thread-safe",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/185"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkV9b8",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Kernels which write to W2 fields may not be thread-safe"
+    },
+    {
+      "assignees": [
+        "tommbendall"
+      ],
+      "content": {
+        "number": 252,
+        "repository": "MetOffice/lfric_core",
+        "title": "Face Selectors not suitable for Not Annexed DoFs",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/252"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkV97Q",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Face Selectors not suitable for Not Annexed DoFs"
+    },
+    {
+      "content": {
+        "number": 22,
+        "repository": "MetOffice/moci",
+        "title": "Move unit tests into a single folder",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/22"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkYrHo",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Move unit tests into a single folder"
+    },
+    {
+      "content": {
+        "number": 23,
+        "repository": "MetOffice/moci",
+        "title": "Deprecate old shellout commands",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/23"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkYtB8",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Deprecate old shellout commands"
+    },
+    {
+      "content": {
+        "number": 24,
+        "repository": "MetOffice/moci",
+        "title": "Deprecate shellouts in postproc",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/24"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkYtVo",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Deprecate shellouts in postproc"
+    },
+    {
+      "content": {
+        "number": 25,
+        "repository": "MetOffice/moci",
+        "title": "Deprecate shellouts from coupled drivers",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/25"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkYtbU",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Deprecate shellouts from coupled drivers"
+    },
+    {
+      "assignees": [
+        "alanjhewitt"
+      ],
+      "content": {
+        "number": 189,
+        "repository": "MetOffice/lfric_apps",
+        "title": "RADAER full domain and segmentation and OpenMP",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/189"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkZ5Ts",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "Ready for Work",
+      "title": "RADAER full domain and segmentation and OpenMP"
+    },
+    {
+      "content": {
+        "number": 31,
+        "repository": "MetOffice/um",
+        "title": "Implement new irrigation scheme in JULES and UM",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/31"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkaY4Y",
+      "repository": "https://github.com/MetOffice/um",
+      "status": "New Issue",
+      "title": "Implement new irrigation scheme in JULES and UM"
+    },
+    {
+      "assignees": [
+        "mo-jmanners"
+      ],
+      "content": {
+        "number": 15,
+        "repository": "MetOffice/socrates",
+        "title": "CMIP7 future scenario solar forcing for GA9 spectral files",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/socrates/issues/15"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkajZk",
+      "labels": [
+        "enhancement",
+        "Linked Spectral"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/socrates/pull/16"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/socrates",
+      "status": "In Review",
+      "title": "CMIP7 future scenario solar forcing for GA9 spectral files"
+    },
+    {
+      "content": {
+        "number": 192,
+        "repository": "MetOffice/lfric_apps",
+        "title": "lfric2lfric: run with multiple CPUs",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/192"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkavDs",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/201"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "lfric2lfric: run with multiple CPUs"
+    },
+    {
+      "content": {
+        "number": 194,
+        "repository": "MetOffice/lfric_apps",
+        "title": "glomap_aerosol_kernel should use gh_scalar_array when available",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/194"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgka1O4",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "glomap_aerosol_kernel should use gh_scalar_array when available"
+    },
+    {
+      "content": {
+        "number": 196,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Unable to run GC6 coupled model at git_migration version of LFRic_Apps",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/196"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkdcGw",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Unable to run GC6 coupled model at git_migration version of LFRic_Apps"
+    },
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 199,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Add fortitude linting to the CI/CD pipeline",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/199"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgkd3zs",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/200"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "Add fortitude linting to the CI/CD pipeline"
+    },
+    {
+      "assignees": [
+        "Pierre-siddall"
+      ],
+      "content": {
+        "number": 257,
+        "repository": "MetOffice/lfric_core",
+        "title": "Add fortitude linting to the CI/CD pipeline",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/257"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgkd304",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_core/pull/258"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "In Review",
+      "title": "Add fortitude linting to the CI/CD pipeline"
+    },
+    {
+      "assignees": [
+        "alanjhewitt"
+      ],
+      "content": {
+        "number": 32,
+        "repository": "MetOffice/um",
+        "title": "Refactoring for radaer",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/32"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkeWFU",
+      "repository": "https://github.com/MetOffice/um",
+      "status": "New Issue",
+      "title": "Refactoring for radaer"
+    },
+    {
+      "assignees": [
+        "maggiehendry"
+      ],
+      "content": {
+        "number": 41,
+        "repository": "MetOffice/jules",
+        "title": "Migrate jules_pftparm metadata to jules-shared",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/41"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkesGk",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/jules/pull/42"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "In Progress",
+      "title": "Migrate jules_pftparm metadata to jules-shared"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 259,
+        "repository": "MetOffice/lfric_core",
+        "title": "Vernier output not being picked up by rose-stem",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/259"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkiUS4",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Vernier output not being picked up by rose-stem"
+    },
+    {
+      "assignees": [
+        "allynt"
+      ],
+      "content": {
+        "number": 260,
+        "repository": "MetOffice/lfric_core",
+        "title": "Update configurator python code to be more robust when specifying the duplicate namelist property",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/260"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkiUcQ",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "In Review",
+      "title": "Update configurator python code to be more robust when specifying the duplicate namelist property"
+    },
+    {
+      "assignees": [
+        "cjohnson-pi",
+        "jameskent-metoffice"
+      ],
+      "content": {
+        "number": 206,
+        "repository": "MetOffice/lfric_apps",
+        "title": "FFSL Transport for the Linear Model",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/206"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkqNrM",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "FFSL Transport for the Linear Model"
+    },
+    {
+      "content": {
+        "number": 26,
+        "repository": "MetOffice/moci",
+        "title": "Update Utilities/mean_nemo to handle time-varying masks and make other improvements",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/26"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgks5bA",
+      "linked pull requests": [
+        "https://github.com/MetOffice/moci/pull/28"
+      ],
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "Done",
+      "title": "Update Utilities/mean_nemo to handle time-varying masks and make other improvements"
+    },
+    {
+      "content": {
+        "number": 27,
+        "repository": "MetOffice/moci",
+        "title": "Add Python dependency checking to the CI/CD pipeline",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/27"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgkus7Q",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Add Python dependency checking to the CI/CD pipeline"
+    },
+    {
+      "assignees": [
+        "hsrumbold"
+      ],
+      "content": {
+        "number": 207,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Implement new irrigation scheme into standalone JULES",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/207"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkvcFw",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Implement new irrigation scheme into standalone JULES"
+    },
+    {
+      "content": {
+        "number": 211,
+        "repository": "MetOffice/lfric_apps",
+        "title": "No isothermal profile option for planar domain initialisation",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/211"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkwJEs",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "No isothermal profile option for planar domain initialisation"
+    },
+    {
+      "content": {
+        "number": 212,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Unphysical vertical wave amplification in non-Earth isothermal CRM setup",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/212"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgkw7I4",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Unphysical vertical wave amplification in non-Earth isothermal CRM setup"
+    },
+    {
+      "assignees": [
+        "christophermaynard"
+      ],
+      "content": {
+        "number": 263,
+        "repository": "MetOffice/lfric_core",
+        "title": "Silent lfric_atm transmute script errors with PSyclone v3.2.0",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/263"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgkzh-Y",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Silent lfric_atm transmute script errors with PSyclone v3.2.0"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 215,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Remove j loop bdy_lyr_expl2",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/215"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgkzx1k",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/223"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "Remove j loop bdy_lyr_expl2"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 216,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Remove j loop ex_coef",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/216"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkzyHM",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/220"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "Remove j loop ex_coef"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 217,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Remove j loop kmkhz_9c",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/217"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkzyuI",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/221"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "Remove j loop kmkhz_9c"
+    },
+    {
+      "assignees": [
+        "mo-cjsmith"
+      ],
+      "content": {
+        "number": 218,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Additional methods for switching to height-varying gravity",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/218"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzgkzywA",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Additional methods for switching to height-varying gravity"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 219,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Remove j loop in excf_nl_9c",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/219"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgkzy5c",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/222"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "Remove j loop in excf_nl_9c"
+    },
+    {
+      "assignees": [
+        "allynt"
+      ],
+      "content": {
+        "number": 265,
+        "repository": "MetOffice/lfric_core",
+        "title": "Ensure data variable in io_value_type is private",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/265"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk0laI",
+      "labels": [
+        "enhancement"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_core/pull/274"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "In Review",
+      "title": "Ensure data variable in io_value_type is private"
+    },
+    {
+      "assignees": [
+        "allynt"
+      ],
+      "content": {
+        "number": 224,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Use new io_value_type getter & setter",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/224"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk0oP4",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Use new io_value_type getter & setter"
+    },
+    {
+      "assignees": [
+        "mo-cjsmith"
+      ],
+      "content": {
+        "number": 226,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Idealised initialisation of temperature and relative humidity profiles",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/226"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk4Z6Y",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Idealised initialisation of temperature and relative humidity profiles"
+    },
+    {
+      "assignees": [
+        "iboutle"
+      ],
+      "content": {
+        "number": 228,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Add option to call implicit boundary-layer before convection",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/228"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk5HkU",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Add option to call implicit boundary-layer before convection"
+    },
+    {
+      "assignees": [
+        "GAndrsn"
+      ],
+      "content": {
+        "number": 37,
+        "repository": "MetOffice/um",
+        "title": "Address issues with missing data values in tropopause height calculation",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/37"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk5evY",
+      "repository": "https://github.com/MetOffice/um",
+      "status": "New Issue",
+      "title": "Address issues with missing data values in tropopause height calculation"
+    },
+    {
+      "assignees": [
+        "oakleybrunt"
+      ],
+      "content": {
+        "number": 229,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Missing `crayhost` switch for Genoa nodes",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/229"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk5-Zo",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Missing `crayhost` switch for Genoa nodes"
+    },
+    {
+      "assignees": [
+        "t00sa"
+      ],
+      "content": {
+        "number": 18,
+        "repository": "MetOffice/shumlib",
+        "title": "Add  SHUMlib installation instructions for non-MO sites",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/shumlib/issues/18"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk9Q7I",
+      "labels": [
+        "backlog"
+      ],
+      "repository": "https://github.com/MetOffice/shumlib",
+      "status": "In Progress",
+      "title": "Add  SHUMlib installation instructions for non-MO sites"
+    },
+    {
+      "content": {
+        "number": 17,
+        "repository": "MetOffice/socrates",
+        "title": "Add spectral file examples for other planets",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/socrates/issues/17"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk9tPw",
+      "repository": "https://github.com/MetOffice/socrates",
+      "status": "New Issue",
+      "title": "Add spectral file examples for other planets"
+    },
+    {
+      "content": {
+        "number": 30,
+        "repository": "MetOffice/moci",
+        "title": "Get build of drivers and postproc to work with Git",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/30"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk-gu8",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "Get build of drivers and postproc to work with Git"
+    },
+    {
+      "content": {
+        "number": 31,
+        "repository": "MetOffice/moci",
+        "title": "UKESM2 postproc developments",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/31"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8Gzgk-oNw",
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "New Issue",
+      "title": "UKESM2 postproc developments"
+    },
+    {
+      "assignees": [
+        "Adrian-Lock"
+      ],
+      "content": {
+        "number": 232,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Improve consistency of diagnosed TKE with diffusivity",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/232"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglGz6c",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Improve consistency of diagnosed TKE with diffusivity"
+    },
+    {
+      "content": {
+        "number": 233,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Can't write checkpoints from coupled model",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/233"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglHGc4",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Can't write checkpoints from coupled model"
+    },
+    {
+      "assignees": [
+        "DanCopsey"
+      ],
+      "content": {
+        "number": 234,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Inland basin flow coupling",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/234"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglHWBQ",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 30th January 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-03-04T00:00:00Z",
+        "title": "Spring 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Inland basin flow coupling"
+    },
+    {
+      "assignees": [
+        "tinyendian"
+      ],
+      "content": {
+        "number": 46,
+        "repository": "MetOffice/jules",
+        "title": "Add ESNZ site to JULES Rose Stem configuration",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/46"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglI6qo",
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Add ESNZ site to JULES Rose Stem configuration"
+    },
+    {
+      "assignees": [
+        "t00sa"
+      ],
+      "content": {
+        "number": 19,
+        "repository": "MetOffice/shumlib",
+        "title": "Fix environment variable handling bug in regression tests",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/shumlib/issues/19"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglJ-z4",
+      "labels": [
+        "bug"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/shumlib/pull/20"
+      ],
+      "repository": "https://github.com/MetOffice/shumlib",
+      "status": "Done",
+      "title": "Fix environment variable handling bug in regression tests"
+    },
+    {
+      "assignees": [
+        "harry-shepherd"
+      ],
+      "content": {
+        "number": 236,
+        "repository": "MetOffice/lfric_apps",
+        "title": "XIOS/OASIS module for lfric_coupled was not updated for vn3.0",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/236"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglK4GI",
+      "labels": [
+        "bug"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/254"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "XIOS/OASIS module for lfric_coupled was not updated for vn3.0"
+    },
+    {
+      "assignees": [
+        "maggiehendry"
+      ],
+      "content": {
+        "number": 49,
+        "repository": "MetOffice/jules",
+        "title": "Migrate jules_radiation metadata to jules-shared",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/jules/issues/49"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglNDgY",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/jules",
+      "status": "New Issue",
+      "title": "Migrate jules_radiation metadata to jules-shared"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 240,
+        "repository": "MetOffice/lfric_apps",
+        "title": "CoMorph microphysics changes for CASIM 2nd ice category",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/240"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQTGQ",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 25th September 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-11-04T00:00:00Z",
+        "title": "Autumn 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "CoMorph microphysics changes for CASIM 2nd ice category"
+    },
+    {
+      "content": {
+        "number": 12,
+        "repository": "MetOffice/shumlib",
+        "title": "Address ignored fortitude rules for Fortran",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/shumlib/issues/12"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQdDQ",
+      "repository": "https://github.com/MetOffice/shumlib",
+      "status": "New Issue",
+      "title": "Address ignored fortitude rules for Fortran"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 241,
+        "repository": "MetOffice/lfric_apps",
+        "title": "CoMorph transport and detrainment of CASIM number concentrations",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/241"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQjec",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 25th September 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-11-04T00:00:00Z",
+        "title": "Autumn 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "CoMorph transport and detrainment of CASIM number concentrations"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 242,
+        "repository": "MetOffice/lfric_apps",
+        "title": "PC2 homogeneous forcing by turbulent horizontal diffusion",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/242"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQmbU",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "PC2 homogeneous forcing by turbulent horizontal diffusion"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 243,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Impose max limit on in-cloud water-content in pc2_checks",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/243"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQoX4",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Impose max limit on in-cloud water-content in pc2_checks"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 244,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Limit numerical vertical diffusion of liquid-cloud in PC2",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/244"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQtgk",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 25th September 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-11-04T00:00:00Z",
+        "title": "Autumn 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Limit numerical vertical diffusion of liquid-cloud in PC2"
+    },
+    {
+      "content": {
+        "number": 272,
+        "repository": "MetOffice/lfric_core",
+        "title": "Logging present in unit-tests",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/272"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQxs0",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Logging present in unit-tests"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 247,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Accurately-reversible PC2 homogeneous forcing option",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/247"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQykg",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Accurately-reversible PC2 homogeneous forcing option"
+    },
+    {
+      "assignees": [
+        "mo-lottieturner"
+      ],
+      "content": {
+        "number": 248,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Vertical regridding in lfric2lfric",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/248"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQ1Jw",
+      "labels": [
+        "enhancement",
+        "LFRic Inputs"
+      ],
+      "linked pull requests": [
+        "https://github.com/MetOffice/lfric_apps/pull/253"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "In Review",
+      "title": "Vertical regridding in lfric2lfric"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 249,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Improved PC2 \"smooth\" initiation option",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/249"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQ1s4",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Improved PC2 \"smooth\" initiation option"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 250,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Bug-fixes for \"no ice in turb\" option used with CASIM",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/250"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQ4_A",
+      "labels": [
+        "bug"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 29th May 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-07-01T00:00:00Z",
+        "title": "Summer 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Bug-fixes for \"no ice in turb\" option used with CASIM"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 251,
+        "repository": "MetOffice/lfric_apps",
+        "title": "CoMorph KGO-breaking refactoring",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/251"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQ7aY",
+      "labels": [
+        "enhancement",
+        "KGO"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 25th September 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-11-04T00:00:00Z",
+        "title": "Autumn 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "CoMorph KGO-breaking refactoring"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 252,
+        "repository": "MetOffice/lfric_apps",
+        "title": "CoMorph minor bug-fixes",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/252"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglQ88g",
+      "labels": [
+        "bug"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 25th September 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-11-04T00:00:00Z",
+        "title": "Autumn 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "CoMorph minor bug-fixes"
+    },
+    {
+      "assignees": [
+        "MetBenjaminWent"
+      ],
+      "content": {
+        "number": 255,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Adjust the bdy_lyr local script, and housekeeping",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/255"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglRZT0",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Adjust the bdy_lyr local script, and housekeeping"
+    },
+    {
+      "assignees": [
+        "stevemullerworth"
+      ],
+      "content": {
+        "number": 256,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Fix coupled restarts in global coupled model",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/256"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglRfro",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Fix coupled restarts in global coupled model"
+    },
+    {
+      "assignees": [
+        "EdHone"
+      ],
+      "content": {
+        "number": 273,
+        "repository": "MetOffice/lfric_core",
+        "title": "Fix output of intermediate checkpoints in global coupled model",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_core/issues/273"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglRj1c",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_core",
+      "status": "New Issue",
+      "title": "Fix output of intermediate checkpoints in global coupled model"
+    },
+    {
+      "content": {
+        "number": 33,
+        "repository": "MetOffice/moci",
+        "title": "Add support for 5D variables to `mean_nemo`",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/moci/issues/33"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglRrgs",
+      "linked pull requests": [
+        "https://github.com/MetOffice/moci/pull/34"
+      ],
+      "repository": "https://github.com/MetOffice/moci",
+      "status": "Done",
+      "title": "Add support for 5D variables to `mean_nemo`"
+    },
+    {
+      "assignees": [
+        "hiker"
+      ],
+      "content": {
+        "number": 40,
+        "repository": "MetOffice/um",
+        "title": "Adding Fab Build Script",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/um/issues/40"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglTiLQ",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/um",
+      "status": "New Issue",
+      "title": "Adding Fab Build Script"
+    },
+    {
+      "assignees": [
+        "MichaelWhitall"
+      ],
+      "content": {
+        "number": 258,
+        "repository": "MetOffice/lfric_apps",
+        "title": "CASIM coupling to prognostic precipitation fraction used with CoMorph",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/258"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglUyP8",
+      "labels": [
+        "enhancement"
+      ],
+      "milestone": {
+        "description": "Code Review deadline is 25th September 2026 (SciTech review to be completed by this date)",
+        "dueOn": "2026-11-04T00:00:00Z",
+        "title": "Autumn 2026"
+      },
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "CASIM coupling to prognostic precipitation fraction used with CoMorph"
+    },
+    {
+      "content": {
+        "number": 259,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Checkpointing scalars and arrays in a generic way",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/259"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglU5wo",
+      "labels": [
+        "enhancement"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Checkpointing scalars and arrays in a generic way"
+    },
+    {
+      "content": {
+        "number": 263,
+        "repository": "MetOffice/lfric_apps",
+        "title": "Short-circuit evaluation in Fortran IF statement leads to segfault with Intel OneAPI compiler",
+        "type": "Issue",
+        "url": "https://github.com/MetOffice/lfric_apps/issues/263"
+      },
+      "id": "PVTI_lADOAGrG5M4BId8GzglYvSY",
+      "labels": [
+        "bug"
+      ],
+      "repository": "https://github.com/MetOffice/lfric_apps",
+      "status": "New Issue",
+      "title": "Short-circuit evaluation in Fortran IF statement leads to segfault with Intel OneAPI compiler"
+    }
+  ],
+  "totalCount": 210
+}

@@ -217,17 +217,17 @@ def main():
     rose_meta_path = ""
     if args.apps:
         source_path = args.apps
-        meta_paths += f"-M {os.path.join(args.apps, "rose-meta")} "
-        rose_meta_path += f"{os.path.join(args.apps, "rose-meta")}"
+        meta_paths += f"-M {os.path.join(args.apps, 'rose-meta')} "
+        rose_meta_path += f"{os.path.join(args.apps, 'rose-meta')}"
     if args.core:
-        meta_paths += f"-M {os.path.join(args.core, "rose-meta")} "
+        meta_paths += f"-M {os.path.join(args.core, 'rose-meta')} "
         if rose_meta_path:
             # Apps has already started this
-            rose_meta_path += f":{os.path.join(args.core, "rose-meta")}"
+            rose_meta_path += f":{os.path.join(args.core, 'rose-meta')}"
         else:
             # Apps hasn't been set
             source_path = args.core
-            rose_meta_path = f"{os.path.join(args.core, "rose-meta")}"
+            rose_meta_path = f"{os.path.join(args.core, 'rose-meta')}"
 
     if check_rose_metadata(rose_meta_path, source_path) or check_rose_stem_apps(
         meta_paths, source_path

@@ -16,7 +16,7 @@ import subprocess
 from pathlib import Path
 from prettytable import PrettyTable
 
-from review_project import ProjectData
+from review_project import ProjectData, REVIEW_ID
 
 lfric_repositories = [
     "lfric_apps",
@@ -166,7 +166,7 @@ def parse_args():
     Read command line args
     """
 
-    testfile = Path(__file__).parent / "test" / "test.json"
+    testfile = Path(__file__).parent / "test" / "pr.json"
 
     parser = argparse.ArgumentParser(
         "Create tables of review workload based on Simulation Systems Review Tracker"
@@ -205,9 +205,9 @@ def main(total: bool, test: bool, capture_project: bool, file: Path):
 
     # Extract data from github about the reviews and team members.
     if test:
-        data = ProjectData.from_file(file)
+        data = ProjectData.from_file(REVIEW_ID, file)
     else:
-        data = ProjectData.from_github(capture_project, file)
+        data = ProjectData.from_github(REVIEW_ID, capture_project, file)
 
     teams = {
         "SSD": Team("ssdteam", test),
