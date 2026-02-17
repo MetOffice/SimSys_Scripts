@@ -184,18 +184,27 @@ def merge_source(
         f"{source} at ref {ref} into {repo}"
     )
 
-    if use_mirrors:
-        remote_path = Path(mirror_loc) / "MetOffice" / repo
+    if ".git" in str(source):
+        if use_mirrors:
+            remote_path = Path(mirror_loc) / "MetOffice" / repo
+            fetch = determine_mirror_fetch(source, ref)
+        else:
+            remote_path = source
+            fetch = ref
     else:
+        if not ref:
+            raise Exception(
+                f"Cannot merge local source '{source}' with empty ref.\n"
+                "Please enter a valid git ref - if you use a branch, then the latest "
+                "commit to that branch will be used."
+            )
         remote_path = source
-    run_command(f"git -C {dest} remote add local {remote_path}")
-
-    if use_mirrors:
-        fetch = determine_mirror_fetch(source, ref)
-    else:
         fetch = ref
 
+    run_command(f"git -C {dest} remote add local {remote_path}")
+
     run_command(f"git -C {dest} fetch local {fetch}")
+
     command = f"git -C {dest} merge --no-gpg-sign FETCH_HEAD"
     result = run_command(command, check=False)
     if result.returncode:
