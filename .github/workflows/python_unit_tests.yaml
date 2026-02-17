@@ -27,6 +27,14 @@ jobs:
         with:
           python-version: '3.14'
           cache: 'pip'
+      - name: Install dependencies
+        run: |
+          # We only have 2 external dependencies other than pytest for now, so
+          # list them here
+          # If this changes, we may want to switch to a dependencies file of
+          # some format
+          python -m pip install --upgrade pip
+          pip install pytest networkx PyYAML
       - name: Test with pytest
         run: |
           # Setup git for git_bdiff and get_git_sources testing
