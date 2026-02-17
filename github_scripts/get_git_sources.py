@@ -184,8 +184,11 @@ def merge_source(
         f"{source} at ref {ref} into {repo}"
     )
 
-    if use_mirrors:
-        remote_path = Path(mirror_loc) / "MetOffice" / repo
+    if ".git" in source:
+        if use_mirrors:
+            remote_path = Path(mirror_loc) / "MetOffice" / repo
+        else:
+            remote_path = source
     else:
         remote_path = source
     run_command(f"git -C {dest} remote add local {remote_path}")
