@@ -21,7 +21,8 @@ conformance, and to run relevant style checkers on those files.
 
 ALLOWABLE_FILE_TYPES = ["Fortran", "Python", "Generic"]
 GROUP_FILE_TYPES = {
-    "CI": ["Fortran", "Python"],
+    "CI": {"Fortran", "Python"},
+    "ALL": set(ALLOWABLE_FILE_TYPES),
 }
 # TODO: Generic /probably/ needs renaming.
 
@@ -470,10 +471,20 @@ def which_cms_is_it(path: str) -> CMSSystem:
 
 def detangle_file_types(file_types: Set[str]) -> Set[str]:
     """Process file type arguments to handle 'group' types."""
+    the_whole_world = set(ALLOWABLE_FILE_TYPES)
+    the_whole_world.update(list(GROUP_FILE_TYPES.keys()))
     for group, members in GROUP_FILE_TYPES.items():
         if group in file_types:
             file_types.remove(group)
             file_types.update(members)
+        # A bit belt and braces, in case the contents of a group gets out of
+        # sync with what's allowable...
+        if file_types.difference(the_whole_world):
+            raise ValueError(
+                "Invalid file types specified: " +
+                f"{file_types.difference(the_whole_world)}" +
+                f" in group \"{group}\""
+                )
     return file_types
 
 
