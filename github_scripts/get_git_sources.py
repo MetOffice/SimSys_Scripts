@@ -184,7 +184,7 @@ def merge_source(
         f"{source} at ref {ref} into {repo}"
     )
 
-    if ".git" in source:
+    if ".git" in str(source):
         if use_mirrors:
             remote_path = Path(mirror_loc) / "MetOffice" / repo
             fetch = determine_mirror_fetch(source, ref)
