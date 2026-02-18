@@ -21,8 +21,15 @@ conformance, and to run relevant style checkers on those files.
 
 @dataclass
 class CheckResult:
-    """Result from running a style checker on a file."""
-
+    """
+    Docstring for CheckResult
+        A class to hold the results of running a style checker on a file.
+        It contains the file path, the number of tests failed, whether all
+        tests passed, and a list of TestResult objects for each test run on
+        that file.
+    """
+    """TODO : Might be better to store number of tests run, and number passed,
+    rather than just number failed and whether all passed."""
     file_path: str = "No file provided"
     tests_failed: int = 0
     all_passed: bool = False
@@ -427,6 +434,11 @@ def process_arguments():
         help="Maximum number of parallel workers"
     )
     parser.add_argument(
+        "--fullcheck", action="store_true",
+        help="Instead of just checking changed files, check all files in "
+             "the repository"
+    )
+    parser.add_argument(
         "-v", "--verbose", action="count", default=0,
         help="Increase output verbosity"
     )
@@ -449,18 +461,35 @@ def process_arguments():
     return args
 
 
-def which_cms_is_it(path: str) -> CMSSystem:
+def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
     """Determine which CMS is in use based on the presence of certain files."""
     repo_path = Path(path)
     if (repo_path / ".git").is_dir():
-        return GitBdiffWrapper(repo_path)
+        cms = GitBdiffWrapper(repo_path)
     elif (repo_path / ".svn").is_dir():
         """
         TODO : If we still want this to work reliably with FCM, it will need
         to also accept URLs and not just local paths."""
-        return FCMBdiffWrapper(repo_path)
+        cms = FCMBdiffWrapper(repo_path)
     else:
         raise RuntimeError("Unknown CMS type at path: " + str(path))
+    branch_name = cms.get_branch_name()
+    if not cms.is_branch():
+        print(
+            f"The path {path} is not a branch."
+            f"\nReported branch name is : {branch_name}"
+            "\nThe meaning of differences is unclear, and so"
+            " checking is aborted.\n"
+            f"Please try switching on the full check option"
+        )
+        exit(1)
+    else:
+        print(f"The branch, {branch_name}, at path {path} is a branch.")
+        if print_volume >= 5:
+            print("The files changed on this branch are:")
+            for changed_file in cms.get_changed_files():
+                print(f"  {changed_file}")
+    return cms
 
 
 def create_style_checkers(
@@ -508,27 +537,44 @@ def create_style_checkers(
     return checkers
 
 
-# Example usage
+def get_files_to_check(path: str, full_check: bool,
+                       print_volume: int = 3) -> List[Path]:
+    """
+    Docstring for get_files_to_check : A routine to get the list of files to
+    check based on the CMS or the full check override.
+
+    :param path: The top level path of the direcotry or clone of the
+    repository to check.
+    :type path: str
+    :param full_check: Logical to force checking of all files in the
+    repository, rather than just the changed files.
+    :type full_check: bool
+    :param print_volume: Verbosity level for printing. Default is 3.
+    :type print_volume: int
+    :return: List of relative file paths to check.
+    :rtype: List[Path]
+    """
+    if full_check:  # Override to check all files present.
+        repo_path = Path(path)
+        all_files = [f for f in repo_path.rglob("*") if f.is_file()]
+        if print_volume >= 3:
+            print(f"Full check requested. Found {len(all_files)} files to "
+                  f"check in repository at path: {path}")
+        return all_files
+    else:  # Configure CMS, and check we've been passed a branch
+        cms = which_cms_is_it(path, print_volume)
+        changed_files = cms.get_changed_files()
+        return changed_files
+
+
+# Usage when run from command line.
 if __name__ == "__main__":
     args = process_arguments()
 
-    # Configure CMS, and check we've been passed a branch
-    cms = which_cms_is_it(args.path)
-    branch_name = cms.get_branch_name()
-    if not cms.is_branch():
-        print(
-            f"The path {args.path} is not a branch."
-            f"\nReported branch name is : {branch_name}"
-            "\nThe meaning of differences is unclear, and so"
-            " checking is aborted."
-        )
-        exit(1)
-    else:
-        print(f"The branch, {branch_name}, at path {args.path} is a branch.")
-        if args.volume >= 5:
-            print("The files changed on this branch are:")
-            for changed_file in cms.get_changed_files():
-                print(f"  {changed_file}")
+    log_volume = args.volume
+
+    file_paths = get_files_to_check(args.path, args.fullcheck, log_volume)
+    full_file_paths = [Path(args.path) / f for f in file_paths]
 
     # Configure checkers
     """
@@ -536,10 +582,7 @@ if __name__ == "__main__":
         For now, just configure checkers based on file type requested.
         Later, could add configuration files to specify which
         checkers to use for each file type."""
-    checkers = []
 
-    full_file_paths = [f"{args.path}/{f}" for f in cms.get_changed_files()]
-    full_file_paths = [Path(f) for f in full_file_paths]
     active_checkers = create_style_checkers(args.file_types,
                                             full_file_paths)
 
@@ -554,7 +597,7 @@ if __name__ == "__main__":
 
     checker.check_files()
 
-    all_passed = checker.print_results(print_volume=args.volume)
+    all_passed = checker.print_results(print_volume=log_volume)
     print(f"Total files checked: {len(checker.results)}")
     print(f"Total files failed: "
           f"{sum(1 for r in checker.results if not r.all_passed)}")
