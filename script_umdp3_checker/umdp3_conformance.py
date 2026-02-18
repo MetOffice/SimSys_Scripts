@@ -19,6 +19,14 @@ conformance, and to run relevant style checkers on those files.
 """
 
 
+ALLOWABLE_FILE_TYPES = ["Fortran", "Python", "Generic"]
+GROUP_FILE_TYPES = {
+    "CI": {"Fortran", "Python"},
+    "ALL": set(ALLOWABLE_FILE_TYPES),
+}
+# TODO: Generic /probably/ needs renaming.
+
+
 @dataclass
 class CheckResult:
     """
@@ -419,13 +427,10 @@ def process_arguments():
         "--file-types",
         type=str,
         nargs="+",
-        choices=["Fortran", "Python", "Generic"],
+        choices=ALLOWABLE_FILE_TYPES + list(GROUP_FILE_TYPES.keys()),
         default=["Fortran"],
         help="File types to check, comma-separated",
     )
-    """
-    TODO : I /think/ the old version also checked '.h' files as Fortran.
-        Not sure if that is still needed."""
     parser.add_argument(
         "-p", "--path", type=str, default="./", help="path to repository"
     )
@@ -458,6 +463,7 @@ def process_arguments():
     args = parser.parse_args()
     # Determine output verbosity level
     args.volume = 3 + args.verbose - args.quiet
+    args.file_types = detangle_file_types(set(args.file_types))
     return args
 
 
@@ -492,6 +498,25 @@ def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
     return cms
 
 
+def detangle_file_types(file_types: Set[str]) -> Set[str]:
+    """Process file type arguments to handle 'group' types."""
+    the_whole_world = set(ALLOWABLE_FILE_TYPES)
+    the_whole_world.update(list(GROUP_FILE_TYPES.keys()))
+    for group, members in GROUP_FILE_TYPES.items():
+        if group in file_types:
+            file_types.remove(group)
+            file_types.update(members)
+        # A bit belt and braces, in case the contents of a group gets out of
+        # sync with what's allowable...
+        if file_types.difference(the_whole_world):
+            raise ValueError(
+                "Invalid file types specified: " +
+                f"{file_types.difference(the_whole_world)}" +
+                f" in group \"{group}\""
+                )
+    return file_types
+
+
 def create_style_checkers(
     file_types: List[str], changed_files: List[Path]
 ) -> List[StyleChecker]:
@@ -501,6 +526,9 @@ def create_style_checkers(
     if "Fortran" in file_types:
         file_extensions = {".f", ".for", ".f90", ".f95",
                            ".f03", ".f08", ".F90"}
+        """
+        TODO : I /think/ the old version also checked '.h' files as Fortran.
+        Not sure if that is still needed."""
         fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
         fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
         generic_file_table = dispatch_tables.get_file_dispatch_table_all()
