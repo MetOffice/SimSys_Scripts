@@ -9,7 +9,18 @@
 # import sys
 import re
 import argparse
-from fstring_parse import *  # noqa: F403
+from fstring_parse import (
+    blank_fcomments,
+    blank_fstring,
+    clean_str_continuation,
+    is_continuation,
+    is_pp_continuation,
+    is_str_continuation,
+    ParsingError,
+    partial_blank_fstring,
+    DQUOTE,
+    SQUOTE,
+)
 
 # These 4 are defined globally for visibility. They are actually only used in
 # main or a single subroutine but actual text is not yet defined in stone...

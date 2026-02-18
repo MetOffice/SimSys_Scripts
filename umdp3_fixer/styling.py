@@ -17,7 +17,19 @@ Fortran source code
 
 import re
 import sys
-from fstring_parse import *  # noqa: F403
+from fstring_parse import (
+    blank_fcomments,
+    blank_fstring,
+    clean_str_continuation,
+    is_continuation,
+    is_pp_continuation,
+    is_str_continuation,
+    ParsingError,
+    partial_blank_fstring,
+    simplify_line,
+    DQUOTE,
+    SQUOTE,
+)
 
 CODE_REPLACEMENTS = [
     # Replace Fortran 77 style conditional keywords

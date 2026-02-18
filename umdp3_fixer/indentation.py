@@ -18,7 +18,12 @@ to Fortran source code
 
 import re
 import sys
-from fstring_parse import *  # noqa: F403
+from fstring_parse import (
+    is_continuation,
+    is_pp_continuation,
+    is_str_continuation,
+    simplify_line,
+)
 
 # Number of spaces of indent to apply per indentation level
 INDENT = 2
