@@ -14,6 +14,7 @@ copied over.
 This module contains various functions for applying UMDP3 styling to
 Fortran source code
 """
+
 import re
 import sys
 from fstring_parse import *  # noqa: F403
@@ -839,7 +840,7 @@ def replace_patterns(line, str_continuation):
                     blank_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print("{0:s} Line simplification has failed for:" "".format(e.msg))
+                    print("{0:s} Line simplification has failed for:".format(e.msg))
                     print(line)
                     exit(1)
 
@@ -905,7 +906,7 @@ def replace_comment_patterns(line, str_continuation):
                     match_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print("{0:s} Line simplification has failed for:" "".format(e.msg))
+                    print("{0:s} Line simplification has failed for:".format(e.msg))
                     print(line)
                     exit(1)
 

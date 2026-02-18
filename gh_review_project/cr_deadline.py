@@ -37,8 +37,7 @@ def parse_args():
     testfile_path = Path(__file__).parent / "test"
 
     parser = argparse.ArgumentParser(
-        "Changes to the Simulation System projects required at the code"
-        "review deadline."
+        "Changes to the Simulation System projects required at the codereview deadline."
     )
 
     parser.add_argument("--milestone", help="Milestone being released")
@@ -79,7 +78,6 @@ def parse_args():
 def main(
     milestone: str, test: bool, capture_project: bool, file: Path, dry: bool
 ) -> None:
-
     # Get milestone data
     if test:
         issue_data = ProjectData.from_file(ISSUE_ID, file / "issue.json")

@@ -13,6 +13,7 @@ This script will run the processes needed to close off and finish a milestone
         * Remaining open PRs and issues against this milestone
         * Closed PRs against this milestone
 """
+
 from pathlib import Path
 import argparse
 from review_project import ProjectData, REVIEW_ID, ISSUE_ID
@@ -186,7 +187,6 @@ def parse_args():
 def main(
     milestone: str, test: bool, capture_project: bool, file: Path, dry: bool
 ) -> None:
-
     # Get milestone data
     if test:
         review_data = ProjectData.from_file(REVIEW_ID, file / "pr.json")

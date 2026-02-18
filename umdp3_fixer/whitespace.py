@@ -58,7 +58,6 @@ def strip_trailing_space(line):
 
 
 def keyword_split(line, str_continuation):
-
     if len(line.strip()) == 0:
         return line
 
@@ -118,7 +117,7 @@ def keyword_split(line, str_continuation):
                     blank_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print("{0:s} Line simplification has failed " "for:".format(e.msg))
+                    print("{0:s} Line simplification has failed for:".format(e.msg))
                     print(line)
                     exit(1)
 
@@ -225,7 +224,7 @@ def main():
     parser.add_argument(
         "-k",
         "--keywordsplit",
-        help="Split potentially conjoined keywords" " such as INOUT",
+        help="Split potentially conjoined keywords such as INOUT",
         action="store_true",
     )
     parser.add_argument(

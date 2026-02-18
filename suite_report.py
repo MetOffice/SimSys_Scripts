@@ -6,22 +6,22 @@
 # which you should have received as part of this distribution.
 # *****************************COPYRIGHT*******************************
 """
-   ## NOTE ##
+## NOTE ##
 
-   This module is one of several for which the main copy is in the
-   SimSys_Scripts repository. When making changes, please ensure the
-   changes are made in the github repository.
+This module is one of several for which the main copy is in the
+SimSys_Scripts repository. When making changes, please ensure the
+changes are made in the github repository.
 
-   Script to process the results of a suite and write a summary to file. The
-   summary is in Trac wiki mark-up. Any projects that do not have a local
-   mirror repository are assumed not to be used at that site and are
-   excluded from the report.
+Script to process the results of a suite and write a summary to file. The
+summary is in Trac wiki mark-up. Any projects that do not have a local
+mirror repository are assumed not to be used at that site and are
+excluded from the report.
 
-   Owner: Scientific Software Development and Deployment team
-          (formerly : UM System Development Team)
-   Cylc Suite Syntax: shutdown handler = "suite_report.py"
-   Command Line syntax:
-       suite_report.py -S <suite_dir> [-v] [-q] [-N] [-L <log_dir>]
+Owner: Scientific Software Development and Deployment team
+       (formerly : UM System Development Team)
+Cylc Suite Syntax: shutdown handler = "suite_report.py"
+Command Line syntax:
+    suite_report.py -S <suite_dir> [-v] [-q] [-N] [-L <log_dir>]
 
 """
 
@@ -40,7 +40,6 @@ import time
 import traceback
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from collections import defaultdict
-from optparse import OptionGroup, OptionParser
 
 from fcm_bdiff import get_branch_diff_filenames
 
@@ -1154,9 +1153,9 @@ class SuiteReport:
                     owner += " (" + deputy + ")"
                 needed_approvals[owner].add(section)
             except KeyError:
-                needed_approvals[
-                    "Unknown - ensure section " "is in CodeOwners.txt"
-                ].add(section)
+                needed_approvals["Unknown - ensure section is in CodeOwners.txt"].add(
+                    section
+                )
 
         return needed_approvals
 
@@ -1416,7 +1415,7 @@ class SuiteReport:
             lines.append(f" || {task} || {highlight_start}{state}{highlight_end} || ")
         if len(lines) == 1:
             lines.append(
-                " |||| This table is deliberately empty as all tasks " "are hidden || "
+                " |||| This table is deliberately empty as all tasks are hidden || "
             )
 
         status_summary = ["'''Suite Output'''"]
@@ -1822,7 +1821,7 @@ class SuiteReport:
             except Exception as err:
                 print(err)
                 if attempt == 4:
-                    print("Cant get list of alterered files - returning " "empty list.")
+                    print("Cant get list of alterered files - returning empty list.")
                     bdiff_files = []
                     break
 
@@ -2120,7 +2119,7 @@ def parse_arguments():
         dest="increase_verbosity",
         action="count",
         default=0,
-        help="increases Verbosity level. " f"(default: {DEFAULT_VERBOSITY})",
+        help=f"increases Verbosity level. (default: {DEFAULT_VERBOSITY})",
     )
 
     verbose.add_argument(

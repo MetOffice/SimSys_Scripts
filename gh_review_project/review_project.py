@@ -8,6 +8,7 @@
 Classes and functions for interacting with the Simulation Systems Review Tracker
 Project.
 """
+
 from __future__ import annotations
 
 import json
@@ -248,7 +249,6 @@ class ProjectData:
                 or (status == "open" and item.status in item.open_states)
                 or (status == "closed" and item.status not in item.open_states)
             ):
-
                 milestone_data[item.repo].append(item)
         return milestone_data
 
@@ -357,7 +357,7 @@ class ProjectItem:
         if milestone:
             command += f" --milestone='{milestone}'"
         else:
-            command += f" --remove-milestone"
+            command += " --remove-milestone"
 
         message = f"Changing milestone for #{self.number} in {self.repo}"
 
