@@ -236,7 +236,7 @@ class UMDP3Checker:
                 )
         output = f"Checked {count+1} lines, found {failures} failures."
         return TestResult(
-            checker_name="Capitalised Keywords",
+            checker_name="OpenMP sentinels not in column one",
             failure_count=failures,
             passed=(failures == 0),
             output=output,
@@ -252,7 +252,8 @@ class UMDP3Checker:
             if line.lstrip(" ").startswith("!"):
                 continue
             clean_line = self.remove_quoted(line)
-            for pattern in [f"\\b{kw}\\b" for kw in unseparated_keywords_list]:
+            for pattern in [f"\\b{kw}\\b" for kw in
+                            unseparated_keywords_list]:
                 if re.search(pattern, clean_line, re.IGNORECASE):
                     self.add_extra_error(f"unseparated keyword in line: "
                                          f"{line.strip()}")

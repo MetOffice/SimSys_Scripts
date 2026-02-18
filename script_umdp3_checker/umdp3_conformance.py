@@ -180,6 +180,7 @@ class UMDP3_checker(StyleChecker):
         file_extensions: Set[str],
         check_functions: Dict[str, Callable],
         changed_files: List[Path] = [],
+        print_volume: int = 3,
     ):
         self.name = name
         self.file_extensions = file_extensions or set()
@@ -189,12 +190,12 @@ class UMDP3_checker(StyleChecker):
             if changed_files
             else []
         )
-        # Should wrap the following in some kind of verbosity control
-        # print(f"UMDP3_checker initialized :\n"
-        #       f"    Name : {self.name}\n"
-        #       f"    Has {len(self.check_functions)} check functions\n"
-        #       f"    Using {len(self.file_extensions)} file extensions\n"
-        #       f"    Gives {len(self.files_to_check)} files to check.")
+        if print_volume >= 5:
+            print(f"UMDP3_checker initialized :\n"
+                  f"    Name : {self.name}\n"
+                  f"    Has {len(self.check_functions)} check functions\n"
+                  f"    Using {len(self.file_extensions)} file extensions\n"
+                  f"    Gives {len(self.files_to_check)} files to check.")
 
     def get_name(self) -> str:
         return self.name
@@ -233,6 +234,7 @@ class ExternalChecker(StyleChecker):
         file_extensions: Set[str],
         check_functions: Dict[str, List[str]],
         changed_files: List[Path],
+        print_volume: int = 3,
     ):
         self.name = name
         self.file_extensions = file_extensions or set()
@@ -242,12 +244,12 @@ class ExternalChecker(StyleChecker):
             if changed_files
             else []
         )
-        # Should wrap the following in some kind of verbosity control
-        # print(f"ExternalChecker initialized :\n"
-        #       f"    Name : {self.name}\n"
-        #       f"    Has {len(self.check_commands)} check commands\n"
-        #       f"    Using {len(self.file_extensions)} file extensions\n"
-        #       f"    Gives {len(self.files_to_check)} files to check.")
+        if print_volume >= 5:
+            print(f"ExternalChecker initialized :\n"
+                  f"    Name : {self.name}\n"
+                  f"    Has {len(self.check_commands)} check commands\n"
+                  f"    Using {len(self.file_extensions)} file extensions\n"
+                  f"    Gives {len(self.files_to_check)} files to check.")
 
     def get_name(self) -> str:
         return self.name
@@ -360,7 +362,8 @@ class ConformanceChecker:
         self.results = results
         return
 
-    def print_results(self, print_volume: int = 3) -> bool:
+    def print_results(self, print_volume: int = 3,
+                      quiet_pass: bool = True) -> bool:
         """Print results and return True if all checks passed.
         ========================================================"""
         """
@@ -374,35 +377,31 @@ class ConformanceChecker:
             # Lousy variable names here: 'result' is the CheckResult for a file
             # which had multiple tests, so result.all_passed is for that file.
             all_passed = all_passed and result.all_passed
-            if print_volume >= 2:
-                print(f"{file_status:7s} file : {result.file_path:50s}")
-            if print_volume < 4 and result.all_passed:
+            # verbosity level 4 overides quiet_pass for file summary.
+            if quiet_pass and result.all_passed and print_volume < 4:
                 continue
+            print(f"{file_status:7s} file : {result.file_path:50s}")
+            if print_volume >= 3 and not result.all_passed:
+                print(" " * 4 + line_2(86))
             for test_result in result.test_results:
-                # TODO : The output logic here is a bit of a mess.
                 if print_volume < 5 and test_result.passed:
                     continue
-                if print_volume >= 4:
-                    print(
-                        " " * 5
-                        + "-" * 50
-                        + " " * 5
-                        + f"\n     {test_result.checker_name} Output :\n"
-                        + " " * 5
-                        + f"{test_result.output}\n"
-                        + " " * 5
-                        + "-" * 50
-                    )
-                    if test_result.errors:
-                        print(" " * 5 + "-=-" * 30)
-                        print(" " * 5 + " Std Error :")
+                if print_volume >= 3 and not test_result.passed:
+                    plural = "" if test_result.failure_count == 1 else "s"
+                    print(f"     {test_result.checker_name:60s} : Found "
+                          + f"{test_result.failure_count:3} failure{plural}.")
+                    if test_result.errors and print_volume >= 4:
+                        print(" " * 8 + line_2(82))
                         for count, (title, info) in enumerate(
                             test_result.errors.items()
                         ):
-                            print(f"      {count:2} : {title} : {info}")
-                        print(" " * 5 + "-=-" * 30)
-                elif print_volume > 2:
-                    print(f"     {test_result.checker_name:60s} : ✗ FAIL")
+                            print(" " * 8 +
+                                  f"{count + 1:2} : {title} : {info}")
+                        print(" " * 8 + line_2(82))
+                elif print_volume >= 3:
+                    print(f"     {test_result.checker_name:60s} : ✓ PASS")
+            if print_volume >= 3 and not result.all_passed:
+                print(" " * 4 + line_2(86))
         return all_passed
 
 
@@ -439,10 +438,16 @@ def process_arguments():
              "the repository"
     )
     parser.add_argument(
+        "--printpass", action="store_true",
+        help="Print details of passed checks as well as failed ones.\n"
+             "By default, only failed checks are printed in detail."
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-v", "--verbose", action="count", default=0,
         help="Increase output verbosity"
     )
-    parser.add_argument(
+    group.add_argument(
         "-q", "--quiet", action="count", default=0,
         help="Decrease output verbosity"
     )
@@ -461,6 +466,24 @@ def process_arguments():
     return args
 
 
+def line_1(length: int = 80) -> str:
+    """Helper function to print a line for separating output sections."""
+    repeats = length // 3
+    pads = length % 3
+    line = ""
+    if pads > 1:
+        line += "="
+    line += "-=-" * repeats
+    if pads > 0:
+        line += "="
+    return line
+
+
+def line_2(length: int = 80) -> str:
+    """Helper function to print a line for separating output sections."""
+    return "-" * length
+
+
 def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
     """Determine which CMS is in use based on the presence of certain files."""
     repo_path = Path(path)
@@ -475,6 +498,8 @@ def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
         raise RuntimeError("Unknown CMS type at path: " + str(path))
     branch_name = cms.get_branch_name()
     if not cms.is_branch():
+        # TODO : This /might/ be better as a raise ValueError to allow
+        # printing the help message, but for now just print and exit.
         print(
             f"The path {path} is not a branch."
             f"\nReported branch name is : {branch_name}"
@@ -482,18 +507,28 @@ def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
             " checking is aborted.\n"
             f"Please try switching on the full check option"
         )
-        exit(1)
+        # Soft exit mainly so nightly testing on main doesn't flag failure.
+        exit(0)
     else:
-        print(f"The branch, {branch_name}, at path {path} is a branch.")
-        if print_volume >= 5:
+        if print_volume >= 2:
+            print(f"Found branch, {branch_name}, at path {path}.")
+        if print_volume >= 4:
             print("The files changed on this branch are:")
-            for changed_file in cms.get_changed_files():
-                print(f"  {changed_file}")
+            changed_files = cms.get_changed_files()
+            no_of_changed_files = len(changed_files)
+            extras = no_of_changed_files - 10
+            if no_of_changed_files > 10:
+                changed_files = changed_files[:10]
+            for changed_file in changed_files:
+                print(f"    {changed_file}")
+            if no_of_changed_files > 10:
+                print(f"    ... and {extras} more changed files.")
     return cms
 
 
 def create_style_checkers(
-    file_types: List[str], changed_files: List[Path]
+    file_types: List[str], changed_files: List[Path],
+    print_volume: int = 3
 ) -> List[StyleChecker]:
     """Create style checkers based on requested file types."""
     dispatch_tables = CheckerDispatchTables()
@@ -504,7 +539,8 @@ def create_style_checkers(
         fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
         fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
         generic_file_table = dispatch_tables.get_file_dispatch_table_all()
-        print("Configuring Fortran checkers:")
+        if print_volume >= 3:
+            print("Configuring Fortran checkers:")
         combined_checkers = fortran_diff_table | fortran_file_table | \
             generic_file_table
         fortran_file_checker = UMDP3_checker.from_full_list(
@@ -513,7 +549,8 @@ def create_style_checkers(
         )
         checkers.append(fortran_file_checker)
     if "Python" in file_types:
-        print("Setting up Python external checkers.")
+        if print_volume >= 3:
+            print("Configuring External Python checkers:")
         file_extensions = {".py"}
         python_checkers = {
             # "flake 8":     ["flake8", "-q"],
@@ -522,11 +559,13 @@ def create_style_checkers(
             "ruff":        ["ruff", "check"],
         }
         python_file_checker = ExternalChecker(
-            "Python External Checkers", file_extensions,
+            "External Python Checkers", file_extensions,
             python_checkers, changed_files
         )
         checkers.append(python_file_checker)
     if "Generic" in file_types or file_types == []:
+        if print_volume >= 3:
+            print("Configuring Generic File Checkers:")
         all_file_dispatch_table = dispatch_tables.get_file_dispatch_table_all()
         generic_checker = UMDP3_checker(
             "Generic File Checker", set(), all_file_dispatch_table,
@@ -557,11 +596,15 @@ def get_files_to_check(path: str, full_check: bool,
     if full_check:  # Override to check all files present.
         repo_path = Path(path)
         all_files = [f for f in repo_path.rglob("*") if f.is_file()]
+        if print_volume >= 1:
+            print("Full check override enabled.")
         if print_volume >= 3:
-            print(f"Full check requested. Found {len(all_files)} files to "
+            print(f"    Found {len(all_files)} files to "
                   f"check in repository at path: {path}")
         return all_files
     else:  # Configure CMS, and check we've been passed a branch
+        if print_volume >= 1:
+            print("Using a CMS to determine changed files.")
         cms = which_cms_is_it(path, print_volume)
         changed_files = cms.get_changed_files()
         return changed_files
@@ -572,6 +615,7 @@ if __name__ == "__main__":
     args = process_arguments()
 
     log_volume = args.volume
+    quiet_pass = not args.printpass
 
     file_paths = get_files_to_check(args.path, args.fullcheck, log_volume)
     full_file_paths = [Path(args.path) / f for f in file_paths]
@@ -597,7 +641,18 @@ if __name__ == "__main__":
 
     checker.check_files()
 
-    all_passed = checker.print_results(print_volume=log_volume)
+    if log_volume >= 3:
+        print(line_1(81))
+        print("## Results :" + " "*67 + "##")
+        print(line_1(81) + "\n")
+    else:
+        print("Results  :")
+    all_passed = checker.print_results(print_volume=log_volume,
+                                       quiet_pass=quiet_pass)
+    if log_volume >= 4:
+        print("\n" + line_1(81))
+        print("## Summary :" + " "*67 + "##")
+        print(line_1(81))
     print(f"Total files checked: {len(checker.results)}")
     print(f"Total files failed: "
           f"{sum(1 for r in checker.results if not r.all_passed)}")
