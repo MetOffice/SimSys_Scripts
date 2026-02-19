@@ -1,5 +1,6 @@
 cache-dir = "/tmp/.ruff_cache"
 line-length = 88
+output-format = "grouped"
 
 [lint]
 # Allow unused variables when underscore-prefixed.
