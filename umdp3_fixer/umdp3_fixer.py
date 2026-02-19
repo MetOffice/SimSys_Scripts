@@ -31,6 +31,7 @@ Usage:
  branch-diff version to apply to them. C files must have the
  .c or .h extension.
 """
+
 import os
 import re
 import sys
@@ -206,7 +207,6 @@ def main():
             ):
                 if input_file.split(".")[-1] == "h":
                     if re.search(r".*\/include\/other\/.*", input_file) is not None:
-
                         print(
                             "Input file {0:s} not a "
                             "Fortran include file,"
@@ -215,8 +215,9 @@ def main():
                         continue
                 else:
                     print(
-                        "Input file {0:s} not a "
-                        "Fortran file, skipping".format(input_file)
+                        "Input file {0:s} not a Fortran file, skipping".format(
+                            input_file
+                        )
                     )
                     continue
 
@@ -241,8 +242,7 @@ def main():
 
                     if len(amp_not_parsed) > 0:
                         print(
-                            "Ampersand Alignment Failed for:"
-                            " {0:s}".format(input_file)
+                            "Ampersand Alignment Failed for: {0:s}".format(input_file)
                         )
                         print("failed on lines:\n")
                         for i in amp_not_parsed:
@@ -256,9 +256,7 @@ def main():
                         white_lines = apply_whitespace_fixes(amp_lines)
 
                     if white_lines is None:
-                        print(
-                            "Whitespace Fixes Failed for:" " {0:s}".format(input_file)
-                        )
+                        print("Whitespace Fixes Failed for: {0:s}".format(input_file))
                         failed = True
 
                     styled_lines = None
@@ -289,8 +287,7 @@ def main():
 
                     if len(amp_not_parsed) > 0:
                         print(
-                            "Ampersand Alignment Failed for:"
-                            " {0:s}".format(input_file)
+                            "Ampersand Alignment Failed for: {0:s}".format(input_file)
                         )
                         print("failed on lines:\n")
                         for i in amp_not_parsed:
@@ -424,9 +421,7 @@ def main():
                 )
         else:
             print("\nSkipping C files:")
-            print(
-                "\nThis utilises clang-format," " which is not available on this system"
-            )
+            print("\nThis utilises clang-format, which is not available on this system")
 
     if failed:
         sys.exit(1)

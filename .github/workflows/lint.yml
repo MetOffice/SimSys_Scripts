@@ -42,8 +42,6 @@ jobs:
           # Once the codebase is perfectly linted/formatted, switch to validating only changed files
           # VALIDATE_ALL_CODEBASE: false  # lint and format new or changed files only
           FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md)
-          FIX_PYTHON_RUFF_FORMAT: true
-          FIX_PYTHON_RUFF: true
           IGNORE_GITIGNORED_FILES: true
           VALIDATE_BASH: true
           VALIDATE_CHECKOV: true

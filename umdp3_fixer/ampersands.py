@@ -26,11 +26,23 @@ may be some cases which are missed. These lines will be left without applying
 the ampersand shifting, and will be flagged, optionally with a message in
 stdout.
 """
+
 # import sys
 import re
+
 # import traceback
 from optparse import OptionParser
-from fstring_parse import *  # noqa: F403
+from fstring_parse import (
+    find_commented_char,
+    find_quoted_char,
+    is_continuation,
+    is_pp_continuation,
+    is_str_continuation,
+    ParsingError,
+    replace_characters,
+    DQUOTE,
+    SQUOTE,
+)
 
 # Default column in which to place ampersands.
 DEFAULT_COL = 80
@@ -44,9 +56,8 @@ class CharError(ParsingError):
     def __init__(self, char, number):
         self.number = number
         self.char = char
-        self.msg = (
-            "There are {0:d} unquoted, uncommented "
-            '"{1:s}" in this line.'.format(number, char)
+        self.msg = 'There are {0:d} unquoted, uncommented "{1:s}" in this line.'.format(
+            number, char
         )
 
     pass
@@ -252,12 +263,10 @@ def shift_ampersand(
     # If the line contains an unquoted or uncommented ampersand, need
     # to check if it is in the right place.
     if amp_loc != -1:
-
         # If there is no comment, determin if it is a leading continuation
         # ampersand. If it is remove it; else shift the ampersand (and remove
         # any trailing whitespace).
         if comment_loc == -1:
-
             # determin if we are a leading ampersand
             beforeline = workline[lp:amp_loc].rstrip()
 
@@ -292,7 +301,6 @@ def shift_ampersand(
         # if the line is too long, in which case can try to take white
         # space to get it down to length.
         elif comment_loc > amp_loc:
-
             # If the line is too long, first make sure there is only one
             # space between ampersand and comment, and get rid of any
             # trailing whitespace.
@@ -322,7 +330,6 @@ def shift_ampersand(
                 # Try cutting down the whitespace one step at a time until
                 # there is only one space left.
                 for i in range(nloop):
-
                     if workline[amp_location - 1] == " ":
                         # If there is still whitespace that can be removed,
                         # remove it and update the ampersand location.
@@ -373,7 +380,7 @@ def apply_ampersand_shift(
             if debug:
                 print_message(
                     "PARSING ERROR",
-                    "{0:s} Ampersand shifting has not been " "applied".format(e.msg),
+                    "{0:s} Ampersand shifting has not been applied".format(e.msg),
                     iline + 1,
                     line=line,
                     fname=fname,

@@ -31,6 +31,7 @@ Optional Arguments:
 
 
 """
+
 import argparse
 import os
 import re
@@ -208,7 +209,6 @@ def group_comparisons_by_dir(comparisons, skip=False):
     """
     kgo_dirs = defaultdict(dict)
     for _, kgo_file, suite_file, status, _ in comparisons:
-
         # If the kgo_file isn't set, move on (in some cases the test is not
         # comparing two files at all
         if kgo_file is None:
@@ -237,17 +237,13 @@ def group_comparisons_by_dir(comparisons, skip=False):
         # If the above goes wrong it will eventually hit root; if this happens
         # we cannot continue as something is seriously not right
         if basedir == "/":
-            msg = (
-                "Problem locating KGO directory - "
-                "is this actually a KGO file?\n  {0}"
-            )
+            msg = "Problem locating KGO directory - is this actually a KGO file?\n  {0}"
             sys.exit(msg.format(kgo_file))
 
         # Otherwise add the result to the list - for each entry we store the
         # relative path to the KGO file and the full path to the file in the
         # suite which should be used to update it (if it needs updating)
         if status.strip() in UPDATE_CRITERIA:
-
             # Here we could check if this update has already been lodged,
             # and if it has perhaps we can do some additional checking
             # (for instance, are the changes in answers the same?)
@@ -501,7 +497,7 @@ def main():
         "-E",
         "--extension",
         default=".cylc",
-        help="The extension of the variables file, either .rc " "or .cylc",
+        help="The extension of the variables file, either .rc or .cylc",
     )
 
     args = parser.parse_args()
@@ -607,8 +603,7 @@ def main():
     # Open the file for viewing in user's editor
     if interactive:
         print(
-            f"\n\nOpening {script_path}\nHit Return to Step through, "
-            "q to print all\n\n"
+            f"\n\nOpening {script_path}\nHit Return to Step through, q to print all\n\n"
         )
         with open(script_path, "r") as f:
             line_count = 0

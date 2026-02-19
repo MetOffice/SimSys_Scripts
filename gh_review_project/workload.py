@@ -202,7 +202,6 @@ def parse_args():
 
 
 def main(total: bool, test: bool, capture_project: bool, file: Path):
-
     # Extract data from github about the reviews and team members.
     if test:
         data = ProjectData.from_file(REVIEW_ID, file)
