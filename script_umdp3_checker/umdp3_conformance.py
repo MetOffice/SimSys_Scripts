@@ -131,7 +131,7 @@ class StyleChecker():
         name: str,
         # file_extensions: Set[str],
         check_functions: Dict[str, Callable],
-        changed_files: List[Path] = [],
+        changed_files: List[Path],
     ):
         self.name = name
         # self.file_extensions = file_extensions or set()
@@ -161,27 +161,25 @@ class StyleChecker():
     def from_full_list(
         cls,
         name: str,
-        file_extensions: Set[str],
-        check_functions: Dict[str, List[str]],
-        changed_files: List[Path],
+        file_extensions: Set[str] = set(),
+        check_functions: Dict[str, Callable] = {},
+        changed_files: List[Path] = [],
         print_volume: int = 3,
     ):
-        cls.name = name
-        cls.file_extensions = file_extensions or set()
-        cls.check_commands = check_functions or {}
-        cls.files_to_check = (
-            cls.filter_files(changed_files, cls.file_extensions)
+        files_to_check = (
+            cls.filter_files(changed_files, file_extensions)
             if changed_files
             else []
         )
         if print_volume >= 5:
             print(
                 f"ExternalChecker initialized :\n"
-                f"    Name : {cls.name}\n"
-                f"    Has {len(cls.check_commands)} check commands\n"
-                f"    Using {len(cls.file_extensions)} file extensions\n"
-                f"    Gives {len(cls.files_to_check)} files to check."
+                f"    Name : {name}\n"
+                f"    Has {len(check_functions)} check commands\n"
+                f"    Using {len(file_extensions)} file extensions\n"
+                f"    Gives {len(files_to_check)} files to check."
             )
+        return cls(name, check_functions, files_to_check)
 
     @staticmethod
     def filter_files(
@@ -525,12 +523,8 @@ def create_style_checkers(
             generic_file_table
         fortran_file_checker = StyleChecker.from_full_list(
             "Fortran Checker", file_extensions,
-            combined_checkers, changed_files  # type: ignore
+            combined_checkers, changed_files
         )
-        # TODO : The type:ignore above disables something that pylance is
-        # complaining about in VS Code, (the combined_checkers argument)
-        # but I can't translate the 'explanation' of what the issue is into
-        # something meaningful.
         checkers.append(fortran_file_checker)
     if "Python" in file_types:
         print("Configuring External Linters for Python files.")
