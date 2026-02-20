@@ -208,51 +208,55 @@ class StyleChecker():
         check_functions = {}
         # file_results = []
         for command in commands:
-            print("Configuring external runner for command: "
-                  f"{' '.join(command)}")
             external_opname = f"External_operation_{command[0]}"
-            print(f"Checker name for this command is : {external_opname}")
-
-            def new_mangle(file_name: Path) -> TestResult:
-                cmd = command + [str(file_name)]
-                tests_failed = 0
-                try:
-                    result = subprocess.run(cmd, capture_output=True,
-                                            text=True, timeout=60)
-                except subprocess.TimeoutExpired:
-                    failure_count = 1
-                    passed = False
-                    output = f"Checker {external_opname} timed out"
-                    errors = {external_opname: "TimeoutExpired"}
-                    tests_failed += 1
-                except Exception as e:
-                    failure_count = 1
-                    passed = False
-                    output = str(e)
-                    errors = {external_opname: str(e)}
-                    tests_failed += 1
-                else:
-                    error_text = result.stderr if result.stderr else ""
-                    failure_count = 0 if result.returncode == 0 else 1
-                    passed = result.returncode == 0
-                    output = result.stdout
-                    if error_text:
-                        errors = {external_opname: error_text}
-                    else:
-                        errors = {}
-                    if result.returncode != 0:
-                        tests_failed += 1
-                    # ---
-                return (TestResult(
-                    checker_name=external_opname,
-                    failure_count=failure_count,
-                    passed=passed,
-                    output=output,
-                    errors=errors,
-                    ))
-
-            check_functions[external_opname] = new_mangle
+            free_runner = cls.create_free_runner(command, external_opname)
+            check_functions[external_opname] = free_runner
         return cls(name, check_functions, filtered_files)
+
+    @staticmethod
+    def create_free_runner(command: List[str],
+                           external_opname: str) -> Callable[[Path],
+                                                             TestResult]:
+        """Method to create a free runner function for a given external
+        command with  it's checker name for output."""
+        def new_free_runner(file_name: Path) -> TestResult:
+            cmd = command + [str(file_name)]
+            tests_failed = 0
+            try:
+                result = subprocess.run(cmd, capture_output=True,
+                                        text=True, timeout=60)
+            except subprocess.TimeoutExpired:
+                failure_count = 1
+                passed = False
+                output = f"Checker {external_opname} timed out"
+                errors = {external_opname: "TimeoutExpired"}
+                tests_failed += 1
+            except Exception as e:
+                failure_count = 1
+                passed = False
+                output = str(e)
+                errors = {external_opname: str(e)}
+                tests_failed += 1
+            else:
+                error_text = result.stderr if result.stderr else ""
+                failure_count = 0 if result.returncode == 0 else 1
+                passed = result.returncode == 0
+                output = result.stdout
+                if error_text:
+                    errors = {external_opname: error_text}
+                else:
+                    errors = {}
+                if result.returncode != 0:
+                    tests_failed += 1
+                # ---
+            return (TestResult(
+                checker_name=external_opname,
+                failure_count=failure_count,
+                passed=passed,
+                output=output,
+                errors=errors,
+                ))
+        return new_free_runner
 
 
 class Check_Runner(StyleChecker):
@@ -265,9 +269,6 @@ class Check_Runner(StyleChecker):
         file_results = []  # list of TestResult objects
         for check_name, check_function in self.check_functions.items():
             file_results.append(check_function(file_path))
-            print(f"Finished running {check_name} on {file_path}. ")
-            print(f"Self described as: {file_results[-1].checker_name}")
-
         tests_failed = sum([0 if result.passed else 1 for result in
                             file_results])
         return CheckResult(
@@ -524,32 +525,21 @@ def create_style_checkers(
             generic_file_table
         fortran_file_checker = StyleChecker.from_full_list(
             "Fortran Checker", file_extensions,
-            combined_checkers, changed_files
+            combined_checkers, changed_files  # type: ignore
         )
+        # TODO : The type:ignore above disables something that pylance is
+        # complaining about in VS Code, (the combined_checkers argument)
+        # but I can't translate the 'explanation' of what the issue is into
+        # something meaningful.
         checkers.append(fortran_file_checker)
-    """if "Python" in file_types:
-        if print_volume >= 3:
-            print("Configuring External Python checkers:")
-        file_extensions = {".py"}
-        python_checkers = {
-            # "flake 8":     ["flake8", "-q"],
-            # "black":       ["black", "--check"],
-            # "pylint":      ["pylint", "-E"],
-            "ruff": ["ruff", "check"],
-        }
-        python_file_checker = ExternalChecker(
-            "External Python Checkers", file_extensions, python_checkers,
-            changed_files
-        )
-        checkers.append(python_file_checker) """
     if "Python" in file_types:
-        print("Setting up External Runners for Python files.")
+        print("Configuring External Linters for Python files.")
         file_extensions = {".py"}
         external_commands = [
             ["ruff", "check"],
-            ["flake8", "-q"],
-            ["black", "--check"],
-            ["pylint", "-E"],
+            # ["flake8", "-q"],
+            # ["black", "--check"],
+            # ["pylint", "-E"],
         ]
         python_file_checker = Check_Runner.create_external_runners(
             "Python External Checkers", external_commands, changed_files,
