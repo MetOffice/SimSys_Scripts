@@ -111,11 +111,11 @@ class FCMBdiffWrapper(CMSSystem):
         return self.bdiff_obj.branch
 
 
-class StyleChecker:
+class StyleChecker():
     """A Class intended to coordinate the running of a set of style checks on
-    a set of files.
-    The checks are a dictionary of named callable routines.
-    The files are a list of file paths to check."""
+      a set of files.
+      The checks are a dictionary of named callable routines.
+      The files are a list of file paths to check."""
 
     """
     TODO: This is where it might be good to set up a threadsafe
@@ -130,16 +130,19 @@ class StyleChecker:
         a TestResult object directly, which includes the extra error
         info, so that each thread can work independently."""
     name: str
+    # file_extensions: Set[str]
     check_functions: Dict[str, Callable]
     files_to_check: List[Path]
 
     def __init__(
         self,
         name: str,
+        # file_extensions: Set[str],
         check_functions: Dict[str, Callable],
         changed_files: List[Path],
     ):
         self.name = name
+        # self.file_extensions = file_extensions or set()
         self.check_functions = check_functions or {}
         self.files_to_check = changed_files or []
 
@@ -153,7 +156,8 @@ class StyleChecker:
         for check_name, check_function in self.check_functions.items():
             file_results.append(check_function(lines))
 
-        tests_failed = sum([0 if result.passed else 1 for result in file_results])
+        tests_failed = sum([0 if result.passed else 1 for
+                            result in file_results])
         return CheckResult(
             file_path=str(file_path),
             tests_failed=tests_failed,
@@ -170,22 +174,27 @@ class StyleChecker:
         changed_files: List[Path],
         print_volume: int = 3,
     ):
-        files_to_check = (
-            cls.filter_files(changed_files, file_extensions) if changed_files else []
+        cls.name = name
+        cls.file_extensions = file_extensions or set()
+        cls.check_commands = check_functions or {}
+        cls.files_to_check = (
+            cls.filter_files(changed_files, cls.file_extensions)
+            if changed_files
+            else []
         )
         if print_volume >= 5:
             print(
                 f"ExternalChecker initialized :\n"
-                f"    Name : {name}\n"
-                f"    Has {len(check_functions)} check commands\n"
-                f"    Using {len(file_extensions)} file extensions\n"
-                f"    Gives {len(files_to_check)} files to check."
+                f"    Name : {cls.name}\n"
+                f"    Has {len(cls.check_commands)} check commands\n"
+                f"    Using {len(cls.file_extensions)} file extensions\n"
+                f"    Gives {len(cls.files_to_check)} files to check."
             )
         return cls(name, check_functions, files_to_check)
 
     @staticmethod
     def filter_files(
-        files: List[Path], file_extensions: Optional[Set[str]] = None
+        files: List[Path], file_extensions: Set[str] = set()
     ) -> List[Path]:
         """Filter files based on the checker's file extensions."""
         if not file_extensions:
@@ -198,66 +207,61 @@ class StyleChecker:
         name: str,
         commands: List[List[str]],
         all_files: List[Path],
-        file_extensions: Set[str],
+        file_extensions: Set[str] = set(),
     ) -> "StyleChecker":
         """Create a StyleChecker instance filtering files from a full list."""
         filtered_files = cls.filter_files(all_files, file_extensions)
-        print(
-            f"Creating external runners for {name} with {len(commands)} "
-            f"commands and {len(filtered_files)} files to check from a "
-            f"total of {len(all_files)} files."
-        )
+        print(f"Creating external runners for {name} with {len(commands)} "
+              f"commands and {len(filtered_files)} files to check from a "
+              f"total of {len(all_files)} files.")
         check_functions = {}
+        # file_results = []
         for command in commands:
+            print("Configuring external runner for command: "
+                  f"{' '.join(command)}")
             external_opname = f"External_operation_{command[0]}"
-            free_runner = cls.create_free_runner(command, external_opname)
-            check_functions[external_opname] = free_runner
-        return cls(name, check_functions, filtered_files)
+            print(f"Checker name for this command is : {external_opname}")
 
-    @staticmethod
-    def create_free_runner(
-        command: List[str], external_opname: str
-    ) -> Callable[[Path], TestResult]:
-        """Method to create a free runner function for a given external
-        command with  it's checker name for output."""
-
-        def new_free_runner(file_name: Path) -> TestResult:
-            cmd = command + [str(file_name)]
-            tests_failed = 0
-            try:
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-            except subprocess.TimeoutExpired:
-                failure_count = 1
-                passed = False
-                output = f"Checker {external_opname} timed out"
-                errors = {external_opname: "TimeoutExpired"}
-                tests_failed += 1
-            except Exception as e:
-                failure_count = 1
-                passed = False
-                output = str(e)
-                errors = {external_opname: str(e)}
-                tests_failed += 1
-            else:
-                error_text = result.stderr if result.stderr else ""
-                failure_count = 0 if result.returncode == 0 else 1
-                passed = result.returncode == 0
-                output = result.stdout
-                if error_text:
-                    errors = {external_opname: error_text}
-                else:
-                    errors = {}
-                if result.returncode != 0:
+            def new_mangle(file_name: Path) -> TestResult:
+                cmd = command + [str(file_name)]
+                tests_failed = 0
+                try:
+                    result = subprocess.run(cmd, capture_output=True,
+                                            text=True, timeout=60)
+                except subprocess.TimeoutExpired:
+                    failure_count = 1
+                    passed = False
+                    output = f"Checker {external_opname} timed out"
+                    errors = {external_opname: "TimeoutExpired"}
                     tests_failed += 1
-            return TestResult(
-                checker_name=external_opname,
-                failure_count=failure_count,
-                passed=passed,
-                output=output,
-                errors=errors,
-            )
+                except Exception as e:
+                    failure_count = 1
+                    passed = False
+                    output = str(e)
+                    errors = {external_opname: str(e)}
+                    tests_failed += 1
+                else:
+                    error_text = result.stderr if result.stderr else ""
+                    failure_count = 0 if result.returncode == 0 else 1
+                    passed = result.returncode == 0
+                    output = result.stdout
+                    if error_text:
+                        errors = {external_opname: error_text}
+                    else:
+                        errors = {}
+                    if result.returncode != 0:
+                        tests_failed += 1
+                    # ---
+                return (TestResult(
+                    checker_name=external_opname,
+                    failure_count=failure_count,
+                    passed=passed,
+                    output=output,
+                    errors=errors,
+                    ))
 
-        return new_free_runner
+            check_functions[external_opname] = new_mangle
+        return cls(name, check_functions, filtered_files)
 
 
 class Check_Runner(StyleChecker):
@@ -270,7 +274,11 @@ class Check_Runner(StyleChecker):
         file_results = []  # list of TestResult objects
         for check_name, check_function in self.check_functions.items():
             file_results.append(check_function(file_path))
-        tests_failed = sum([0 if result.passed else 1 for result in file_results])
+            print(f"Finished running {check_name} on {file_path}. ")
+            print(f"Self described as: {file_results[-1].checker_name}")
+
+        tests_failed = sum([0 if result.passed else 1 for result in
+                            file_results])
         return CheckResult(
             file_path=str(file_path),
             tests_failed=tests_failed,
@@ -339,7 +347,8 @@ class ConformanceChecker:
         self.results = results
         return
 
-    def print_results(self, print_volume: int = 3, quiet_pass: bool = True) -> bool:
+    def print_results(self, print_volume: int = 3,
+                      quiet_pass: bool = True) -> bool:
         """Print results and return True if all checks passed.
         ========================================================"""
         """
@@ -373,7 +382,8 @@ class ConformanceChecker:
                         for count, (title, info) in enumerate(
                             test_result.errors.items()
                         ):
-                            print(" " * 8 + f"{count + 1:2} : {title} : {info}")
+                            print(" " * 8 +
+                                  f"{count + 1:2} : {title} : {info}")
                         print(" " * 8 + line_2(82))
                 elif print_volume >= 3:
                     print(f"     {test_result.checker_name:60s} : ✓ PASS")
@@ -403,7 +413,8 @@ def process_arguments():
         "-p", "--path", type=str, default="./", help="path to repository"
     )
     parser.add_argument(
-        "--max-workers", type=int, default=8, help="Maximum number of parallel workers"
+        "--max-workers", type=int, default=8,
+        help="Maximum number of parallel workers"
     )
     parser.add_argument(
         "--fullcheck",
@@ -419,10 +430,12 @@ def process_arguments():
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "-v", "--verbose", action="count", default=0, help="Increase output verbosity"
+        "-v", "--verbose", action="count", default=0,
+        help="Increase output verbosity"
     )
     group.add_argument(
-        "-q", "--quiet", action="count", default=0, help="Decrease output verbosity"
+        "-q", "--quiet", action="count", default=0,
+        help="Decrease output verbosity"
     )
     # The following are not yet implemented, but may become useful
     # branch and base branch could be used to configure the CMS diff
@@ -526,36 +539,47 @@ def create_style_checkers(
     dispatch_tables = CheckerDispatchTables()
     checkers = []
     if "Fortran" in file_types:
-        file_extensions = {".f", ".for", ".f90", ".f95", ".f03", ".f08", ".F90"}
-        """
-        TODO : I /think/ the old version also checked '.h' files as Fortran.
-        Not sure if that is still needed."""
+        file_extensions = {".f", ".for", ".f90", ".f95",
+                           ".f03", ".f08", ".F90"}
         fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
         fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
         generic_file_table = dispatch_tables.get_file_dispatch_table_all()
         if print_volume >= 3:
             print("Configuring Fortran checkers:")
-        combined_checkers = fortran_diff_table | fortran_file_table | generic_file_table
+        combined_checkers = fortran_diff_table | fortran_file_table | \
+            generic_file_table
         fortran_file_checker = StyleChecker.from_full_list(
-            "Fortran Checker", file_extensions, combined_checkers, changed_files
+            "Fortran Checker", file_extensions,
+            combined_checkers, changed_files
         )
         checkers.append(fortran_file_checker)
+    """if "Python" in file_types:
+        if print_volume >= 3:
+            print("Configuring External Python checkers:")
+        file_extensions = {".py"}
+        python_checkers = {
+            # "flake 8":     ["flake8", "-q"],
+            # "black":       ["black", "--check"],
+            # "pylint":      ["pylint", "-E"],
+            "ruff": ["ruff", "check"],
+        }
+        python_file_checker = ExternalChecker(
+            "External Python Checkers", file_extensions, python_checkers,
+            changed_files
+        )
+        checkers.append(python_file_checker) """
     if "Python" in file_types:
-        print("Configuring External Linters for Python files.")
+        print("Setting up External Runners for Python files.")
         file_extensions = {".py"}
         external_commands = [
             ["ruff", "check"],
-            """TODO : The following need 'tweaking' to replicate what's run as
-            part of the CI on GitHub.""",
-            # ["flake8", "-q"],
-            # ["black", "--check"],
-            # ["pylint", "-E"],
+            ["flake8", "-q"],
+            ["black", "--check"],
+            ["pylint", "-E"],
         ]
         python_file_checker = Check_Runner.create_external_runners(
-            "Python External Checkers",
-            external_commands,
-            changed_files,
-            file_extensions,
+            "Python External Checkers", external_commands, changed_files,
+            file_extensions
         )
         checkers.append(python_file_checker)
     if "Generic" in file_types or file_types == []:
@@ -563,7 +587,8 @@ def create_style_checkers(
             print("Configuring Generic File Checkers:")
         all_file_dispatch_table = dispatch_tables.get_file_dispatch_table_all()
         generic_checker = StyleChecker(
-            "Generic File Checker", all_file_dispatch_table, changed_files
+            "Generic File Checker", all_file_dispatch_table,
+            changed_files
         )
         checkers.append(generic_checker)
 
@@ -643,12 +668,14 @@ if __name__ == "__main__":
         print(line_1(81) + "\n")
     else:
         print("Results  :")
-    all_passed = checker.print_results(print_volume=log_volume, quiet_pass=quiet_pass)
+    all_passed = checker.print_results(print_volume=log_volume,
+                                       quiet_pass=quiet_pass)
     if log_volume >= 4:
         print("\n" + line_1(81))
         print("## Summary :" + " " * 67 + "##")
         print(line_1(81))
     print(f"Total files checked: {len(checker.results)}")
-    print(f"Total files failed: {sum(1 for r in checker.results if not r.all_passed)}")
+    print(f"Total files failed: {sum(1 for r in checker.results if
+                                     not r.all_passed)}")
 
     exit(0 if all_passed else 1)
