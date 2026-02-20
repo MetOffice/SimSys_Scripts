@@ -254,8 +254,7 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             for pattern in [f"\\b{kw}\\b" for kw in unseparated_keywords_list]:
                 if re.search(pattern, clean_line, re.IGNORECASE):
-                    self.add_extra_error(f"unseparated keyword in line: "
-                                         f"{line.strip()}")
+                    self.add_extra_error(f"unseparated keyword in line: {line.strip()}")
                     failures += 1
                     error_log = self.add_error_log(
                         error_log,
@@ -280,8 +279,7 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if match := re.search(r"\bGO\s*TO\s+(\d+)", clean_line,
-                                  re.IGNORECASE):
+            if match := re.search(r"\bGO\s*TO\s+(\d+)", clean_line, re.IGNORECASE):
                 label = match.group(1)
                 if label != "9999":
                     self.add_extra_error(f"GO TO {label}")
@@ -307,12 +305,10 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if re.search(r"\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)", clean_line,
-                         re.IGNORECASE):
+            if re.search(r"\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)", clean_line, re.IGNORECASE):
                 self.add_extra_error("WRITE(*,*) found")
                 failures += 1
-                error_log = self.add_error_log(error_log, "WRITE(*,*) found",
-                                               count + 1)
+                error_log = self.add_error_log(error_log, "WRITE(*,*) found", count + 1)
         output = f"Checked {count + 1} lines, found {failures} failures."
         return TestResult(
             checker_name="WRITE using default format",
@@ -349,12 +345,10 @@ class UMDP3Checker:
                     clean_line,
                 )
                 if match := re.search(r"([A-Z]{2,})", clean_line):
-                    self.add_extra_error("UPPERCASE variable name : "
-                                         f"{match[1]}")
+                    self.add_extra_error(f"UPPERCASE variable name : {match[1]}")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, f"UPPERCASE variable name {match[1]}",
-                        count + 1
+                        error_log, f"UPPERCASE variable name {match[1]}", count + 1
                     )
 
         output = f"Checked {count + 1} lines, found {failures} failures."
@@ -424,8 +418,7 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if re.search(r"\b(EQUIVALENCE|PAUSE)\b", clean_line,
-                         re.IGNORECASE):
+            if re.search(r"\b(EQUIVALENCE|PAUSE)\b", clean_line, re.IGNORECASE):
                 self.add_extra_error("forbidden keyword")
                 failures += 1
                 error_log = self.add_error_log(
@@ -460,8 +453,7 @@ class UMDP3Checker:
                     )
 
         return TestResult(
-            checker_name="Use of older form of relational operator " +
-            "(.GT. etc.)",
+            checker_name="Use of older form of relational operator " + "(.GT. etc.)",
             failure_count=failures,
             passed=(failures == 0),
             output=f"Checked {count + 1} lines, found {failures} failures.",
@@ -477,8 +469,7 @@ class UMDP3Checker:
             if len(line.rstrip()) > 80:
                 self.add_extra_error("line too long")
                 failures += 1
-                error_log = self.add_error_log(error_log, "line too long",
-                                               count + 1)
+                error_log = self.add_error_log(error_log, "line too long", count + 1)
 
         return TestResult(
             checker_name="Line longer than 80 characters",
@@ -542,8 +533,7 @@ class UMDP3Checker:
             if re.search(r"\bPRINT\s*\*", clean_line, re.IGNORECASE):
                 self.add_extra_error("PRINT * used")
                 failures += 1
-                error_log = self.add_error_log(error_log, "PRINT * used",
-                                               count + 1)
+                error_log = self.add_error_log(error_log, "PRINT * used", count + 1)
 
         return TestResult(
             checker_name="Use of PRINT rather than umMessage and umPrint",
@@ -565,8 +555,7 @@ class UMDP3Checker:
             if re.search(r"\bWRITE\s*\(\s*6\s*,", clean_line, re.IGNORECASE):
                 self.add_extra_error("WRITE(6) used")
                 failures += 1
-                error_log = self.add_error_log(error_log, "WRITE(6) used",
-                                               count + 1)
+                error_log = self.add_error_log(error_log, "WRITE(6) used", count + 1)
 
         return TestResult(
             checker_name="Use of WRITE(6) rather than umMessage and umPrint",
@@ -622,12 +611,10 @@ class UMDP3Checker:
         error_log = {}
         count = -1
         for count, line in enumerate(lines):
-            if (re.search(r"!\s*OMP\b", line) and
-                    not re.search(r"!\$OMP", line)):
+            if re.search(r"!\s*OMP\b", line) and not re.search(r"!\$OMP", line):
                 self.add_extra_error("!OMP without $")
                 failures += 1
-                error_log = self.add_error_log(error_log, "!OMP without $",
-                                               count + 1)
+                error_log = self.add_error_log(error_log, "!OMP without $", count + 1)
 
         return TestResult(
             checker_name="!OMP without $",
@@ -675,8 +662,7 @@ class UMDP3Checker:
                     self.add_extra_error("Fortran comment in CPP directive")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, "Fortran comment in CPP directive",
-                        count + 1
+                        error_log, "Fortran comment in CPP directive", count + 1
                     )
 
         return TestResult(
@@ -701,8 +687,7 @@ class UMDP3Checker:
                     self.add_extra_error(f"obsolescent intrinsic: {intrinsic}")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, f"obsolescent intrinsic: {intrinsic}",
-                        count + 1
+                        error_log, f"obsolescent intrinsic: {intrinsic}", count + 1
                     )
 
         return TestResult(
@@ -750,10 +735,8 @@ class UMDP3Checker:
             for module in intrinsic_modules:
                 if re.search(
                     rf"\bUSE\s+(::)*\s*{module}\b", clean_line, re.IGNORECASE
-                ) and not re.search(r"\bINTRINSIC\b", clean_line,
-                                    re.IGNORECASE):
-                    self.add_extra_error(f"intrinsic module {module} "
-                                         "without INTRINSIC")
+                ) and not re.search(r"\bINTRINSIC\b", clean_line, re.IGNORECASE):
+                    self.add_extra_error(f"intrinsic module {module} without INTRINSIC")
                     failures += 1
                     error_log = self.add_error_log(
                         error_log,
@@ -778,8 +761,7 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if match := re.search(r"\bREAD\s*\(\s*([^,)]+)", clean_line,
-                                  re.IGNORECASE):
+            if match := re.search(r"\bREAD\s*\(\s*([^,)]+)", clean_line, re.IGNORECASE):
                 first_arg = match.group(1).strip()
                 if not first_arg.upper().startswith("UNIT="):
                     self.add_extra_error("READ without explicit UNIT=")
@@ -821,8 +803,7 @@ class UMDP3Checker:
                     self.add_extra_error(f"retired if-def: {match.group(1)}")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, f"retired if-def: {match.group(1)}",
-                        count + 1
+                        error_log, f"retired if-def: {match.group(1)}", count + 1
                     )
         return TestResult(
             checker_name="retired if-def",
@@ -864,8 +845,7 @@ class UMDP3Checker:
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            if re.search(r"\b(STOP|CALL\s+abort)\b", clean_line,
-                         re.IGNORECASE):
+            if re.search(r"\b(STOP|CALL\s+abort)\b", clean_line, re.IGNORECASE):
                 self.add_extra_error("STOP or CALL abort used")
                 failures += 1
                 error_log = self.add_error_log(
@@ -930,8 +910,7 @@ class UMDP3Checker:
             found_copyright = True
 
         if not found_copyright:
-            self.add_extra_error(
-                "missing copyright or crown copyright statement")
+            self.add_extra_error("missing copyright or crown copyright statement")
             error_log = self.add_error_log(
                 error_log, "missing copyright or crown copyright statement", 0
             )
@@ -956,16 +935,14 @@ class UMDP3Checker:
         file_content = "\n".join(lines)
         found_code_owner = False
         error_log = {}
-        if ("Code Owner:" in file_content or
-                "code owner" in file_content.lower()):
+        if "Code Owner:" in file_content or "code owner" in file_content.lower():
             # print(f"Debug: Found {file_content.lower()}")
             found_code_owner = True
 
         # This is often a warning rather than an error
         if not found_code_owner:
             self.add_extra_error("missing code owner comment")
-            error_log = self.add_error_log(error_log,
-                                           "missing code owner comment", 0)
+            error_log = self.add_error_log(error_log, "missing code owner comment", 0)
         return TestResult(
             checker_name="Code Owner Comment",
             failure_count=0 if found_code_owner else 1,
@@ -1037,8 +1014,7 @@ class UMDP3Checker:
         for line in lines:
             for identifier in deprecated_c_identifiers:
                 if re.search(rf"\b{identifier}\b", line):
-                    self.add_extra_error(
-                        f"deprecated C identifier: {identifier}")
+                    self.add_extra_error(f"deprecated C identifier: {identifier}")
                     failures += 1
 
         return failures
@@ -1065,8 +1041,7 @@ class UMDP3Checker:
             ) or re.search(
                 r"&&.*_OPENMP.*&&.*SHUM_USE_C_OPENMP_VIA_THREAD_UTILS", line
             ):
-                self.add_extra_error(
-                    "OpenMP defines combined with third macro")
+                self.add_extra_error("OpenMP defines combined with third macro")
                 failures += 1
 
         return failures
