@@ -11,7 +11,6 @@ import concurrent.futures
 # Add custom modules to Python path if needed
 # Add the repository root to access fcm_bdiff and git_bdiff packages
 import sys
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 """
@@ -122,19 +121,16 @@ class StyleChecker():
         a TestResult object directly, which includes the extra error
         info, so that each thread can work independently."""
     name: str
-    # file_extensions: Set[str]
     check_functions: Dict[str, Callable]
     files_to_check: List[Path]
 
     def __init__(
         self,
         name: str,
-        # file_extensions: Set[str],
         check_functions: Dict[str, Callable],
         changed_files: List[Path],
     ):
         self.name = name
-        # self.file_extensions = file_extensions or set()
         self.check_functions = check_functions or {}
         self.files_to_check = changed_files or []
 
@@ -204,7 +200,6 @@ class StyleChecker():
               f"commands and {len(filtered_files)} files to check from a "
               f"total of {len(all_files)} files.")
         check_functions = {}
-        # file_results = []
         for command in commands:
             external_opname = f"External_operation_{command[0]}"
             free_runner = cls.create_free_runner(command, external_opname)
@@ -246,7 +241,6 @@ class StyleChecker():
                     errors = {}
                 if result.returncode != 0:
                     tests_failed += 1
-                # ---
             return (TestResult(
                 checker_name=external_opname,
                 failure_count=failure_count,
@@ -531,6 +525,8 @@ def create_style_checkers(
         file_extensions = {".py"}
         external_commands = [
             ["ruff", "check"],
+            """TODO : The following need 'tweaking' to replicate what's run as
+            part of the CI on GitHub."""
             # ["flake8", "-q"],
             # ["black", "--check"],
             # ["pylint", "-E"],
