@@ -13,9 +13,11 @@ This script will run the processes needed to close off and finish a milestone
         * Remaining open PRs and issues against this milestone
         * Closed PRs against this milestone
 """
+
 from pathlib import Path
 import argparse
 from review_project import ProjectData, REVIEW_ID, ISSUE_ID
+from set_milestone import add_milestone
 
 
 def print_banner(message: str) -> None:
@@ -23,26 +25,6 @@ def print_banner(message: str) -> None:
     print("=" * len(message))
     print(message)
     print("=" * len(message))
-
-
-def closed_other(
-    reviews: ProjectData, current_milestone: str, dry_run: bool = False
-) -> None:
-    """
-    Set a milestone for closed PRs without one.
-
-    reviews: ProjectData from the Review Tracker Project
-    current_milestone: Milestone being closed
-    dry_run: If true, do not actually modify the milestone
-    """
-
-    print_banner(f"Setting pull requests with no milestone to {current_milestone}")
-
-    closed_prs = reviews.get_milestone(milestone="None", status="closed")
-
-    for repo in closed_prs:
-        for pr in closed_prs[repo]:
-            pr.modify_milestone(current_milestone, dry_run)
 
 
 def check_ready(
@@ -186,7 +168,6 @@ def parse_args():
 def main(
     milestone: str, test: bool, capture_project: bool, file: Path, dry: bool
 ) -> None:
-
     # Get milestone data
     if test:
         review_data = ProjectData.from_file(REVIEW_ID, file / "pr.json")
@@ -200,7 +181,7 @@ def main(
         )
 
     # Set a milestone on closed PRs
-    closed_other(review_data, milestone, dry)
+    add_milestone(review_data, milestone, dry)
 
     # Process data and report on status
     check_ready(review_data, issue_data, milestone)

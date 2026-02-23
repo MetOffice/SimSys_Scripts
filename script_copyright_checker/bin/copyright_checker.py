@@ -8,6 +8,7 @@
 Script which tests code files within the UM repository to ensure they contain a
 recognised copyright notice.
 """
+
 import argparse
 import os
 import re
@@ -208,9 +209,7 @@ def parse_options():
         "--full_trunk",
         action="store_true",
         default=False,
-        help=(
-            "run on use the full file list when trunk, " "else run on fcm branch-diff"
-        ),
+        help=("run on use the full file list when trunk, else run on fcm branch-diff"),
     )
     excl_group.add_argument(
         "files",

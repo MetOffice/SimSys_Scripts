@@ -5,39 +5,45 @@
 # -----------------------------------------------------------------------------
 
 """
-This script will update the pull requests and issues in the Simulation System
-Projects as required at the code review deadline.
+This script will change the milestone on all closed pull requests that don't
+have one.
 """
 
 import argparse
 from pathlib import Path
-from review_project import ProjectData, ISSUE_ID
+from review_project import ProjectData, REVIEW_ID
 
 
-def remove_milestone(
-    issue_data: ProjectData, milestone: str, dry_run: bool = False
-) -> int:
+def print_banner(message: str) -> None:
+    print("\n")
+    print("=" * len(message))
+    print(message)
+    print("=" * len(message))
+
+
+def add_milestone(
+    reviews: ProjectData, current_milestone: str, dry_run: bool = False
+) -> None:
     """
-    Remove the milestone from all open issues that do not have any linked PRs
-    attached to them. Leave a comment explaining why.
+    Set a milestone for closed PRs without one.
+
+    reviews: ProjectData from the Review Tracker Project
+    current_milestone: Milestone to set
+    dry_run: If true, do not actually modify the milestone
     """
 
-    open_issues = issue_data.get_milestone(milestone=milestone, status="open")
-
-    comment = (
-        f"[Bulk Update]\n\nThe Code Review deadline for the {milestone} milestone has "
-        f"passed. As this issue does not have a linked pull request it has been "
-        f"removed from the milestone. Please review this issue and either select "
-        f"a new milestone or close it as appropriate. Please contact "
-        f"MetOffice/ssdteam if you think there has been an error.\n\n Thanks"
+    print_banner(
+        f"Setting closed pull requests with no milestone to {current_milestone}"
     )
 
-    for repo in open_issues:
-        print(f"\nRemoving issues in {repo}")
-        for issue in open_issues[repo]:
-            if not issue.linked_prs:
-                issue.add_comment(comment, dry_run=dry_run)
-                issue.modify_milestone(milestone=None, dry_run=dry_run)
+    closed_prs = reviews.get_milestone(milestone="None", status="closed")
+
+    if closed_prs:
+        for repo in closed_prs:
+            for pr in closed_prs[repo]:
+                pr.modify_milestone(current_milestone, dry_run)
+    else:
+        print("No closed pull requests without a milestone.")
 
 
 def parse_args():
@@ -48,10 +54,10 @@ def parse_args():
     testfile_path = Path(__file__).parent / "test"
 
     parser = argparse.ArgumentParser(
-        "Changes to the Simulation System projects required at the codereview deadline."
+        "Set all closed pull requests without a milestone to the requested milestone."
     )
 
-    parser.add_argument("--milestone", help="Milestone being released")
+    parser.add_argument("--milestone", help="Milestone to set")
     parser.add_argument(
         "--test",
         action="store_true",
@@ -91,13 +97,13 @@ def main(
 ) -> None:
     # Get milestone data
     if test:
-        issue_data = ProjectData.from_file(ISSUE_ID, file / "issue.json")
+        review_data = ProjectData.from_file(REVIEW_ID, file / "pr.json")
     else:
-        issue_data = ProjectData.from_github(
-            ISSUE_ID, capture_project, file / "issue.json"
+        review_data = ProjectData.from_github(
+            REVIEW_ID, capture_project, file / "pr.json"
         )
 
-    remove_milestone(issue_data, milestone=milestone, dry_run=dry)
+    add_milestone(review_data, milestone, dry)
 
 
 if __name__ == "__main__":

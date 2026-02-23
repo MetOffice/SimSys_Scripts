@@ -2,7 +2,13 @@ name: Python Unit Tests
 
 on:
   pull_request:
+    paths:
+      - '**.py'
+      - '.github/workflows/python_unit_tests.yaml'
   push:
+    paths:
+      - '**.py'
+      - '.github/workflows/python_unit_tests.yaml'
     branches: [main, 'releases/**']
   workflow_dispatch:
 
@@ -12,7 +18,7 @@ jobs:
   python_unit_tests:
     name: python_unit_tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v5
@@ -22,16 +28,15 @@ jobs:
           python-version: '3.14'
       - name: Install dependencies
         run: |
-          # We only have 1 external dependency other than pytest for now, so
+          # We only have 2 external dependencies other than pytest for now, so
           # list them here
           # If this changes, we may want to switch to a dependencies file of
           # some format
           python -m pip install --upgrade pip
-          pip install pytest
-          pip install networkx
-          pip install PyYAML
+          pip install pytest networkx PyYAML
       - name: Test with pytest
         run: |
+          # Setup git for git_bdiff and get_git_sources testing
           git config --global user.name 'Testing'
           git config --global user.email 'Testing'
           pytest -vv

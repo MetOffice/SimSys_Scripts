@@ -9,7 +9,18 @@
 # import sys
 import re
 import argparse
-from fstring_parse import *  # noqa: F403
+from fstring_parse import (
+    blank_fcomments,
+    blank_fstring,
+    clean_str_continuation,
+    is_continuation,
+    is_pp_continuation,
+    is_str_continuation,
+    ParsingError,
+    partial_blank_fstring,
+    DQUOTE,
+    SQUOTE,
+)
 
 # These 4 are defined globally for visibility. They are actually only used in
 # main or a single subroutine but actual text is not yet defined in stone...
@@ -58,7 +69,6 @@ def strip_trailing_space(line):
 
 
 def keyword_split(line, str_continuation):
-
     if len(line.strip()) == 0:
         return line
 
@@ -118,7 +128,7 @@ def keyword_split(line, str_continuation):
                     blank_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print("{0:s} Line simplification has failed " "for:".format(e.msg))
+                    print("{0:s} Line simplification has failed for:".format(e.msg))
                     print(line)
                     exit(1)
 
@@ -225,7 +235,7 @@ def main():
     parser.add_argument(
         "-k",
         "--keywordsplit",
-        help="Split potentially conjoined keywords" " such as INOUT",
+        help="Split potentially conjoined keywords such as INOUT",
         action="store_true",
     )
     parser.add_argument(
