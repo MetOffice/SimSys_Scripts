@@ -206,8 +206,12 @@ add_tag() {
     usage
   fi
 
-  verify_tag && exit 1  # Tag already exists, exit with error
-  verify_ref || exit 1  # Reference resolution failed, exit with error
+  if verify_tag ; then
+    exit 1  # Tag already exists, exit with error
+  fi
+  if ! verify_ref ; then
+    exit 1  # Reference resolution failed, exit with error
+  fi
 
   local url="https://github.com/${REPO}.git"
   local msg="${MESSAGE:-"Tagging $TAG @ $REF"}"
