@@ -78,7 +78,7 @@ cleanup() {
 confirm() {
   local message="$1"
   local response
-  echo -en "${YLW}"
+  echo -en "${YELLOW}"
   read -rp "$message (y/n): " response
   echo -en "${NC}"
 
