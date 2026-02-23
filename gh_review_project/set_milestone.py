@@ -32,7 +32,9 @@ def add_milestone(
     dry_run: If true, do not actually modify the milestone
     """
 
-    print_banner(f"Setting closed pull requests with no milestone to {current_milestone}")
+    print_banner(
+        f"Setting closed pull requests with no milestone to {current_milestone}"
+    )
 
     closed_prs = reviews.get_milestone(milestone="None", status="closed")
 
