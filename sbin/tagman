@@ -19,10 +19,10 @@
 
 set -euo pipefail
 # Colour codes for output
-GRN='\033[0;32m'  # Green
-RED='\033[0;31m'  # Red
-YLW='\033[0;33m'  # Yellow
-NC='\033[0m' # No Color
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NO_COLOR='\033[0m'
 
 # Default values
 DEFAULT_REPO="MetOffice/git_playground"
@@ -80,7 +80,7 @@ confirm() {
   local response
   echo -en "${YELLOW}"
   read -rp "$message (y/n): " response
-  echo -en "${NC}"
+  echo -en "${NO_COLOR}"
 
   case "${response^^}" in  # Note: requires bash 4+ for ^^ operator
     YES | Y)
@@ -98,10 +98,10 @@ run() {
   timestamp=$(date "+%F %T")
 
   if "$@"; then
-    echo -e "[$timestamp] ${GRN}✓${NC} $msg succeeded."
+    echo -e "[$timestamp] ${GREEN}✓${NO_COLOR} $msg succeeded."
     return 0
   else
-    echo -e "[$timestamp] ${RED}✗${NC} $msg failed."
+    echo -e "[$timestamp] ${RED}✗${NO_COLOR} $msg failed."
     return 1
   fi
 }
@@ -110,7 +110,7 @@ trap cleanup EXIT ERR SIGINT
 
 verify_tag() {
   if gh api "repos/${REPO}/git/refs/tags/${TAG}" >/dev/null 2>&1; then
-    echo -e "${YLW}Tag '$TAG' exists in repository '$REPO'.${NC}"
+    echo -e "${YELLOW}Tag '$TAG' exists in repository '$REPO'.${NO_COLOR}"
     return 0
   fi
   return 1
@@ -122,13 +122,13 @@ verify_ref() {
   # First, try to resolve as a commit SHA (handles both short and full)
   if resolved_sha=$(gh api "repos/${REPO}/commits/${REF}" --jq '.sha' 2>/dev/null); then
     REF="$resolved_sha"
-    echo -e "${GRN}Using commit SHA: $REF${NC}"
+    echo -e "${GREEN}Using commit SHA: $REF${NO_COLOR}"
     return 0
   fi
 
   # Try to resolve as a tag
   if gh api "repos/${REPO}/git/refs/tags/${REF}" >/dev/null 2>&1; then
-    echo -e "${YLW}Resolving tag '$REF' to commit SHA...${NC}"
+    echo -e "${YELLOW}Resolving tag '$REF' to commit SHA...${NO_COLOR}"
     local tag_sha
     tag_sha=$(gh api "repos/${REPO}/git/refs/tags/${REF}" --jq '.object.sha')
 
@@ -142,7 +142,7 @@ verify_ref() {
       if [[ "$tag_type" == "commit" ]]; then
         resolved_sha=$(echo "$tag_info" | jq -r '.object.sha')
       else
-        echo -e "${RED}** Tag points to unexpected object type: $tag_type${NC}"
+        echo -e "${RED}** Tag points to unexpected object type: $tag_type${NO_COLOR}"
         return 1
       fi
     else
@@ -153,56 +153,56 @@ verify_ref() {
     # Verify it's a full SHA and a valid commit
     if resolved_sha=$(gh api "repos/${REPO}/commits/${resolved_sha}" --jq '.sha' 2>/dev/null); then
       REF="$resolved_sha"
-      echo -e "${GRN}Resolved to commit: $REF${NC}"
+      echo -e "${GREEN}Resolved to commit: $REF${NO_COLOR}"
       return 0
     else
-      echo -e "${RED}** Failed to verify commit SHA from tag${NC}"
+      echo -e "${RED}** Failed to verify commit SHA from tag${NO_COLOR}"
       return 1
     fi
   fi
 
   # Try to resolve as a release
   if gh api "repos/${REPO}/releases/tags/${REF}" >/dev/null 2>&1; then
-    echo -e "${YLW}Resolving release '$REF' to commit SHA...${NC}"
+    echo -e "${YELLOW}Resolving release '$REF' to commit SHA...${NO_COLOR}"
     local target_ref
     target_ref=$(gh api "repos/${REPO}/releases/tags/${REF}" --jq '.target_commitish')
 
     # Resolve the target to full SHA
     if resolved_sha=$(gh api "repos/${REPO}/commits/${target_ref}" --jq '.sha' 2>/dev/null); then
       REF="$resolved_sha"
-      echo -e "${GRN}Resolved to commit: $REF${NC}"
+      echo -e "${GREEN}Resolved to commit: $REF${NO_COLOR}"
       return 0
     else
-      echo -e "${RED}** Failed to resolve release target to commit SHA${NC}"
+      echo -e "${RED}** Failed to resolve release target to commit SHA${NO_COLOR}"
       return 1
     fi
   fi
 
   # Try as a branch name
   if gh api "repos/${REPO}/git/refs/heads/${REF}" >/dev/null 2>&1; then
-    echo -e "${YLW}Resolving branch '$REF' to commit SHA...${NC}"
+    echo -e "${YELLOW}Resolving branch '$REF' to commit SHA...${NO_COLOR}"
     local branch_sha
     branch_sha=$(gh api "repos/${REPO}/git/refs/heads/${REF}" --jq '.object.sha')
 
     # Verify it's a full SHA
     if resolved_sha=$(gh api "repos/${REPO}/commits/${branch_sha}" --jq '.sha' 2>/dev/null); then
       REF="$resolved_sha"
-      echo -e "${GRN}Resolved to commit: $REF${NC}"
+      echo -e "${GREEN}Resolved to commit: $REF${NO_COLOR}"
       return 0
     else
-      echo -e "${RED}** Failed to verify commit SHA from branch${NC}"
+      echo -e "${RED}** Failed to verify commit SHA from branch${NO_COLOR}"
       return 1
     fi
   fi
 
-  echo -e "${RED}** Reference '$REF' not found in repository '$REPO'.${NC}"
-  echo -e "${RED}** Tried: commit SHA, tag, release, and branch name.${NC}"
+  echo -e "${RED}** Reference '$REF' not found in repository '$REPO'.${NO_COLOR}"
+  echo -e "${RED}** Tried: commit SHA, tag, release, and branch name.${NO_COLOR}"
   return 1
 }
 
 add_tag() {
   if [[ -z "$TAG" || -z "$REF" ]]; then
-    echo -e "${RED}** TAG and REF are required for add action.${NC}"
+    echo -e "${RED}** TAG and REF are required for add action.${NO_COLOR}"
     usage
   fi
 
@@ -217,12 +217,12 @@ add_tag() {
   local msg="${MESSAGE:-"Tagging $TAG @ $REF"}"
 
   if [[ "$DRY_RUN" == true ]]; then
-    echo -e "${YLW}[DRY RUN] Would create tag with the following details:${NC}"
+    echo -e "${YELLOW}[DRY RUN] Would create tag with the following details:${NO_COLOR}"
     echo -e "  Repository: $REPO"
     echo -e "  Tag name:   $TAG"
     echo -e "  Commit SHA: $REF"
     echo -e "  Message:    $msg"
-    echo -e "${YLW}[DRY RUN] No changes made.${NC}"
+    echo -e "${YELLOW}[DRY RUN] No changes made.${NO_COLOR}"
     return 0
   fi
 
@@ -237,25 +237,25 @@ add_tag() {
   run "Push '$TAG' to remote '$REPO'" git push --quiet origin "$TAG"
   popd >/dev/null
 
-  echo -e "${GRN}Successfully created and pushed tag '$TAG' to '$REPO'.${NC}"
+  echo -e "${GREEN}Successfully created and pushed tag '$TAG' to '$REPO'.${NO_COLOR}"
 }
 
 delete_tag() {
   if [[ -z "$TAG" ]]; then
-    echo -e "${RED}** TAG is required for delete action.${NC}"
+    echo -e "${RED}** TAG is required for delete action.${NO_COLOR}"
     usage
   fi
 
   if ! verify_tag; then
-    echo -e "${RED}** Tag '$TAG' does not exist in repository '$REPO'.${NC}"
+    echo -e "${RED}** Tag '$TAG' does not exist in repository '$REPO'.${NO_COLOR}"
     return 1
   fi
 
   if [[ "$DRY_RUN" == true ]]; then
-    echo -e "${YLW}[DRY RUN] Would delete tag with the following details:${NC}"
+    echo -e "${YELLOW}[DRY RUN] Would delete tag with the following details:${NO_COLOR}"
     echo -e "  Repository: $REPO"
     echo -e "  Tag name:   $TAG"
-    echo -e "${YLW}[DRY RUN] No changes made.${NC}"
+    echo -e "${YELLOW}[DRY RUN] No changes made.${NO_COLOR}"
     return 0
   fi
 
@@ -269,14 +269,14 @@ delete_tag() {
 
   if confirm "Are you sure you want to delete the tag '$TAG' from '$REPO'?"; then
     run "Delete remote tag '$TAG' from '$REPO'" git push --quiet origin --delete "$TAG"
-    echo -e "${GRN}Successfully deleted tag '$TAG' from '$REPO'.${NC}"
+    echo -e "${GREEN}Successfully deleted tag '$TAG' from '$REPO'.${NO_COLOR}"
   fi
   popd >/dev/null
 }
 
 list_tags() {
   local url="https://github.com/${REPO}.git"
-  echo -e "${GRN}Listing tags from '$REPO':${NC}\n"
+  echo -e "${GREEN}Listing tags from '$REPO':${NO_COLOR}\n"
   git ls-remote --tags --sort="-version:refname" "$url"
 }
 
@@ -308,7 +308,7 @@ parse_args() {
       # No arguments required
       ;;
     *)
-      echo -e "${RED}Unknown action: $ACTION${NC}"
+      echo -e "${RED}Unknown action: $ACTION${NO_COLOR}"
       usage
       ;;
   esac
@@ -320,7 +320,7 @@ parse_args() {
       --message) MESSAGE="$2"; shift 2 ;;
       -n|--dry-run) DRY_RUN=true; shift ;;
       *)
-        echo -e "${RED}Unknown option: $1${NC}"
+        echo -e "${RED}Unknown option: $1${NO_COLOR}"
         usage ;;
     esac
   done
@@ -333,7 +333,7 @@ main() {
     add) add_tag ;;
     del|delete) delete_tag ;;
     ls|list) list_tags ;;
-     *) echo -e "${RED}Invalid action: $ACTION${NC}" ;;
+     *) echo -e "${RED}Invalid action: $ACTION${NO_COLOR}" ;;
   esac
 }
 
