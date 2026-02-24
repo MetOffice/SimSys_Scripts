@@ -142,7 +142,7 @@ verify_ref() {
       if [[ "$tag_type" == "commit" ]]; then
         resolved_sha=$(echo "$tag_info" | jq -r '.object.sha')
       else
-        echo -e "${RED}** Tag points to unexpected object type: $tag_type${NO_COLOR}"
+        echo -e "${RED}** Tag points to object type: $tag_type, but a commit object type is expected${NO_COLOR}"
         return 1
       fi
     else
