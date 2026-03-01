@@ -13,7 +13,7 @@ fcm repositories to pull from this repository.
 
 ## Install venv with dev tools
 
-- After cloning the repo, run
+- After cloning the repository, run
 
 ```sh
 # venv + pip: recommended for Met Office use

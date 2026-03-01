@@ -190,13 +190,11 @@ def apply_whitespace_fixes(lines, striptrailingspace=True, keywordsplit=True):
 
         # if we are a (pp) continuation, save the partial line
         if pp_continuation:
-            pp_line_previous = "".join(
-                [
-                    re.sub(r"\\\s*$", "", pp_line_previous),
-                    re.sub(r"&\s*$", "", line_previous),
-                    line,
-                ]
-            )
+            pp_line_previous = "".join([
+                re.sub(r"\\\s*$", "", pp_line_previous),
+                re.sub(r"&\s*$", "", line_previous),
+                line,
+            ])
             line_previous = ""
             pseudo_line = re.sub(r"\\\s*$", "&", pp_line_previous)
             pseudo_str_continuation = is_str_continuation(pseudo_line, str_continuation)

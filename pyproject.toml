@@ -66,6 +66,7 @@ select = [
 ignore = [
     "E501",  # line too long
     "I001",  # isort: skip unsorted-imports
+    "UP030", # Allow explicit positional integers in .format()
 ]
 
 [tool.ruff.format]

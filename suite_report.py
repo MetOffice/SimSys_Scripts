@@ -1992,14 +1992,12 @@ class SuiteReport:
                 suite_dir = self.suite_path
             except Exception:
                 suite_dir = "--cylc_suite_dir--"
-            trac_log.extend(
-                [
-                    "There has been an exception in SuiteReport.print_report()",
-                    "See output for more information",
-                    "rose-stem suite output will be in the files :\n",
-                    f"~/cylc-run/{suite_dir}/log/scheduler/log",
-                ]
-            )
+            trac_log.extend([
+                "There has been an exception in SuiteReport.print_report()",
+                "See output for more information",
+                "rose-stem suite output will be in the files :\n",
+                f"~/cylc-run/{suite_dir}/log/scheduler/log",
+            ])
         finally:
             # Pick up user specified log path if available,
             # otherwise default to cyclc suite dir.
