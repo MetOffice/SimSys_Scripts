@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+# Installs the package into a virtual environment (.venv) at the repository root.
+#
+# Usage:
+#   ./install [--uv] [--python PYTHON]
+#
+#   --uv              Use `uv` to create and sync the virtual environment
+#                     (alternative to venv + pip).
+#   --python PYTHON   Path to the Python interpreter to use (default: python3.12).
+#
+# Requirements:
+#   - Python 3.12 or higher
+#   - pip (bundled with Python)
+#   - uv (optional, only required when --uv flag is passed)
+#
+# Once installed, activate the environment with:
+#   source .venv/bin/activate
+
+set -euo pipefail
+
+USE_UV=false
+PYTHON="python3.12"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --uv) USE_UV=true ;;
+    --python)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --python requires an argument." >&2
+        exit 1
+      fi
+      PYTHON="$2"
+      shift
+      ;;
+    *) echo "Unknown argument: $1" >&2; exit 1 ;;
+  esac
+  shift
+done
+
+if $USE_UV; then
+  # Option 2: uv - alternative for users who prefer uv for environment management.
+  # Syncs dependencies declared in pyproject.toml / uv.lock.
+  if ! command -v uv &>/dev/null; then
+    echo "Error: 'uv' is not installed or not on PATH." >&2
+    exit 1
+  fi
+  uv sync ${PYTHON:+--python "$PYTHON"}
+  echo "Installation complete. Activate the environment with: source .venv/bin/activate"
+else
+  # Option 1: venv + pip - recommended for Met Office users.
+  # Ensures packages are resolved via Met Office Artifactory rather than PyPI.
+  if ! command -v "$PYTHON" &>/dev/null; then
+    echo "Error: '$PYTHON' is not installed or not on PATH." >&2
+    exit 1
+  fi
+  "$PYTHON" -m venv .venv
+  # shellcheck source=/dev/null
+  source .venv/bin/activate
+  pip install -e .
+  echo "Installation complete. Virtual environment is active."
+fi
