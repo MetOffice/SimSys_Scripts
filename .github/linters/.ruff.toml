@@ -1,12 +1,16 @@
 cache-dir = "/tmp/.ruff_cache"
 line-length = 88
-output-format = "grouped"
+# output-format = "grouped"
+preview = true
 
 [lint]
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # undefined-local-with-import-star-usage
-ignore = ["F405"]
+ignore = [
+    "F405", # line too long
+    "I001", # isort: unsorted-imports
+]
 
 [format]
 # Like Black, indent with spaces, rather than tabs.

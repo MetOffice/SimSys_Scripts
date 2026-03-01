@@ -2,13 +2,15 @@
 name = "SimSys_Scripts"
 version = "0.1.0"
 description = "Simulation Systems Scripts"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 
 [project.optional-dependencies]
 dev = [
     "pytest",
     "networkx",
     "PyYAML",
+    "ruff",
+    "ty",
 ]
 
 [build-system]
@@ -53,7 +55,14 @@ line-length = 88
 target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
+select = [
+    "E",  # pycodestyle errors: Basic PEP 8 violations
+    "F",  # pyflakes errors: Logical errors in code
+    "W",  # pycodestyle warnings: PEP 8 warnings
+    "I",  # isort errors: Import sorting issues
+    "UP", # pyupgrade: Modernisation rules, enforce f-strings for formatting
+    "B",  # flake8-bugbear: Code quality issues
+]
 ignore = [
     "E501",  # line too long
     "I001",  # isort: skip unsorted-imports
