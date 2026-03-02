@@ -125,11 +125,11 @@ def main(inputs, ignore_list, template_path):
     filter_tmp = re.compile(r".*\.regex_template$")
     regex_templates_raw.extend(load_templates(filter_tmp, template_path))
 
+    if not (templates or regex_templates_raw):
+        raise SystemExit("[ERROR] no templates or regex templates found")
+
     for filename, template_lines in regex_templates_raw:
         regex_templates.append((filename, re.compile(r"\n".join(template_lines))))
-
-    if not templates:
-        raise SystemExit("[ERROR] no templates found")
 
     files_to_check = []
     ignored_count = 0
