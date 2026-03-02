@@ -9,7 +9,7 @@ Standalone version of the dispatch tables from UMDP3Job
 Python translation of the original Perl module
 """
 
-from typing import Dict, Callable
+from collections.abc import Callable
 from umdp3_checker_rules import UMDP3Checker
 
 """
@@ -30,7 +30,7 @@ class CheckerDispatchTables:
     def __init__(self):
         self.umdp3_checker = UMDP3Checker()
 
-    def get_diff_dispatch_table_fortran(self) -> Dict[str, Callable]:
+    def get_diff_dispatch_table_fortran(self) -> dict[str, Callable]:
         """Get dispatch table for Fortran diff tests"""
         return {
             # 'Captain Daves doomed test of destruction':
@@ -65,7 +65,7 @@ class CheckerDispatchTables:
 
     def get_file_dispatch_table_fortran(
         self, filename: str = ""
-    ) -> Dict[str, Callable]:
+    ) -> dict[str, Callable]:
         """Get dispatch table for Fortran file tests"""
         return {
             "Warning - used an if-def due for retirement": self.umdp3_checker.retire_if_def,
@@ -78,7 +78,7 @@ class CheckerDispatchTables:
             + "[1,2,3] form": self.umdp3_checker.array_init_form,
         }
 
-    def get_diff_dispatch_table_c(self) -> Dict[str, Callable]:
+    def get_diff_dispatch_table_c(self) -> dict[str, Callable]:
         """Get dispatch table for C diff tests"""
         return {
             "Line longer than 80 characters": self.umdp3_checker.line_over_80chars,
@@ -87,7 +87,7 @@ class CheckerDispatchTables:
             + 'between themselves and the string delimiter (the " character)': self.umdp3_checker.c_integral_format_specifiers,
         }
 
-    def get_file_dispatch_table_c(self) -> Dict[str, Callable]:
+    def get_file_dispatch_table_c(self) -> dict[str, Callable]:
         """Get dispatch table for C file tests"""
         return {
             "Warning - used an if-def due for retirement": self.umdp3_checker.retire_if_def,
@@ -108,7 +108,7 @@ class CheckerDispatchTables:
             "C Unit does not end with a final newline character": self.umdp3_checker.c_final_newline,
         }
 
-    def get_file_dispatch_table_all(self) -> Dict[str, Callable]:
+    def get_file_dispatch_table_all(self) -> dict[str, Callable]:
         """Get dispatch table for universal file tests"""
         return {
             "Line includes trailing whitespace character(s)": self.umdp3_checker.line_trail_whitespace,

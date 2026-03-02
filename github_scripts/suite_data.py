@@ -16,7 +16,6 @@ import subprocess
 import yaml
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Union
 from git_bdiff import GitBDiff, GitInfo
 from get_git_sources import clone_repo, sync_repo
 
@@ -43,7 +42,7 @@ class SuiteData:
         self.task_states = {}
         self.temp_directory = None
 
-    def get_um_failed_configs(self) -> Set[str]:
+    def get_um_failed_configs(self) -> set[str]:
         """
         Read through failed UM rose_ana tasks
         """
@@ -76,7 +75,7 @@ class SuiteData:
             section = "Unknown"
         return section
 
-    def get_changed_um_section(self) -> Set[str]:
+    def get_changed_um_section(self) -> set[str]:
         """
         Read through bdiff of UM source and find code owner section for each changed
         file
@@ -113,7 +112,7 @@ class SuiteData:
 
         return changed_sections
 
-    def get_um_owners(self, filename: str) -> Dict:
+    def get_um_owners(self, filename: str) -> dict:
         """
         Read UM Code Owners file and write to a dictionary
         """
@@ -151,7 +150,7 @@ class SuiteData:
 
         return owners
 
-    def parse_tasks(self) -> Dict[str, List[str]]:
+    def parse_tasks(self) -> dict[str, list[str]]:
         """
         Read through the tasks run, sorting by state
         """
@@ -233,7 +232,7 @@ class SuiteData:
 
         return "unknown"
 
-    def read_rose_conf(self) -> Dict[str, str]:
+    def read_rose_conf(self) -> dict[str, str]:
         """
         Read the suite rose-suite.conf file into a dictionary
         """
@@ -281,19 +280,19 @@ class SuiteData:
 
         pattern = re.compile(rf"{dependency.upper()} SOURCE CLONE=(\S+)")
         log_file = self.suite_path / "log" / "scheduler" / "log"
-        with open(log_file, "r") as f:
+        with open(log_file) as f:
             for line in f:
                 if match := pattern.search(line):
                     return match.group(1).rstrip("/")
         raise RuntimeError(f"Unable to find source for dependency {dependency}")
 
-    def read_dependencies(self) -> Dict[str, Dict]:
+    def read_dependencies(self) -> dict[str, dict]:
         """
         Read the suite dependencies from the dependencies.yaml file - this is assumed to
         have been copied to the suite_path directory
         """
 
-        with open(self.suite_path / "dependencies.yaml", "r") as stream:
+        with open(self.suite_path / "dependencies.yaml") as stream:
             dependencies = yaml.safe_load(stream)
         for dependency, data in dependencies.items():
             if data["source"] is None:
@@ -307,7 +306,7 @@ class SuiteData:
         Read cylc install log for workflow id
         """
 
-        with open(self.suite_path / "log" / "scheduler" / "log", "r") as f:
+        with open(self.suite_path / "log" / "scheduler" / "log") as f:
             for line in f:
                 match = re.search(r"INFO - Workflow: (\S+\/\w+)", line)
                 try:
@@ -344,7 +343,7 @@ class SuiteData:
             starttime = row[0]
         return starttime.split("+")[0]
 
-    def read_groups_run(self) -> List[str]:
+    def read_groups_run(self) -> list[str]:
         """
         Read in groups run as part of suite from the cylc database file
         """
@@ -360,7 +359,7 @@ class SuiteData:
             groups = ["suite_default"]
         return groups
 
-    def get_task_states(self) -> Dict[str, str]:
+    def get_task_states(self) -> dict[str, str]:
         """
         Query the database and return a dictionary of states. This is assumed to be in
         suite_path/log/db
@@ -374,8 +373,8 @@ class SuiteData:
         return data
 
     def query_suite_database(
-        self, database: Path, selections: List[str], source: str
-    ) -> List[tuple]:
+        self, database: Path, selections: list[str], source: str
+    ) -> list[tuple]:
         """
         Create an sql statement and query provided database. Return the result
         """
@@ -392,8 +391,8 @@ class SuiteData:
         return data
 
     def run_command(
-        self, command: Union[str, List[str]], shell: bool = False, rval: bool = False
-    ) -> Optional[subprocess.CompletedProcess]:
+        self, command: str | list[str], shell: bool = False, rval: bool = False
+    ) -> subprocess.CompletedProcess | None:
         """
         Run a subprocess command and return the result object
         Inputs:

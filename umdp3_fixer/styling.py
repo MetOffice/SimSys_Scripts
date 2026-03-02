@@ -818,7 +818,7 @@ def replace_patterns(line, str_continuation):
             blank_line = partial_blank_fstring(workline)
         else:
             print("keyword split simplify line has failed.")
-            print("{0:s} Line simplification has failed for:".format(e.msg))
+            print(f"{e.msg:s} Line simplification has failed for:")
             print(line)
             exit(1)
 
@@ -850,7 +850,7 @@ def replace_patterns(line, str_continuation):
                     blank_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print("{0:s} Line simplification has failed for:".format(e.msg))
+                    print(f"{e.msg:s} Line simplification has failed for:")
                     print(line)
                     exit(1)
 
@@ -887,7 +887,7 @@ def replace_comment_patterns(line, str_continuation):
             match_line = partial_blank_fstring(workline)
         else:
             print("keyword split simplify line has failed.")
-            print("{0:s} Line simplification has failed for:".format(e.msg))
+            print(f"{e.msg:s} Line simplification has failed for:")
             print(line)
             exit(1)
 
@@ -916,7 +916,7 @@ def replace_comment_patterns(line, str_continuation):
                     match_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print("{0:s} Line simplification has failed for:".format(e.msg))
+                    print(f"{e.msg:s} Line simplification has failed for:")
                     print(line)
                     exit(1)
 
@@ -945,7 +945,7 @@ def upcase_keywords(line, str_continuation):
             simple_line = partial_blank_fstring(workline)
         else:
             print("keyword split simplify line has failed.")
-            print("{0:s} Line simplification has failed for:".format(e.msg))
+            print(f"{e.msg:s} Line simplification has failed for:")
             print(line)
             exit(1)
 
@@ -958,19 +958,15 @@ def upcase_keywords(line, str_continuation):
     for word in line_words:
         # Exclude special "__FILE__" or "__LINE__" directives
         if word.isupper() and not re.match(r"__\w+__", word):
-            recomp = re.compile(r"(^|\b){0:s}(\b|$)".format(word))
-            simple_line = recomp.sub(
-                r"\g<1>{0:s}" r"\g<2>".format(word.lower()), simple_line
-            )
+            recomp = re.compile(rf"(^|\b){word:s}(\b|$)")
+            simple_line = recomp.sub(rf"\g<1>{word.lower():s}" r"\g<2>", simple_line)
 
     line_words = set([word.lower() for word in line_words])
     words_to_upcase = list(line_words.intersection(KEYWORDS))
     line = list(line)
     for keyword in words_to_upcase:
-        recomp = re.compile(r"(?i)(^|\b){0:s}(\b|$)".format(keyword))
-        simple_line = recomp.sub(
-            r"\g<1>{0:s}\g<2>".format(keyword.upper()), simple_line
-        )
+        recomp = re.compile(rf"(?i)(^|\b){keyword:s}(\b|$)")
+        simple_line = recomp.sub(rf"\g<1>{keyword.upper():s}\g<2>", simple_line)
 
     # Now add back any comments/strings
     simple_line = list(simple_line)
@@ -1002,9 +998,7 @@ def declaration_double_colon(iline, lines, pp_line_previous, line_previous):
     found_dec_type = None
 
     for declare_type in FORTRAN_TYPES:
-        if re.search(
-            r"^\s*{0:s}\W".format(declare_type), workline, flags=re.IGNORECASE
-        ):
+        if re.search(rf"^\s*{declare_type:s}\W", workline, flags=re.IGNORECASE):
             found_dec_type = declare_type
             break
 
@@ -1023,7 +1017,7 @@ def declaration_double_colon(iline, lines, pp_line_previous, line_previous):
             # older "*INT" declaration the first character should
             # not be a comma
             search = re.search(
-                r"^(\s*{0:s}\s*?(\(.*?\)|\*\s*[0-9]+|))\s+(\w+)".format(found_dec_type),
+                rf"^(\s*{found_dec_type:s}\s*?(\(.*?\)|\*\s*[0-9]+|))\s+(\w+)",
                 simple_line,
                 flags=re.IGNORECASE,
             )
@@ -1044,15 +1038,15 @@ def declaration_double_colon(iline, lines, pp_line_previous, line_previous):
                     # Attempt to fit the double-colon into an existing space to
                     # preserve indentation, otherwise just add it to the line
                     line = re.sub(
-                        r"^{0:s}" r"\s\s\s\s".format(re.escape(statement)),
-                        r"{0:s} :: ".format(statement),
+                        rf"^{re.escape(statement):s}" r"\s\s\s\s",
+                        rf"{statement:s} :: ",
                         line,
                         count=1,
                     )
                     line = re.sub(
-                        r"^{0:s}\s*"
-                        r"((?<!\s\s\s\s)(\w|\\|&))".format(re.escape(statement)),
-                        r"{0:s} :: \g<1>".format(statement),
+                        rf"^{re.escape(statement):s}\s*"
+                        r"((?<!\s\s\s\s)(\w|\\|&))",
+                        rf"{statement:s} :: \g<1>",
                         line,
                         count=1,
                     )

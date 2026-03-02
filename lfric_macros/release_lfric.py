@@ -133,7 +133,7 @@ def update_version_number(args):
     print("[INFO] Updating rose-suite.conf version number")
 
     fpath = os.path.join(args.apps, "rose-stem", "rose-suite.conf")
-    with open(fpath, "r") as f:
+    with open(fpath) as f:
         lines = f.readlines()
 
     for i, line in enumerate(lines):
@@ -160,7 +160,7 @@ def update_variables_files(apps):
             variables_files.add(os.path.join(meto_path, filename))
 
     for fpath in variables_files:
-        with open(fpath, "r") as f:
+        with open(fpath) as f:
             lines = f.readlines()
 
         for i, line in enumerate(lines):
@@ -305,7 +305,7 @@ def add_new_import(versions_file, upgrade_name):
 
     upgrade_import = upgrade_name.removesuffix(".py")
 
-    with open(versions_file, "r") as f:
+    with open(versions_file) as f:
         lines = f.readlines()
 
     for i, line in enumerate(lines):

@@ -127,7 +127,7 @@ def apply_indentation(lines, debug=False):
 
     for iline, line in enumerate(lines):
         if debug:
-            print('\n{0:d}: "{1:s}"'.format(iline, line))
+            print(f'\n{iline:d}: "{line:s}"')
 
         # If this line is continuing a previous preprocessing line,
         # just ignore indentation
@@ -262,11 +262,7 @@ def apply_indentation(lines, debug=False):
             simple_line = simplify_line(lines[iline:])
 
             if debug:
-                print(
-                    "??"
-                    + " " * len("{0:d}".format(iline))
-                    + '"{0:s}"'.format(simple_line)
-                )
+                print("??" + " " * len(f"{iline:d}") + f'"{simple_line:s}"')
 
             # Check for ending statements first - since the indentation
             # shift for the end of a block must also be applied to the
@@ -274,7 +270,7 @@ def apply_indentation(lines, debug=False):
             for pattern in INDENTATION_END:
                 if re.search(pattern, simple_line, flags=re.IGNORECASE):
                     if debug:
-                        print("    (End, matches {0:s})".format(pattern))
+                        print(f"    (End, matches {pattern:s})")
                     indentation -= INDENT
 
             # Get the current indentation level of the line
@@ -289,11 +285,7 @@ def apply_indentation(lines, debug=False):
             indented_line = indent_line(line, relative_indent)
 
             if debug:
-                print(
-                    "=>"
-                    + " " * len("{0:d}".format(iline))
-                    + '"{0:s}"'.format(indented_line)
-                )
+                print("=>" + " " * len(f"{iline:d}") + f'"{indented_line:s}"')
 
             new_lines.append(indented_line)
 
@@ -303,7 +295,7 @@ def apply_indentation(lines, debug=False):
             for pattern in INDENTATION_START:
                 if re.search(pattern, simple_line, flags=re.IGNORECASE):
                     if debug:
-                        print("    (Start, matches {0:s})".format(pattern))
+                        print(f"    (Start, matches {pattern:s})")
                     indentation += INDENT
 
             # Finally, detect if the following line is a continuation
@@ -335,7 +327,7 @@ def apply_indentation(lines, debug=False):
         return None
 
     if indentation != 0:
-        print("Final indentation level non-zero ({0:d})".format(indentation))
+        print(f"Final indentation level non-zero ({indentation:d})")
         return None
 
     return new_lines

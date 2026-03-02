@@ -198,7 +198,7 @@ def main():
         if len(f_files) > 0:
             print("\nProcessing Fortran Files")
         for input_file in f_files:
-            print("Processing: {0:s}".format(input_file))
+            print(f"Processing: {input_file:s}")
             sys.stdout.flush()
             if (
                 input_file.split(".")[-1] != "F90"
@@ -208,17 +208,13 @@ def main():
                 if input_file.split(".")[-1] == "h":
                     if re.search(r".*\/include\/other\/.*", input_file) is not None:
                         print(
-                            "Input file {0:s} not a "
+                            f"Input file {input_file:s} not a "
                             "Fortran include file,"
-                            " skipping".format(input_file)
+                            " skipping"
                         )
                         continue
                 else:
-                    print(
-                        "Input file {0:s} not a Fortran file, skipping".format(
-                            input_file
-                        )
-                    )
+                    print(f"Input file {input_file:s} not a Fortran file, skipping")
                     continue
 
             with open(input_file, "r+", errors="replace") as file_in:
@@ -241,9 +237,7 @@ def main():
                         )
 
                     if len(amp_not_parsed) > 0:
-                        print(
-                            "Ampersand Alignment Failed for: {0:s}".format(input_file)
-                        )
+                        print(f"Ampersand Alignment Failed for: {input_file:s}")
                         print("failed on lines:\n")
                         for i in amp_not_parsed:
                             print(str(i) + ': "' + modify_lines[i] + '"')
@@ -256,7 +250,7 @@ def main():
                         white_lines = apply_whitespace_fixes(amp_lines)
 
                     if white_lines is None:
-                        print("Whitespace Fixes Failed for: {0:s}".format(input_file))
+                        print(f"Whitespace Fixes Failed for: {input_file:s}")
                         failed = True
 
                     styled_lines = None
@@ -265,7 +259,7 @@ def main():
                         styled_lines = apply_styling(white_lines)
 
                     if styled_lines is None:
-                        print("Styling Failed for: {0:s}".format(input_file))
+                        print(f"Styling Failed for: {input_file:s}")
                         failed = True
 
                     indented_lines = None
@@ -274,7 +268,7 @@ def main():
                         indented_lines = apply_indentation(styled_lines)
 
                     if indented_lines is None:
-                        print("Indentation Failed for: {0:s}".format(input_file))
+                        print(f"Indentation Failed for: {input_file:s}")
                         failed = True
 
                     amp_lines = None
@@ -286,9 +280,7 @@ def main():
                         )
 
                     if len(amp_not_parsed) > 0:
-                        print(
-                            "Ampersand Alignment Failed for: {0:s}".format(input_file)
-                        )
+                        print(f"Ampersand Alignment Failed for: {input_file:s}")
                         print("failed on lines:\n")
                         for i in amp_not_parsed:
                             print(str(i) + ': "' + indented_lines[i] + '"')
@@ -385,7 +377,7 @@ def main():
 
                     print("\nProcessing C Files")
                     for input_file in c_files:
-                        print("Processing: {0}".format(input_file))
+                        print(f"Processing: {input_file}")
                         # Use the clang-format command corresponding to the
                         # installed version on this system
                         args = format_command_map[clang_format_ver].format(input_file)

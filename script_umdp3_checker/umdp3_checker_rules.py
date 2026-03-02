@@ -11,7 +11,6 @@ Python translation of the original Perl UMDP3.pm module.
 
 import re
 import threading
-from typing import List, Dict
 from fortran_keywords import fortran_keywords
 from search_lists import (
     obsolescent_intrinsics,
@@ -46,7 +45,7 @@ class TestResult:
     failure_count: int = 0
     passed: bool = False
     output: str = ""
-    errors: Dict = field(default_factory=dict)
+    errors: dict = field(default_factory=dict)
 
 
 class UMDP3Checker:
@@ -84,7 +83,7 @@ class UMDP3Checker:
         with self._lock:
             self._extra_error_info = {}
 
-    def get_extra_error_information(self) -> Dict:
+    def get_extra_error_information(self) -> dict:
         """
         Get extra error information. Dictionary with file names as the keys.
         """
@@ -106,8 +105,8 @@ class UMDP3Checker:
             self._extra_error_info[key] = value
 
     def add_error_log(
-        self, error_log: Dict, key: str = "no key", value: int = 0
-    ) -> Dict:
+        self, error_log: dict, key: str = "no key", value: int = 0
+    ) -> dict:
         """Add extra error information to the dictionary"""
         """
     TODO: This is a bodge to get more detailed info about
@@ -158,7 +157,7 @@ class UMDP3Checker:
     Although, a brief look seems to imply that there are two 'dispatch tables'
     one for full files and one for changed lines."""
 
-    def capitulated_keywords(self, lines: List[str]) -> TestResult:
+    def capitulated_keywords(self, lines: list[str]) -> TestResult:
         """A fake test, put in for testing purposes.
         Probably not needed any more, but left in case."""
         failures = 0
@@ -192,7 +191,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def capitalised_keywords(self, lines: List[str]) -> TestResult:
+    def capitalised_keywords(self, lines: list[str]) -> TestResult:
         """Check for the presence of lowercase Fortran keywords, which are
         taken from an imported list 'fortran_keywords'."""
         failures = 0
@@ -222,7 +221,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def openmp_sentinels_in_column_one(self, lines: List[str]) -> TestResult:
+    def openmp_sentinels_in_column_one(self, lines: list[str]) -> TestResult:
         """Check OpenMP sentinels are in column one"""
         failures = 0
         error_log = {}
@@ -243,7 +242,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def unseparated_keywords(self, lines: List[str]) -> TestResult:
+    def unseparated_keywords(self, lines: list[str]) -> TestResult:
         """Check for omitted optional spaces in keywords"""
         failures = 0
         error_log = {}
@@ -270,7 +269,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def go_to_other_than_9999(self, lines: List[str]) -> TestResult:
+    def go_to_other_than_9999(self, lines: list[str]) -> TestResult:
         """Check for GO TO statements other than 9999"""
         failures = 0
         error_log = {}
@@ -296,7 +295,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def write_using_default_format(self, lines: List[str]) -> TestResult:
+    def write_using_default_format(self, lines: list[str]) -> TestResult:
         """Check for WRITE without format"""
         failures = 0
         error_log = {}
@@ -318,7 +317,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def lowercase_variable_names(self, lines: List[str]) -> TestResult:
+    def lowercase_variable_names(self, lines: list[str]) -> TestResult:
         """Check for lowercase or CamelCase variable names only"""
         """
     TODO: This is a very simplistic check and will not detect many
@@ -360,7 +359,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def dimension_forbidden(self, lines: List[str]) -> TestResult:
+    def dimension_forbidden(self, lines: list[str]) -> TestResult:
         """Check for use of dimension attribute"""
         failures = 0
         error_log = {}
@@ -385,7 +384,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def ampersand_continuation(self, lines: List[str]) -> TestResult:
+    def ampersand_continuation(self, lines: list[str]) -> TestResult:
         """Check continuation lines shouldn't start with &"""
         failures = 0
         error_log = {}
@@ -406,7 +405,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def forbidden_keywords(self, lines: List[str]) -> TestResult:
+    def forbidden_keywords(self, lines: list[str]) -> TestResult:
         """Check for use of EQUIVALENCE or PAUSE"""
         """
     TODO: Can't believe this will allow a COMMON BLOCK....
@@ -433,7 +432,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def forbidden_operators(self, lines: List[str]) -> TestResult:
+    def forbidden_operators(self, lines: list[str]) -> TestResult:
         """Check for older form of relational operators"""
         failures = 0
         error_log = {}
@@ -460,7 +459,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def line_over_80chars(self, lines: List[str]) -> TestResult:
+    def line_over_80chars(self, lines: list[str]) -> TestResult:
         """Check for lines longer than 80 characters"""
         failures = 0
         error_log = {}
@@ -479,7 +478,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def tab_detection(self, lines: List[str]) -> TestResult:
+    def tab_detection(self, lines: list[str]) -> TestResult:
         """Check for tab characters"""
         failures = 0
         error_log = {}
@@ -500,7 +499,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def printstatus_mod(self, lines: List[str]) -> TestResult:
+    def printstatus_mod(self, lines: list[str]) -> TestResult:
         """Check for use of printstatus_mod instead of umPrintMgr"""
         failures = 0
         error_log = {}
@@ -521,7 +520,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def printstar(self, lines: List[str]) -> TestResult:
+    def printstar(self, lines: list[str]) -> TestResult:
         """Check for PRINT rather than umMessage and umPrint"""
         failures = 0
         error_log = {}
@@ -543,7 +542,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def write6(self, lines: List[str]) -> TestResult:
+    def write6(self, lines: list[str]) -> TestResult:
         """Check for WRITE(6) rather than umMessage and umPrint"""
         failures = 0
         error_log = {}
@@ -565,7 +564,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def um_fort_flush(self, lines: List[str]) -> TestResult:
+    def um_fort_flush(self, lines: list[str]) -> TestResult:
         """Check for um_fort_flush rather than umPrintFlush"""
         failures = 0
         error_log = {}
@@ -585,7 +584,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def svn_keyword_subst(self, lines: List[str]) -> TestResult:
+    def svn_keyword_subst(self, lines: list[str]) -> TestResult:
         """Check for Subversion keyword substitution"""
         failures = 0
         error_log = {}
@@ -605,7 +604,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def omp_missing_dollar(self, lines: List[str]) -> TestResult:
+    def omp_missing_dollar(self, lines: list[str]) -> TestResult:
         """Check for !OMP instead of !$OMP"""
         failures = 0
         error_log = {}
@@ -624,7 +623,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def cpp_ifdef(self, lines: List[str]) -> TestResult:
+    def cpp_ifdef(self, lines: list[str]) -> TestResult:
         """Check for #ifdef/#ifndef rather than #if defined()"""
         failures = 0
         error_log = {}
@@ -645,7 +644,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def cpp_comment(self, lines: List[str]) -> TestResult:
+    def cpp_comment(self, lines: list[str]) -> TestResult:
         """Check for Fortran comments in CPP directives"""
         """
     TODO: This looks like it will incorrectly fail # if !defined(X)
@@ -673,7 +672,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def obsolescent_fortran_intrinsic(self, lines: List[str]) -> TestResult:
+    def obsolescent_fortran_intrinsic(self, lines: list[str]) -> TestResult:
         """Check for archaic Fortran intrinsic functions"""
         failures = 0
         error_log = {}
@@ -698,7 +697,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def exit_stmt_label(self, lines: List[str]) -> TestResult:
+    def exit_stmt_label(self, lines: list[str]) -> TestResult:
         """Check that EXIT statements are labelled"""
         failures = 0
         error_log = {}
@@ -722,7 +721,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def intrinsic_modules(self, lines: List[str]) -> TestResult:
+    def intrinsic_modules(self, lines: list[str]) -> TestResult:
         """Check intrinsic modules are USEd with INTRINSIC keyword"""
         failures = 0
         intrinsic_modules = ["ISO_C_BINDING", "ISO_FORTRAN_ENV"]
@@ -752,7 +751,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def read_unit_args(self, lines: List[str]) -> TestResult:
+    def read_unit_args(self, lines: list[str]) -> TestResult:
         """Check READ statements have explicit UNIT= as first argument"""
         failures = 0
         error_log = {}
@@ -778,7 +777,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def retire_if_def(self, lines: List[str]) -> TestResult:
+    def retire_if_def(self, lines: list[str]) -> TestResult:
         """Check for if-defs due for retirement"""
         # retired_ifdefs = ['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES',
         # 'A12_2A',]
@@ -813,7 +812,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def implicit_none(self, lines: List[str]) -> TestResult:
+    def implicit_none(self, lines: list[str]) -> TestResult:
         """Check file has at least one IMPLICIT NONE"""
         error_log = {}
         no_implicit_none = True
@@ -836,7 +835,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def forbidden_stop(self, lines: List[str]) -> TestResult:
+    def forbidden_stop(self, lines: list[str]) -> TestResult:
         """Check for STOP or CALL abort"""
         failures = 0
         error_log = {}
@@ -860,7 +859,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def intrinsic_as_variable(self, lines: List[str]) -> TestResult:
+    def intrinsic_as_variable(self, lines: list[str]) -> TestResult:
         """Check for Fortran function used as variable name"""
         failures = 0
         error_log = {}
@@ -894,7 +893,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def check_crown_copyright(self, lines: List[str]) -> TestResult:
+    def check_crown_copyright(self, lines: list[str]) -> TestResult:
         """Check for crown copyright statement"""
         """
     TODO: This is a very simplistic check and will not detect many
@@ -922,7 +921,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def check_code_owner(self, lines: List[str]) -> TestResult:
+    def check_code_owner(self, lines: list[str]) -> TestResult:
         """Check for correct code owner comment"""
         """
     TODO: oh wow is this test worthless. We don't even guarentee to put
@@ -951,7 +950,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def array_init_form(self, lines: List[str]) -> TestResult:
+    def array_init_form(self, lines: list[str]) -> TestResult:
         """Check for old array initialization form"""
         """
     TODO: Another instance that assumes continuation lines are
@@ -977,7 +976,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def line_trail_whitespace(self, lines: List[str]) -> TestResult:
+    def line_trail_whitespace(self, lines: list[str]) -> TestResult:
         """Check for trailing whitespace"""
         failures = 0
         error_log = {}
@@ -998,7 +997,7 @@ class UMDP3Checker:
 
     # C-specific tests
 
-    def c_integral_format_specifiers(self, lines: List[str]) -> int:
+    def c_integral_format_specifiers(self, lines: list[str]) -> int:
         """Check C integral format specifiers have space"""
         failures = 0
         for line in lines:
@@ -1008,7 +1007,7 @@ class UMDP3Checker:
 
         return failures
 
-    def c_deprecated(self, lines: List[str]) -> int:
+    def c_deprecated(self, lines: list[str]) -> int:
         """Check for deprecated C identifiers"""
         failures = 0
         for line in lines:
@@ -1019,7 +1018,7 @@ class UMDP3Checker:
 
         return failures
 
-    def c_openmp_define_pair_thread_utils(self, lines: List[str]) -> int:
+    def c_openmp_define_pair_thread_utils(self, lines: list[str]) -> int:
         """Check C OpenMP define pairing with thread utils"""
         failures = 0
         for line in lines:
@@ -1032,7 +1031,7 @@ class UMDP3Checker:
 
         return failures
 
-    def c_openmp_define_no_combine(self, lines: List[str]) -> int:
+    def c_openmp_define_no_combine(self, lines: list[str]) -> int:
         """Check C OpenMP defines not combined with third macro"""
         failures = 0
         for line in lines:
@@ -1046,7 +1045,7 @@ class UMDP3Checker:
 
         return failures
 
-    def c_openmp_define_not(self, lines: List[str]) -> int:
+    def c_openmp_define_not(self, lines: list[str]) -> int:
         """Check for !defined(_OPENMP) usage"""
         failures = 0
         for line in lines:
@@ -1056,7 +1055,7 @@ class UMDP3Checker:
 
         return failures
 
-    def c_protect_omp_pragma(self, lines: List[str]) -> int:
+    def c_protect_omp_pragma(self, lines: list[str]) -> int:
         """Check OMP pragma is protected with ifdef"""
         failures = 0
         in_openmp_block = False
@@ -1075,7 +1074,7 @@ class UMDP3Checker:
 
         return failures
 
-    def c_ifdef_defines(self, lines: List[str]) -> int:
+    def c_ifdef_defines(self, lines: list[str]) -> int:
         """Check for #ifdef style rather than #if defined()"""
         failures = 0
         for line in lines:
@@ -1085,7 +1084,7 @@ class UMDP3Checker:
 
         return failures
 
-    def c_final_newline(self, lines: List[str]) -> int:
+    def c_final_newline(self, lines: list[str]) -> int:
         """Check C unit ends with final newline"""
         if lines and not lines[-1].endswith("\n"):
             self.add_extra_error("missing final newline")

@@ -370,7 +370,7 @@ class ApplyMacros:
             - str, The source as defined by the dependencies.yaml file
         """
         dependencies_path = os.path.join(self.root_path, "dependencies.yaml")
-        with open(dependencies_path, "r") as f:
+        with open(dependencies_path) as f:
             dependencies = yaml.safe_load(f)
 
         return dependencies[repo]["source"], dependencies[repo]["ref"]
@@ -626,7 +626,7 @@ class ApplyMacros:
             meta_file = meta_dir
 
         imports = []
-        with open(meta_file, "r") as f:
+        with open(meta_file) as f:
             in_import_list = False
             for line in f:
                 line = line.strip()

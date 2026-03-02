@@ -1,7 +1,7 @@
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, List, Dict, Set
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import argparse
 from checker_dispatch_tables import CheckerDispatchTables
@@ -43,14 +43,14 @@ class CheckResult:
     file_path: str = "No file provided"
     tests_failed: int = 0
     all_passed: bool = False
-    test_results: List[TestResult] = field(default_factory=list)
+    test_results: list[TestResult] = field(default_factory=list)
 
 
 class CMSSystem(ABC):
     """Abstract base class for CMS systems like git or FCM."""
 
     @abstractmethod
-    def get_changed_files(self) -> List[Path]:
+    def get_changed_files(self) -> list[Path]:
         """Get list of files changed between base_branch and branch."""
         pass
 
@@ -75,7 +75,7 @@ class GitBdiffWrapper(CMSSystem):
         self.bdiff_obj = git_bdiff.GitBDiff(repo=self.repo_path)
         self.info_obj = git_bdiff.GitInfo(repo=self.repo_path)
 
-    def get_changed_files(self) -> List[Path]:
+    def get_changed_files(self) -> list[Path]:
         """Get list of files changed between base_branch and branch."""
         return [Path(f) for f in self.bdiff_obj.files()]
 
@@ -98,7 +98,7 @@ class FCMBdiffWrapper(CMSSystem):
         self.repo_path = repo_path
         self.bdiff_obj = fcm_bdiff.FCMBDiff(repo=self.repo_path)
 
-    def get_changed_files(self) -> List[Path]:
+    def get_changed_files(self) -> list[Path]:
         """Get list of files changed between base_branch and branch."""
         return [Path(f) for f in self.bdiff_obj.files()]
 
@@ -118,7 +118,7 @@ class StyleChecker(ABC):
     TODO: This is where it might be good to set up a threadsafe
         class instance to hold the 'expanded' check outputs.
         One for each file being checked in parallel.
-        Curently the UMDP3 class holds "_extra_error_info" which
+        Currently the UMDP3 class holds "_extra_error_info" which
         was used to provide more detailed error logging.
         However, this is not threadsafe, so in a multithreaded
         environment, the extra error info could get mixed up between
@@ -127,16 +127,16 @@ class StyleChecker(ABC):
         a TestResult object directly, which includes the extra error
         info, so that each thread can work independently."""
     name: str
-    file_extensions: Set[str]
-    check_functions: Dict[str, Callable]
-    files_to_check: List[Path]
+    file_extensions: set[str]
+    check_functions: dict[str, Callable]
+    files_to_check: list[Path]
 
     def __init__(
         self,
         name: str,
-        file_extensions: Set[str],
-        check_functions: Dict[str, Callable],
-        changed_files: List[Path] = [],
+        file_extensions: set[str],
+        check_functions: dict[str, Callable],
+        changed_files: list[Path] = [],
     ):
         self.name = name
         self.file_extensions = file_extensions or set()
@@ -161,9 +161,9 @@ class StyleChecker(ABC):
     def from_full_list(
         cls,
         name: str,
-        file_extensions: Set[str],
-        check_functions: Dict[str, Callable],
-        all_files: List[Path],
+        file_extensions: set[str],
+        check_functions: dict[str, Callable],
+        all_files: list[Path],
     ) -> "StyleChecker":
         """Create a StyleChecker instance filtering files from a full list."""
         filtered_files = cls.filter_files(all_files, file_extensions)
@@ -171,8 +171,8 @@ class StyleChecker(ABC):
 
     @staticmethod
     def filter_files(
-        files: List[Path], file_extensions: Set[str] = set()
-    ) -> List[Path]:
+        files: list[Path], file_extensions: set[str] = set()
+    ) -> list[Path]:
         """Filter files based on the checker's file extensions."""
         if not file_extensions:
             return files
@@ -182,14 +182,14 @@ class StyleChecker(ABC):
 class UMDP3_checker(StyleChecker):
     """UMDP3 built-in style checker."""
 
-    files_to_check: List[Path]
+    files_to_check: list[Path]
 
     def __init__(
         self,
         name: str,
-        file_extensions: Set[str],
-        check_functions: Dict[str, Callable],
-        changed_files: List[Path] = [],
+        file_extensions: set[str],
+        check_functions: dict[str, Callable],
+        changed_files: list[Path] = [],
         print_volume: int = 3,
     ):
         self.name = name
@@ -216,7 +216,7 @@ class UMDP3_checker(StyleChecker):
         """Run UMDP3 check function on file."""
         lines = file_path.read_text().splitlines()
         file_results = []  # list of TestResult objects
-        for check_name, check_function in self.check_functions.items():
+        for _check_name, check_function in self.check_functions.items():
             file_results.append(check_function(lines))
 
         tests_failed = sum([0 if result.passed else 1 for result in file_results])
@@ -237,14 +237,14 @@ class ExternalChecker(StyleChecker):
     Ideally we should be making callable functions for each check, but that
     would require more refactoring of the code.
     Is that a 'factory' method?"""
-    check_commands: Dict[str, List[str]]
+    check_commands: dict[str, list[str]]
 
     def __init__(
         self,
         name: str,
-        file_extensions: Set[str],
-        check_functions: Dict[str, List[str]],
-        changed_files: List[Path],
+        file_extensions: set[str],
+        check_functions: dict[str, list[str]],
+        changed_files: list[Path],
         print_volume: int = 3,
     ):
         self.name = name
@@ -323,7 +323,7 @@ class ConformanceChecker:
 
     def __init__(
         self,
-        checkers: List[StyleChecker],
+        checkers: list[StyleChecker],
         max_workers: int = 8,
     ):
         self.checkers = checkers
@@ -535,7 +535,7 @@ def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
     return cms
 
 
-def detangle_file_types(file_types: Set[str]) -> Set[str]:
+def detangle_file_types(file_types: set[str]) -> set[str]:
     """Process file type arguments to handle 'group' types."""
     the_whole_world = set(ALLOWABLE_FILE_TYPES)
     the_whole_world.update(list(GROUP_FILE_TYPES.keys()))
@@ -555,8 +555,8 @@ def detangle_file_types(file_types: Set[str]) -> Set[str]:
 
 
 def create_style_checkers(
-    file_types: List[str], changed_files: List[Path], print_volume: int = 3
-) -> List[StyleChecker]:
+    file_types: list[str], changed_files: list[Path], print_volume: int = 3
+) -> list[StyleChecker]:
     """Create style checkers based on requested file types."""
     dispatch_tables = CheckerDispatchTables()
     checkers = []
@@ -603,7 +603,7 @@ def create_style_checkers(
 
 def get_files_to_check(
     path: str, full_check: bool, print_volume: int = 3
-) -> List[Path]:
+) -> list[Path]:
     """
     Docstring for get_files_to_check : A routine to get the list of files to
     check based on the CMS or the full check override.

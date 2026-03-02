@@ -62,6 +62,7 @@ select = [
     "I",  # isort errors: Import sorting issues
     "UP", # pyupgrade: Modernisation rules, enforce f-strings for formatting
     "B",  # flake8-bugbear: Code quality issues
+    # "PL", # pylint rules: Various code quality and style issues
 ]
 ignore = [
     "E501",  # line too long

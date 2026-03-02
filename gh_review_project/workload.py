@@ -218,12 +218,12 @@ def main(total: bool, test: bool, capture_project: bool, file: Path):
     # Create tables for each combination of reviewers and reposotories
     tables = {}
 
-    ## Table for non-LFRic repositories
+    # Table for non-LFRic repositories
     repo_list = other_repo_list(data, lfric_repositories)
     reviewers = teams["SSD"].get_team_members()
     tables["SSD"] = build_table(data, reviewers, repo_list)
 
-    ## Table for LFRic repositories
+    # Table for LFRic repositories
     repo_list = lfric_repositories
     reviewers = []
     for team in teams.values():

@@ -21,7 +21,7 @@ Lines that are still too long will be identified, optionally with a message in
 stdout.
 
 Note that this code has made an effort to deal with the possibility of
-amersands and exclamation marks within quoted strings or comments, but there
+ampersands and exclamation marks within quoted strings or comments, but there
 may be some cases which are missed. These lines will be left without applying
 the ampersand shifting, and will be flagged, optionally with a message in
 stdout.
@@ -56,8 +56,8 @@ class CharError(ParsingError):
     def __init__(self, char, number):
         self.number = number
         self.char = char
-        self.msg = 'There are {0:d} unquoted, uncommented "{1:s}" in this line.'.format(
-            number, char
+        self.msg = (
+            f'There are {number:d} unquoted, uncommented "{char:s}" in this line.'
         )
 
     pass
@@ -70,7 +70,7 @@ def print_message(errtype, msg, iline=None, line=None, fname=None):
     if fname is None:
         fnamestr = ""
     else:
-        fnamestr = "{0:s}:".format(fname)
+        fnamestr = f"{fname:s}:"
 
     if iline is None:
         if fnamestr is None:
@@ -78,16 +78,14 @@ def print_message(errtype, msg, iline=None, line=None, fname=None):
         else:
             ilinestr = " "
     else:
-        ilinestr = "L{0:05d}: ".format(iline)
+        ilinestr = f"L{iline:05d}: "
 
     if line is None:
         linestr = ""
     else:
-        linestr = ": {0:s}".format(line)
+        linestr = f": {line:s}"
 
-    print(
-        "{0:s}{1:s}{2:s} - {3:s}{4:s}".format(fnamestr, ilinestr, errtype, msg, linestr)
-    )
+    print(f"{fnamestr:s}{ilinestr:s}{errtype:s} - {msg:s}{linestr:s}")
 
 
 def shift_ampersand(
@@ -104,7 +102,7 @@ def shift_ampersand(
     required line length.
     """
 
-    # return earliy if there are no apersands at all.
+    # return early if there are no amerinds at all.
     if "&" not in line:
         return line
 
@@ -263,11 +261,11 @@ def shift_ampersand(
     # If the line contains an unquoted or uncommented ampersand, need
     # to check if it is in the right place.
     if amp_loc != -1:
-        # If there is no comment, determin if it is a leading continuation
+        # If there is no comment, determine if it is a leading continuation
         # ampersand. If it is remove it; else shift the ampersand (and remove
         # any trailing whitespace).
         if comment_loc == -1:
-            # determin if we are a leading ampersand
+            # determine if we are a leading ampersand
             beforeline = workline[lp:amp_loc].rstrip()
 
             if len(beforeline) == 0:
@@ -329,7 +327,7 @@ def shift_ampersand(
 
                 # Try cutting down the whitespace one step at a time until
                 # there is only one space left.
-                for i in range(nloop):
+                for _i in range(nloop):
                     if workline[amp_location - 1] == " ":
                         # If there is still whitespace that can be removed,
                         # remove it and update the ampersand location.
@@ -380,7 +378,7 @@ def apply_ampersand_shift(
             if debug:
                 print_message(
                     "PARSING ERROR",
-                    "{0:s} Ampersand shifting has not been applied".format(e.msg),
+                    f"{e.msg:s} Ampersand shifting has not been applied",
                     iline + 1,
                     line=line,
                     fname=fname,
@@ -435,7 +433,7 @@ def apply_check_line_len(lines, fname=None, maxlinelen=DEFAULT_COL, debug=False)
             if debug:
                 print_message(
                     "VIOLATION",
-                    "Line > {0:d} columns".format(maxlinelen),
+                    f"Line > {maxlinelen:d} columns",
                     iline + 1,
                     line=line,
                     fname=fname,
@@ -499,9 +497,9 @@ def main():
             if ilines_too_long is not None:
                 print_message(
                     "WARNING",
-                    "Some lines are longer than {0:d} characters. "
+                    f"Some lines are longer than {opts.col:d} characters. "
                     "Please check and make them "
-                    "shorter.".format(opts.col),
+                    "shorter.",
                     fname=input_file,
                 )
 
