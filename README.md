@@ -47,3 +47,9 @@ ruff check . --config .github/linters/.ruff.toml
 # Check Format
 ruff format --check --preview --config .github/linters/.ruff.toml
 ```
+
+## Run Unit Tests
+
+```sh
+pytest -vv
+```

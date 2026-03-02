@@ -249,10 +249,14 @@ def find_previous_hash():
     Loop over a git log output and extract a hash that isn't the current head
     """
 
-    result = subprocess.run(["git", "log"], check=True, capture_output=True, text=True)
-    for line in result.stdout.split("\n"):
-        if line.startswith("commit") and "HEAD" not in line:
-            return line.split()[1]
+    result = subprocess.run(
+        ["git", "log", "--skip=1", "--format=%H", "-1"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    commit_hash = result.stdout.strip()
+    return commit_hash if commit_hash else None
 
 
 def test_detached_head(git_repo):
@@ -262,6 +266,9 @@ def test_detached_head(git_repo):
     subprocess.run(["git", "checkout", "main"], check=True)
 
     commit_hash = find_previous_hash()
+    if commit_hash is None:
+        pytest.skip("No previous commit available for detached head test")
+
     subprocess.run(["git", "checkout", commit_hash], check=True)
 
     git_base = GitBase()
