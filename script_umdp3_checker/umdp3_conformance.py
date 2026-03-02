@@ -170,12 +170,15 @@ class StyleChecker:
         changed_files: List[Path] = [],
         print_volume: int = 3,
     ):
+        """Create a StyleChecker instance whilst simultaneously filtering files
+        from a full list.
+        Returns a StyleChecker instance."""
         files_to_check = (
             cls.filter_files(changed_files, file_extensions) if changed_files else []
         )
         if print_volume >= 5:
             print(
-                f"ExternalChecker initialized :\n"
+                f"StyleChecker initialized using a filtered list:\n"
                 f"    Name : {name}\n"
                 f"    Has {len(check_functions)} check commands\n"
                 f"    Using {len(file_extensions)} file extensions\n"
