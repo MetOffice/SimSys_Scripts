@@ -234,12 +234,6 @@ def parse_options():
         default=None,
         help="Override the base path to find the actual file.",
     )
-    excl_group.add_argument(
-        "--full_trunk",
-        action="store_true",
-        default=False,
-        help=("run on use the full file list when trunk, else run on fcm branch-diff"),
-    )
     parser.add_argument(
         "--templates",
         action="store",
@@ -247,6 +241,12 @@ def parse_options():
         metavar="DIR",
         default=template_path,
         help="path to the templates (default: %(default)s)",
+    )
+    excl_group.add_argument(
+        "--full_trunk",
+        action="store_true",
+        default=False,
+        help=("run on use the full file list when trunk, else run on fcm branch-diff"),
     )
     excl_group.add_argument(
         "files",
