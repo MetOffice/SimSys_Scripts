@@ -45,8 +45,13 @@ def add_milestone(
                 state = pr.check_state()
                 if state == "MERGED":
                     pr.modify_milestone(current_milestone, dry_run)
-                else:
+                elif state == "CLOSED":
                     archive_list.append(pr)
+                else:
+                    print(
+                        f"PR {pr.number} in {pr.repo} is in state {state} with "
+                        f"status {pr.status}. Please manually check it."
+                    )
 
         if archive_list:
             print(
