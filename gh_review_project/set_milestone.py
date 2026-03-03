@@ -54,6 +54,7 @@ def add_milestone(
             )
             for pr in archive_list:
                 pr.archive(REVIEW_ID, dry_run)
+                reviews.project_items.remove(pr)
     else:
         print("No closed pull requests without a milestone.")
 
