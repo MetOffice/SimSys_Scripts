@@ -329,7 +329,7 @@ class UMDP3Checker:
         failures = 0
         error_log = {}
         count = -1
-        for count, line in enumerate(lines):
+        for count, line in enumerate(lines, 1):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
