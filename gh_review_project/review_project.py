@@ -345,6 +345,7 @@ class ProjectItem:
         if dry_run:
             print(f"[DRY RUN] {message: <40} {command}")
         else:
+            print(message)
             run_command(command)
 
     def modify_milestone(self, milestone: str, dry_run: bool = False) -> None:
