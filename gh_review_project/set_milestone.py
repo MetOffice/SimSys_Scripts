@@ -33,15 +33,33 @@ def add_milestone(
     """
 
     print_banner(
-        f"Setting closed pull requests with no milestone to {current_milestone}"
+        f"Setting merged pull requests with no milestone to {current_milestone}"
     )
 
     closed_prs = reviews.get_milestone(milestone="None", status="closed")
 
+    archive_list = []
     if closed_prs:
         for repo in closed_prs:
             for pr in closed_prs[repo]:
-                pr.modify_milestone(current_milestone, dry_run)
+                state = pr.check_state()
+                if state == "MERGED":
+                    pr.modify_milestone(current_milestone, dry_run)
+                elif state == "CLOSED":
+                    archive_list.append(pr)
+                else:
+                    print(
+                        f"PR {pr.number} in {pr.repo} is in state {state} with "
+                        f"status {pr.status}. Please manually check it."
+                    )
+
+        if archive_list:
+            print(
+                "\nThe following PRs were closed without merging. Archive them from the project:"
+            )
+            for pr in archive_list:
+                pr.archive(REVIEW_ID, dry_run)
+                reviews.project_items.remove(pr)
     else:
         print("No closed pull requests without a milestone.")
 
