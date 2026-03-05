@@ -33,6 +33,7 @@ def check_ready(
     """
     Check if the milestone is ready to be closed by confirming that:
       * all pull requests for this milestone have been completed
+      * all closed pull requests in the project are in this milestone.
       * all In Review issues for this milestone have been completed
 
     Give the user the choice to continue regardless since there may be valid
@@ -52,10 +53,23 @@ def check_ready(
     if total_issues_in_review == 0:
         print("No issues in review\n")
 
-    if total_open or total_issues_in_review:
+    print_banner(f"Checking for closed pull requests not set to {current_milestone}")
+    total_other = 0
+    for milestone in reviews.milestones:
+        if milestone == current_milestone:
+            continue
+        else:
+            total_other += reviews.count_items(
+                milestone=milestone, status="closed", message="closed pull requests"
+            )
+    if total_other == 0:
+        print("All closed pull requests are in this milestone\n")
+
+    if total_open or total_other or total_issues_in_review:
         print("=" * 50)
         print(
             f"{total_open} open pull request(s) in {current_milestone}. \n"
+            f"{total_other} closed pull request(s) not in {current_milestone}. \n"
             f"{total_issues_in_review} issues in {current_milestone} with status In Review. "
         )
         cont = input("Would you like to continue with closing this milestone? (y/n) ")
