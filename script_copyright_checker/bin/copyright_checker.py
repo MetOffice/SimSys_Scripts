@@ -37,18 +37,16 @@ def banner_print(message, maxwidth=_OUTPUT_LINE_WIDTH, char="%"):
 
 
 # ------------------------------------------------------------------------------
-def load_templates(filter_pattern):
+def load_templates(filter_pattern, template_path):
     """
     Attempt load allowed copyright templates
     """
 
     loaded_templates = []
 
-    template_path = "."
-    if "CYLC_TASK_WORK_PATH" in os.environ:
-        template_path = os.path.join(os.environ["CYLC_TASK_WORK_PATH"], "file", "")
-
-    template_files = files_to_process(template_path, [], filter_pattern=filter_pattern)
+    template_files, _ = files_to_process(
+        template_path, [], filter_pattern=filter_pattern
+    )
 
     for filename in template_files:
         with open(filename) as file:
@@ -100,49 +98,52 @@ def files_to_process(filepath, ignore_list, filter_pattern=_FILENAME_FILTER):
     the patterns in the ignore list
     """
     files = []
+    ignored = 0
     for root, _, filenames in os.walk(filepath):
         for filename in filenames:
             if filter_pattern.match(filename):
                 path_to_file = os.path.join(root, filename)
                 if any([ignore in path_to_file for ignore in ignore_list]):
-                    print(f"WARNING: Ignoring file: {path_to_file}")
+                    ignored += 1
                     continue
                 files.append(path_to_file)
 
-    return files
+    return files, ignored
 
 
 # ------------------------------------------------------------------------------
-def main(inputs, ignore_list):
+def main(inputs, ignore_list, template_path):
     """main program block"""
 
     templates = []
     regex_templates_raw = []
     regex_templates = []
 
-    banner_print("Running copyright checker")
-
     filter_tmp = re.compile(r".*\.template$")
-    templates.extend(load_templates(filter_pattern=filter_tmp))
+    templates.extend(load_templates(filter_tmp, template_path))
 
     filter_tmp = re.compile(r".*\.regex_template$")
-    regex_templates_raw.extend(load_templates(filter_pattern=filter_tmp))
+    regex_templates_raw.extend(load_templates(filter_tmp, template_path))
+
+    if not (templates or regex_templates_raw):
+        raise SystemExit("[ERROR] no templates or regex templates found")
 
     for filename, template_lines in regex_templates_raw:
         regex_templates.append((filename, re.compile(r"\n".join(template_lines))))
 
     files_to_check = []
+    ignored_count = 0
     for file_input in inputs:
         if os.path.isfile(file_input):
             if any([ignore in file_input for ignore in ignore_list]):
-                print(f"WARNING: Ignoring file: {file_input}")
+                ignored_count += 1
                 continue
             else:
-                print(f"Source (file): {file_input}")
                 files_to_check.append(file_input)
         elif os.path.isdir(file_input):
-            print(f"Source (dir) : {file_input}")
-            files_to_check.extend(files_to_process(file_input, ignore_list))
+            files_found, files_ignored = files_to_process(file_input, ignore_list)
+            files_to_check.extend(files_found)
+            ignored_count += files_ignored
         else:
             raise SystemExit(
                 "[ERROR] Input sources must be files/directories"
@@ -150,31 +151,53 @@ def main(inputs, ignore_list):
                 + f'"{file_input}" is neither'
             )
 
-    print(f"\nFound {len(files_to_check)} files to check")
-
     failed_files = []
     for item in files_to_check:
-        print(f"file : {item}")
         file_pass = check_file_compliance(item, templates, regex_templates)
         if not file_pass:
             failed_files.append(item)
 
     fail_count = len(failed_files)
+    checked_count = len(files_to_check)
     plural = "s" if fail_count != 1 else ""
-    banner_print(f"Checks completed with {fail_count} failure{plural}\n")
 
     if fail_count > 0:
-        print(f": Failed file{plural} :")
+        banner_print(
+            f"Checked {checked_count}, ignored {ignored_count}, "
+            f"with {fail_count} failure{plural}\n"
+        )
         for filename in failed_files:
-            full_fname = os.path.realpath(filename)
-            banner_print(full_fname, maxwidth=(len(full_fname) + 10), char="#")
-            print("")
-        print("")
+            print(os.path.realpath(filename))
+        print()
         plural2 = "have" if fail_count != 1 else "is"
         raise SystemExit(
             f"[ERROR] {fail_count} file{plural} "
             + f"{plural2} missing copyright notice{plural}"
         )
+    elif not files_to_check:
+        message = "[WARNING] "
+        if ignored_count == 1:
+            message += "only possible file ignored"
+        elif ignored_count > 1:
+            message += f"all {ignored_count} possible file{plural} ignored"
+        else:
+            message += "no files found"
+        print(message)
+
+    else:
+        if checked_count != 1:
+            plural = "s"
+            plural2 = "have"
+        else:
+            plural = ""
+            plural2 = "has a"
+        message = (
+            f"[SUCCESS] {checked_count} file{plural} {plural2} valid copyright{plural}"
+        )
+        if ignored_count > 0:
+            plural = "s" if ignored_count != 1 else ""
+            message += f" with {ignored_count} file{plural} ignored"
+        print(message)
 
 
 # ------------------------------------------------------------------------------
@@ -189,12 +212,17 @@ def parse_options():
         "individual files will be scanned, and all files within "
         "directories and their sub-directories will be scanned."
     )
+    if "CYLC_TASK_WORK_PATH" in os.environ:
+        template_path = os.path.join(os.environ["CYLC_TASK_WORK_PATH"], "file", "")
+    else:
+        template_path = "."
     parser = argparse.ArgumentParser(usage=usage, description=description)
     excl_group = parser.add_mutually_exclusive_group()
     parser.add_argument(
         "--ignore",
         action="store",
         dest="ignore",
+        metavar="LIST",
         default=None,
         help=("ignore filename/s containing (comma separated list of patterns)"),
     )
@@ -202,8 +230,17 @@ def parse_options():
         "--base_path",
         action="store",
         dest="base_path",
+        metavar="DIR",
         default=None,
         help="Override the base path to find the actual file.",
+    )
+    parser.add_argument(
+        "--templates",
+        action="store",
+        dest="templates",
+        metavar="DIR",
+        default=template_path,
+        help="path to the templates (default: %(default)s)",
     )
     excl_group.add_argument(
         "--full_trunk",
@@ -235,4 +272,4 @@ if __name__ == "__main__":
         if len(OPTS.ignore) == 1 and OPTS.ignore[0] == "":
             OPTS.ignore = []
 
-    main(OPTS.files, OPTS.ignore)
+    main(OPTS.files, OPTS.ignore, OPTS.templates)
