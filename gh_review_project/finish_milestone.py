@@ -33,7 +33,6 @@ def check_ready(
     """
     Check if the milestone is ready to be closed by confirming that:
       * all pull requests for this milestone have been completed
-      * all closed pull requests in the project are in this milestone.
       * all In Review issues for this milestone have been completed
 
     Give the user the choice to continue regardless since there may be valid
@@ -53,23 +52,10 @@ def check_ready(
     if total_issues_in_review == 0:
         print("No issues in review\n")
 
-    print_banner(f"Checking for closed pull requests not set to {current_milestone}")
-    total_other = 0
-    for milestone in reviews.milestones:
-        if milestone == current_milestone:
-            continue
-        else:
-            total_other += reviews.count_items(
-                milestone=milestone, status="closed", message="closed pull requests"
-            )
-    if total_other == 0:
-        print("All closed pull requests are in this milestone\n")
-
-    if total_open or total_other or total_issues_in_review:
+    if total_open or total_issues_in_review:
         print("=" * 50)
         print(
             f"{total_open} open pull request(s) in {current_milestone}. \n"
-            f"{total_other} closed pull request(s) not in {current_milestone}. \n"
             f"{total_issues_in_review} issues in {current_milestone} with status In Review. "
         )
         cont = input("Would you like to continue with closing this milestone? (y/n) ")
@@ -78,6 +64,7 @@ def check_ready(
             exit(0)
         elif cont != "y":
             print("Unrecognised input, please select y or n")
+            exit(0)
 
 
 def report(data: ProjectData, milestone: str) -> None:
@@ -96,6 +83,29 @@ def report(data: ProjectData, milestone: str) -> None:
         print(f"{repo: <20} {count: >3} pull requests")
 
     print(f"{total} pull requests completed in {milestone}")
+
+def tidy_unmerged(review_data: ProjectData, milestone: str, dry_run: bool = False):
+    """
+    Confirm that all PRs closed at this milestone were actually merged, not just
+    closed. If there are any then remove them from the milestone and archive
+    them from the project.
+    """
+
+    print_banner(f"Removing closed but not merged pull requests from {milestone}")
+    total = 0
+    reviews = review_data.get_milestone(milestone, status="closed")
+    for repo in reviews:
+        for pr in reviews[repo]:
+            if pr.check_state() == "CLOSED":
+                pr.modify_milestone(milestone=None, dry_run=dry_run)
+                pr.archive(REVIEW_ID, dry_run)
+                review_data.project_items.remove(pr)
+                total+=1
+
+    if total:
+        print(f"{total} pull requests removed from {milestone} and archived.")
+    else:
+        print(f"All pull requests have been merged.")
 
 
 def tidy_issues(issue_data: ProjectData, milestone: str, dry_run: bool = False) -> None:
@@ -180,8 +190,10 @@ def main(
             ISSUE_ID, capture_project, file / "issue.json"
         )
 
-    # Set a milestone on closed PRs
+    # Tidy closed PRs by setting milestones on those merged and removing
+    # those closed but not merged.
     add_milestone(review_data, milestone, dry)
+    tidy_unmerged(review_data, milestone, dry)
 
     # Process data and report on status
     check_ready(review_data, issue_data, milestone)
