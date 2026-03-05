@@ -142,7 +142,7 @@ class ProjectData:
             if "milestone" in item_data:
                 item.milestone = item_data["milestone"]["title"]
 
-            if "assignee" in item_data:
+            if "assignees" in item_data:
                 item.assignee = item_data["assignees"]
 
             item_list.append(item)
@@ -309,7 +309,8 @@ class ProjectItem:
     number: number of the item in the repository
     title: title of the item
     repo: repository where the item is located
-    status: status of the item
+    status: status of the item in the project
+    state: item state (draft, open, merged, closed)
     milestone: title of the milestone
     """
 
@@ -325,6 +326,7 @@ class ProjectItem:
         self.repo = repo
 
         self.status = None
+        self.state = None
         self.milestone = "None"
         self.assignee = None
 
@@ -343,6 +345,7 @@ class ProjectItem:
         if dry_run:
             print(f"[DRY RUN] {message: <40} {command}")
         else:
+            print(message)
             run_command(command)
 
     def modify_milestone(self, milestone: str, dry_run: bool = False) -> None:
@@ -387,6 +390,16 @@ class ProjectItem:
         else:
             print(message)
             run_command(command)
+
+    def check_state(self) -> str:
+        """
+        Fetch item state from gh and store to object
+        """
+        command = f"gh {self.command_type} view {self.number} --repo='{PROJECT_OWNER}/{self.repo}' --json state"
+        output = run_command(command)
+        self.state = json.loads(output.stdout)["state"]
+
+        return self.state
 
 
 class PullRequest(ProjectItem):
