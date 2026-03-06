@@ -10,7 +10,6 @@ Python translation of the original Perl UMDP3.pm module.
 """
 
 import re
-import threading
 from typing import List, Dict
 from fortran_keywords import fortran_keywords
 from search_lists import (

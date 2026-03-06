@@ -7,7 +7,6 @@ import argparse
 from checker_dispatch_tables import CheckerDispatchTables
 from umdp3_checker_rules import TestResult
 import concurrent.futures
-from multiprocessing import Pool
 
 # Add custom modules to Python path if needed
 # Add the repository root to access fcm_bdiff and git_bdiff packages
@@ -329,25 +328,19 @@ class ConformanceChecker:
         then have each worker run all the checks for a given file. This would
         reduce the overhead of creating threads and allow for better use of
         resources."""
-        #with concurrent.futures.ThreadPoolExecutor(
-        #    max_workers=self.max_workers
-        #) as executor:
-        #    future_to_task = {
-        #        executor.submit(checker.check, file_path): file_path
-        #        for checker in self.checkers
-        #        for file_path in checker.files_to_check
-        #    }
-        with Pool(processes=self.max_workers) as pool:
-            tasks = []
-            for checker in self.checkers:
-                for file_path in checker.files_to_check:
-                    tasks.append((checker, file_path))
-            apply_results = [pool.apply_async(checker.check, args=(file_path,)) for checker, file_path in tasks]
-            results = [result.get() for result in apply_results]
-
-            #for future in concurrent.futures.as_completed(future_to_task):
-            #    result = future.result()
-            #    results.append(result)
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=self.max_workers
+        ) as executor:
+            future_to_task = {
+                executor.submit(checker.check, file_path): file_path
+                for checker in self.checkers
+                for file_path in checker.files_to_check
+            }
+            # TODO : This next loop could be used to process the individual results as
+            # they come in, rather than waiting for all to complete.
+            for future in concurrent.futures.as_completed(future_to_task):
+                result = future.result()
+                results.append(result)
         self.results = results
         print(f"ConformanceChecker completed with {len(results)} results.")
         return
