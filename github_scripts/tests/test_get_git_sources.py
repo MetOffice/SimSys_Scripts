@@ -136,10 +136,10 @@ def test_merge_sources(setup_sources):
         is None
     )
     # Test Local Source Doesn't Merge
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="Local source cannot be merged"):
         merge_source(setup_sources / "merge1", "merge1", target_clone, "SimSys_Scripts")
     # Test Local Source without ref raises error
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError, match="Local source must have a ref"):
         merge_source(setup_sources / "merge0", "", target_clone, "SimSys_Scripts")
 
 

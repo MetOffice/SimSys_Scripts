@@ -37,10 +37,10 @@ class FCMBase:
     getting information from an instance of the same class.
 
     Note that the version for Git has a small handful of methods, mostly
-    internal and some propeties. These are kept as close as possible to
+    internal and some properties. These are kept as close as possible to
     version in git_bdiff.py.
 
-    Attributes used to navigate the horros of FCM and thus used in this
+    Attributes used to navigate the horrors of FCM and thus used in this
     package are therefore preceded with an '_' and shouldn't be what is
     being referred to outwith this class. Nor should the original
     'functions'...
@@ -85,7 +85,7 @@ class FCMBase:
         """
         Get the branch name from the branch URL.
         Not sure how useful this will be in FCM world.
-        For now, define it to be the contants of the URL after .*/main/ has been
+        For now, define it to be the contents of the URL after .*/main/ has been
         stripped off. i.e. it will start with trunk/... or branches/...
         """
 

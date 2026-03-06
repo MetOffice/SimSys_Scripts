@@ -140,7 +140,7 @@ def check_rose_stem_apps(meta_paths, source_path):
             continue
         app_dir = os.path.join(start_dir, app)
         conf_file = os.path.join(app_dir, "rose-app.conf")
-        with open(conf_file, "r") as f:
+        with open(conf_file) as f:
             for line in f:
                 if line.startswith("meta="):
                     break

@@ -10,7 +10,6 @@ Helper functions for cloning git sources in command line builds
 import re
 import subprocess
 from datetime import datetime
-from typing import Optional, Union
 from pathlib import Path
 from shutil import rmtree
 import shlex
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def run_command(
     command: str, check: bool = True, capture: bool = True, timeout: int = 600
-) -> Optional[subprocess.CompletedProcess]:
+) -> subprocess.CompletedProcess | None:
     """
     Run a subprocess command and return the result object
     Inputs:
@@ -92,7 +91,7 @@ def datetime_str() -> str:
 
 def clone_and_merge(
     dependency: str,
-    opts: Union[list, dict],
+    opts: list | dict,
     loc: Path,
     use_mirrors: bool,
     mirror_loc: Path,
@@ -167,7 +166,7 @@ def get_source(
 
 
 def merge_source(
-    source: Union[Path, str],
+    source: Path | str,
     ref: str,
     dest: Path,
     repo: str,
@@ -187,13 +186,14 @@ def merge_source(
     if ".git" in str(source):
         if use_mirrors:
             remote_path = Path(mirror_loc) / "MetOffice" / repo
-            fetch = determine_mirror_fetch(source, ref)
+            fetch = determine_mirror_fetch(str(source), ref)
         else:
             remote_path = source
             fetch = ref
     else:
         if not ref:
-            raise Exception(
+            raise ValueError(
+                f"Local source must have a ref. "
                 f"Cannot merge local source '{source}' with empty ref.\n"
                 "Please enter a valid git ref - if you use a branch, then the latest "
                 "commit to that branch will be used."
@@ -242,6 +242,7 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
     if unmerged:
         files = "\n".join(f for f in unmerged)
         raise RuntimeError(
+            "\nLocal source cannot be merged."
             "\nA merge conflict has been identified while merging the following branch "
             f"into the {dependency} source:\n\nsource: {source}\nref: {ref}\n\n"
             f"with conflicting files:{files}"
@@ -364,7 +365,7 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
             run_command(command)
 
 
-def sync_repo(repo_source: Union[str, Path], repo_ref: str, loc: Path) -> None:
+def sync_repo(repo_source: str | Path, repo_ref: str, loc: Path) -> None:
     """
     Rsync a local git clone and checkout the provided ref
     """

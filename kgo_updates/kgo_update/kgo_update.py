@@ -92,7 +92,7 @@ def write_update_script(kgo_dirs, new_dirname, script):
         # Write a sub-header for this KGO directory to help visually split
         # up the file (for when the user checks it by eye)
         script.write("#" * (len(new_kgo_dir) + 4) + "\n")
-        script.write("# {0} #\n".format(new_kgo_dir))
+        script.write(f"# {new_kgo_dir} #\n")
         script.write("#" * (len(new_kgo_dir) + 4) + "\n")
         script.write(f"echo 'Installing {new_kgo_dir}'\n\n")
 
@@ -103,8 +103,8 @@ def write_update_script(kgo_dirs, new_dirname, script):
         copy_description = ["# Files to be copied from suite: "]
         copy_commands = []
         mkdir_commands = []
-        mkdir_commands.append("echo 'mkdir -p {0}'".format(new_kgo_dir))
-        mkdir_commands.append("mkdir -p {0}".format(new_kgo_dir))
+        mkdir_commands.append(f"echo 'mkdir -p {new_kgo_dir}'")
+        mkdir_commands.append(f"mkdir -p {new_kgo_dir}")
 
         kgo_files = sorted(update_dict.keys())
         for kgo_file in kgo_files:
@@ -114,8 +114,8 @@ def write_update_script(kgo_dirs, new_dirname, script):
             subdir = os.path.dirname(kgo_file)
             if subdir != "":
                 full_subdir = os.path.join(new_kgo_dir, subdir)
-                mkdir_commands.append("echo 'mkdir -p {0}'".format(full_subdir))
-                mkdir_commands.append("mkdir -p {0}".format(full_subdir))
+                mkdir_commands.append(f"echo 'mkdir -p {full_subdir}'")
+                mkdir_commands.append(f"mkdir -p {full_subdir}")
 
             if source is None:
                 # Files being kept should be sym-linked back to the previous
@@ -125,30 +125,24 @@ def write_update_script(kgo_dirs, new_dirname, script):
                     # without a source here must have been retired from
                     # the tests
                     continue
-                keep_description.append("#    * {0}".format(kgo_file))
+                keep_description.append(f"#    * {kgo_file}")
 
                 # Construct the paths
                 old_file = os.path.join(kgo_dir, kgo_file)
                 new_file = os.path.join(new_kgo_dir, kgo_file)
 
                 keep_commands.append(
-                    "echo 'ln -s {0} {1}'".format(
-                        os.path.relpath(old_file, os.path.dirname(new_file)),
-                        new_file,
-                    )
+                    f"echo 'ln -s {os.path.relpath(old_file, os.path.dirname(new_file))} {new_file}'"
                 )
                 keep_commands.append(
-                    "ln -s {0} {1}".format(
-                        os.path.relpath(old_file, os.path.dirname(new_file)),
-                        new_file,
-                    )
+                    f"ln -s {os.path.relpath(old_file, os.path.dirname(new_file))} {new_file}"
                 )
             else:
                 # Files from the suite should be copied from the suite
-                copy_description.append("#    * {0}".format(kgo_file))
+                copy_description.append(f"#    * {kgo_file}")
                 new_file = os.path.join(new_kgo_dir, kgo_file)
-                copy_commands.append("echo 'cp {0} {1}'".format(source, new_file))
-                copy_commands.append("cp {0} {1}".format(source, new_file))
+                copy_commands.append(f"echo 'cp {source} {new_file}'")
+                copy_commands.append(f"cp {source} {new_file}")
                 # In this case more disk-space is needed, so update
                 # the running total for reporting later
                 total_filesize += os.path.getsize(source)
@@ -179,13 +173,8 @@ def report_space_required(total_filesize, skip=False):
         units.pop()
     unit = units[-1]
 
-    print(
-        banner(
-            "Update will require: {0:.2f} {1} of disk space".format(
-                total_filesize, unit
-            )
-        )
-    )
+    print(banner(f"Update will require: {total_filesize:.2f} {unit} of disk space"))
+
     if not confirm("Please confirm this much space is available (y/n)? ", skip=skip):
         sys.exit("Aborting...")
 
@@ -218,8 +207,8 @@ def group_comparisons_by_dir(comparisons, skip=False):
         # decide what they want to happen
         if not os.path.exists(kgo_file) and status.strip() in UPDATE_CRITERIA:
             if not confirm(
-                "KGO file {0} doesn't appear to exist, should we "
-                "install it from the suite (y/n)? ".format(kgo_file),
+                f"KGO file {kgo_file} doesn't appear to exist, should we "
+                "install it from the suite (y/n)? ",
                 skip=skip,
             ):
                 # Note this is negated - i.e. if the user doesn't want to
@@ -298,7 +287,7 @@ def connect_to_kgo_database(suite_dir):
 
 def get_suite_dir(user, suite_name):
     "Returns the path to the given suite directory of a given user"
-    suite_dir = "~{0}/cylc-run/{1}".format(user, suite_name)
+    suite_dir = f"~{user}/cylc-run/{suite_name}"
     expansion = os.path.expanduser(suite_dir)
     if expansion == suite_dir or not os.path.exists(expansion):
         msg = "ERROR: Unable to find suite ({0})"
@@ -317,7 +306,7 @@ def get_site():
     retcode = cmd.returncode
     if retcode == 0:
         site = stdout.decode("utf-8").split("=")[1].strip()
-        print("Found site via rose-config: {0}\n".format(site))
+        print(f"Found site via rose-config: {site}\n")
     else:
         sys.exit("No site was detected via rose config - this setting is required")
     return site
@@ -377,7 +366,7 @@ def update_variables_rc(
     if os.path.exists(variables_rc_new):
         print(
             "WARNING: New variables.rc file for this update already exists "
-            "at {0} and will be overwritten".format(variables_rc_new)
+            f"at {variables_rc_new} and will be overwritten"
         )
         if not confirm("Okay to overwrite variables.rc file (y/n)? ", skip=skip):
             sys.exit("Aborting...")
@@ -393,7 +382,7 @@ def update_variables_rc(
     ticket_suffix = new_kgo_dir.split("_")[1]
 
     # Rewrite the variables.rc
-    with open(variables_rc, "r") as vrc_old:
+    with open(variables_rc) as vrc_old:
         with open(variables_rc_new, "w") as vrc_new:
             for line in vrc_old.readlines():
                 # Find lines with KGO variables and update them if they are
@@ -403,7 +392,7 @@ def update_variables_rc(
                     vrc_new.write(
                         re.sub(
                             r":\s*BASE.*",
-                            r': BASE~"_{}",'.format(ticket_suffix),
+                            rf': BASE~"_{ticket_suffix}",',
                             line,
                         )
                     )
@@ -423,7 +412,7 @@ def main():
         "Formatter which adds blank lines between options"
 
         def _split_lines(self, text, width):
-            return super(BlankLinesHelpFormatter, self)._split_lines(text, width) + [""]
+            return super()._split_lines(text, width) + [""]
 
     parser = argparse.ArgumentParser(
         usage="%(prog)s [--new-release]",
@@ -569,11 +558,11 @@ def main():
     kgo_dirs = add_untested_kgo_files(kgo_dirs)
 
     # Create a file to hold the update script
-    script_path = os.path.expanduser("~/kgo_update_{0}.sh".format(new_kgo_dir))
+    script_path = os.path.expanduser(f"~/kgo_update_{new_kgo_dir}.sh")
     if os.path.exists(script_path):
         print(
-            "WARNING: Script file for this update already exists at {0} "
-            "and will be overwritten".format(script_path)
+            f"WARNING: Script file for this update already exists at {script_path} "
+            "and will be overwritten"
         )
         if not confirm("Okay to overwrite script file (y/n)? ", skip=confirm_skip):
             sys.exit("Aborting...")
@@ -582,7 +571,7 @@ def main():
     with open(script_path, "w") as script:
         total_filesize = write_update_script(kgo_dirs, new_kgo_dir, script)
 
-    print("Script file written to: {0}\n".format(script_path))
+    print(f"Script file written to: {script_path}\n")
 
     # Report on the required space
     report_space_required(total_filesize, skip=confirm_skip)
@@ -605,7 +594,7 @@ def main():
         print(
             f"\n\nOpening {script_path}\nHit Return to Step through, q to print all\n\n"
         )
-        with open(script_path, "r") as f:
+        with open(script_path) as f:
             line_count = 0
             print_all = False
             for line in f:
@@ -629,7 +618,7 @@ def main():
         sys.exit("Aborting...")
 
     print(
-        banner("Running KGO Update commands from {0}".format(script_path)),
+        banner(f"Running KGO Update commands from {script_path}"),
         flush=True,
     )
 

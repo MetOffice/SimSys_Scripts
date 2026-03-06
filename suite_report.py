@@ -27,8 +27,6 @@ Command Line syntax:
 
 # pylint: disable=too-many-lines
 
-from __future__ import print_function
-
 import glob
 import json
 import os
@@ -177,11 +175,11 @@ def _read_file(filename):
     """Takes filename (str)
     Return contents of a file, as list of strings."""
     if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as filehandle:
+        with open(filename, encoding="utf-8") as filehandle:
             lines = filehandle.readlines()
     else:
         print(f'[ERROR] Unable to find file :\n    "{filename}"')
-        raise IOError(f'_read_file got invalid filename : "{filename}"')
+        raise OSError(f'_read_file got invalid filename : "{filename}"')
     return lines
 
 
@@ -219,7 +217,7 @@ def _run_command(command, ignore_fail=False):
         print(f"[INFO] RC: {retcode}")
         print(f"[INFO] Stdout: {stdout}")
         print(f"[INFO] Stderr: {stderr}")
-        raise IOError("run_command")
+        raise OSError("run_command")
     # Reformat stdout into a list
     stdout = "".join(stdout)
     stdout = stdout.split("\n")
@@ -874,7 +872,7 @@ class SuiteReport:
 
         try:
             os.remove(os.path.expanduser(fname))
-        except EnvironmentError:
+        except OSError:
             pass
 
     def generate_owner_dictionary(self, mode):
@@ -908,7 +906,7 @@ class SuiteReport:
 
         # Read through file and generate dictionary
         try:
-            with open(file_path, "r", encoding="utf-8") as inp_file:
+            with open(file_path, encoding="utf-8") as inp_file:
                 owners_dict = {}
                 inside_listing = False
                 for line in inp_file:
@@ -932,7 +930,7 @@ class SuiteReport:
                             except IndexError:
                                 others = ""
                             owners_dict.update({section.lower(): [owners, others]})
-        except EnvironmentError:
+        except OSError:
             print("Can't find working copy for Owners File")
             return None
 
@@ -1124,14 +1122,14 @@ class SuiteReport:
                         file_path = ""
 
                 try:
-                    with open(file_path, "r", encoding="utf-8") as inp_file:
+                    with open(file_path, encoding="utf-8") as inp_file:
                         for line in inp_file:
                             if "file belongs in" in line:
                                 section = line.strip("\n")
                                 break
                         else:
                             section = ""
-                except EnvironmentError:
+                except OSError:
                     section = ""
 
                 # Clean up checked out file
@@ -1299,7 +1297,7 @@ class SuiteReport:
                             extract_list_dict[item] += temp_dict[item]
                         else:
                             extract_list_dict[item] = temp_dict[item]
-                except (EnvironmentError, TypeError, AttributeError):
+                except (OSError, TypeError, AttributeError):
                     # Potential error here changed type between python2 and 3
                     extract_list_path = None
 
@@ -1992,14 +1990,12 @@ class SuiteReport:
                 suite_dir = self.suite_path
             except Exception:
                 suite_dir = "--cylc_suite_dir--"
-            trac_log.extend(
-                [
-                    "There has been an exception in SuiteReport.print_report()",
-                    "See output for more information",
-                    "rose-stem suite output will be in the files :\n",
-                    f"~/cylc-run/{suite_dir}/log/scheduler/log",
-                ]
-            )
+            trac_log.extend([
+                "There has been an exception in SuiteReport.print_report()",
+                "See output for more information",
+                "rose-stem suite output will be in the files :\n",
+                f"~/cylc-run/{suite_dir}/log/scheduler/log",
+            ])
         finally:
             # Pick up user specified log path if available,
             # otherwise default to cyclc suite dir.
@@ -2013,7 +2009,7 @@ class SuiteReport:
             # even in event of serious exceptions
             try:
                 _write_file(trac_log_path, trac_log, newline=True)
-            except IOError:
+            except OSError:
                 print(f"[ERROR] Writing to {TRAC_LOG_FILE} file : {trac_log_path}")
                 print(
                     f"{TRAC_LOG_FILE} to this point " + "would have read as follows :\n"

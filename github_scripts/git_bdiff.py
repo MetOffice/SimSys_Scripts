@@ -168,9 +168,12 @@ class GitBDiff(GitBase):
     def files(self):
         """Iterate over files changed on the branch."""
 
-        for line in self.run_git(
-            ["diff", "--name-only", "--diff-filter=AMX", self.ancestor]
-        ):
+        for line in self.run_git([
+            "diff",
+            "--name-only",
+            "--diff-filter=AMX",
+            self.ancestor,
+        ]):
             if line != "":
                 yield line
 

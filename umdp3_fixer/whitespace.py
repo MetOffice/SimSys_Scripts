@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-## NOTE ##
+# NOTE ##
 # This module is one of several for which the Master copy is in the UM
 # repository. When making changes, please ensure the changes are made in the UM
 # repository or they will be lost during the release process when the UM copy
@@ -96,7 +96,7 @@ def keyword_split(line, str_continuation):
             blank_line = partial_blank_fstring(workline)
         else:
             print("keyword split simplify line has failed.")
-            print("{0:s} Line simplification has failed for:".format(e.msg))
+            print(f"{e.msg:s} Line simplification has failed for:")
             print(line)
             exit(1)
 
@@ -128,7 +128,7 @@ def keyword_split(line, str_continuation):
                     blank_line = partial_blank_fstring(workline)
                 else:
                     print("keyword split simplify line has failed.")
-                    print("{0:s} Line simplification has failed for:".format(e.msg))
+                    print(f"{e.msg:s} Line simplification has failed for:")
                     print(line)
                     exit(1)
 
@@ -151,7 +151,7 @@ def apply_whitespace_fixes(lines, striptrailingspace=True, keywordsplit=True):
     pp_line_previous = ""
     line_previous = ""
 
-    for iline, line in enumerate(lines):
+    for _iline, line in enumerate(lines):
         if striptrailingspace:
             # Strip out trailing spaces ?
             line = strip_trailing_space(line)
@@ -190,13 +190,11 @@ def apply_whitespace_fixes(lines, striptrailingspace=True, keywordsplit=True):
 
         # if we are a (pp) continuation, save the partial line
         if pp_continuation:
-            pp_line_previous = "".join(
-                [
-                    re.sub(r"\\\s*$", "", pp_line_previous),
-                    re.sub(r"&\s*$", "", line_previous),
-                    line,
-                ]
-            )
+            pp_line_previous = "".join([
+                re.sub(r"\\\s*$", "", pp_line_previous),
+                re.sub(r"&\s*$", "", line_previous),
+                line,
+            ])
             line_previous = ""
             pseudo_line = re.sub(r"\\\s*$", "&", pp_line_previous)
             pseudo_str_continuation = is_str_continuation(pseudo_line, str_continuation)
@@ -274,9 +272,9 @@ def main():
             f'Error opening file:\n     "{filename}"\n'
             "I need a valid filename on which to work...."
         )
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
-    print("\nLooking at file :\n     {0:s}".format(filename))
+    print(f"\nLooking at file :\n     {filename:s}")
     # re-open the fortran file, this time to write to it.
     with open(filename, "r+") as fortran_file:
         lines_in = fortran_file.read().split("\n")

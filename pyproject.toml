@@ -1,0 +1,88 @@
+[project]
+name = "SimSys_Scripts"
+version = "0.1.0"
+description = "Simulation Systems Scripts"
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "networkx",
+    "PyYAML",
+    "ruff",
+    "ty",
+]
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = [
+    "fcm_bdiff*",
+    "kgo_updates*",
+    "umdp3_fixer*",
+    "lfric_macros*",
+    "lfric_styling*",
+    "github_scripts*",
+    "nightly_testing*",
+    "gh_review_project*",
+    "script_umdp3_checker*",
+    "script_copyright_checker*",
+]
+
+[tool.setuptools]
+script-files = [
+    "sbin/gh_add_user",
+    "sbin/gh_manage_milestones",
+    "sbin/gh_manage_labels",
+    "sbin/tagman",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "gh_review_project",
+    "github_scripts",
+    "script_umdp3_checker",
+    "lfric_macros",
+    "lfric_styling",
+    "nightly_testing",
+    "umdp3_fixer",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors: Basic PEP 8 violations
+    "F",  # pyflakes errors: Logical errors in code
+    "W",  # pycodestyle warnings: PEP 8 warnings
+    "I",  # isort errors: Import sorting issues
+    "UP", # pyupgrade: Modernisation rules, enforce f-strings for formatting
+    "B",  # flake8-bugbear: Code quality issues
+    # "PL", # pylint rules: Various code quality and style issues
+]
+ignore = [
+    "E501",  # line too long
+    "I001",  # isort: skip unsorted-imports
+    "UP030", # Allow explicit positional integers in .format()
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty.environment]
+root = [
+    ".",
+    "./fcm_bdiff",
+    "./gh_review_project",
+    "./github_scripts",
+    "./script_umdp3_checker",
+    "./lfric_macros",
+    "./lfric_styling",
+    "./nightly_testing",
+    "./umdp3_fixer",
+]

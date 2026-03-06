@@ -48,22 +48,23 @@ def copy_working_branch(model_source):
         shutil.copytree(src_wkcopy, tmp_path)
     # Directories are the same
     except shutil.Error as err:
-        print("Directory not copied. Error: %s" % err)
+        print(f"Directory not copied. Error: {err}")
     # Any error saying that the directory doesn't exist
     except OSError as err:
-        print("Directory not copied. Error: %s" % err)
+        print(f"Directory not copied. Error: {err}")
     return tmp_path, saved_umask, tmpdir
 
 
 def diff_cwd_working(model_source, path, saved_umask, tmpdir):
     """Diff the tmp dir with the working branch and report diff."""
     diff = subprocess.run(
-        "diff -qr " + model_source + "/src " + path,
+        ["diff", "-qr", f"{model_source}/src", path],
         stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        shell=True,
-        universal_newlines=True,
+        capture_output=True,
+        text=True,
+        # stdout=subprocess.PIPE,
+        # stderr=subprocess.PIPE,
+        # shell=False,
     )
 
     if diff.returncode == 0:

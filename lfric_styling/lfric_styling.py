@@ -27,7 +27,7 @@ def lowercase_keywords(file):
     Lowercase words in a file when they match a word in the keywords set.
     """
     print("Lowercasing keywords in", file)
-    with open(file, "r") as fp:
+    with open(file) as fp:
         lines = fp.read()
         for keyword in NEW_KEYWORDS:
             # regex to check if a keyword is preceded with a '!' symbol
@@ -55,7 +55,7 @@ def apply_styling(path_to_dir):
     Identifying fortran files by extension.
     """
     if os.path.exists(path_to_dir):
-        for root, dirs, files in os.walk(path_to_dir):
+        for root, _dirs, files in os.walk(path_to_dir):
             for file in files:
                 if file.endswith((".f90", ".F90")):
                     cur_path = os.path.join(root, file)

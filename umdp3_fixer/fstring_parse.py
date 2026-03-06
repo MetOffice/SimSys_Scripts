@@ -42,8 +42,8 @@ class QuoteError(ParsingError):
 
         self.msg = (
             "There are an odd number of non-commented "
-            "and non-quoted {1:s} in this line. "
-            "(From a total of {0:d})".format(number, self.quotemarks[quote])
+            f"and non-quoted {self.quotemarks[quote]:s} in this line. "
+            f"(From a total of {number:d})"
         )
 
     pass
@@ -258,7 +258,7 @@ def is_str_continuation_preparblank(parblanked, line):
 
     first_loc = min(apos_loc, quot_loc)
 
-    # set the correct return based on the first occurance character
+    # set the correct return based on the first occurrence character
     if line[first_loc] == "'":
         cont[SQUOTE] = True
     else:
@@ -297,7 +297,7 @@ def simplify_line(lines):
 
     # Note we will be passed a slice to include the lines after the
     # current line to the end of the file to allow handling of
-    # continutations
+    # continuations
     iline = 0
     line = lines[iline]
 
@@ -321,7 +321,7 @@ def simplify_line(lines):
             str_cont_test = is_str_continuation(line)
             if not (str_cont_test[SQUOTE] or str_cont_test[DQUOTE]):
                 print("Indentation simplify line has failed. [2]")
-                print("{0:s} Line simplification has failed for:".format(e.msg))
+                print(f"{e.msg:s} Line simplification has failed for:")
                 print(line)
                 exit(1)
 
@@ -376,7 +376,7 @@ def simplify_line(lines):
         line = blank_fstring(line)
     except ParsingError as e:
         print("Indentation simplify line has failed. [3]")
-        print("{0:s} Line simplification has failed for:".format(e.msg))
+        print(f"{e.msg:s} Line simplification has failed for:")
         print(line)
         exit(1)
 
