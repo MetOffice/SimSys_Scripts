@@ -98,6 +98,7 @@ def report(data: ProjectData, milestone: str) -> None:
 
     print(f"{total} pull requests completed in {milestone}")
 
+
 def tidy_unmerged(review_data: ProjectData, milestone: str, dry_run: bool = False):
     """
     Confirm that all PRs closed at this milestone were actually merged, not just
@@ -114,12 +115,12 @@ def tidy_unmerged(review_data: ProjectData, milestone: str, dry_run: bool = Fals
                 pr.modify_milestone(milestone=None, dry_run=dry_run)
                 pr.archive(REVIEW_ID, dry_run)
                 review_data.project_items.remove(pr)
-                total+=1
+                total += 1
 
     if total:
         print(f"{total} pull requests removed from {milestone} and archived.")
     else:
-        print(f"All pull requests have been merged.")
+        print("All pull requests have been merged.")
 
 
 def tidy_issues(issue_data: ProjectData, milestone: str, dry_run: bool = False) -> None:
