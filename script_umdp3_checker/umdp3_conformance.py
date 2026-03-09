@@ -1,7 +1,7 @@
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, List, Dict, Set
+from typing import Callable, List, Dict, Set, Optional
 from dataclasses import dataclass, field
 import argparse
 from checker_dispatch_tables import CheckerDispatchTables
@@ -165,9 +165,9 @@ class StyleChecker:
     def from_full_list(
         cls,
         name: str,
-        file_extensions: Set[str] = set(),
-        check_functions: Dict[str, Callable] = {},
-        changed_files: List[Path] = [],
+        file_extensions: Set[str],
+        check_functions: Dict[str, Callable],
+        changed_files: List[Path],
         print_volume: int = 3,
     ):
         files_to_check = (
@@ -185,7 +185,7 @@ class StyleChecker:
 
     @staticmethod
     def filter_files(
-        files: List[Path], file_extensions: Set[str] = set()
+        files: List[Path], file_extensions: Optional[Set[str]] = None
     ) -> List[Path]:
         """Filter files based on the checker's file extensions."""
         if not file_extensions:
@@ -198,7 +198,7 @@ class StyleChecker:
         name: str,
         commands: List[List[str]],
         all_files: List[Path],
-        file_extensions: Set[str] = set(),
+        file_extensions: Set[str],
     ) -> "StyleChecker":
         """Create a StyleChecker instance filtering files from a full list."""
         filtered_files = cls.filter_files(all_files, file_extensions)
