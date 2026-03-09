@@ -333,7 +333,6 @@ class ConformanceChecker:
                 result = future.result()
                 results.append(result)
         self.results = results
-        print(f"ConformanceChecker completed with {len(results)} results.")
         return
 
     def print_results(self, print_volume: int = 3, quiet_pass: bool = True) -> bool:
