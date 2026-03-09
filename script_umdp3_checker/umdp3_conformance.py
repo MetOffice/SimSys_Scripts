@@ -590,7 +590,7 @@ def get_files_to_check(
     """
     if full_check:  # Override to check all files present.
         repo_path = Path(path)
-        all_files = [f for f in repo_path.rglob("*") if f.is_file()]
+        all_files = [f.relative_to(path) for f in repo_path.rglob("*") if f.is_file()]
         if print_volume >= 1:
             print("Full check override enabled.")
         if print_volume >= 3:
