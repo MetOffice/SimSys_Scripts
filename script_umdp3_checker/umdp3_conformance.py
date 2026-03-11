@@ -165,20 +165,17 @@ class StyleChecker:
     def from_full_list(
         cls,
         name: str,
-        file_extensions: Set[str] = set(),
-        check_functions: Dict[str, Callable] = {},
-        changed_files: List[Path] = [],
+        file_extensions: Set[str],
+        check_functions: Dict[str, Callable],
+        changed_files: List[Path],
         print_volume: int = 3,
     ):
-        """Create a StyleChecker instance whilst simultaneously filtering files
-        from a full list.
-        Returns a StyleChecker instance."""
         files_to_check = (
             cls.filter_files(changed_files, file_extensions) if changed_files else []
         )
         if print_volume >= 5:
             print(
-                f"StyleChecker initialized using a filtered list:\n"
+                f"ExternalChecker initialized :\n"
                 f"    Name : {name}\n"
                 f"    Has {len(check_functions)} check commands\n"
                 f"    Using {len(file_extensions)} file extensions\n"
@@ -188,7 +185,7 @@ class StyleChecker:
 
     @staticmethod
     def filter_files(
-        files: List[Path], file_extensions: Set[str] = set()
+        files: List[Path], file_extensions: Optional[Set[str]] = None
     ) -> List[Path]:
         """Filter files based on the checker's file extensions."""
         if not file_extensions:
@@ -201,7 +198,7 @@ class StyleChecker:
         name: str,
         commands: List[List[str]],
         all_files: List[Path],
-        file_extensions: Set[str] = set(),
+        file_extensions: Set[str],
     ) -> "StyleChecker":
         """Create a StyleChecker instance filtering files from a full list."""
         filtered_files = cls.filter_files(all_files, file_extensions)
@@ -526,6 +523,9 @@ def create_style_checkers(
     checkers = []
     if "Fortran" in file_types:
         file_extensions = {".f", ".for", ".f90", ".f95", ".f03", ".f08", ".F90"}
+        """
+        TODO : I /think/ the old version also checked '.h' files as Fortran.
+        Not sure if that is still needed."""
         fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
         fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
         generic_file_table = dispatch_tables.get_file_dispatch_table_all()

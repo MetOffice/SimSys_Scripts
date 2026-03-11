@@ -342,7 +342,7 @@ class UMDP3Checker:
                     self.add_extra_error(f"UPPERCASE variable name : {match[1]}")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, f"UPPERCASE variable name {match[1]}", count + 1
+                        error_log, f"UPPERCASE variable name {match[1]}", count
                     )
 
         output = f"Checked {count + 1} lines, found {failures} failures."
