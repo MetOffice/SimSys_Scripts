@@ -36,7 +36,7 @@ class SuiteData:
         "-v-",
     )
 
-    def __init__(self,suite_path=None) -> None:
+    def __init__(self, suite_path=None) -> None:
         self.dependencies = {}
         self.rose_data = {}
         self.suite_path = suite_path
