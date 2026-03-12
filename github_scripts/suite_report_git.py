@@ -69,6 +69,7 @@ class SuiteReport(SuiteData):
     close_collapsed = "</details>"
 
     def __init__(self, suite_path: Path) -> None:
+        super.__init__()
         self.suite_path: Path = suite_path
         self.suite_user = suite_path.owner()
         self.suite_starttime: str = self.get_suite_starttime()
