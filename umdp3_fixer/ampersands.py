@@ -54,6 +54,7 @@ class CharError(ParsingError):
     """
 
     def __init__(self, char, number):
+        super().__init__()
         self.number = number
         self.char = char
         self.msg = 'There are {0:d} unquoted, uncommented "{1:s}" in this line.'.format(
