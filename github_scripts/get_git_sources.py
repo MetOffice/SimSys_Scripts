@@ -88,18 +88,16 @@ def datetime_str() -> str:
 
 
 def clone_and_merge(
-    dependency: str, opts: Union[list, dict], loc: Path, use_mirrors: bool, mirror_loc: Path
+    opts: Union[list, dict], loc: Path, use_mirrors: bool, mirror_loc: Path
 ) -> None:
     """
     Wrapper script for calling get_source and merge_source for a single dependency
 
-    dependency: name of the dependency
     opts: dict or list of dicts for a dependency in the dependencies file
     loc: path to location to clone to
     use_mirrors: bool, use local git mirrors if true
     mirror_loc: path to local git mirrors
     """
-
     if not isinstance(opts, list):
         opts = [opts]
 
@@ -113,7 +111,6 @@ def clone_and_merge(
                 values["source"],
                 values["ref"],
                 loc,
-                dependency,
                 use_mirrors,
                 mirror_loc,
             )
@@ -123,7 +120,6 @@ def clone_and_merge(
                 values["source"],
                 values["ref"],
                 loc,
-                dependency,
                 use_mirrors,
                 mirror_loc,
             )
@@ -133,7 +129,6 @@ def get_source(
     source: str,
     ref: str,
     dest: Path,
-    repo: str,
     use_mirrors: bool = False,
     mirror_loc: Path = Path(""),
 ) -> None:
@@ -144,18 +139,16 @@ def get_source(
     if ".git" in source:
         if use_mirrors:
             logger.info(
-                f"[{datetime_str()}] Cloning {repo} from {mirror_loc} at ref {ref}"
+                f"[{datetime_str()}] Cloning {dest.name} from {mirror_loc} at ref {ref}"
             )
-            mirror_repo = repo
-            if "jules-internal" in source:
-                mirror_repo = "jules-internal"
+            mirror_repo = re.split("[:/]", source)[-1]
             mirror_loc = Path(mirror_loc) / "MetOffice" / mirror_repo
             clone_repo_mirror(source, ref, mirror_loc, dest)
         else:
-            logger.info(f"[{datetime_str()}] Cloning {repo} from {source} at ref {ref}")
+            logger.info(f"[{datetime_str()}] Cloning {dest.name} from {source} at ref {ref}")
             clone_repo(source, ref, dest)
     else:
-        logger.info(f"[{datetime_str()}] Syncing {repo} at ref {ref}")
+        logger.info(f"[{datetime_str()}] Syncing {dest.name} at ref {ref}")
         sync_repo(source, ref, dest)
 
 
@@ -163,7 +156,6 @@ def merge_source(
     source: str,
     ref: str,
     dest: Path,
-    repo: str,
     use_mirrors: bool = False,
     mirror_loc: Path = Path(""),
 ) -> None:
@@ -174,11 +166,12 @@ def merge_source(
 
     logger.info(
         f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Merging "
-        f"{source} at ref {ref} into {repo}"
+        f"{source} at ref {ref} into {dest.name}"
     )
 
     if use_mirrors:
-        remote_path = Path(mirror_loc) / "MetOffice" / repo
+        mirror_repo = re.split("[:/]", source)[-1]
+        remote_path = Path(mirror_loc) / "MetOffice" / mirror_repo
     else:
         remote_path = source
     run_command(f"git -C {dest} remote add local {remote_path}")
@@ -194,7 +187,7 @@ def merge_source(
     if result.returncode:
         unmerged_files = get_unmerged(dest)
         if unmerged_files:
-            handle_merge_conflicts(source, ref, dest, repo)
+            handle_merge_conflicts(source, ref, dest, dest.name)
         else:
             raise subprocess.CalledProcessError(
                 result.returncode, command, result.stdout, result.stderr
