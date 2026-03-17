@@ -165,6 +165,14 @@ def print_table(
         print(table)
         return
 
+    # Check html path is valid
+    html_path = Path(args.html)
+    if html_path.is_dir():
+        raise ValueError("--html option cannot be a directory")
+    html_dir = html_path.parent
+    html_dir.mkdir(parents=True, exist_ok=True)
+    html_path.unlink(missing_ok=True)
+
     table.format = True
     html_table = table.get_html_string()
     with open(html_output, "a") as f:
@@ -211,15 +219,6 @@ def parse_args():
     )
 
     args = parser.parse_args()
-
-    # If html file provided, then ensure the directory exists and the file is empty
-    if args.html:
-        html_path = Path(args.html)
-        if html_path.is_dir():
-            raise ValueError("--html option cannot be a directory")
-        html_dir = html_path.parent
-        html_dir.mkdir(parents=True, exist_ok=True)
-        html_path.unlink(missing_ok=True)
 
     args.file = Path(args.file)
     args.file = args.file.expanduser().resolve()
