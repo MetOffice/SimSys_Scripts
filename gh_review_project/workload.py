@@ -144,7 +144,9 @@ def build_table(data: ProjectData, reviewer_list: list, repos: list) -> PrettyTa
     return table
 
 
-def print_table(title: str, table: PrettyTable, sortTotal: bool, html_output: str = "") -> None:
+def print_table(
+    title: str, table: PrettyTable, sortTotal: bool, html_output: str = ""
+) -> None:
     """
     Print a pretty table and its title.
 
@@ -204,7 +206,7 @@ def parse_args():
         "--html",
         default="",
         help="html file to output table contents to. If not set, an ascii formatted "
-        "table will be outputted to stdout"
+        "table will be outputted to stdout",
     )
 
     args = parser.parse_args()
@@ -217,7 +219,6 @@ def parse_args():
         html_dir = html_path.parent
         html_dir.mkdir(parents=True, exist_ok=True)
         html_path.unlink(missing_ok=True)
-
 
     args.file = Path(args.file)
     args.file = args.file.expanduser().resolve()
