@@ -169,6 +169,10 @@ def merge_source(
         f"{source} at ref {ref} into {dest.name}"
     )
 
+    if not any([g for g in ["https:", "git@", "localmirrors:"] if source.startswith(g)]):
+        # Source is local working copy - cannot determine mirror_repo
+        use_mirrors = False
+
     if use_mirrors:
         mirror_repo = re.split("[:/]", source)[-1]
         remote_path = Path(mirror_loc) / "MetOffice" / mirror_repo
