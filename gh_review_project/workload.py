@@ -165,14 +165,6 @@ def print_table(
         print(table)
         return
 
-    # Check html path is valid
-    html_path = Path(args.html)
-    if html_path.is_dir():
-        raise ValueError("--html option cannot be a directory")
-    html_dir = html_path.parent
-    html_dir.mkdir(parents=True, exist_ok=True)
-    html_path.unlink(missing_ok=True)
-
     table.format = True
     html_table = table.get_html_string()
     with open(html_output, "a") as f:
@@ -261,9 +253,17 @@ def main(total: bool, test: bool, capture_project: bool, file: Path):
     tables["LFRic"] = build_table(data, reviewers, repo_list)
 
     # Print tables
+    # Check html path is valid
+    if args.html:
+        html_path = Path(args.html)
+        if html_path.is_dir():
+            raise ValueError("--html option cannot be a directory")
+        html_dir = html_path.parent
+        html_dir.mkdir(parents=True, exist_ok=True)
+        html_path.unlink(missing_ok=True)
+
     for name, table in tables.items():
         print_table(name, table, total, args.html)
-
 
 if __name__ == "__main__":
     args = parse_args()
