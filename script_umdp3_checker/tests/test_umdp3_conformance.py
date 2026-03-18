@@ -8,7 +8,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from umdp3_conformance import StyleChecker, detangle_file_types, \
-	ALLOWABLE_FILE_TYPES, GROUP_FILE_TYPES, Check_Runner, get_files_to_check, which_cms_is_it, ConformanceChecker, CheckResult
+	ALLOWABLE_FILE_TYPES, GROUP_FILE_TYPES, Check_Runner, get_files_to_check, line_1, line_2, which_cms_is_it, ConformanceChecker, CheckResult, process_arguments
 
 
 def test_from_full_list_filters_by_extension():
@@ -260,10 +260,29 @@ def test_get_files_to_check_full_check_returns_all_files(tmp_path: Path):
     (tmp_path / "sub").mkdir()
     (tmp_path / "sub" / "b.py").write_text("b")
 
-    result = get_files_to_check(str(tmp_path), full_check=True, print_volume=0)
+    result = get_files_to_check(str(tmp_path), full_check=True)
 
-    assert set(result) == {tmp_path / "a.txt", tmp_path / "sub" / "b.py"}
+    # Function contract is relative paths when full_check=True
+    assert set(result) == {Path("a.txt"), Path("sub/b.py")}
 
+
+def test_get_files_to_check_passes_path_and_volume_to_cms(monkeypatch: pytest.MonkeyPatch):
+    calls = []
+
+    class FakeCMS:
+        def get_changed_files(self):
+            return [Path("x.py")]
+
+    def fake_which(path, volume):
+        calls.append((path, volume))
+        return FakeCMS()
+
+    monkeypatch.setattr("umdp3_conformance.which_cms_is_it", fake_which)
+
+    result = get_files_to_check("repo", full_check=False, print_volume=7)
+
+    assert result == [Path("x.py")]
+    assert calls == [("repo", 7)]
 
 def test_get_files_to_check_uses_cms_when_not_fullcheck(monkeypatch: pytest.MonkeyPatch):
     class FakeCMS:
@@ -303,6 +322,30 @@ def test_which_cms_is_it_git_branch(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     assert cms.repo_path == tmp_path
 
 
+def test_which_cms_is_it_svn_branch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    (tmp_path / ".svn").mkdir()
+
+    class FakeFCMWrapper:
+        def __init__(self, repo_path):
+            self.repo_path = repo_path
+
+        def get_branch_name(self):
+            return "fcm/branch"
+
+        def is_branch(self):
+            return True
+
+        def get_changed_files(self):
+            return [Path("x.F90")]
+
+    monkeypatch.setattr("umdp3_conformance.FCMBdiffWrapper", FakeFCMWrapper)
+
+    cms = which_cms_is_it(str(tmp_path), print_volume=0)
+
+    assert isinstance(cms, FakeFCMWrapper)
+    assert cms.repo_path == tmp_path
+
+
 def test_which_cms_is_it_raises_for_unknown_cms(tmp_path: Path):
     with pytest.raises(RuntimeError, match="Unknown CMS type"):
         which_cms_is_it(str(tmp_path), print_volume=0)
@@ -331,7 +374,41 @@ def test_which_cms_is_it_exits_when_not_branch(tmp_path: Path, monkeypatch: pyte
     assert exc.value.code == 0
 
 
-def test_conformance_checker_check_files_collects_all_results():
+"""
+These last few are CoPilot Specials. I'm not sure how much some are actually testing our
+code and how much is testing MonkeyPatch and pytest. Equally some of the latter ones I
+might argue aren't really worth having... but we've got them now. Perhaps
+not worth maintaining though.
+"""
+class _FakeFuture:
+    def __init__(self, value=None, exc=None):
+        self._value = value
+        self._exc = exc
+
+    def result(self):
+        if self._exc is not None:
+            raise self._exc
+        return self._value
+
+
+class _FakeProcessPoolExecutor:
+    def __init__(self, max_workers=None):
+        self.max_workers = max_workers
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def submit(self, fn, *args, **kwargs):
+        try:
+            return _FakeFuture(value=fn(*args, **kwargs))
+        except Exception as e:
+            return _FakeFuture(exc=e)
+
+
+def test_conformance_checker_check_files_collects_all_results(monkeypatch: pytest.MonkeyPatch):
     class DummyChecker:
         def __init__(self, files):
             self.files_to_check = files
@@ -344,23 +421,52 @@ def test_conformance_checker_check_files_collects_all_results():
                 test_results=[],
             )
 
+    monkeypatch.setattr(
+        "umdp3_conformance.concurrent.futures.ProcessPoolExecutor",
+        _FakeProcessPoolExecutor,
+    )
+    monkeypatch.setattr(
+        "umdp3_conformance.concurrent.futures.as_completed",
+        lambda futures: list(futures),
+    )
+
     checkers = [
         DummyChecker([Path("a.py"), Path("b.py")]),
         DummyChecker([Path("c.py")]),
     ]
-    cc = ConformanceChecker(checkers, max_workers=2) # type: ignore
+    cc = ConformanceChecker(checkers, max_workers=2)  # type: ignore
 
     cc.check_files()
-
+    # These asserts are basically just checking that the results from the two "dummy" checkers,one of which checked 2 files, are collected into a single list of three results objects.
     assert len(cc.results) == 3
     assert {r.file_path for r in cc.results} == {"a.py", "b.py", "c.py"}
 
 
-"""
-These last two are CoPilot Specials. I'm not sure we need to test the logic of
-changing print verbosity, but we've got them now. Perhaps not worth maintaining though.
-"""
-def test_conformance_checker_print_results_quiet_pass_suppresses_passed(capsys: pytest.CaptureFixture[str]):
+def test_conformance_checker_check_files_propagates_worker_exception(monkeypatch: pytest.MonkeyPatch):
+    class BadChecker:
+        def __init__(self):
+            self.files_to_check = [Path("bad.py")]
+
+        def check(self, file_path):
+            raise RuntimeError("boom")
+
+    monkeypatch.setattr(
+        "umdp3_conformance.concurrent.futures.ProcessPoolExecutor",
+        _FakeProcessPoolExecutor,
+    )
+    monkeypatch.setattr(
+        "umdp3_conformance.concurrent.futures.as_completed",
+        lambda futures: list(futures),
+    )
+
+    cc = ConformanceChecker([BadChecker()], max_workers=1)  # type: ignore
+
+    with pytest.raises(RuntimeError, match="boom"):
+        cc.check_files()
+
+
+def test_conformance_checker_print_results_quiet_pass_suppresses_passed(
+          capsys: pytest.CaptureFixture[str]):
     fail_tr = SimpleNamespace(
         checker_name="RuleX", failure_count=1, passed=False, errors={"RuleX": "bad"}
     )
@@ -376,7 +482,8 @@ def test_conformance_checker_print_results_quiet_pass_suppresses_passed(capsys: 
 
     all_passed = cc.print_results(print_volume=3, quiet_pass=True)
     out = capsys.readouterr().out
-
+    """That seems to be a lot of effort to create fake results in a fake conformance
+    checker just to check the text from the 'passed' test wasnt in the output written"""
     assert all_passed is False
     assert "bad.py" in out
     assert "ok.py" not in out
@@ -393,6 +500,96 @@ def test_conformance_checker_print_results_volume4_prints_error_details(capsys: 
 
     cc.print_results(print_volume=4, quiet_pass=True)
     out = capsys.readouterr().out
-
+    """Again, that seems to be a lot of effort to create fake results in a fake
+    conformance checker just to check the detail text from the test was in the output
+    written"""
     assert "RuleZ" in out
     assert "detail" in out
+
+
+def test_stylechecker_check_with_no_check_functions_passes(tmp_path: Path):
+    # CoPilot described this as an 'edge case'. I'm not sure it shouldn't be
+    # checked for in the code and a PEBCAK error raised.
+    file_path = tmp_path / "sample.txt"
+    file_path.write_text("content\n")
+
+    checker = StyleChecker("EmptyChecks", {}, [file_path])
+    result = checker.check(file_path)
+
+    assert result.file_path == str(file_path)
+    assert result.tests_failed == 0
+    assert result.all_passed is True
+    assert result.test_results == []
+
+
+def test_create_free_runner_generic_exception(monkeypatch: pytest.MonkeyPatch):
+    def fake_run(cmd, capture_output, text, timeout):
+        raise OSError("cannot execute")
+
+    monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
+    runner = StyleChecker.create_free_runner(["dummy_checker"], "Dummy")
+
+    result = runner(Path("sample.py"))
+
+    assert result.checker_name == "Dummy"
+    assert result.failure_count == 1
+    assert result.passed is False
+    assert result.errors == {"Dummy": "cannot execute"}
+
+
+def test_create_external_runners_with_empty_commands():
+    # Again, is this something we should be ensuring works, or testing for in the code
+    # to raise a PEBCAK error if this is ever the case? Although it's a 'coder error'
+    # not a user error if it does.
+    checker = StyleChecker.create_external_runners(
+        "Noop External",
+        commands=[],
+        all_files=[Path("a.py"), Path("b.py")],
+        file_extensions={".py"},
+    )
+
+    assert checker.files_to_check == [Path("a.py"), Path("b.py")]
+    assert checker.check_functions == {}
+
+# Okay, c'mon CoPilot - where's the value in testing a tiny function to write a string
+# of characters from a runtime supplied length is the length you asked for ?
+def test_line_helpers_basic_shapes():
+    assert line_1(0) == ""
+    assert len(line_1(80)) == 80
+    assert line_2(5) == "-----"
+
+
+# hmmmm, isn't this really just testing that argparse is doing what we expect it to do
+# with the arguments we give it. Again, is this something we should be testing for, or
+# just ensuring that our code is using argparse correctly and trusting that argparse
+# itself works as advertised ?
+def test_process_arguments_defaults(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(sys, "argv", ["umdp3_conformance.py"])
+
+    args = process_arguments()
+    # All the below are the defaults assigned if no args were given...
+    assert args.path == "./"
+    assert args.max_workers == 2
+    assert args.fullcheck is False
+    assert args.printpass is False
+    assert args.volume == 3
+    assert args.file_types == {"Fortran"}
+
+
+def test_process_arguments_verbose_and_filetype_group_expansion(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["umdp3_conformance.py", "--file-types", "CI", "Generic", "-vv"],
+    )
+
+    args = process_arguments()
+
+    assert args.volume == 5
+    assert args.file_types == {"Fortran", "Python", "Generic"}
+
+
+def test_process_arguments_rejects_verbose_and_quiet_together(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(sys, "argv", ["umdp3_conformance.py", "-v", "-q"])
+    with pytest.raises(SystemExit):
+        process_arguments()
