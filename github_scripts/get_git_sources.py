@@ -148,7 +148,9 @@ def get_source(
             mirror_loc = Path(mirror_loc) / "MetOffice" / mirror_repo
             clone_repo_mirror(source, ref, mirror_loc, dest)
         else:
-            logger.info(f"[{datetime_str()}] Cloning {dest.name} from {source} at ref {ref}")
+            logger.info(
+                f"[{datetime_str()}] Cloning {dest.name} from {source} at ref {ref}"
+            )
             clone_repo(source, ref, dest)
     else:
         logger.info(f"[{datetime_str()}] Syncing {dest.name} at ref {ref}")
@@ -172,20 +174,23 @@ def merge_source(
         f"{source} at ref {ref} into {dest.name}"
     )
 
-    if not any([g for g in ["https:", "git@", "localmirrors:"] if source.startswith(g)]):
-        # Source is local working copy - cannot determine mirror_repo
-        use_mirrors = False
-
-    if use_mirrors:
-        mirror_repo = re.split("[:/]", source)[-1]
-        remote_path = Path(mirror_loc) / "MetOffice" / mirror_repo
-    else:
+    if not any(
+        [g for g in ["https:", "git@", "localmirrors:"] if source.startswith(g)]
+    ):
         if not ref:
             raise Exception(
                 f"Cannot merge local source '{source}' with empty ref.\n"
                 "Please enter a valid git ref - if you use a branch, then the latest "
                 "commit to that branch will be used."
             )
+        remote_path = source
+        fetch = ref
+    elif use_mirrors:
+        mirror_repo = re.split("[:/]", source)[-1]
+        remote_path = Path(mirror_loc) / "MetOffice" / mirror_repo
+        fetch = determine_mirror_fetch(source, ref)
+    else:
+        # Not using a clone or the mirrors
         remote_path = source
         fetch = ref
 
