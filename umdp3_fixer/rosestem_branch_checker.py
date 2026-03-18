@@ -93,8 +93,7 @@ def diff_cwd_working(model_source, path, saved_umask, tmpdir):
         os.umask(saved_umask)
         shutil.rmtree(tmpdir)
         raise ValueError(
-            "Ran fcm diff command and changes were made by "
-            + "the umdp3_fixer.py script."
+            "Ran diff command and changes were made by the umdp3_fixer.py script."
         )
 
     return
