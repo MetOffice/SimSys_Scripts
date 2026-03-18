@@ -2,6 +2,7 @@
 
 [![Checks](https://github.com/MetOffice/SimSys_Scripts/actions/workflows/lint.yml/badge.svg)](https://github.com/MetOffice/SimSys_Scripts/actions/workflows/lint.yml)
 [![CodeQL](https://github.com/MetOffice/SimSys_Scripts/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/MetOffice/SimSys_Scripts/actions/workflows/github-code-scanning/codeql)
+[![Python Unit Tests](https://github.com/MetOffice/SimSys_Scripts/actions/workflows/python_unit_tests.yaml/badge.svg)](https://github.com/MetOffice/SimSys_Scripts/actions/workflows/python_unit_tests.yaml)
 
 This repository contains support scripts that are common across the many
 simulation and modelling codes owned by the Met Office. Particularly those

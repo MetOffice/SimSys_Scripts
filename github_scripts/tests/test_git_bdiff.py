@@ -27,7 +27,16 @@ def add_to_repo(start, end, message, mode="wt"):
             print(f"Lorem ipsum dolor sit amet {i}", file=fd)
 
     subprocess.run(["git", "add", "-A"], check=True)
-    subprocess.run(["git", "commit", "--no-gpg-sign", "-m", message], check=True)
+    subprocess.run(
+        [
+            "git",
+            "commit",
+            "--no-gpg-sign",
+            "-m",
+            message,
+        ],
+        check=True,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -38,7 +47,7 @@ def git_repo(tmpdir_factory):
     os.chdir(location)
 
     # Create the repo and add some files
-    subprocess.run(["git", "init"], check=True)
+    subprocess.run(["git", "init", "--initial-branch=main"], check=True)
     add_to_repo(0, 10, "Testing")
 
     # Create a branch and add some files

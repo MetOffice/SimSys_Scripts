@@ -13,6 +13,7 @@ copied over.
 This module contains various functions for parsing and manipulating
 quoted strings in Fortran
 """
+
 import re
 
 
@@ -35,6 +36,7 @@ class QuoteError(ParsingError):
     """
 
     def __init__(self, quote, number):
+        super().__init__()
         self.number = number
         self.quote = quote
         self.quotemarks = {"'": "single quotes", '"': "double quotes"}
@@ -309,7 +311,6 @@ def simplify_line(lines):
 
     # Pull any continuation lines into this line
     while repeat_simplify:
-
         while is_pp_continuation(line):
             iline += 1
             line = "".join([re.sub(r"\\(\s*)$", r" \1", line), lines[iline]])

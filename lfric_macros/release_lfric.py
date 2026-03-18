@@ -415,7 +415,6 @@ def parse_args():
 
 
 def main():
-
     args = parse_args()
 
     macro_object = ApplyMacros(

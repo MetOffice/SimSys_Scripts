@@ -13,9 +13,11 @@ This script will run the processes needed to close off and finish a milestone
         * Remaining open PRs and issues against this milestone
         * Closed PRs against this milestone
 """
+
 from pathlib import Path
 import argparse
-from review_project import ProjectData
+from review_project import ProjectData, REVIEW_ID, ISSUE_ID
+from set_milestone import add_milestone
 
 
 def print_banner(message: str) -> None:
@@ -25,85 +27,50 @@ def print_banner(message: str) -> None:
     print("=" * len(message))
 
 
-def still_open(open_prs: dict, current_milestone: str) -> int:
-    """
-    Report on all open pull requests for the current milestone
-    """
-
-    print_banner(f"Checking for open pull requests for {current_milestone}")
-
-    total = 0
-
-    for repo in open_prs:
-        print(f"{repo} \n{'-'*len(repo)}")
-        for pr in open_prs[repo]:
-            print(f"{pr.status: <18} #{pr.number: <5} {pr.title}")
-
-        count = len(open_prs[repo])
-        print(f"->   {count} open pull request(s) in {repo} \n")
-        total += count
-
-    if total == 0:
-        print(f"No open pull requests for {current_milestone} \n")
-
-    return total
-
-
-def closed_other(
-    closed_prs: dict, current_milestone: str, dry_run: bool = False
-) -> int:
-    """
-    Report on closed pull requests not at the current milestone.
-    """
-
-    print_banner(f"Checking for closed pull requests not for {current_milestone}")
-
-    total = 0
-
-    for milestone in closed_prs:
-        if milestone == current_milestone:
-            continue
-
-        elif milestone == "None":
-            print(f"Setting pull requests with no milestone " f"to {current_milestone}")
-            for repo in closed_prs[milestone]:
-                for pr in closed_prs[milestone][repo]:
-                    pr.modify_milestone(current_milestone, dry_run)
-
-        else:
-            for repo in closed_prs[milestone]:
-                print(f"{repo} \n{'-' * len(repo)}")
-                for pr in closed_prs[milestone][repo]:
-                    print(f"#{pr.number : <5} {pr.title}")
-
-                count = len(closed_prs[milestone][repo])
-                print(
-                    f"->   {count} closed pull request(s) in {repo} at milestone {milestone} \n"
-                )
-                total += count
-
-    return total
-
-
-def check_ready(data: ProjectData, milestone: str, dry_run: bool = False) -> None:
+def check_ready(
+    reviews: ProjectData, issues: ProjectData, current_milestone: str
+) -> None:
     """
     Check if the milestone is ready to be closed by confirming that:
       * all pull requests for this milestone have been completed
       * all closed pull requests in the project are in this milestone.
+      * all In Review issues for this milestone have been completed
 
     Give the user the choice to continue regardless since there may be valid
     exceptions.
     """
-    open_prs = data.get_milestone(milestone=milestone, status="open")
-    closed_prs = data.get_all_milestones(status="closed")
-    total_open = still_open(open_prs, milestone)
-    total_other = closed_other(closed_prs, milestone, dry_run)
+    print_banner(f"Checking for open pull requests for {current_milestone}")
+    total_open = reviews.count_items(
+        milestone=current_milestone, status="open", message="open pull requests"
+    )
+    if total_open == 0:
+        print("No open pull requests\n")
 
-    if total_open or total_other:
+    print_banner(f"Checking for issues in review for {current_milestone}")
+    total_issues_in_review = issues.count_items(
+        milestone=current_milestone, status="In Review", message="In Review issues"
+    )
+    if total_issues_in_review == 0:
+        print("No issues in review\n")
+
+    print_banner(f"Checking for closed pull requests not set to {current_milestone}")
+    total_other = 0
+    for milestone in reviews.milestones:
+        if milestone == current_milestone:
+            continue
+        else:
+            total_other += reviews.count_items(
+                milestone=milestone, status="closed", message="closed pull requests"
+            )
+    if total_other == 0:
+        print("All closed pull requests are in this milestone\n")
+
+    if total_open or total_other or total_issues_in_review:
         print("=" * 50)
         print(
-            f"{total_open} open pull request(s) in {milestone} and "
-            f"{total_other} closed pull request(s) not in {milestone}."
+            f"{total_open} open pull request(s) in {current_milestone}. \n"
+            f"{total_other} closed pull request(s) not in {current_milestone}. \n"
+            f"{total_issues_in_review} issues in {current_milestone} with status In Review. "
         )
         cont = input("Would you like to continue with closing this milestone? (y/n) ")
 
@@ -111,6 +78,7 @@ def check_ready(data: ProjectData, milestone: str, dry_run: bool = False) -> Non
             exit(0)
         elif cont != "y":
             print("Unrecognised input, please select y or n")
+            exit(0)
 
 
 def report(data: ProjectData, milestone: str) -> None:
@@ -131,12 +99,56 @@ def report(data: ProjectData, milestone: str) -> None:
     print(f"{total} pull requests completed in {milestone}")
 
 
+def tidy_unmerged(review_data: ProjectData, milestone: str, dry_run: bool = False):
+    """
+    Confirm that all PRs closed at this milestone were actually merged, not just
+    closed. If there are any then remove them from the milestone and archive
+    them from the project.
+    """
+
+    print_banner(f"Removing closed but not merged pull requests from {milestone}")
+    total = 0
+    reviews = review_data.get_milestone(milestone, status="closed")
+    for repo in reviews:
+        for pr in reviews[repo]:
+            if pr.check_state() == "CLOSED":
+                pr.modify_milestone(milestone=None, dry_run=dry_run)
+                pr.archive(REVIEW_ID, dry_run)
+                review_data.project_items.remove(pr)
+                total += 1
+
+    if total:
+        print(f"{total} pull requests removed from {milestone} and archived.")
+    else:
+        print("All pull requests have been merged.")
+
+
+def tidy_issues(issue_data: ProjectData, milestone: str, dry_run: bool = False) -> None:
+    """
+    Remove any outstanding open issues from the current milestone.
+    """
+
+    print_banner(f"Removing uncompleted issues from {milestone}")
+
+    issues = issue_data.get_milestone(milestone=milestone, status="open")
+    comment = (
+        f"[Bulk Update]\n\nThe {milestone} milestone is being closed. "
+        f"Please review this issue and either select a new milestone or "
+        f"close it as appropriate. Please contact MetOffice/ssdteam if "
+        f"you think there has been an error.\n\n Thanks"
+    )
+    for repo in issues:
+        for issue in issues[repo]:
+            issue.add_comment(comment, dry_run=dry_run)
+            issue.modify_milestone(milestone=None, dry_run=dry_run)
+
+
 def parse_args():
     """
     Read command line args
     """
 
-    testfile = Path(__file__).parent / "test" / "test.json"
+    testfile_path = Path(__file__).parent / "test"
 
     parser = argparse.ArgumentParser(
         "Archive milestone contents within the project and close the "
@@ -156,7 +168,7 @@ def parse_args():
     )
     parser.add_argument(
         "--file",
-        default=testfile,
+        default=testfile_path,
         help="Filepath to test data for either capturing the project status, "
         "or use as input data.",
     )
@@ -181,20 +193,35 @@ def parse_args():
 def main(
     milestone: str, test: bool, capture_project: bool, file: Path, dry: bool
 ) -> None:
-
     # Get milestone data
     if test:
-        data = ProjectData.from_file(file)
+        review_data = ProjectData.from_file(REVIEW_ID, file / "pr.json")
+        issue_data = ProjectData.from_file(ISSUE_ID, file / "issue.json")
     else:
-        data = ProjectData.from_github(capture_project, file)
+        review_data = ProjectData.from_github(
+            REVIEW_ID, capture_project, file / "pr.json"
+        )
+        issue_data = ProjectData.from_github(
+            ISSUE_ID, capture_project, file / "issue.json"
+        )
+
+    # Tidy closed PRs by setting milestones on those merged and removing
+    # those closed but not merged.
+    add_milestone(review_data, milestone, dry)
+    tidy_unmerged(review_data, milestone, dry)
 
     # Process data and report on status
-    check_ready(data, milestone, dry)
-    report(data, milestone)
+    check_ready(review_data, issue_data, milestone)
+
+    # Tidy outstanding issues
+    tidy_issues(issue_data, milestone, dry)
 
     # Archive pull requests at the milestone
     print_banner(f"Archiving Milestone {milestone}")
-    data.archive_milestone(milestone, dry_run=dry)
+    review_data.archive_milestone(milestone, dry_run=dry)
+
+    # Print report as final step so its visible
+    report(review_data, milestone)
 
     # Close milestones
     # TODO: run this command from here, rather than prompting user. Leaving

@@ -15,9 +15,15 @@ copied over.
 Module containing various functions used to apply UMDP3 style indentation
 to Fortran source code
 """
+
 import re
 import sys
-from fstring_parse import *  # noqa: F403
+from fstring_parse import (
+    is_continuation,
+    is_pp_continuation,
+    is_str_continuation,
+    simplify_line,
+)
 
 # Number of spaces of indent to apply per indentation level
 INDENT = 2
@@ -120,7 +126,6 @@ def apply_indentation(lines, debug=False):
     rel_indent_pp_level_max = {}
 
     for iline, line in enumerate(lines):
-
         if debug:
             print('\n{0:d}: "{1:s}"'.format(iline, line))
 

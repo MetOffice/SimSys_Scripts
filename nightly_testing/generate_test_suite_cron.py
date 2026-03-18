@@ -53,9 +53,9 @@ DEPENDENCIES = {
     "ukca": [],
 }
 
-CLONE_DIR = os.path.join(os.environ["TMPDIR"], os.environ["USER"])
+CLONE_DIR = os.path.join(os.getenv("TMPDIR", "."), os.getenv("USER", "unknown"))
 MIRROR_PATH = "/data/users/gitassist/git_mirrors/"
-UMDIR = os.environ["UMDIR"]
+UMDIR = os.getenv("UMDIR", ".")
 CYLC = "bash -l cylc"
 DATE_BASE = "date +\\%Y-\\%m-\\%d"
 
@@ -80,7 +80,7 @@ def create_git_clone_cron(repo):
 
     command = f"# Clone {repo} - every day at 23:30 #"
     length = len(command)
-    command = f"{length*'#'}\n{command}\n{length*'#'}\n30 23 * * * "
+    command = f"{length * '#'}\n{command}\n{length * '#'}\n30 23 * * * "
     command += f"rm -rf {clone_path} ; "
     command += f"git clone {repo_mirror} {clone_path}"
     return command + "\n\n\n"
@@ -172,7 +172,7 @@ def generate_clean_cron(suite_name, suite, log_file, cylc_version):
     return clean_cron
 
 
-def generate_cylc_command(suite, wc_path, cylc_version, name):
+def generate_cylc_command(suite, clone_path, cylc_version, name):
     """
     Return a string with the rose-stem command
     Ignores any additional source arguments
@@ -186,7 +186,7 @@ def generate_cylc_command(suite, wc_path, cylc_version, name):
     )
     if "revisions" in suite and suite["revisions"] == "heads":
         command += "-S USE_HEADS=true "
-    command += f"{os.path.join(wc_path, 'rose-stem')} "
+    command += f"{os.path.join(clone_path, 'rose-stem')} "
     return command
 
 
