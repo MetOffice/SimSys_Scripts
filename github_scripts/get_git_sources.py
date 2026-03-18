@@ -175,7 +175,7 @@ def merge_source(
     )
 
     if not any(
-        [g for g in ["https:", "git@", "localmirrors:"] if source.startswith(g)]
+        [g for g in ["https:", "git@", "localmirrors:"] if str(source).startswith(g)]
     ):
         if not ref:
             raise Exception(
