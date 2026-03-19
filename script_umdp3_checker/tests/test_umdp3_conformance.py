@@ -7,83 +7,96 @@ import pytest
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from umdp3_conformance import StyleChecker, detangle_file_types, \
-	ALLOWABLE_FILE_TYPES, GROUP_FILE_TYPES, Check_Runner, get_files_to_check, line_1, line_2, which_cms_is_it, ConformanceChecker, CheckResult, process_arguments
+from umdp3_conformance import (
+    StyleChecker,
+    detangle_file_types,
+    ALLOWABLE_FILE_TYPES,
+    GROUP_FILE_TYPES,
+    Check_Runner,
+    get_files_to_check,
+    line_1,
+    line_2,
+    which_cms_is_it,
+    ConformanceChecker,
+    CheckResult,
+    process_arguments,
+)
 
 
 def test_from_full_list_filters_by_extension():
-	changed_files = [
-		Path("src/code.F90"),
-		Path("src/module.f"),
-		Path("src/script.py"),
-		Path("README.md"),
-	]
-	check_functions = {"dummy_check": lambda lines: None}
+    changed_files = [
+        Path("src/code.F90"),
+        Path("src/module.f"),
+        Path("src/script.py"),
+        Path("README.md"),
+    ]
+    check_functions = {"dummy_check": lambda lines: None}
 
-	checker = StyleChecker.from_full_list(
-		name="Fortran Checker",
-		file_extensions={".F90", ".f"},
-		check_functions=check_functions,
-		changed_files=changed_files,
-	)
+    checker = StyleChecker.from_full_list(
+        name="Fortran Checker",
+        file_extensions={".F90", ".f"},
+        check_functions=check_functions,
+        changed_files=changed_files,
+    )
 
-	assert checker.get_name() == "Fortran Checker"
-	assert checker.check_functions == check_functions
-	assert checker.files_to_check == [Path("src/code.F90"), Path("src/module.f")]
+    assert checker.get_name() == "Fortran Checker"
+    assert checker.check_functions == check_functions
+    assert checker.files_to_check == [Path("src/code.F90"), Path("src/module.f")]
 
 
 def test_from_full_list_returns_all_files_when_no_extensions():
-	changed_files = [Path("a.F90"), Path("b.py"), Path("c.txt")]
+    changed_files = [Path("a.F90"), Path("b.py"), Path("c.txt")]
 
-	checker = StyleChecker.from_full_list(
-		name="Any Checker",
-		file_extensions=set(),
-		check_functions={},
-		changed_files=changed_files,
-	)
+    checker = StyleChecker.from_full_list(
+        name="Any Checker",
+        file_extensions=set(),
+        check_functions={},
+        changed_files=changed_files,
+    )
 
-	assert checker.files_to_check == changed_files
+    assert checker.files_to_check == changed_files
 
 
 def test_from_full_list_with_no_changed_files_returns_empty_list():
-	checker = StyleChecker.from_full_list(
-		name="Empty Checker",
-		file_extensions={".py"},
-		check_functions={},
-		changed_files=[],
-	)
+    checker = StyleChecker.from_full_list(
+        name="Empty Checker",
+        file_extensions={".py"},
+        check_functions={},
+        changed_files=[],
+    )
 
-	assert checker.files_to_check == []
+    assert checker.files_to_check == []
 
 
 def test_filter_files_with_extensions_only_returns_matches():
-	files = [Path("a.py"), Path("b.F90"), Path("c.txt"), Path("d.py")]
+    files = [Path("a.py"), Path("b.F90"), Path("c.txt"), Path("d.py")]
 
-	result = StyleChecker.filter_files(files, {".py", ".F90"})
+    result = StyleChecker.filter_files(files, {".py", ".F90"})
 
-	assert result == [Path("a.py"), Path("b.F90"), Path("d.py")]
+    assert result == [Path("a.py"), Path("b.F90"), Path("d.py")]
 
 
 def test_filter_files_with_empty_extensions_returns_original_list():
-	files = [Path("a.py"), Path("b.F90"), Path("c.txt")]
+    files = [Path("a.py"), Path("b.F90"), Path("c.txt")]
 
-	result = StyleChecker.filter_files(files, set())
+    result = StyleChecker.filter_files(files, set())
 
-	assert result == files
+    assert result == files
 
 
 def test_filter_files_with_no_matches_returns_empty_list():
-	files = [Path("a.py"), Path("b.F90"), Path("c.txt")]
+    files = [Path("a.py"), Path("b.F90"), Path("c.txt")]
 
-	result = StyleChecker.filter_files(files, {".md"})
+    result = StyleChecker.filter_files(files, {".md"})
 
-	assert result == []
+    assert result == []
 
 
 def test_create_free_runner_success(monkeypatch: pytest.MonkeyPatch):
     """Test that create_free_runner returns a runner that correctly captures the
-     output of a successful command. We use monkeypatch to replace subprocess.run with
-     a fake function that simulates a successful command execution."""
+    output of a successful command. We use monkeypatch to replace subprocess.run with
+    a fake function that simulates a successful command execution."""
+
     def fake_run(cmd, capture_output, text, timeout):
         return SimpleNamespace(returncode=0, stdout="all good", stderr="")
 
@@ -100,70 +113,71 @@ def test_create_free_runner_success(monkeypatch: pytest.MonkeyPatch):
 
 
 def test_create_free_runner_checker_failure(monkeypatch: pytest.MonkeyPatch):
-	"""As above, but returning an error code"""
-	def fake_run(cmd, capture_output, text, timeout):
-		return SimpleNamespace(returncode=2, stdout="", stderr="some stderr")
+    """As above, but returning an error code"""
 
-	monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
-	runner = StyleChecker.create_free_runner(["dummy_checker"], "Dummy")
+    def fake_run(cmd, capture_output, text, timeout):
+        return SimpleNamespace(returncode=2, stdout="", stderr="some stderr")
 
-	result = runner(Path("sample.py"))
+    monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
+    runner = StyleChecker.create_free_runner(["dummy_checker"], "Dummy")
 
-	assert result.checker_name == "Dummy"
-	assert result.failure_count == 1
-	assert result.passed is False
-	assert result.errors == {"Dummy": "some stderr"}
+    result = runner(Path("sample.py"))
+
+    assert result.checker_name == "Dummy"
+    assert result.failure_count == 1
+    assert result.passed is False
+    assert result.errors == {"Dummy": "some stderr"}
 
 
 def test_create_free_runner_timeout(monkeypatch: pytest.MonkeyPatch):
-	"""As above, but simulating a timeout by having the fake subprocess.run raise a
+    """As above, but simulating a timeout by having the fake subprocess.run raise a
     TimeoutExpired exception."""
-	def fake_run(cmd, capture_output, text, timeout):
-		raise subprocess.TimeoutExpired(cmd=cmd, timeout=timeout)
 
-	monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
-	runner = StyleChecker.create_free_runner(["slow_checker"], "SlowChecker")
+    def fake_run(cmd, capture_output, text, timeout):
+        raise subprocess.TimeoutExpired(cmd=cmd, timeout=timeout)
 
-	result = runner(Path("sample.py"))
+    monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
+    runner = StyleChecker.create_free_runner(["slow_checker"], "SlowChecker")
 
-	assert result.checker_name == "SlowChecker"
-	assert result.failure_count == 1
-	assert result.passed is False
-	assert "timed out" in result.output
-	assert result.errors == {"SlowChecker": "TimeoutExpired"}
+    result = runner(Path("sample.py"))
+
+    assert result.checker_name == "SlowChecker"
+    assert result.failure_count == 1
+    assert result.passed is False
+    assert "timed out" in result.output
+    assert result.errors == {"SlowChecker": "TimeoutExpired"}
 
 
 def test_detangle_file_types_expands_ci_group():
-	result = detangle_file_types({"CI"})
+    result = detangle_file_types({"CI"})
 
-	assert result == {"Fortran", "Python"}
-	assert result == GROUP_FILE_TYPES["CI"]
+    assert result == {"Fortran", "Python"}
+    assert result == GROUP_FILE_TYPES["CI"]
 
 
 def test_detangle_file_types_expands_all_group():
-	result = detangle_file_types({"ALL"})
+    result = detangle_file_types({"ALL"})
 
-	assert result == set(ALLOWABLE_FILE_TYPES)
-
+    assert result == set(ALLOWABLE_FILE_TYPES)
 
 
 def test_detangle_file_types_mixed_group_and_explicit_type():
-	result = detangle_file_types({"CI", "Generic"})
+    result = detangle_file_types({"CI", "Generic"})
 
-	assert result == GROUP_FILE_TYPES["CI"].union({"Generic"})
+    assert result == GROUP_FILE_TYPES["CI"].union({"Generic"})
 
 
 def test_detangle_file_types_passthrough_without_groups():
-	input_types = {"Fortran", "Generic"}
+    input_types = {"Fortran", "Generic"}
 
-	result = detangle_file_types(set(input_types))
+    result = detangle_file_types(set(input_types))
 
-	assert result == input_types
+    assert result == input_types
 
 
 def test_detangle_file_types_raises_for_invalid_type():
-	with pytest.raises(ValueError, match="Invalid file types specified"):
-		detangle_file_types({"Fortran", "Java"})
+    with pytest.raises(ValueError, match="Invalid file types specified"):
+        detangle_file_types({"Fortran", "Java"})
 
 
 def test_stylechecker_check_aggregates_results(tmp_path: Path):
@@ -183,7 +197,9 @@ def test_stylechecker_check_aggregates_results(tmp_path: Path):
         seen.append(lines)
         return SimpleNamespace(passed=False)
 
-    checker = StyleChecker("StyleChecker test", {"pass test": check_pass, "fail test": check_fail}, [])
+    checker = StyleChecker(
+        "StyleChecker test", {"pass test": check_pass, "fail test": check_fail}, []
+    )
     result = checker.check(file_path)
 
     assert seen == [["a", "b"], ["a", "b"]]
@@ -208,7 +224,9 @@ def test_check_runner_check_passes_path_not_lines(tmp_path: Path):
         seen.append(path)
         return SimpleNamespace(passed=False)
 
-    checker = Check_Runner("CheckRunner test", {"pass test": check_pass, "fail test": check_fail}, [])
+    checker = Check_Runner(
+        "CheckRunner test", {"pass test": check_pass, "fail test": check_fail}, []
+    )
     result = checker.check(file_path)
 
     assert seen == [file_path, file_path]
@@ -216,16 +234,18 @@ def test_check_runner_check_passes_path_not_lines(tmp_path: Path):
     assert result.all_passed is False
 
 
-def test_create_external_runners_builds_expected_checkers(monkeypatch: pytest.MonkeyPatch):
+def test_create_external_runners_builds_expected_checkers(
+    monkeypatch: pytest.MonkeyPatch,
+):
     """Warning! when using monkeypatch, make sure you're testing your own code on not basic Python intrinsics.
     In this case, in order to test the class method, StyleChecker.create_external_runners, we're patching StyleChecker.create_free_runner, which is another static method. In reality StyleChecker.create_free_runner does most of the heavy lifting and StyleChecker.create_external_runners is just a thin wrapper to turn a list (of lists) which form commands into a dictionary of callables."""
     callables = []
 
-	# (fake_)create_free_runner will be called once for each
-	# command, and it will receive the command and the generated
-	# external_opname. We want to capture those arguments to verify
-	# them later, and then return a dummy runner that always
-	# returns passed=True.
+    # (fake_)create_free_runner will be called once for each
+    # command, and it will receive the command and the generated
+    # external_opname. We want to capture those arguments to verify
+    # them later, and then return a dummy runner that always
+    # returns passed=True.
     def fake_create_free_runner(command, external_opname):
         callables.append((command, external_opname))
         return lambda _: SimpleNamespace(passed=True)
@@ -241,7 +261,7 @@ def test_create_external_runners_builds_expected_checkers(monkeypatch: pytest.Mo
         file_extensions={".py"},
     )
 
-	# All_files got filtered to only those with 'py' extension.
+    # All_files got filtered to only those with 'py' extension.
     assert checker.files_to_check == [Path("a.py"), Path("d.py")]
     # The two commands get given generated 'names'.
     assert set(checker.check_functions.keys()) == {
@@ -266,7 +286,9 @@ def test_get_files_to_check_full_check_returns_all_files(tmp_path: Path):
     assert set(result) == {Path("a.txt"), Path("sub/b.py")}
 
 
-def test_get_files_to_check_passes_path_and_volume_to_cms(monkeypatch: pytest.MonkeyPatch):
+def test_get_files_to_check_passes_path_and_volume_to_cms(
+    monkeypatch: pytest.MonkeyPatch,
+):
     calls = []
 
     class FakeCMS:
@@ -284,7 +306,10 @@ def test_get_files_to_check_passes_path_and_volume_to_cms(monkeypatch: pytest.Mo
     assert result == [Path("x.py")]
     assert calls == [("repo", 7)]
 
-def test_get_files_to_check_uses_cms_when_not_fullcheck(monkeypatch: pytest.MonkeyPatch):
+
+def test_get_files_to_check_uses_cms_when_not_fullcheck(
+    monkeypatch: pytest.MonkeyPatch,
+):
     class FakeCMS:
         def get_changed_files(self):
             return [Path("x.py"), Path("y.F90")]
@@ -351,7 +376,9 @@ def test_which_cms_is_it_raises_for_unknown_cms(tmp_path: Path):
         which_cms_is_it(str(tmp_path), print_volume=0)
 
 
-def test_which_cms_is_it_exits_when_not_branch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_which_cms_is_it_exits_when_not_branch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     (tmp_path / ".git").mkdir()
 
     class FakeGitWrapper:
@@ -380,6 +407,8 @@ code and how much is testing MonkeyPatch and pytest. Equally some of the latter 
 might argue aren't really worth having... but we've got them now. Perhaps
 not worth maintaining though.
 """
+
+
 class _FakeFuture:
     def __init__(self, value=None, exc=None):
         self._value = value
@@ -408,7 +437,9 @@ class _FakeProcessPoolExecutor:
             return _FakeFuture(exc=e)
 
 
-def test_conformance_checker_check_files_collects_all_results(monkeypatch: pytest.MonkeyPatch):
+def test_conformance_checker_check_files_collects_all_results(
+    monkeypatch: pytest.MonkeyPatch,
+):
     class DummyChecker:
         def __init__(self, files):
             self.files_to_check = files
@@ -442,7 +473,9 @@ def test_conformance_checker_check_files_collects_all_results(monkeypatch: pytes
     assert {r.file_path for r in cc.results} == {"a.py", "b.py", "c.py"}
 
 
-def test_conformance_checker_check_files_propagates_worker_exception(monkeypatch: pytest.MonkeyPatch):
+def test_conformance_checker_check_files_propagates_worker_exception(
+    monkeypatch: pytest.MonkeyPatch,
+):
     class BadChecker:
         def __init__(self):
             self.files_to_check = [Path("bad.py")]
@@ -466,7 +499,8 @@ def test_conformance_checker_check_files_propagates_worker_exception(monkeypatch
 
 
 def test_conformance_checker_print_results_quiet_pass_suppresses_passed(
-          capsys: pytest.CaptureFixture[str]):
+    capsys: pytest.CaptureFixture[str],
+):
     fail_tr = SimpleNamespace(
         checker_name="RuleX", failure_count=1, passed=False, errors={"RuleX": "bad"}
     )
@@ -476,8 +510,8 @@ def test_conformance_checker_print_results_quiet_pass_suppresses_passed(
 
     cc = ConformanceChecker([])
     cc.results = [
-        CheckResult("ok.py", tests_failed=0, all_passed=True, test_results=[pass_tr]), # type: ignore
-        CheckResult("bad.py", tests_failed=1, all_passed=False, test_results=[fail_tr]), # type: ignore
+        CheckResult("ok.py", tests_failed=0, all_passed=True, test_results=[pass_tr]),  # type: ignore
+        CheckResult("bad.py", tests_failed=1, all_passed=False, test_results=[fail_tr]),  # type: ignore
     ]
 
     all_passed = cc.print_results(print_volume=3, quiet_pass=True)
@@ -489,14 +523,17 @@ def test_conformance_checker_print_results_quiet_pass_suppresses_passed(
     assert "ok.py" not in out
 
 
-def test_conformance_checker_print_results_volume4_prints_error_details(capsys: pytest.CaptureFixture[str]):
+def test_conformance_checker_print_results_volume4_prints_error_details(
+    capsys: pytest.CaptureFixture[str],
+):
     fail_tr = SimpleNamespace(
         checker_name="RuleZ", failure_count=2, passed=False, errors={"RuleZ": "detail"}
     )
 
     cc = ConformanceChecker([])
-    cc.results = [CheckResult("bad.py", tests_failed=1, all_passed=False,
-                              test_results=[fail_tr])] # type: ignore
+    cc.results = [
+        CheckResult("bad.py", tests_failed=1, all_passed=False, test_results=[fail_tr])
+    ]  # type: ignore
 
     cc.print_results(print_volume=4, quiet_pass=True)
     out = capsys.readouterr().out
@@ -551,6 +588,7 @@ def test_create_external_runners_with_empty_commands():
     assert checker.files_to_check == [Path("a.py"), Path("b.py")]
     assert checker.check_functions == {}
 
+
 # Okay, c'mon CoPilot - where's the value in testing a tiny function to write a string
 # of characters from a runtime supplied length is the length you asked for ?
 def test_line_helpers_basic_shapes():
@@ -576,7 +614,9 @@ def test_process_arguments_defaults(monkeypatch: pytest.MonkeyPatch):
     assert args.file_types == {"Fortran"}
 
 
-def test_process_arguments_verbose_and_filetype_group_expansion(monkeypatch: pytest.MonkeyPatch):
+def test_process_arguments_verbose_and_filetype_group_expansion(
+    monkeypatch: pytest.MonkeyPatch,
+):
     monkeypatch.setattr(
         sys,
         "argv",
@@ -589,7 +629,9 @@ def test_process_arguments_verbose_and_filetype_group_expansion(monkeypatch: pyt
     assert args.file_types == {"Fortran", "Python", "Generic"}
 
 
-def test_process_arguments_rejects_verbose_and_quiet_together(monkeypatch: pytest.MonkeyPatch):
+def test_process_arguments_rejects_verbose_and_quiet_together(
+    monkeypatch: pytest.MonkeyPatch,
+):
     monkeypatch.setattr(sys, "argv", ["umdp3_conformance.py", "-v", "-q"])
     with pytest.raises(SystemExit):
         process_arguments()
