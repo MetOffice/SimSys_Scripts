@@ -532,7 +532,7 @@ def test_conformance_checker_print_results_volume4_prints_error_details(
 
     cc = ConformanceChecker([])
     cc.results = [
-        CheckResult("bad.py", tests_failed=1, all_passed=False, test_results=[fail_tr]) # type: ignore
+        CheckResult("bad.py", tests_failed=1, all_passed=False, test_results=[fail_tr])  # type: ignore
     ]
 
     cc.print_results(print_volume=4, quiet_pass=True)
