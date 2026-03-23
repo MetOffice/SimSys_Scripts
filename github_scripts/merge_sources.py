@@ -82,7 +82,7 @@ def main():
 
     for dependency, sources in dependencies.items():
         dest = args.path / dependency
-        clone_and_merge(dependency, sources, dest, args.mirrors, args.mirror_loc)
+        clone_and_merge(sources, dest, args.mirrors, args.mirror_loc)
 
 
 if __name__ == "__main__":

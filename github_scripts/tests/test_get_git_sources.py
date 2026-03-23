@@ -126,7 +126,6 @@ def test_merge_sources(setup_sources):
             "https://github.com/MetOffice/SimSys_Scripts.git",
             "main",
             target_clone,
-            "SimSys_Scripts",
         )
         is None
     )
