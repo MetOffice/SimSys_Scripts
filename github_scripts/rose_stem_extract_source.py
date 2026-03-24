@@ -45,7 +45,7 @@ def main() -> None:
 
     for dependency, sources in dependencies.items():
         loc = clone_loc / dependency
-        clone_and_merge(dependency, sources, loc, use_mirrors, mirror_loc)
+        clone_and_merge(sources, loc, use_mirrors, mirror_loc)
 
 
 if __name__ == "__main__":
