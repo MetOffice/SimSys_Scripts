@@ -265,6 +265,7 @@ def main(total: bool, test: bool, capture_project: bool, file: Path):
     for name, table in tables.items():
         print_table(name, table, total, args.html)
 
+
 if __name__ == "__main__":
     args = parse_args()
     main(args.total, args.test, args.capture_project, args.file)
