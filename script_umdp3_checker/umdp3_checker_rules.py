@@ -10,7 +10,6 @@ Python translation of the original Perl UMDP3.pm module.
 """
 
 import re
-import threading
 from typing import List, Dict
 from fortran_keywords import fortran_keywords
 from search_lists import (
@@ -65,7 +64,6 @@ class UMDP3Checker:
 
     def __init__(self):
         self._extra_error_info = {}
-        self._lock = threading.Lock()
         """
     TODO: The Perl version had a dodgy looking subroutine to calculate
         this, but I can't find where it was called from within the files in
@@ -81,8 +79,7 @@ class UMDP3Checker:
         Appears to be used 'between' blocks of tests such as those on diffs and
         those on full files.
         """
-        with self._lock:
-            self._extra_error_info = {}
+        self._extra_error_info = {}
 
     def get_extra_error_information(self) -> Dict:
         """
@@ -94,16 +91,14 @@ class UMDP3Checker:
         actual failures and not just the count. However, this information
         doesn't seem to be output as yet and will need implementing.
         """
-        with self._lock:
-            return self._extra_error_info.copy()
+        return self._extra_error_info.copy()
 
     def add_extra_error(self, key: str, value: str = ""):
         """Add extra error information to the dictionary"""
         """
     TODO: The usefulness of the information added has not been assessed,
         nor does it appear to be reported as yet."""
-        with self._lock:
-            self._extra_error_info[key] = value
+        self._extra_error_info[key] = value
 
     def add_error_log(
         self, error_log: Dict, key: str = "no key", value: int = 0
@@ -188,7 +183,6 @@ class UMDP3Checker:
             failure_count=failures,
             passed=(failures == 0),
             output=f"Checked {line_count} lines, found {failures} failures.",
-            # errors=self.get_extra_error_information()
             errors=error_log,
         )
 
@@ -329,7 +323,7 @@ class UMDP3Checker:
         failures = 0
         error_log = {}
         count = -1
-        for count, line in enumerate(lines):
+        for count, line in enumerate(lines, 1):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
@@ -344,11 +338,11 @@ class UMDP3Checker:
                     "",
                     clean_line,
                 )
-                if re.search(r"[A-Z]{2,}", clean_line):
-                    self.add_extra_error("UPPERCASE variable name")
+                if match := re.search(r"([A-Z]{2,})", clean_line):
+                    self.add_extra_error(f"UPPERCASE variable name : {match[1]}")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, "UPPERCASE variable name", count + 1
+                        error_log, f"UPPERCASE variable name {match[1]}", count
                     )
 
         output = f"Checked {count + 1} lines, found {failures} failures."

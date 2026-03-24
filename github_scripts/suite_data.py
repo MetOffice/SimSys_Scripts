@@ -36,10 +36,10 @@ class SuiteData:
         "-v-",
     )
 
-    def __init__(self) -> None:
+    def __init__(self, suite_path=None) -> None:
         self.dependencies = {}
         self.rose_data = {}
-        self.suite_path = None
+        self.suite_path = suite_path
         self.task_states = {}
         self.temp_directory = None
 

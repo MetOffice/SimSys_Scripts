@@ -79,6 +79,7 @@ def check_ready(
             exit(0)
         elif cont != "y":
             print("Unrecognised input, please select y or n")
+            exit(0)
 
 
 def report(data: ProjectData, milestone: str) -> None:
@@ -97,6 +98,30 @@ def report(data: ProjectData, milestone: str) -> None:
         print(f"{repo: <20} {count: >3} pull requests")
 
     print(f"{total} pull requests completed in {milestone}")
+
+
+def tidy_unmerged(review_data: ProjectData, milestone: str, dry_run: bool = False):
+    """
+    Confirm that all PRs closed at this milestone were actually merged, not just
+    closed. If there are any then remove them from the milestone and archive
+    them from the project.
+    """
+
+    print_banner(f"Removing closed but not merged pull requests from {milestone}")
+    total = 0
+    reviews = review_data.get_milestone(milestone, status="closed")
+    for repo in reviews:
+        for pr in reviews[repo]:
+            if pr.check_state() == "CLOSED":
+                pr.modify_milestone(milestone=None, dry_run=dry_run)
+                pr.archive(REVIEW_ID, dry_run)
+                review_data.project_items.remove(pr)
+                total += 1
+
+    if total:
+        print(f"{total} pull requests removed from {milestone} and archived.")
+    else:
+        print("All pull requests have been merged.")
 
 
 def tidy_issues(issue_data: ProjectData, milestone: str, dry_run: bool = False) -> None:
@@ -181,8 +206,10 @@ def main(
             ISSUE_ID, capture_project, file / "issue.json"
         )
 
-    # Set a milestone on closed PRs
+    # Tidy closed PRs by setting milestones on those merged and removing
+    # those closed but not merged.
     add_milestone(review_data, milestone, dry)
+    tidy_unmerged(review_data, milestone, dry)
 
     # Process data and report on status
     check_ready(review_data, issue_data, milestone)
