@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
@@ -144,21 +145,31 @@ def build_table(data: ProjectData, reviewer_list: list, repos: list) -> PrettyTa
     return table
 
 
-def print_table(title: str, table: PrettyTable, sortTotal: bool) -> None:
+def print_table(
+    title: str, table: PrettyTable, sortTotal: bool, html_output: str = ""
+) -> None:
     """
     Print a pretty table and its title.
 
     title: str Title of table to be printed first
     table: PrettyTable table to be printed
     """
-    print(title)
-    # table.set_style(TableStyle.MARKDOWN) #requires newer version
+
     table.align["Reviewer"] = "l"
 
     if sortTotal:
         table.sortby = "Total"
 
-    print(table)
+    if not html_output:
+        print(title)
+        print(table)
+        return
+
+    table.format = True
+    html_table = table.get_html_string()
+    with open(html_output, "a") as f:
+        f.write(f"<h1>{title}</h1>")
+        f.write(html_table)
 
 
 def parse_args():
@@ -191,6 +202,12 @@ def parse_args():
         default=testfile,
         help="Filepath to test data for either capture the project status, "
         "or use as input data.",
+    )
+    parser.add_argument(
+        "--html",
+        default="",
+        help="html file to output table contents to. If not set, an ascii formatted "
+        "table will be outputted to stdout",
     )
 
     args = parser.parse_args()
@@ -236,8 +253,17 @@ def main(total: bool, test: bool, capture_project: bool, file: Path):
     tables["LFRic"] = build_table(data, reviewers, repo_list)
 
     # Print tables
+    # Check html path is valid
+    if args.html:
+        html_path = Path(args.html)
+        if html_path.is_dir():
+            raise ValueError("--html option cannot be a directory")
+        html_dir = html_path.parent
+        html_dir.mkdir(parents=True, exist_ok=True)
+        html_path.unlink(missing_ok=True)
+
     for name, table in tables.items():
-        print_table(name, table, total)
+        print_table(name, table, total, args.html)
 
 
 if __name__ == "__main__":
