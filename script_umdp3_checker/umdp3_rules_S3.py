@@ -10,10 +10,13 @@ from typing import List, Dict
 #     deprecated_c_identifiers,
 # )
 from dataclasses import dataclass, field
-from umdp3_checker_rules import TestResult
+from umdp3_checker_rules import UMDP3Checker, TestResult
 """
 3.1 Source files should only contain a single program unit
+"""
 
+
+"""
 * Modules may be used to group related variables, subroutines and functions. Each separate file within the source tree should be uniquely named.
 * The name of the file should reflect the name of the programming unit. Multiple versions of the same file should be named filename-#ver where #ver is the section/version number (e.g. 1a,2a,2b. . . ). For example:
      <filename-#ver>.F90 when writing a <subroutine>
