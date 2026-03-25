@@ -20,7 +20,7 @@ from umdp3_checker_rules import UMDP3Checker, TestResult
 from checker_dispatch_tables import CheckerDispatchTables
 
 # Prevent pytest from trying to collect TestResult as more tests:
-TestResult.__test__ = False
+TestResult.__test__ = False # type: ignore
 
 
 def test_basic_functionality():

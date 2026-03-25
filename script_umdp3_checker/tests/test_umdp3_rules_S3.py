@@ -7,7 +7,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from umdp3_checker_rules import TestResult, UMDP3Checker
 
-def modified_fortran_lines_fnc(lines: list[str], changes: list[dict]) -> list[str]:
+
+def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
     """Return a copy of example_fortran_lines with changes applied.
 
     ``request.param`` is a list of operation dicts, each with:
@@ -18,95 +19,71 @@ def modified_fortran_lines_fnc(lines: list[str], changes: list[dict]) -> list[st
     Operations are applied in descending line order so that earlier
     line numbers are not shifted by later mutations.
     """
-    # lines = example_fortran_lines.copy()
-    for change in sorted(changes, key=lambda o: o["line"], reverse=True):
-        idx = change["line"] - 1
-        if change["operation"] == "replace":
-            lines[idx] = change["text"]
-        elif change["operation"] == "delete":
+    lines = lines_in.copy()
+    for change in sorted(changes, key=lambda o: o[1], reverse=True):
+        idx = int(change[1]) - 1
+        if change[0] == "replace":
+            lines[idx] = change[2]
+        elif change[0] == "delete":
             del lines[idx]
-        elif change["operation"] == "add":
-            lines.insert(idx, change["text"])
-        # if change["operation"] == "replace":
+        elif change[0] == "add":
+            lines.insert(idx, change[2])
+        # if change[0] == "replace":
         #     lines[idx:idx+1] = change["text"]
-        # elif change["operation"] == "delete":
+        # elif change[0] == "delete":
         #     del lines[idx]
-        # elif change["operation"] == "add":
+        # elif change[0] == "add":
         #     lines[idx:idx], change["text"])
         else:
-            raise ValueError(f"Unknown operation: {change['operation']}")
-        for count, line in enumerate(lines):
-             print(f"line [{count}]: {line}")
+            raise ValueError(f"Unknown operation: {change[0]}")
+        # for count, line in enumerate(lines, 1):
+        #      print(f"line [{count}]: {line}")
     return lines
 
 
-
 # =================================================================
 
-def test_example_fortran_lines_fixture(example_fortran_lines):
-	assert example_fortran_lines
 
+"""This example hopefully demonstrates some of the complexity available...
+    Setting up a test, may involve multiple changes to the demo Fortran file, hence the complex entries in the parametrization.
+    Each error found is recorded with the line number(s) it was found on using the Error text as a dict key, and the line no(s) as a list, which means finding 'use' and 'Use' in the code would generate 2 different keys in the dict.
+    Then a single value recording the total number of failures is also included in the 'TestResult' object.
+    So for the dictionary of errors returned, we have to check they match, which at present involves checking it's 'len' but also that all the keys in one are in the other, i.e. youre not accidentally getting a matching count but different errors.
+    Then for each error(key) in the dict, you need to check how many lines it occured on, and that the line numbers match, i.e. the list of lines numbers is a match with the expected list of line numbers.
 
-# =================================================================
-
-@pytest.mark.parametrize(
-    "modified_fortran_lines, expected_result, expected_errors",
-    [([{"operation": "add", "line": 10, "text": ""}], 0, []),  # No changes, expect no errors
-     ([{"operation": "replace", "line": 10, "text": "Module example_mod\n"}], 1, {'lowercase keyword: Module': [10]})
-    ],
-    indirect=["modified_fortran_lines"],
-)
-def test_keywords(modified_fortran_lines, expected_result, expected_errors):
-    checker = UMDP3Checker()
-    for line in modified_fortran_lines:
-         assert isinstance(line, str)  # Ensure all lines are strings for debugging
-    result = checker.capitalised_keywords(modified_fortran_lines)
-    assert result.failure_count == expected_result
-    for error in expected_errors:
-        assert error in result.errors
-
-
-# =================================================================
-
+    There has to be a better way.....
+    As a side note, might it be better to write a function to compare 2 'TestResult' objects, which would be more robust to changes in the structure of the 'TestResult' object, and also make the test code more readable? If so, would it's place be here in the testing, or as a method in the 'TestResult' class itself?
+    """
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
-    [([{"operation": "add", "line": 10, "text": ""}], 0, []),  # No changes, expect no errors
-     ([{"operation": "replace", "line": 10, "text": "Module example_mod\n"}], 1, {'lowercase keyword: Module': [10]})
+    [
+        (
+            [
+                ["replace", 10, "Module example_mod"],
+                ["replace", 37, "use parkind1, ONLY: jpim, jprb"],
+                ["replace", 40, "use yomhook, ONLY: lhook, dr_hook"]
+            ],
+            3,
+            {"lowercase keyword: Module": [10], "lowercase keyword: use": [37, 40]},
+        ),
+        ([["add", 10, ""]], 0, []),  # No changes, expect no errors
     ],
 )
-def test_keywords_II(example_fortran_lines, changes_list, expected_result, expected_errors):
+def test_keywords(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
     checker = UMDP3Checker()
-    modified_fortran_lines = modified_fortran_lines_fnc(example_fortran_lines, changes_list)
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = checker.capitalised_keywords(modified_fortran_lines)
-    assert result.failure_count == expected_result
-    for error in expected_errors:
-        assert error in result.errors
-
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    assert len(errors) == len(expected_errors)
+    for error, lines_list  in errors.items():
+        assert error in expected_errors
+        assert len(lines_list) == len(expected_errors[error])
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
 
 
 # =================================================================
-
-@pytest.mark.parametrize(
-    "modified_fortran_lines, expected_fragment",
-    [
-        # replace: swap the module name
-        ([{"operation": "replace", "line": 10, "text": "MODULE bad_mod\n"}], "bad_mod"),
-        # delete: remove the IMPLICIT NONE line
-        ([{"operation": "delete", "line": 11}], "MODULE example_mod"),
-        # add: insert a comment before the module line
-        ([{"operation": "add", "line": 10, "text": "! inserted comment\n"}], "! inserted comment"),
-        # combined: replace module name and add a comment above it
-        (
-            [
-                {"operation": "replace", "line": 10, "text": "MODULE renamed_mod\n"},
-                {"operation": "add", "line": 10, "text": "! renamed module\n"},
-            ],
-            "renamed_mod",
-        ),
-    ],
-    indirect=["modified_fortran_lines"],
-)
-def test_example_fortran_lines_parametrized(
-    modified_fortran_lines, expected_fragment
-):
-    assert any(expected_fragment in line for line in modified_fortran_lines)
