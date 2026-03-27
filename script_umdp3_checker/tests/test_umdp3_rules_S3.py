@@ -2,10 +2,10 @@ import pytest
 import sys
 from pathlib import Path
 
-# from umdp3_rules_S3 import rule_S3_1
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from umdp3_checker_rules import TestResult, UMDP3Checker
+from umdp3_rules_S3 import capitulated_keywords, r3_4_1_capitalised_keywords
+# from umdp3_checker_rules import TestResult, UMDP3Checker
 
 
 def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
@@ -68,13 +68,14 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
         ),
         ([["add", 10, ""]], 0, []),  # No changes, expect no errors
     ],
+    ids = ["3 Errors", "No Errors"]
 )
-def test_keywords(
+def test_r3_4_1_capitalised_keywords(
     example_fortran_lines, changes_list, expected_result, expected_errors
 ):
-    checker = UMDP3Checker()
+    # checker = UMDP3Checker()
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
-    result = checker.capitalised_keywords(modified_fortran_lines)
+    result = r3_4_1_capitalised_keywords(modified_fortran_lines)
     failure_count = result.failure_count
     assert failure_count == expected_result
     errors = result.errors
@@ -87,3 +88,35 @@ def test_keywords(
 
 
 # =================================================================
+
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 10, "Module example_mod"],
+                ["replace", 37, "use parkind1, ONLY: jpim, jprb"],
+                ["replace", 40, "use yomhook, ONLY: lhook, dr_hook"]
+            ],
+            3,
+            {"capitulated keyword: Module": [10], "capitulated keyword: use": [37, 40]},
+        ),
+        ([["add", 10, ""]], 0, []),  # No changes, expect no errors
+    ],
+)
+def test_keywords_II(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+#     checker = UMDP3Checker()
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = capitulated_keywords(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    assert len(errors) == len(expected_errors)
+    for error, lines_list  in errors.items():
+        assert error in expected_errors
+        assert len(lines_list) == len(expected_errors[error])
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+

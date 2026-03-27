@@ -276,6 +276,9 @@ class Check_Runner(StyleChecker):
 
 class ConformanceChecker:
     """Main framework for running style checks in parallel."""
+    checkers: List[StyleChecker]
+    max_workers: int
+    results: List[CheckResult]
 
     def __init__(
         self,
@@ -284,6 +287,7 @@ class ConformanceChecker:
     ):
         self.checkers = checkers
         self.max_workers = max_workers
+        self.results = []
 
     def check_files(self) -> None:
         """Run all checkers on given files in parallel.
