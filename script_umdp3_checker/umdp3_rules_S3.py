@@ -67,6 +67,53 @@ Then check it's the same name as the last thing closed."""
 * Subroutines should be kept reasonably short, where appropriate, say up to about 100 lines of executable code, but don’t forget there are start up overheads involved in calling an external subroutine so they should do a reasonable amount of work
 """
 
+"""3.2 Headers
+* All programming units require a suitable copyright header. Met Office derived code should use the stan-dard UM copyright header as depicted in the good example code. Collaborative UM developed codemay require alternative headers as agreed in the collaborative agreements. e.g. UKCA code. The IPR(intelectual property rights) of UM code is important and needs to be protected appropriately."""
+
+def r3_2_1_check_crown_copyright(lines: List[str]) -> TestResult:
+    """Check for crown copyright statement"""
+    """
+TODO: This is a very simplistic check and will not detect many cases which break UMDP3.
+    It will pass if the word copyright appears on a commented out line. This could
+    include passing :
+    ! I should put a copyright statement here...
+
+    I suspect the Perl Predeccessor
+    did much more convoluted tests"""
+    comment_lines = [
+        line.upper() for line in lines if line.lstrip(" ").startswith("!")
+    ]
+    file_content = "\n".join(comment_lines)
+    error_log = {}
+    found_copyright = False
+    if "CROWN COPYRIGHT" in file_content or "COPYRIGHT" in file_content:
+        found_copyright = True
+
+    if not found_copyright:
+        # add_extra_error("missing copyright or crown copyright statement")
+        error_log = add_error_log(
+            error_log, "missing copyright or crown copyright statement", 0
+        )
+    return TestResult(
+        checker_name="Crown Copyright Statement",
+        failure_count=0 if found_copyright else 1,
+        passed=found_copyright,
+        output="Checked for crown copyright statement.",
+        errors=error_log,
+    )
+
+"""
+* Headers are an immensely important part of any code as they document what it does, and how it does it.
+* The description of the MODULE and its contained SUBROUTINE may be the same and thus it need not berepeated in the latter. If a MODULE contains more than one subroutine then further descriptions are required.
+* History comments should not be included in the header or routine code. FCM TRAC provides the history of our codes.
+* Code author names should NOT be included explicitly within the code as they quickly become out of date and are sometimes misleading. Instead we reference a single maintainable text file which is included within the UM code repository.
+
+! Code Owner: Please refer to the UM file CodeOwners.txt
+! This file belongs in section: <section_name_to_be_entered>
+
+* Example UM templates are provided with the source of this document; subroutine, function and module
+templates"""
+
 """3.4 Fortran style
 * To improve readability, write your code using the ALL CAPS Fortran keywords approach."""
 def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
