@@ -338,7 +338,9 @@ class UMDP3Checker:
             ):
                 var_name = match.group(1)
                 # Only flag if it's fully UPPERCASE (not mixed case like CamelCase)
-                if var_name.isupper() or ("_" in var_name and var_name.replace("_", "").isupper()):
+                if var_name.isupper() or (
+                    "_" in var_name and var_name.replace("_", "").isupper()
+                ):
                     self.add_extra_error(f"UPPERCASE variable name : {var_name}")
                     failures += 1
                     error_log = self.add_error_log(
