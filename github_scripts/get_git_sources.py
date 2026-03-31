@@ -19,6 +19,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class subprocess_run_error(Exception):
+    def __init__(self, command, returncode, stdout, stderr):
+        self.command = command
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+        self.message = (
+            f"Errorcode {returncode} raised when running command '{command}\n\n"
+            f"stdout:\n{stdout}\n\nstderr:\n{stderr}"
+        )
+        super.__init__(self.message)
+
+
 def run_command(
     command: str, check: bool = True, capture: bool = True, timeout: int = 600
 ) -> Optional[subprocess.CompletedProcess]:
@@ -44,8 +57,8 @@ def run_command(
         if check and result.returncode != 0:
             err_msg = (result.stderr or "").strip()
             logger.error(f"[FAIL] Command failed: {command}\nError: {err_msg}")
-            raise subprocess.CalledProcessError(
-                result.returncode, args, output=result.stdout, stderr=result.stderr
+            raise subprocess_run_error(
+                result.returncode, command, result.stdout, result.stderr
             )
         return result
 
@@ -205,7 +218,7 @@ def merge_source(
         if unmerged_files:
             handle_merge_conflicts(source, ref, dest, dest.name)
         else:
-            raise subprocess.CalledProcessError(
+            raise subprocess_run_error(
                 result.returncode, command, result.stdout, result.stderr
             )
 
