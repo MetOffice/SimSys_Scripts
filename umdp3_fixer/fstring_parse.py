@@ -36,6 +36,7 @@ class QuoteError(ParsingError):
     """
 
     def __init__(self, quote, number):
+        super().__init__()
         self.number = number
         self.quote = quote
         self.quotemarks = {"'": "single quotes", '"': "double quotes"}

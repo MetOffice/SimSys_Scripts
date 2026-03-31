@@ -202,11 +202,6 @@ class StyleChecker:
     ) -> "StyleChecker":
         """Create a StyleChecker instance filtering files from a full list."""
         filtered_files = cls.filter_files(all_files, file_extensions)
-        print(
-            f"Creating external runners for {name} with {len(commands)} "
-            f"commands and {len(filtered_files)} files to check from a "
-            f"total of {len(all_files)} files."
-        )
         check_functions = {}
         for command in commands:
             external_opname = f"External_operation_{command[0]}"
@@ -285,7 +280,7 @@ class ConformanceChecker:
     def __init__(
         self,
         checkers: List[StyleChecker],
-        max_workers: int = 8,
+        max_workers: int = 2,
     ):
         self.checkers = checkers
         self.max_workers = max_workers
@@ -324,7 +319,7 @@ class ConformanceChecker:
         then have each worker run all the checks for a given file. This would
         reduce the overhead of creating threads and allow for better use of
         resources."""
-        with concurrent.futures.ThreadPoolExecutor(
+        with concurrent.futures.ProcessPoolExecutor(
             max_workers=self.max_workers
         ) as executor:
             future_to_task = {
@@ -332,7 +327,8 @@ class ConformanceChecker:
                 for checker in self.checkers
                 for file_path in checker.files_to_check
             }
-
+            # TODO : This next loop could be used to process the individual results as
+            # they come in, rather than waiting for all to complete.
             for future in concurrent.futures.as_completed(future_to_task):
                 result = future.result()
                 results.append(result)
@@ -403,7 +399,7 @@ def process_arguments():
         "-p", "--path", type=str, default="./", help="path to repository"
     )
     parser.add_argument(
-        "--max-workers", type=int, default=8, help="Maximum number of parallel workers"
+        "--max-workers", type=int, default=2, help="Maximum number of parallel workers"
     )
     parser.add_argument(
         "--fullcheck",
@@ -417,11 +413,11 @@ def process_arguments():
         help="Print details of passed checks as well as failed ones.\n"
         "By default, only failed checks are printed in detail.",
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
+    verbosity_grp = parser.add_mutually_exclusive_group()
+    verbosity_grp.add_argument(
         "-v", "--verbose", action="count", default=0, help="Increase output verbosity"
     )
-    group.add_argument(
+    verbosity_grp.add_argument(
         "-q", "--quiet", action="count", default=0, help="Decrease output verbosity"
     )
     # The following are not yet implemented, but may become useful
