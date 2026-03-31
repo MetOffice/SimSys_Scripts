@@ -238,7 +238,7 @@ class SuiteReport(SuiteData):
         # Create a dict with owners as the key
         table_dict = defaultdict(list)
         for config in failed_configs:
-            owner, others = owners[config]
+            owner, others = owners.get(config, "UNKNOWN")
             if others != "--":
                 config = f"{config} ({others})"
             table_dict[owner].append(config)
