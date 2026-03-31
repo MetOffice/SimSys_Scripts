@@ -211,7 +211,7 @@ def merge_source(
 
     run_command(f"git -C {dest} fetch local {fetch}")
 
-    command = f"git -C {dest} merge --no-gpg-sign FETCH_HEAD"
+    command = f"git -C {dest} merge --no-gpg-sign --no-edit FETCH_HEAD"
     result = run_command(command, check=False)
     if result.returncode:
         unmerged_files = get_unmerged(dest)
