@@ -329,26 +329,23 @@ class UMDP3Checker:
         failures = 0
         error_log = {}
         count = -1
-        for count, line in enumerate(lines, 1):
+        for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
 
-            # Simple check for UPPERCASE variable declarations
-            if re.search(
-                r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+",
+            # Check for UPPERCASE variable declarations (but allow CamelCase)
+            # Use (?i) flag only for the keywords, not for the variable name pattern
+            if match := re.search(
+                r"^\s*(?i:INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*([A-Z]\w*)",
                 clean_line,
-                re.IGNORECASE,
             ):
-                clean_line = re.sub(
-                    r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*",
-                    "",
-                    clean_line,
-                )
-                if match := re.search(r"([A-Z]{2,})", clean_line):
-                    self.add_extra_error(f"UPPERCASE variable name : {match[1]}")
+                var_name = match.group(1)
+                # Only flag if it's fully UPPERCASE (not mixed case like CamelCase)
+                if var_name.isupper() or ("_" in var_name and var_name.replace("_", "").isupper()):
+                    self.add_extra_error(f"UPPERCASE variable name : {var_name}")
                     failures += 1
                     error_log = self.add_error_log(
-                        error_log, f"UPPERCASE variable name {match[1]}", count
+                        error_log, f"UPPERCASE variable name {var_name}", count + 1
                     )
 
         output = f"Checked {count + 1} lines, found {failures} failures."
