@@ -68,7 +68,7 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
         ),
         ([["add", 10, ""]], 0, []),  # No changes, expect no errors
     ],
-    ids = ["3 Errors", "No Errors"]
+    ids = ["3 Errors", "No lowercase keyword Errors"]
 )
 def test_r3_4_1_capitalised_keywords(
     example_fortran_lines, changes_list, expected_result, expected_errors
@@ -104,7 +104,7 @@ def test_r3_4_1_capitalised_keywords(
         ),
         ([["add", 10, ""]], 0, []),  # No changes, expect no errors
     ],
-    ids = ["Missing copyright statement", "No Errors"]
+    ids = ["Missing copyright statement", "copyright statemrent present"]
 )
 def test_r3_2_1_check_crown_copyright(
     example_fortran_lines, changes_list, expected_result, expected_errors
