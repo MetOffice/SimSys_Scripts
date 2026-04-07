@@ -32,6 +32,12 @@ TODO : Several of the test functions are poor shadows of the original
 # Declare version
 VERSION = "13.5.0"
 
+# Precompile regex statements
+_vars_declare = re.compile(r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+", re.IGNORECASE)
+_vars_cleaner = re.compile(r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*")
+_consecutive_upper = re.compile(r"([A-Z]{2,})")
+_comment_declare = re.compile(r"!.*$")
+
 
 @dataclass
 class TestResult:
@@ -325,20 +331,13 @@ class UMDP3Checker:
         count = -1
         for count, line in enumerate(lines, 1):
             clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r"!.*$", "", clean_line)
+            clean_line = _comment_declare.sub("", clean_line)
 
             # Simple check for UPPERCASE variable declarations
-            if re.search(
-                r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+",
-                clean_line,
-                re.IGNORECASE,
-            ):
-                clean_line = re.sub(
-                    r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*",
-                    "",
-                    clean_line,
-                )
-                if match := re.search(r"([A-Z]{2,})", clean_line):
+            if _vars_declare.search(clean_line):
+                clean_line = _vars_cleaner.sub("", clean_line)
+
+                if match := _consecutive_upper.search(clean_line):
                     self.add_extra_error(f"UPPERCASE variable name : {match[1]}")
                     failures += 1
                     error_log = self.add_error_log(
