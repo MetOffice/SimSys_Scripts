@@ -8,7 +8,7 @@ from umdp3_checker_rules import UMDP3Checker, TestResult
 
 
 # Prevent pytest from trying to collect TestResult as more tests:
-TestResult.__test__ = False
+TestResult.__test__ = False  # type: ignore
 """
 ToDo :
       THere has been a LOT of refactoring in the umdp3 module since these
