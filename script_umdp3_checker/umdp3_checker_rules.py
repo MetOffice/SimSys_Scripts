@@ -34,7 +34,7 @@ VERSION = "13.5.0"
 
 # Precompile regex statements
 _vars_declare = re.compile(r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+", re.IGNORECASE)
-_vars_cleaner = re.compile(r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*")
+_vars_cleaner = re.compile(r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*(.+)$", re.IGNORECASE)
 _consecutive_upper = re.compile(r"([A-Z]{2,})")
 _comment_declare = re.compile(r"!.*$")
 
@@ -335,14 +335,24 @@ class UMDP3Checker:
 
             # Simple check for UPPERCASE variable declarations
             if _vars_declare.search(clean_line):
-                clean_line = _vars_cleaner.sub("", clean_line)
+                # Extract variable names part using capturing group
+                match_vars = _vars_cleaner.search(clean_line)
+                if match_vars:
+                    var_declarations = match_vars.group(2).strip()
+                    # Split by comma to get individual variable names
+                    var_names = var_declarations.split(",")
 
-                if match := _consecutive_upper.search(clean_line):
-                    self.add_extra_error(f"UPPERCASE variable name : {match[1]}")
-                    failures += 1
-                    error_log = self.add_error_log(
-                        error_log, f"UPPERCASE variable name {match[1]}", count
-                    )
+                    for var_name in var_names:
+                        # Extract just the variable name (before = or ()
+                        #TODO: Check spliting of this var name 
+                        var_name = re.split(r'[=(]', var_name)[0].strip()
+
+                        if match := _consecutive_upper.search(var_name):
+                            self.add_extra_error(f"UPPERCASE variable name : {match[1]}")
+                            failures += 1
+                            error_log = self.add_error_log(
+                                error_log, f"UPPERCASE variable name {match[1]}", count
+                            )
 
         output = f"Checked {count + 1} lines, found {failures} failures."
         return TestResult(
