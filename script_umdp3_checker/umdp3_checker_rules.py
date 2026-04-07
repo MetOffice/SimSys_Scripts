@@ -4,9 +4,6 @@
 # which you should have received as part of this distribution.
 # *****************************COPYRIGHT*******************************
 
-# Some of the content of this file has been produced with the assistance of
-# Claude Sonnet 4.5
-
 """
 Package to contain functions which test for UMDP3 compliance.
 Python translation of the original Perl UMDP3.pm module.
