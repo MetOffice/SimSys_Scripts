@@ -343,16 +343,17 @@ class UMDP3Checker:
                     var_names = var_declarations.split(",")
 
                     for var_name in var_names:
+                        index = 1
                         # Extract just the variable name (before = or ()
-                        #TODO: Check spliting of this var name 
                         var_name = re.split(r'[=(]', var_name)[0].strip()
 
-                        if match := _consecutive_upper.search(var_name):
-                            self.add_extra_error(f"UPPERCASE variable name : {match[1]}")
+                        if _consecutive_upper.search(var_name):
+                            self.add_extra_error(f"UPPERCASE variable name : {var_name}")
                             failures += 1
                             error_log = self.add_error_log(
-                                error_log, f"UPPERCASE variable name {match[1]}", count
+                                error_log, f"UPPERCASE variable name {var_name}", count
                             )
+                            index += 1
 
         output = f"Checked {count + 1} lines, found {failures} failures."
         return TestResult(
