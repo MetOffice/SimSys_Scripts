@@ -180,6 +180,16 @@ test_lowercase_variable_names_parameters = [
         1,
         "Uppercase variable name with leading whitespace",
     ),
+    (
+        ["REAL :: var1", "REAL :: VAR2", "REAL :: Var3"],
+        1,
+        "Mixed case variable names",
+    ),
+    (
+        ["REAL :: var1, DAVE_2, HiPPo", "REAL :: var2", "REAL :: var3"],
+        1,
+        "2nd variable all uppercase",
+    ),
 ]
 
 
