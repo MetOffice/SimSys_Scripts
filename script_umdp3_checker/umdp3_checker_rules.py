@@ -361,7 +361,7 @@ class UMDP3Checker:
                             )
                             index += 1
 
-        output = f"Checked {count + 1} lines, found {failures} failures."
+        output = f"Checked {count} lines, found {failures} failures."
         return TestResult(
             checker_name="Lowercase or CamelCase variable names only",
             failure_count=failures,
