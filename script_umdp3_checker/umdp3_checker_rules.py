@@ -33,8 +33,12 @@ TODO : Several of the test functions are poor shadows of the original
 VERSION = "13.5.0"
 
 # Precompile regex statements
-_vars_declare = re.compile(r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+", re.IGNORECASE)
-_vars_cleaner = re.compile(r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*(.+)$", re.IGNORECASE)
+_vars_declare = re.compile(
+    r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+", re.IGNORECASE
+)
+_vars_cleaner = re.compile(
+    r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*(.+)$", re.IGNORECASE
+)
 _consecutive_upper = re.compile(r"([A-Z]{2,})")
 _comment_declare = re.compile(r"!.*$")
 
@@ -345,10 +349,12 @@ class UMDP3Checker:
                     for var_name in var_names:
                         index = 1
                         # Extract just the variable name (before = or ()
-                        var_name = re.split(r'[=(]', var_name)[0].strip()
+                        var_name = re.split(r"[=(]", var_name)[0].strip()
 
                         if _consecutive_upper.search(var_name):
-                            self.add_extra_error(f"UPPERCASE variable name : {var_name}")
+                            self.add_extra_error(
+                                f"UPPERCASE variable name : {var_name}"
+                            )
                             failures += 1
                             error_log = self.add_error_log(
                                 error_log, f"UPPERCASE variable name {var_name}", count
