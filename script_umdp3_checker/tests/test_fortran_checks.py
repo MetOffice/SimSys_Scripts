@@ -187,7 +187,7 @@ test_lowercase_variable_names_parameters = [
     ),
     (
         ["REAL :: var1, DAVE_2, HiPPo", "REAL :: var2", "REAL :: var3"],
-        1,
+        2,
         "2nd variable all uppercase",
     ),
 ]
