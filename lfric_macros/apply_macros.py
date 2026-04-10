@@ -244,7 +244,7 @@ class ApplyMacros:
     Object to hold data + methods to apply upgrade macros in lfric_apps
     """
 
-    def __init__(self, tag, cname, version, apps, core, jules, testing=False):
+    def __init__(self, tag, cname, version, apps, core, testing=False):
         self.tag = tag
         if cname:
             self.class_name = cname
@@ -258,11 +258,7 @@ class ApplyMacros:
             self.root_path = apps
         else:
             self.root_path = get_root_path(apps)
-        self.core_source = self.get_dependency_paths(core, "lfric_core")
-        # The Jules source is temporarily ignored as Jules Shared metadata has a
-        # copy in LFRic, rather than using the Jules version. The LFRic build
-        # system needs modifying to enable this
-        # self.jules_source = self.get_dependency_paths(jules, "jules")
+        self.core_source = self.get_dependency_paths(core)
         self.set_rose_meta_path()
         if version is None:
             self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
@@ -281,11 +277,9 @@ class ApplyMacros:
 
     def set_rose_meta_path(self):
         """
-        Set up the ROSE_META_PATH environment variable in order to use the Jules
-        and Core metadata. We also add the clone root path as this should
-        allow the script to be run from anywhere.
-        When Jules Shared from Jules is enabled, self.jules_source will need
-        adding here
+        Set up the ROSE_META_PATH environment variable in order to use the Core
+        metadata. We also add the clone root path as this should allow the script to be
+        run from anywhere.
         Edit 02/2026 - remove backwards compatibility support for pre central-metadata
         """
         rose_meta_path = (
@@ -297,8 +291,8 @@ class ApplyMacros:
     def parse_application_section(self, meta_dir):
         """
         Given a path to a metadata directory, parse out the application/science
-        section. Try to remove the apps, core and jules root paths. Then try to
-        remove trailing /HEAD or /versions.py
+        section. Try to remove the apps and core root paths. Then try to remove trailing
+        /HEAD or /versions.py
         Inputs:
             - meta_dir, path to a metadata dir
         Returns:
@@ -308,8 +302,6 @@ class ApplyMacros:
         meta_dir = str(meta_dir)
         meta_dir = meta_dir.removeprefix(str(self.root_path))
         meta_dir = meta_dir.removeprefix(str(self.core_source))
-        # Reinstate when using Jules Shared from Jules
-        # meta_dir = meta_dir.removeprefix(self.jules_source)
         meta_dir = meta_dir.removeprefix("/")
 
         meta_dir = meta_dir.removesuffix("/HEAD")
@@ -321,24 +313,24 @@ class ApplyMacros:
     # Get Working Copy Functions
     ############################################################################
 
-    def get_dependency_paths(self, source, repo):
+    def get_dependency_paths(self, source):
         """
-        Parse the core or jules command line arguments to get the path to a git clone.
+        Parse the core command line arguments to get the path to a git clone.
         If the source isn't defined, first populate the source by reading the
         dependencies.yaml file.
         If the source is a remote GitHub source clone it to a temporary location
         Inputs:
             - source, str, The command line argument for the source. If not set
                            this will be None
-            - repo, str, Either "lfric_core" or "jules" depending on which
-                         source is being found
         Outputs:
             - str, The path to the source working copy to use
         """
 
+        repo = "lfric_core"
+
         # If source is None then read the dependencies.yaml file for the source
         if source is None:
-            source, ref = self.read_dependencies(repo)
+            source, ref = self.read_dependencies()
         if ":" in str(source):
             source_path = Path(source.split(":")[1]).expanduser()
         else:
@@ -361,14 +353,10 @@ class ApplyMacros:
         source = self.git_clone_temp(source, ref, repo)
         return source
 
-    def read_dependencies(self, repo):
+    def read_dependencies(self, repo="lfric_core"):
         """
         Read through the dependencies.yaml file for the source of the repo defined
         by repo. Uses self.root_path to locate the dependencies.yaml file.
-        Inputs:
-            - repo, str, Either "lfric_core" or "jules" depending on which
-                         source is being found. The function will work with
-                         other repos, but not intended to within this script.
         Outputs:
             - str, The source as defined by the dependencies.yaml file
         """
@@ -584,7 +572,7 @@ class ApplyMacros:
 
     def get_full_import_path(self, imp):
         """
-        Search through the Core, Jules and Apps working copies to get the full
+        Search through the Core and Apps working copies to get the full
         path to a metadata directory
         Inputs:
             - imp, the import statement without the full path
@@ -592,8 +580,6 @@ class ApplyMacros:
             - the import statement containing the full path - raises an error if
               not found
         """
-
-        # TODO: Reinstate Jules checks when using Jules Metadata from Jules
 
         core_imp = self.core_source / "rose-meta" / imp
         apps_imp = self.root_path / "rose-meta" / imp
@@ -608,8 +594,7 @@ class ApplyMacros:
             return apps_imp
 
         raise Exception(
-            f"Couldn't find the import '{imp}' in any of the Apps, Core or "
-            "Jules sources."
+            f"Couldn't find the import '{imp}' in any of the Apps or Core Sources"
         )
 
     def read_meta_imports(self, meta_dir, flag="import"):
@@ -1048,7 +1033,7 @@ class ApplyMacros:
     def get_rose_apps(self):
         """
         Return:
-            - list of paths to rose-stem apps in Apps, Core and Jules
+            - list of paths to rose-stem apps in Apps and Core
         """
 
         apps_list = []
@@ -1227,25 +1212,17 @@ def parse_args():
         "Either a path to a working copy or a git source."
         "If not set, will be read from the dependencies.yaml",
     )
-    parser.add_argument(
-        "-j",
-        "--jules",
-        default=None,
-        help="The Jules source being used."
-        "Either a path to a working copy or a git source."
-        "If not set, will be read from the dependencies.yaml",
-    )
     return parser.parse_args()
 
 
-def apply_macros_main(tag, cname=None, version=None, apps=Path(".").absolute(), core=None, jules=None):
+def apply_macros_main(tag: str, cname: str = None, version: str = None, apps: Path = Path(".").absolute(), core: str = None):
     """
     Main function for this program
     """
 
     check_environment()
 
-    macro_object = ApplyMacros(tag, cname, version, apps, core, jules)
+    macro_object = ApplyMacros(tag, cname, version, apps, core)
 
     # Pre-process macros
     banner_print("Pre-Processing Macros")
@@ -1277,5 +1254,5 @@ def apply_macros_main(tag, cname=None, version=None, apps=Path(".").absolute(), 
 if __name__ == "__main__":
     args = parse_args()
     apply_macros_main(
-        args.tag, args.cname, args.version, args.apps, args.core, args.jules
+        args.tag, args.cname, args.version, args.apps, args.core
     )
