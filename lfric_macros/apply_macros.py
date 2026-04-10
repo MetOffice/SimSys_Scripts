@@ -21,6 +21,7 @@ import tempfile
 import yaml
 import networkx as nx
 from collections import defaultdict
+from pathlib import Path
 
 BLACK_COMMAND = "black --line-length=80"
 CLASS_NAME_REGEX = r"vn\d+(_t\d+\w*)?"
@@ -94,7 +95,7 @@ def get_root_path(wc_path):
     # If no error, then search through output for the working copy root path
     # return the found path
     if result.stdout:
-        return result.stdout.strip()
+        return Path(result.stdout.strip())
     raise Exception(
         "Couldn't extract the Git Clone Root path from the output of the "
         f"command '{command}'"
@@ -132,7 +133,7 @@ def read_versions_file(meta_dir):
         - a list of lines in the versions.py file with blank lines removed
     """
 
-    version_file = os.path.join(meta_dir, "versions.py")
+    version_file = meta_dir / "versions.py"
 
     # Read in versions file and then remove all blank lines
     with open(version_file) as f:
@@ -288,8 +289,8 @@ class ApplyMacros:
         Edit 02/2026 - remove backwards compatibility support for pre central-metadata
         """
         rose_meta_path = (
-            f"{os.path.join(self.root_path, 'rose-meta')}:"
-            f"{os.path.join(self.core_source, 'rose-meta')}"
+            f"{self.root_path / 'rose-meta'}:"
+            f"{self.core_source / 'rose-meta'}"
         )
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
@@ -303,8 +304,10 @@ class ApplyMacros:
         Returns:
             - path to the metadata directory with the root path removed
         """
-        meta_dir = meta_dir.removeprefix(self.root_path)
-        meta_dir = meta_dir.removeprefix(self.core_source)
+
+        meta_dir = str(meta_dir)
+        meta_dir = meta_dir.removeprefix(str(self.root_path))
+        meta_dir = meta_dir.removeprefix(str(self.core_source))
         # Reinstate when using Jules Shared from Jules
         # meta_dir = meta_dir.removeprefix(self.jules_source)
         meta_dir = meta_dir.removeprefix("/")
@@ -312,7 +315,7 @@ class ApplyMacros:
         meta_dir = meta_dir.removesuffix("/HEAD")
         meta_dir = meta_dir.removesuffix("/versions.py")
 
-        return meta_dir
+        return Path(meta_dir)
 
     ############################################################################
     # Get Working Copy Functions
@@ -336,19 +339,19 @@ class ApplyMacros:
         # If source is None then read the dependencies.yaml file for the source
         if source is None:
             source, ref = self.read_dependencies(repo)
+        if ":" in str(source):
+            source_path = Path(source.split(":")[1]).expanduser()
+        else:
+            source_path = Path(source).expanduser()
 
         # If the source exists as a path then return as is
-        if os.path.exists(os.path.expanduser(source)):
-            return os.path.expanduser(source)
-        if ":" in source:
-            source_path = os.path.expanduser(source.split(":")[1])
-            if os.path.exists(source_path):
-                return source_path
+        if source_path.exists():
+            return source_path
 
         # Check that the source looks like a GitHub URL, raise an error if not
         if "git@github.com:" not in source and "https://github.com/" not in source:
             raise Exception(
-                f"The {repo} source: {source}, was not found as a working copy "
+                f"The {repo} source: {source}, was not found as a local clone "
                 "and does not look like an GitHub URL. Please check the source."
                 "If not set on the command then the dependencies.yaml file is "
                 "being used."
@@ -369,7 +372,7 @@ class ApplyMacros:
         Outputs:
             - str, The source as defined by the dependencies.yaml file
         """
-        dependencies_path = os.path.join(self.root_path, "dependencies.yaml")
+        dependencies_path = self.root_path / "dependencies.yaml"
         with open(dependencies_path, "r") as f:
             dependencies = yaml.safe_load(f)
 
@@ -397,7 +400,7 @@ class ApplyMacros:
                     f"Failed to clone from {source} into directory {tempdir} "
                     f"with error message:\n\n{result.stderr}"
                 )
-        return tempdir
+        return Path(tempdir)
 
     ############################################################################
     # Preprocess Macros Functions
@@ -413,7 +416,7 @@ class ApplyMacros:
         """
 
         meta_dirs = set()
-        for dirpath, dirnames, filenames in os.walk(path, followlinks=True):
+        for dirpath, dirnames, filenames in path.walk(follow_symlinks=True):
             dirnames[:] = [d for d in dirnames if d not in [".svn", ".git"]]
             if "versions.py" in filenames:
                 meta_dirs.add(dirpath)
@@ -431,7 +434,7 @@ class ApplyMacros:
               commands
         """
 
-        version_file = os.path.join(meta_dir, "versions.py")
+        version_file = meta_dir / "versions.py"
 
         ticket_details = re.search(r"Upgrade .* (#\d+) by (\S+.*)", macro)
         try:
@@ -494,8 +497,8 @@ class ApplyMacros:
             - meta_dir, the path to the versions.py file being rewritten
         """
 
-        filepath = os.path.join(meta_dir, "versions.py")
-        temppath = os.path.join(meta_dir, ".versions.py")
+        filepath = meta_dir / "versions.py"
+        temppath = meta_dir / ".versions.py"
 
         with open(temppath, "w") as f:
             in_new_macro = False
@@ -510,7 +513,7 @@ class ApplyMacros:
 
         apply_styling(temppath)
 
-        if not os.path.getsize(temppath) > 0:
+        if not temppath.stat().st_size > 0:
             raise Exception(
                 f"The file modified at {filepath} has zero size, indicating "
                 "something has gone wrong"
@@ -563,7 +566,7 @@ class ApplyMacros:
             - String containing the macro. Empty if the macro isn't found
         """
 
-        version_file = os.path.join(meta_dir, "versions.py")
+        version_file = meta_dir / "versions.py"
 
         # Find the macro we're interested in
         for macro in macros:
@@ -592,16 +595,16 @@ class ApplyMacros:
 
         # TODO: Reinstate Jules checks when using Jules Metadata from Jules
 
-        core_imp = os.path.join(self.core_source, "rose-meta", imp)
-        apps_imp = os.path.join(self.root_path, "rose-meta", imp)
+        core_imp = self.core_source / "rose-meta" / imp
+        apps_imp = self.root_path / "rose-meta" / imp
 
-        if os.path.exists(core_imp):
+        if core_imp.exists():
             return core_imp
-        if os.path.exists(apps_imp):
+        if apps_imp.exists():
             return apps_imp
-        if os.path.exists(os.path.dirname(core_imp)):
+        if core_imp.parent.exists():
             return core_imp
-        if os.path.exists(os.path.dirname(apps_imp)):
+        if apps_imp.parent.exists():
             return apps_imp
 
         raise Exception(
@@ -621,7 +624,7 @@ class ApplyMacros:
         """
 
         if flag == "import":
-            meta_file = os.path.join(meta_dir, "HEAD", "rose-meta.conf")
+            meta_file = meta_dir / "HEAD" / "rose-meta.conf"
         else:
             meta_file = meta_dir
 
@@ -656,8 +659,8 @@ class ApplyMacros:
             - meta_dir, path to the metadata directory with a versions.py file
         """
 
-        filepath = os.path.join(meta_dir, "versions.py")
-        temppath = os.path.join(meta_dir, ".versions.py")
+        filepath = meta_dir / "versions.py"
+        temppath = meta_dir / ".versions.py"
 
         # Work out where we need to insert the new imports
         # For simplicity, do this at the beginning of the existing imports
@@ -767,8 +770,8 @@ class ApplyMacros:
             - macro, the parsed macro being written
         """
 
-        filepath = os.path.join(meta_dir, "versions.py")
-        temppath = os.path.join(meta_dir, ".versions.py")
+        filepath = meta_dir / "versions.py"
+        temppath = meta_dir / ".versions.py"
         shutil.copy(filepath, temppath)
 
         author = macro["author"] or self.author
@@ -937,10 +940,10 @@ class ApplyMacros:
 
         # Get list of versions files to check - in both core and apps
         self.meta_dirs = self.meta_dirs.union(
-            self.find_meta_dirs(os.path.join(self.root_path, "rose-meta"))
+            self.find_meta_dirs(self.root_path / "rose-meta")
         )
         self.meta_dirs = self.meta_dirs.union(
-            self.find_meta_dirs(os.path.join(self.core_source, "rose-meta"))
+            self.find_meta_dirs(self.core_source / "rose-meta")
         )
 
         for meta_dir in self.meta_dirs:
@@ -984,7 +987,7 @@ class ApplyMacros:
 
             # Read through the versions.py file for python import statements
             self.python_imports.update(
-                read_python_imports(os.path.join(meta_dir, "versions.py"))
+                read_python_imports(meta_dir / "versions.py")
             )
 
         # Now reconstruct the macro for all applications which have the newly
@@ -1032,7 +1035,7 @@ class ApplyMacros:
         """
 
         print(f"[INFO] Checking metadata in {meta_dir}")
-        command = f"rose metadata-check -C {os.path.join(meta_dir, 'HEAD')}"
+        command = f"rose metadata-check -C {meta_dir / 'HEAD'}"
         result = run_command(command)
         if result.returncode:
             print(f"[FAIL] The metadata at {meta_dir} failed to validate.")
@@ -1050,10 +1053,10 @@ class ApplyMacros:
 
         apps_list = []
         for item in (self.root_path, self.core_source):
-            app_dir = os.path.join(item, "rose-stem", "app")
-            if not os.path.exists(app_dir):
+            app_dir = item / "rose-stem" / "app"
+            if not app_dir.exists():
                 continue
-            apps_list += [os.path.join(app_dir, f) for f in os.listdir(app_dir)]
+            apps_list += [app_dir / f for f in os.listdir(app_dir)]
         return set(apps_list)
 
     def apps_to_upgrade(self):
@@ -1069,18 +1072,18 @@ class ApplyMacros:
         for app_path in apps_list:
             # Ignore lfric_coupled_rivers as this is based on Jules-standalone
             # metadata which is not currently available
-            if "fcm_make" in app_path or "lfric_coupled_rivers" in app_path:
+            if "fcm_make" in str(app_path) or "lfric_coupled_rivers" in str(app_path):
                 continue
-            if not os.path.isdir(app_path):
+            if not app_path.is_dir():
                 continue
             meta_import = self.read_meta_imports(
-                os.path.join(app_path, "rose-app.conf"), "meta"
+                app_path / "rose-app.conf", "meta"
             )
             # If there was a metadata import, it is the first value in the list
             # It includes the version directory, so remove this to compare with
             # self.sections_with_macro
             if meta_import:
-                if os.path.dirname(meta_import[0]) in self.sections_with_macro:
+                if meta_import[0].parent in self.sections_with_macro:
                     upgradeable_apps.append(app_path)
 
         return upgradeable_apps
@@ -1091,7 +1094,7 @@ class ApplyMacros:
         Inputs:
             - app_path, the path to this app
         """
-        app = os.path.basename(app_path)
+        app = app_path.name
         print(f"[INFO] Upgrading the rose-stem app {app}")
         command = f"rose app-upgrade -a -y -C {app_path} {self.tag}"
         result = run_command(command)
@@ -1110,7 +1113,7 @@ class ApplyMacros:
         Inputs:
             - app_path, the path to this app
         """
-        app = os.path.basename(app_path)
+        app = app_path.name
         print(f"[INFO] Forcing metadata consistency in app {app}")
         command = f"rose macro --fix -y -C {app_path}"
         result = run_command(command)
@@ -1150,7 +1153,7 @@ class ApplyMacros:
         for app_path in upgradeable_apps:
             self.run_app_upgrade(app_path)
             self.run_macro_fix(app_path)
-            if app_path.startswith(self.core_source):
+            if self.core_source in app_path.parents:
                 self.upgraded_core = True
 
 
@@ -1210,7 +1213,8 @@ def parse_args():
     parser.add_argument(
         "-a",
         "--apps",
-        default=".",
+        type=Path,
+        default=Path(".").absolute(),
         help="The path to the LFRic Apps working copy being used. Defaults to  "
         "the location the script is being run from - this assumes you are in a "
         "working copy.",
@@ -1234,7 +1238,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def apply_macros_main(tag, cname=None, version=None, apps=".", core=None, jules=None):
+def apply_macros_main(tag, cname=None, version=None, apps=Path(".").absolute(), core=None, jules=None):
     """
     Main function for this program
     """
@@ -1265,7 +1269,7 @@ def apply_macros_main(tag, cname=None, version=None, apps=".", core=None, jules=
 
     # Run rose config-dump on rose-stem
     config_dump_apps = (
-        f"rose config-dump {os.path.join(macro_object.root_path), 'rose-stem'}"
+        f"rose config-dump {macro_object.root_path / 'rose-stem'}"
     )
     run_command(config_dump_apps)
 
