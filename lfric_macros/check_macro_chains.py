@@ -123,9 +123,7 @@ def main() -> None:
     source_apps = Path(os.environ["SOURCE_ROOT"]) / "lfric_apps"
     source_core = Path(os.environ["SOURCE_ROOT"]) / "lfric_core"
 
-    macro_object = ApplyMacros(
-        "vn0.0_t0", None, "vn0.0", source_apps, source_core
-    )
+    macro_object = ApplyMacros("vn0.0_t0", None, "vn0.0", source_apps, source_core)
     macro_object.find_meta_dirs(macro_object.root_path / "applications")
 
     errors = []
