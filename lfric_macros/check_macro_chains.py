@@ -14,11 +14,12 @@ import os
 import re
 import shutil
 import sys
+from pathlib import Path
 
 from apply_macros import ApplyMacros, run_command
 
 
-def find_upgradeable_apps(apps_dir):
+def find_upgradeable_apps(apps_dir: Path) -> list[Path]:
     """
     Loop over rose-stem apps installed into the cylc_workflow and return a list
     of those with metadata imports and therefore available for rose upgrade
@@ -30,9 +31,9 @@ def find_upgradeable_apps(apps_dir):
     """
 
     valid_apps = []
-    for app in os.listdir(apps_dir):
-        conf_path = os.path.join(apps_dir, app, "rose-app.conf")
-        if not os.path.isfile(conf_path):
+    for app in apps_dir.iterdir():
+        conf_path = apps_dir / app / "rose-app.conf"
+        if not conf_path.is_file():
             continue
         grep_com = f'grep -E "meta=.*" {conf_path}'
         result = run_command(grep_com)
@@ -42,19 +43,19 @@ def find_upgradeable_apps(apps_dir):
     return valid_apps
 
 
-def find_macro_tags(tag, path, errors):
+def find_macro_tags(tag: str, path: Path, errors: list) -> set[str]:
     """
     Find tags with format BEFORE_TAG= or AFTER_TAG= in a versions.py file.
     Inputs:
         tag - either before or after
-        path, path to the directory containing the versions.py file
+        path - path to the directory containing the versions.py file
     Returns:
         set of tags found in file
     """
 
     found_tags = set()
     in_comment = False
-    with open(os.path.join(path, "versions.py")) as f:
+    with open(path / "versions.py") as f:
         for line in f:
             line = line.strip()
             # Check whether this is a comment
@@ -75,7 +76,7 @@ def find_macro_tags(tag, path, errors):
     return found_tags
 
 
-def compare_tags(before, after, path, errors):
+def compare_tags(before: str, after: str, path: Path, errors: list) -> None:
     """
     Check that the before and after tags form a continuous chain. This is done
     by ensuring that only the initial before tag (the version number) and the
@@ -91,21 +92,21 @@ def compare_tags(before, after, path, errors):
     if len(single_tags) != 2 and len(single_tags) != 0:
         errors.append(
             f"[ERROR] - Found {len(single_tags)} unique before or after tags in "
-            f"{os.path.join(path, 'versions.py')} that were ONLY a before or "
+            f"{path / 'versions.py'} that were ONLY a before or "
             "after tag.\nThere should be 2 of these - the beginning of the "
             "chain and the end of the chain.\nThis is likely a typo in the tags in "
             "the versions.py file. The identified tags were:\n"
         ) + "\n".join(x for x in single_tags)
 
 
-def check_fcm():
+def check_fcm() -> None:
     """
     Check if this script is being run for a fcm working copy and fail gracefully
     if so.
     """
-    dependency = os.path.join(os.environ["SOURCE_ROOT"], "apps", "dependencies.sh")
+    dependency = Path(os.environ["SOURCE_ROOT"]) / "apps" / "dependencies.sh"
 
-    if os.path.exists(dependency):
+    if dependency.exists():
         raise Exception(
             "[ERROR] check_macro_chains.py no longer works with FCM sources. "
             "Please ignore this error until you have migrated your work "
@@ -113,20 +114,19 @@ def check_fcm():
         )
 
 
-def main():
+def main() -> None:
     """
     Main function of the program
     """
     check_fcm()
 
-    source_apps = os.path.join(os.environ["SOURCE_ROOT"], "lfric_apps")
-    source_core = os.path.join(os.environ["SOURCE_ROOT"], "lfric_core")
+    source_apps = Path(os.environ["SOURCE_ROOT"]) / "lfric_apps"
+    source_core = Path(os.environ["SOURCE_ROOT"]) / "lfric_core"
 
     macro_object = ApplyMacros(
-        "vn0.0_t0", None, "vn0.0", source_apps, source_core, None
+        "vn0.0_t0", None, "vn0.0", source_apps, source_core
     )
-    macro_object.find_meta_dirs(os.path.join(macro_object.root_path, "applications"))
-    macro_object.meta_dirs
+    macro_object.find_meta_dirs(macro_object.root_path / "applications")
 
     errors = []
     for meta_dir in macro_object.meta_dirs:
