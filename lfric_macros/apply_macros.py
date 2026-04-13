@@ -28,7 +28,7 @@ CLASS_NAME_REGEX = r"vn\d+(_t\d+\w*)?"
 TAG_REGEX = r"\s*=\s*[\"']\s*(\S+)\s*[\"']"
 
 
-def run_command(command, shell=False):
+def run_command(command: str, shell: bool = False) -> subprocess.CompletedProcess:
     """
     Run a subprocess command and return the result object
     Inputs:
@@ -48,7 +48,7 @@ def run_command(command, shell=False):
     )
 
 
-def check_environment():
+def check_environment() -> None:
     """
     Check that required dependencies are loaded in the current environment
     Cylc >= 8.0
@@ -73,14 +73,14 @@ def check_environment():
         raise Exception("'isort' must be available to run this script")
 
 
-def get_root_path(wc_path):
+def get_root_path(wc_path: Path) -> Path:
     """
     Given a path to a git clone, ensure the path and clone are both
     valid and return the path to the clone root directory
     Inputs:
         - wc_path, command line argument to a clone
     Outputs:
-        - str, path to the top level of the apps clone
+        - path to the top level of the apps clone
     """
 
     command = f"git -C {wc_path} rev-parse --show-toplevel"
@@ -102,7 +102,7 @@ def get_root_path(wc_path):
     )
 
 
-def apply_styling(filepath):
+def apply_styling(filepath: Path) -> None:
     """
     Run black on a given file
     Inputs:
@@ -124,7 +124,7 @@ def apply_styling(filepath):
         )
 
 
-def read_versions_file(meta_dir):
+def read_versions_file(meta_dir: Path) -> list[str]:
     """
     Read in a versions.py and parse out blank lines
     Inputs:
@@ -146,7 +146,7 @@ def read_versions_file(meta_dir):
     return file_parsed
 
 
-def split_macros(parsed_versions):
+def split_macros(parsed_versions: list[str]) -> list[str]:
     """
     Read through a versions.py file and split macros into individual strings
     Inputs:
@@ -178,7 +178,7 @@ def split_macros(parsed_versions):
     return macros
 
 
-def deduplicate_list(lst):
+def deduplicate_list(lst: list) -> list:
     """
     Remove duplicate items from a list, keeping the first
     Need to preserve order so not using a set
@@ -195,7 +195,7 @@ def deduplicate_list(lst):
     return deduplicated
 
 
-def match_python_import(line):
+def match_python_import(line: str) -> bool:
     """
     Return true if string has form 'import *' or 'from * import *'
     Inputs:
@@ -206,12 +206,12 @@ def match_python_import(line):
     return False
 
 
-def read_python_imports(path):
+def read_python_imports(path: Path) -> set[tuple]:
     """
     Given a path to a python file, return a set containing info of all module
     imports in the file
     Inputs:
-        - path, path to a python file
+        - path to a python file
     Returns:
         - set containing data of python imports in given file
     """
@@ -234,7 +234,7 @@ def read_python_imports(path):
     return imports
 
 
-def banner_print(message):
+def banner_print(message: str) -> None:
     """Print a simple banner message"""
     print(f"\n{(len(message) + 4) * '*'}\n* {message} *\n{(len(message) + 4) * '*'}\n")
 
@@ -244,51 +244,58 @@ class ApplyMacros:
     Object to hold data + methods to apply upgrade macros in lfric_apps
     """
 
-    def __init__(self, tag, cname, version, apps, core, testing=False):
-        self.tag = tag
+    def __init__(
+        self,
+        tag: str,
+        cname: str | None,
+        version: str,
+        apps: Path,
+        core: Path,
+        testing: bool = False,
+    ) -> None:
+        self.tag: str = tag
         if cname:
-            self.class_name = cname
+            self.class_name: str = cname
         else:
             # The default class name is the After Tag with the '.'
             #  removed from the version
-            self.class_name = tag.replace(".", "")
-        self.temp_dirs = {}
+            self.class_name: str = tag.replace(".", "")
+        self.temp_dirs: dict = {}
         if testing:
             # Don't search for a git repo if testing
-            self.root_path = apps
+            self.root_path: Path = apps
         else:
-            self.root_path = get_root_path(apps)
-        self.core_source = self.get_dependency_paths(core)
+            self.root_path: Path = get_root_path(apps)
+        self.core_source: Path = self.get_dependency_paths(core)
         self.set_rose_meta_path()
         if version is None:
-            self.version = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
+            self.version: str = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
         else:
-            self.version = version
-        self.author = None
-        self.ticket_number = None
+            self.version: str = version
+        self.author: str | None = None
+        self.ticket_number: str | None = None
         # All parsed macros per metadata section
-        self.parsed_macros = defaultdict(list)
+        self.parsed_macros: dict[list] = defaultdict(list)
         # Parsed macro with desired after tag, per metadata section
-        self.target_macros = {}
-        self.meta_dirs = set()
-        self.sections_with_macro = []
-        self.python_imports = set()
-        self.upgraded_core = False
+        self.target_macros: dict = {}
+        self.meta_dirs: set = set()
+        self.sections_with_macro: list = []
+        self.python_imports: set = set()
+        self.upgraded_core: bool = False
 
-    def set_rose_meta_path(self):
+    def set_rose_meta_path(self) -> None:
         """
         Set up the ROSE_META_PATH environment variable in order to use the Core
         metadata. We also add the clone root path as this should allow the script to be
         run from anywhere.
         Edit 02/2026 - remove backwards compatibility support for pre central-metadata
         """
-        rose_meta_path = (
-            f"{self.root_path / 'rose-meta'}:"
-            f"{self.core_source / 'rose-meta'}"
+        rose_meta_path: str = (
+            f"{self.root_path / 'rose-meta'}:{self.core_source / 'rose-meta'}"
         )
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
-    def parse_application_section(self, meta_dir):
+    def parse_application_section(self, meta_dir: Path) -> Path:
         """
         Given a path to a metadata directory, parse out the application/science
         section. Try to remove the apps and core root paths. Then try to remove trailing
@@ -296,7 +303,7 @@ class ApplyMacros:
         Inputs:
             - meta_dir, path to a metadata dir
         Returns:
-            - path to the metadata directory with the root path removed
+            - path to the metadata directory with the root path and suffixes removed
         """
 
         meta_dir = str(meta_dir)
@@ -313,17 +320,17 @@ class ApplyMacros:
     # Get Working Copy Functions
     ############################################################################
 
-    def get_dependency_paths(self, source):
+    def get_dependency_paths(self, source: str | None) -> Path:
         """
         Parse the core command line arguments to get the path to a git clone.
         If the source isn't defined, first populate the source by reading the
         dependencies.yaml file.
         If the source is a remote GitHub source clone it to a temporary location
         Inputs:
-            - source, str, The command line argument for the source. If not set
-                           this will be None
+            - source, The command line argument for the source. If not set this will be
+              None
         Outputs:
-            - str, The path to the source working copy to use
+            - The path to the source working copy to use
         """
 
         repo = "lfric_core"
@@ -353,12 +360,13 @@ class ApplyMacros:
         source = self.git_clone_temp(source, ref, repo)
         return source
 
-    def read_dependencies(self, repo="lfric_core"):
+    def read_dependencies(self, repo: str = "lfric_core") -> tuple[str, str]:
         """
         Read through the dependencies.yaml file for the source of the repo defined
         by repo. Uses self.root_path to locate the dependencies.yaml file.
         Outputs:
-            - str, The source as defined by the dependencies.yaml file
+            - The source as defined by the dependencies.yaml file
+            - The ref as defined by the dependencies.yaml file
         """
         dependencies_path = self.root_path / "dependencies.yaml"
         with open(dependencies_path, "r") as f:
@@ -366,15 +374,15 @@ class ApplyMacros:
 
         return dependencies[repo]["source"], dependencies[repo]["ref"]
 
-    def git_clone_temp(self, source, ref, repo):
+    def git_clone_temp(self, source: str, ref: str, repo: str) -> Path:
         """
         Given a github URL, extract a temporary clone
         Inputs:
-            - source, str, A github URL
-            - ref, str, A git ref to checkout, None will result in default branch
-            - repo, str, the name of the source being found
+            - source, A github URL
+            - ref, A git ref to checkout, None will result in default branch
+            - repo, the name of the source being found
         Outputs:
-            - str, The path to the temporary working copy
+            - The path to the temporary working copy
         """
 
         print(f"Extracting {source} to a temporary directory")
@@ -394,13 +402,13 @@ class ApplyMacros:
     # Preprocess Macros Functions
     ############################################################################
 
-    def find_meta_dirs(self, path):
+    def find_meta_dirs(self, path: Path) -> set[Path]:
         """
         Searching from a working copy root path, return a list of paths to all
-        the rose-meta directories using os.walk(). Search by looking
+        the rose-meta directories using path.walk(). Search by looking
         for versions.py files
         Outputs:
-            - str, stdout of find command looking for versions.py files
+            - set containing paths of metadata directories
         """
 
         meta_dirs = set()
@@ -410,7 +418,7 @@ class ApplyMacros:
                 meta_dirs.add(dirpath)
         return meta_dirs
 
-    def parse_macro(self, macro, meta_dir):
+    def parse_macro(self, macro: str, meta_dir: Path) -> dict:
         """
         Given a macro string save the macro info in a dictionary
         Inputs:
@@ -476,7 +484,7 @@ class ApplyMacros:
             "class_name": class_name,
         }
 
-    def remove_macro(self, contents, meta_dir):
+    def remove_macro(self, contents: list[str], meta_dir: Path) -> None:
         """
         Rewrite the contents of a versions.py file without the newly added
         macro. Run black on the new file.
@@ -507,17 +515,18 @@ class ApplyMacros:
                 "something has gone wrong"
             )
 
-        os.rename(temppath, filepath)
+        temppath.rename(filepath)
 
-    def find_last_macro(self, macros, meta_dir):
+    def find_last_macro(self, macros: list[str], meta_dir: Path) -> str:
         """
         Given a list of macros, determine the after tag of the final macro in
         the chain. Start from assuming the first before tag is the Version
         Number.
         Inputs:
             - macros, a list of macro strings
+            - meta_dir, the path to the metadata directory
         Returns:
-            - str, the after tag of the final macro in the chain
+            - the after tag of the final macro in the chain
         """
 
         after_tag = f"vn{self.version}"
@@ -541,14 +550,13 @@ class ApplyMacros:
                 )
         return after_tag
 
-    def find_macro(self, meta_dir, macros):
+    def find_macro(self, meta_dir: Path, macros: list[str]) -> str:
         """
         Read through a list of macros, trying to find the macro with a class
         name that matches the class name supplied (either from the tag or
         cname option). If this is present then return the macro.
         Inputs:
-            - meta_dir, str, The path to the rose metadata directory containing
-              these macros
+            - meta_dir, The path to the rose metadata directory containing these macros
             - macros, a list of macro strings
         Returns:
             - String containing the macro. Empty if the macro isn't found
@@ -570,7 +578,7 @@ class ApplyMacros:
                 return macro
         return ""
 
-    def get_full_import_path(self, imp):
+    def get_full_import_path(self, imp: str) -> Path:
         """
         Search through the Core and Apps working copies to get the full
         path to a metadata directory
@@ -597,7 +605,7 @@ class ApplyMacros:
             f"Couldn't find the import '{imp}' in any of the Apps or Core Sources"
         )
 
-    def read_meta_imports(self, meta_dir, flag="import"):
+    def read_meta_imports(self, meta_dir: Path, flag: str = "import") -> list[str]:
         """
         Read a rose-meta.conf and record which other metadata files are imported
         by this metadata.
@@ -606,6 +614,8 @@ class ApplyMacros:
             - flag, either 'import' or 'meta'. Searches for lines in the config
               file starting flag=. If 'meta', then will return the import
               statement on that line
+        Returns:
+            - list of metadata import strings
         """
 
         if flag == "import":
@@ -635,7 +645,7 @@ class ApplyMacros:
                         break
         return imports
 
-    def write_python_imports(self, meta_dir):
+    def write_python_imports(self, meta_dir: Path) -> None:
         """
         Write out all required python module imports at the top of a versions.py
         file. New imports are written at the top of the current import
@@ -675,9 +685,9 @@ class ApplyMacros:
             for line in versions_file:
                 f.write(line.strip("\n") + "\n")
 
-        os.rename(temppath, filepath)
+        temppath.rename(filepath)
 
-    def determine_import_order(self, app):
+    def determine_import_order(self, app: str) -> list[str]:
         """
         Work out what order metadata is imported. This recursively works through
         import statements recorded in self.target_macros["imports"]. Produces a
@@ -705,7 +715,7 @@ class ApplyMacros:
 
         return deduplicate_list(import_list)
 
-    def combine_macros(self, import_order):
+    def combine_macros(self, import_order: list[str]) -> str:
         """
         Combine macro commands, adding commands in the order determined by
         import_order.
@@ -713,7 +723,7 @@ class ApplyMacros:
             - import_order, the metadata import order to match the order of
               marcro commands.
         Returns:
-            - string, combined macro commands
+            - combined macro commands in a single formatted string
         """
 
         full_command = ""
@@ -745,7 +755,7 @@ class ApplyMacros:
                     ]
         return full_command
 
-    def write_new_macro(self, meta_dir, full_command, macro):
+    def write_new_macro(self, meta_dir: Path, full_command: str, macro: str) -> None:
         """
         Write out the new macro with all relevant commands to the versions.py
         file
@@ -776,9 +786,11 @@ class ApplyMacros:
 
         apply_styling(temppath)
 
-        os.rename(temppath, filepath)
+        temppath.rename(filepath)
 
-    def check_missing_macros(self, meta_dir, meta_imports):
+    def check_missing_macros(
+        self, meta_dir: Path, meta_imports: list[str]
+    ) -> list[str]:
         """
         Check through macros of imported metadata sections, returning list of any that
         aren't in the current section (identified by the after tag)
@@ -819,7 +831,9 @@ class ApplyMacros:
 
         return missing_macros
 
-    def combine_missing_macros(self, meta_imports, missing_macros):
+    def combine_missing_macros(
+        self, meta_imports: list[str], missing_macros: list[str]
+    ) -> dict:
         """
         Combine missing macro commands
         Inputs:
@@ -860,7 +874,7 @@ class ApplyMacros:
 
         return new_macros
 
-    def fix_missing_macros(self, meta_dir, meta_imports):
+    def fix_missing_macros(self, meta_dir: Path, meta_imports: list[str]) -> str | None:
         """
         Function to handle checking and fixing of missing upgrade macros
         Inputs:
@@ -893,12 +907,13 @@ class ApplyMacros:
 
         return None
 
-    def order_meta_dirs(self):
+    def order_meta_dirs(self) -> list[str]:
         """
         Order the self.meta_dirs list by metadata import order, such that sections
         higher up the import tree come first
         Create a networkx ordered graph, with nodes as the import tree and edges as the
-        import statements. Then recreate list from this
+        import statements.
+        Return a list of networkx topological_sort result
         """
 
         import_graph = nx.DiGraph()
@@ -912,7 +927,7 @@ class ApplyMacros:
         # guaranteed for valid rose metadata
         return list(nx.topological_sort(import_graph))
 
-    def preprocess_macros(self):
+    def preprocess_macros(self) -> None:
         """
         Overarching function to pre-process added macros
         Run before running any rose macro upgrade commands"
@@ -971,9 +986,7 @@ class ApplyMacros:
             self.target_macros[meta_dir]["imports"] = self.read_meta_imports(meta_dir)
 
             # Read through the versions.py file for python import statements
-            self.python_imports.update(
-                read_python_imports(meta_dir / "versions.py")
-            )
+            self.python_imports.update(read_python_imports(meta_dir / "versions.py"))
 
         # Now reconstruct the macro for all applications which have the newly
         # added macro or import metadata with the new macro
@@ -1010,7 +1023,7 @@ class ApplyMacros:
     # Upgrade Apps Functions
     ############################################################################
 
-    def metadata_check(self, meta_dir):
+    def metadata_check(self, meta_dir: Path) -> None:
         """ "
         Note: Not currently run - see comment below
         Run rose metadata-check on rose metadata directories to check the
@@ -1030,10 +1043,10 @@ class ApplyMacros:
             )
         print(f"[PASS] {meta_dir} validated")
 
-    def get_rose_apps(self):
+    def get_rose_apps(self) -> set[Path]:
         """
         Return:
-            - list of paths to rose-stem apps in Apps and Core
+            - set of paths to rose-stem apps in Apps and Core
         """
 
         apps_list = []
@@ -1044,7 +1057,7 @@ class ApplyMacros:
             apps_list += [app_dir / f for f in os.listdir(app_dir)]
         return set(apps_list)
 
-    def apps_to_upgrade(self):
+    def apps_to_upgrade(self) -> list[Path]:
         """
         Loop over rose-stem apps, finding ones using metadata with an upgrade
         macro.
@@ -1061,9 +1074,7 @@ class ApplyMacros:
                 continue
             if not app_path.is_dir():
                 continue
-            meta_import = self.read_meta_imports(
-                app_path / "rose-app.conf", "meta"
-            )
+            meta_import = self.read_meta_imports(app_path / "rose-app.conf", "meta")
             # If there was a metadata import, it is the first value in the list
             # It includes the version directory, so remove this to compare with
             # self.sections_with_macro
@@ -1073,7 +1084,7 @@ class ApplyMacros:
 
         return upgradeable_apps
 
-    def run_app_upgrade(self, app_path):
+    def run_app_upgrade(self, app_path: Path) -> None:
         """
         Run 'rose app-upgrade' on a particular rose-stem app
         Inputs:
@@ -1091,7 +1102,7 @@ class ApplyMacros:
             )
         print(f"[PASS] Upgraded rose-stem app {app} successfully")
 
-    def run_macro_fix(self, app_path):
+    def run_macro_fix(self, app_path: Path) -> None:
         """
         Run 'rose macro --fix' on a particular rose-stem app to force metadata
         consistency
@@ -1110,7 +1121,7 @@ class ApplyMacros:
             )
         print(f"[PASS] Successfully forced metadata consistency in {app}")
 
-    def upgrade_apps(self):
+    def upgrade_apps(self) -> None:
         """
         Overarching function to run rose commands to apply upgrade macros to
         rose-stem apps.
@@ -1142,7 +1153,7 @@ class ApplyMacros:
                 self.upgraded_core = True
 
 
-def check_tag(opt):
+def check_tag(opt: str | None) -> str | None:
     """
     Check that a command line supplied tag is of a valid format
     """
@@ -1155,7 +1166,7 @@ def check_tag(opt):
     return opt
 
 
-def version_number(opt):
+def version_number(opt: str | None) -> str | None:
     """
     Check that the command line supplied version number is of a suitable format
     """
@@ -1169,7 +1180,7 @@ def version_number(opt):
     return opt
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """
     Read command line args
     """
@@ -1215,14 +1226,20 @@ def parse_args():
     return parser.parse_args()
 
 
-def apply_macros_main(tag: str, cname: str = None, version: str = None, apps: Path = Path(".").absolute(), core: str = None):
+def apply_macros_main(
+    tag: str,
+    cname: str | None = None,
+    version: str | None = None,
+    apps: Path = Path(".").absolute(),
+    core: str | None = None,
+) -> None:
     """
     Main function for this program
     """
 
     check_environment()
 
-    macro_object = ApplyMacros(tag, cname, version, apps, core)
+    macro_object: ApplyMacros = ApplyMacros(tag, cname, version, apps, core)
 
     # Pre-process macros
     banner_print("Pre-Processing Macros")
@@ -1245,14 +1262,10 @@ def apply_macros_main(tag: str, cname: str = None, version: str = None, apps: Pa
         shutil.rmtree(directory)
 
     # Run rose config-dump on rose-stem
-    config_dump_apps = (
-        f"rose config-dump {macro_object.root_path / 'rose-stem'}"
-    )
+    config_dump_apps = f"rose config-dump {macro_object.root_path / 'rose-stem'}"
     run_command(config_dump_apps)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    apply_macros_main(
-        args.tag, args.cname, args.version, args.apps, args.core
-    )
+    apply_macros_main(args.tag, args.cname, args.version, args.apps, args.core)

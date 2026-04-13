@@ -79,7 +79,10 @@ def test_read_versions_file():
     Test read_versions_file
     """
 
-    assert read_versions_file(TEST_APPS_DIR / "rose-meta" / "lfric-gungho") == ["# line 1\n", "# line 2\n"]
+    assert read_versions_file(TEST_APPS_DIR / "rose-meta" / "lfric-gungho") == [
+        "# line 1\n",
+        "# line 2\n",
+    ]
 
 
 def test_find_meta_dirs():
@@ -148,7 +151,9 @@ def test_read_python_imports():
 
 
 def test_find_macro():
-    assert applymacros.find_macro(Path("meta_dir"), expected_split_macros) == desired_macro
+    assert (
+        applymacros.find_macro(Path("meta_dir"), expected_split_macros) == desired_macro
+    )
     assert applymacros.find_macro(Path("meta_dir"), [existing_macro]) == ""
     expected_error = r".*meta_dir/versions.py.*"
     with pytest.raises(Exception, match=expected_error):
@@ -240,9 +245,7 @@ def test_read_meta_imports():
     ]
     assert applymacros.parsed_macros[TEST_APPS_DIR]["imports"] == expected_imports
 
-    expected_meta = [
-        applymacros.root_path / "rose-meta" / "lfric-lfric_atm" / "vn0.0"
-    ]
+    expected_meta = [applymacros.root_path / "rose-meta" / "lfric-lfric_atm" / "vn0.0"]
     assert (
         applymacros.read_meta_imports(
             TEST_APPS_DIR / "rose-stem" / "app" / "lfric_atm" / "rose-app.conf",
@@ -285,26 +288,18 @@ def test_combine_macros():
 
 
 def test_parse_application_section():
-    assert (
-        applymacros.parse_application_section(Path("meta_dir") / "HEAD")
-        == Path("meta_dir")
+    assert applymacros.parse_application_section(Path("meta_dir") / "HEAD") == Path(
+        "meta_dir"
     )
-    assert (
-        applymacros.parse_application_section(Path("meta_dir") / "versions.py")
-        == Path("meta_dir")
-    )
-    assert (
-        applymacros.parse_application_section(
-            applymacros.root_path / "meta_dir"
-        )
-        == Path("meta_dir")
-    )
-    assert (
-        applymacros.parse_application_section(
-            applymacros.core_source / "meta_dir"
-        )
-        == Path("meta_dir")
-    )
+    assert applymacros.parse_application_section(
+        Path("meta_dir") / "versions.py"
+    ) == Path("meta_dir")
+    assert applymacros.parse_application_section(
+        applymacros.root_path / "meta_dir"
+    ) == Path("meta_dir")
+    assert applymacros.parse_application_section(
+        applymacros.core_source / "meta_dir"
+    ) == Path("meta_dir")
 
 
 def test_read_dependencies():
