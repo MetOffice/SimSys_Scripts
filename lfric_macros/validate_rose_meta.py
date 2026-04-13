@@ -12,6 +12,7 @@ import os
 import sys
 import subprocess
 import argparse
+from pathlib import Path
 
 # A list of invalid metadata sections. Most are invalid as they are imported by
 # lfric-gungho but also use the files namelist contained there, creating a circular
@@ -43,7 +44,9 @@ INVALID_APPS = [
 ]
 
 
-def run_command(command, shell=False, env=None):
+def run_command(
+    command: str, shell: bool = False, env: dict = None
+) -> subprocess.CompletedProcess:
     """
     Run a subprocess command and return the result object
     Inputs:
@@ -66,7 +69,7 @@ def run_command(command, shell=False, env=None):
     )
 
 
-def check_rose_metadata(rose_meta_path, source_path):
+def check_rose_metadata(rose_meta_path: str, source_path: Path) -> bool:
     """
     Auto find rose-meta sections from the top level rose-meta directory and run `rose
     metadata-check` on each
@@ -79,12 +82,11 @@ def check_rose_metadata(rose_meta_path, source_path):
     my_env = os.environ.copy()
     my_env["ROSE_META_PATH"] = rose_meta_path
 
-    start_dir = os.path.join(source_path, "rose-meta")
-    dirs = os.listdir(start_dir)
-    for section in dirs:
+    start_dir = source_path / "rose-meta"
+    for section in start_dir.iterdir():
         if section in INVALID_METADATA:
             continue
-        meta_dir = os.path.join(start_dir, section, "HEAD")
+        meta_dir = start_dir / section / "HEAD"
         command = f"rose metadata-check --verbose -C {meta_dir}"
         result = run_command(command, env=my_env)
         if result.returncode:
@@ -100,7 +102,7 @@ def check_rose_metadata(rose_meta_path, source_path):
     return failed
 
 
-def parse_suite_controlled(err_msg):
+def parse_suite_controlled(err_msg: str) -> list:
     """
     Remove any app validation error messages resulting from suite_controlled option
     configs
@@ -124,7 +126,7 @@ def parse_suite_controlled(err_msg):
     return []
 
 
-def check_rose_stem_apps(meta_paths, source_path):
+def check_rose_stem_apps(meta_paths: str, source_path: Path) -> bool:
     """
     Auto find rose-stem apps that use rose metadata and validate these using 'rose
     macro --validate'
@@ -133,13 +135,12 @@ def check_rose_stem_apps(meta_paths, source_path):
     print("\n\n[INFO] - Validating rose-stem apps\n\n")
     failed = False
 
-    start_dir = os.path.join(source_path, "rose-stem", "app")
-    apps = os.listdir(start_dir)
-    for app in apps:
+    start_dir = source_path / "rose-stem" / "app"
+    for app in start_dir.iterdir():
         if app in INVALID_APPS:
             continue
-        app_dir = os.path.join(start_dir, app)
-        conf_file = os.path.join(app_dir, "rose-app.conf")
+        app_dir = start_dir / app
+        conf_file = app_dir / "rose-app.conf"
         with open(conf_file, "r") as f:
             for line in f:
                 if line.startswith("meta="):
@@ -166,7 +167,7 @@ def check_rose_stem_apps(meta_paths, source_path):
     return failed
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """
     Read command line args
     """
@@ -200,14 +201,14 @@ def parse_args():
         )
 
     if args.apps:
-        args.apps = os.path.expanduser(args.apps)
+        args.apps = Path(args.apps).absolute().expanduser()
     if args.core:
-        args.core = os.path.expanduser(args.core)
+        args.core = Path(args.core).absolute().expanduser()
 
     return args
 
 
-def main():
+def main() -> None:
     """
     main function for this script
     """
@@ -217,17 +218,17 @@ def main():
     rose_meta_path = ""
     if args.apps:
         source_path = args.apps
-        meta_paths += f"-M {os.path.join(args.apps, 'rose-meta')} "
-        rose_meta_path += f"{os.path.join(args.apps, 'rose-meta')}"
+        meta_paths += f"-M {args.apps / 'rose-meta'} "
+        rose_meta_path += f"{args.apps / 'rose-meta'}"
     if args.core:
-        meta_paths += f"-M {os.path.join(args.core, 'rose-meta')} "
+        meta_paths += f"-M {args.core / 'rose-meta'} "
         if rose_meta_path:
             # Apps has already started this
-            rose_meta_path += f":{os.path.join(args.core, 'rose-meta')}"
+            rose_meta_path += f":{args.core / 'rose-meta'}"
         else:
             # Apps hasn't been set
             source_path = args.core
-            rose_meta_path = f"{os.path.join(args.core, 'rose-meta')}"
+            rose_meta_path = f"{args.core / 'rose-meta'}"
 
     if check_rose_metadata(rose_meta_path, source_path) or check_rose_stem_apps(
         meta_paths, source_path
