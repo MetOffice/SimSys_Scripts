@@ -21,7 +21,6 @@ from ..apply_macros import (
 
 # Commonly used paths
 TEST_APPS_DIR = Path(__file__).absolute().parent / "test_lfric_apps_dir"
-print(TEST_APPS_DIR)
 TEST_META_DIR = TEST_APPS_DIR / "rose-meta"
 TEST_ROSE_STEM = TEST_APPS_DIR / "rose-stem" / "app"
 
