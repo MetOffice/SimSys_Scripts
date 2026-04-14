@@ -84,7 +84,7 @@ def check_rose_metadata(rose_meta_path: str, source_path: Path) -> bool:
 
     start_dir = source_path / "rose-meta"
     for section in start_dir.iterdir():
-        if section in INVALID_METADATA:
+        if str(section.relative_to(start_dir)) in INVALID_METADATA:
             continue
         meta_dir = start_dir / section / "HEAD"
         command = f"rose metadata-check --verbose -C {meta_dir}"
@@ -137,7 +137,7 @@ def check_rose_stem_apps(meta_paths: str, source_path: Path) -> bool:
 
     start_dir = source_path / "rose-stem" / "app"
     for app in start_dir.iterdir():
-        if app in INVALID_APPS:
+        if str(app.relative_to(start_dir)) in INVALID_APPS:
             continue
         app_dir = start_dir / app
         conf_file = app_dir / "rose-app.conf"
