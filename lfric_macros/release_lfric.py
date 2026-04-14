@@ -156,7 +156,7 @@ def update_variables_files(apps: Path) -> None:
     meto_path = apps / "rose-stem" / "site" / "meto"
     variables_files = set()
     for filename in meto_path.iterdir():
-        if filename.startswith("variables_"):
+        if str(filename).startswith("variables_"):
             variables_files.add(meto_path / filename)
 
     for fpath in variables_files:
@@ -230,13 +230,13 @@ def copy_head_meta(meta_dirs: list[Path], apps: Path, core: Path, version: str) 
         head = meta_dir / "HEAD"
         new = meta_dir / version
         shutil.copytree(head, new)
-        if core in new:
-            new = new.removeprefix(core)
-            new = new.lstrip("/")
+        if core in new.parents:
+            new = new.relative_to(core)
+            print(new)
             command = f"git -C {core} add {new}"
-        elif apps in new:
-            new = new.removeprefix(apps)
-            new = new.lstrip("/")
+        elif apps in new.parents:
+            new = new.relative_to(apps)
+            print(new)
             command = f"git -C {apps} add {new}"
         _ = run_command(command)
 
@@ -290,13 +290,11 @@ def copy_versions_files(
         if not versions_file.exists():
             raise FileNotFoundError(f"The file {versions_file} doesn't exist")
         shutil.copyfile(versions_file, upgrade_file)
-        if core in upgrade_file:
-            upgrade_file = upgrade_file.removeprefix(core)
-            upgrade_file = upgrade_file.lstrip("/")
+        if core in upgrade_file.parents:
+            upgrade_file = upgrade_file.relative_to(core)
             command = f"git -C {core} add {upgrade_file}"
-        elif apps in upgrade_file:
-            upgrade_file = upgrade_file.removeprefix(apps)
-            upgrade_file = upgrade_file.lstrip("/")
+        elif apps in upgrade_file.parents:
+            upgrade_file = upgrade_file.relative_to(apps)
             command = f"git -C {apps} add {upgrade_file}"
         _ = run_command(command)
 
@@ -428,7 +426,6 @@ def main() -> None:
         args.old_version.removeprefix("vn"),
         args.apps,
         args.core,
-        None,
     )
 
     set_dependency_path(args.apps, args.core)
@@ -471,7 +468,6 @@ def main() -> None:
         args.old_version,
         args.apps,
         args.core,
-        None,
     )
     print("\n[INFO] Successfully upgraded apps")
 
