@@ -5,8 +5,13 @@
 # -----------------------------------------------------------------------------
 """
 Helper functions for cloning git sources in command line builds
+
+Reads CONFLCIT_IGNORES environment variable to get a list of comma-separated
+files/directories to ignore merge conflicts in. These should be relative to the
+top-level of the repo. If not set, then a default list is defined below.
 """
 
+import os
 import re
 import subprocess
 from datetime import datetime
@@ -231,17 +236,24 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
     If merge conflicts are in `rose-stem/` or `dependencies.yaml` then accept the
     current changes and mark as resolved.
     If others remain then raise an error
+    If CONFLICT_IGNORES environment variable is set, use that as a comma-separated list
+    of files/directories to ignore. If not set, use a default list below.
     """
 
     # For suites, merge conflicts in these files/directories are unimportant so accept
     # the current changes
-    for filepath in ("dependencies.yaml", "rose-stem"):
+    ignores = os.environ.get(
+        "CONFLICT_IGNORES,dependencies.yaml,rose-stem,CONTRIBUTORS.md"
+    ).split(",")
+    need_commit = False
+    for filepath in ignores:
         full_path = loc / filepath
         if not full_path.exists():
             continue
         logger.warning(f"Ignoring merge conflicts in {filepath}")
         run_command(f"git -C {loc} checkout --ours -- {filepath}")
-        run_command(f"git -C {loc} add {filepath}")
+        run_command(f"git -C {loc} add -f {filepath}")
+        need_commit = True
 
     # Check if there are any remaining merge conflicts
     unmerged = get_unmerged(loc)
@@ -253,6 +265,9 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
             f"with conflicting files:{files}"
             "\n\nThese will need changing in the source branches to be useable together"
         )
+
+    if need_commit:
+        run_command(f"git -C {loc} commit -m 'fix conflict'")
 
 
 def get_unmerged(loc: Path) -> list[str]:
