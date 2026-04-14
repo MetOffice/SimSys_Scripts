@@ -243,7 +243,7 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
     # For suites, merge conflicts in these files/directories are unimportant so accept
     # the current changes
     ignores = os.environ.get(
-        "CONFLICT_IGNORES,dependencies.yaml,rose-stem,CONTRIBUTORS.md"
+        "CONFLICT_IGNORES", "dependencies.yaml,rose-stem,CONTRIBUTORS.md"
     ).split(",")
     need_commit = False
     for filepath in ignores:
