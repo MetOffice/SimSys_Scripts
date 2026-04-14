@@ -266,6 +266,7 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
             "\n\nThese will need changing in the source branches to be useable together"
         )
 
+    # Need to commit the ignored conflict fixes
     if need_commit:
         run_command(f"git -C {loc} commit -m 'fix conflict'")
 
