@@ -16,10 +16,10 @@ import shutil
 import sys
 from pathlib import Path
 
-from apply_macros import ApplyMacros, run_command
+from apply_macros import ApplyMacros
 
 
-def find_upgradeable_apps(apps_dir: Path) -> list[Path]:
+def find_upgradeable_apps(apps_dir: Path) -> dict:
     """
     Loop over rose-stem apps installed into the cylc_workflow and return a list
     of those with metadata imports and therefore available for rose upgrade
@@ -29,17 +29,19 @@ def find_upgradeable_apps(apps_dir: Path) -> list[Path]:
     Returns:
         - list of app names that can be upgraded
     """
-
-    valid_apps = []
+    valid_apps = {}
     for app in apps_dir.iterdir():
-        conf_path = apps_dir / app / "rose-app.conf"
+        conf_path = app / "rose-app.conf"
         if not conf_path.is_file():
             continue
-        grep_com = f'grep -E "meta=.*" {conf_path}'
-        result = run_command(grep_com)
-        if "meta=" in result.stdout:
-            valid_apps.append(app)
-
+        with open(conf_path) as f:
+            for line in f:
+                try:
+                    version = re.search(r"\s*meta\s*=\s*([\w\.\-\/]+)", line).group(1)
+                    valid_apps[app] = version.split("/")
+                    break
+                except AttributeError:
+                    pass
     return valid_apps
 
 
@@ -76,13 +78,15 @@ def find_macro_tags(tag: str, path: Path, errors: list) -> set[str]:
     return found_tags
 
 
-def compare_tags(before: str, after: str, path: Path, errors: list) -> None:
+def compare_tags(before: str, after: str, path: Path, errors: list) -> str | None:
     """
     Check that the before and after tags form a continuous chain. This is done
     by ensuring that only the initial before tag (the version number) and the
     final after tag are not in both sets.
     Inputs:
         before/after, sets of the tags in a given file
+    Returns:
+        Final after tag in the macro chain
     """
 
     # Tags in only one of before and after sets
@@ -97,6 +101,11 @@ def compare_tags(before: str, after: str, path: Path, errors: list) -> None:
             "chain and the end of the chain.\nThis is likely a typo in the tags in "
             "the versions.py file. The identified tags were:\n"
         ) + "\n".join(x for x in single_tags)
+        return None
+
+    for item in single_tags:
+        if item in after:
+            return item
 
 
 def check_fcm() -> None:
@@ -124,24 +133,53 @@ def main() -> None:
     source_core = Path(os.environ["SOURCE_ROOT"]) / "lfric_core"
 
     macro_object = ApplyMacros("vn0.0_t0", None, "vn0.0", source_apps, source_core)
-    macro_object.find_meta_dirs(macro_object.root_path / "applications")
+    macro_object.meta_dirs = macro_object.find_meta_dirs(
+        macro_object.root_path / "rose-meta"
+    )
+
+    rose_apps = find_upgradeable_apps(source_apps / "rose-stem" / "app")
+    latest_meta = {}
 
     errors = []
     for meta_dir in macro_object.meta_dirs:
         before_tags = find_macro_tags("before", meta_dir, errors)
         after_tags = find_macro_tags("after", meta_dir, errors)
 
-        compare_tags(before_tags, after_tags, meta_dir, errors)
+        print(meta_dir)
+        latest = compare_tags(before_tags, after_tags, meta_dir, errors)
 
-    # Remove temp directories
-    for _, directory in macro_object.temp_dirs.items():
-        shutil.rmtree(directory)
+        if latest:
+            latest_meta[meta_dir.name] = latest
 
     if errors:
         for item in errors:
             print(f"{item}\n\n\n\n", file=sys.stderr)
         print("[FAIL] - Found errors in macro chains - please check the job.err")
         exit(1)
+
+    errors = []
+    for app, version in rose_apps:
+        if version[0] not in latest_meta:
+            print("NOT FOUND:", app, version)
+            continue
+        if version[1] != latest_meta[version[0]]:
+            msg = (
+                f"The rose-stem app {app} is using a different macro tag "
+                f"'{version[0]}/{version[1]}' compared with the latest upgrade macro, "
+                f"'{latest_meta[version[0]]}'. This suggests the macro has not been "
+                "successfully applied."
+            )
+            errors.append(msg)
+
+    if errors:
+        for item in errors:
+            print(f"{item}\n\n\n\n", file=sys.stderr)
+        print("[FAIL] - Found errors in rose app versions - please check the job.err")
+        exit(1)
+
+    # Remove temp directories
+    for _, directory in macro_object.temp_dirs.items():
+        shutil.rmtree(directory)
 
     print("[PASS] - Successfully checked all macro chains")
 
