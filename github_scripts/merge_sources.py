@@ -32,6 +32,7 @@ def parse_args():
     parser.add_argument(
         "-p",
         "--path",
+        type=Path,
         default=None,
         help="The path to extract the sources to. If part of a cylc suite, it will "
         "default to $CYLC_WORKFLOW_SHARE_DIR/source, otherwise __file__/source",
