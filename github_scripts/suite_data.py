@@ -10,7 +10,6 @@ Class containing helper methods for gathering data needed for a SuiteReport obje
 
 import re
 import os
-import shutil
 import sqlite3
 import subprocess
 import yaml
@@ -18,8 +17,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 from git_bdiff import GitBDiff, GitInfo
-from get_git_sources import clone_repo, sync_repo
-
 
 class SuiteData:
     """
@@ -36,12 +33,12 @@ class SuiteData:
         "-v-",
     )
 
-    def __init__(self, suite_path=None) -> None:
+    def __init__(self, suite_path: Path = None) -> None:
         self.dependencies = {}
         self.rose_data = {}
         self.suite_path = suite_path
+        self.source_root = suite_path / "share" / "source"
         self.task_states = {}
-        self.temp_directory = None
 
     def get_um_failed_configs(self) -> Set[str]:
         """
@@ -65,7 +62,7 @@ class SuiteData:
         """
         Read through a UM file searching for line
         """
-        change = self.temp_directory / "um" / change
+        change = self.source_root / "um" / change
         lines = change.read_text()
         lines = lines.lower()
         try:
@@ -118,7 +115,7 @@ class SuiteData:
         Read UM Code Owners file and write to a dictionary
         """
 
-        fpath = self.temp_directory / "um" / filename
+        fpath = self.source_root / "um" / filename
         owners_text = fpath.read_text()
 
         in_owners = False
@@ -179,7 +176,7 @@ class SuiteData:
             if not data["gitinfo"].is_main():
                 parent = "main"
                 self.dependencies[dependency]["gitbdiff"] = GitBDiff(
-                    repo=self.temp_directory / dependency, parent=parent
+                    repo=self.source_root / dependency, parent=parent
                 ).files()
             else:
                 self.dependencies[dependency]["gitbdiff"] = []
@@ -191,22 +188,8 @@ class SuiteData:
 
         for dependency in self.dependencies:
             self.dependencies[dependency]["gitinfo"] = GitInfo(
-                self.temp_directory / dependency
+                self.source_root / dependency
             )
-
-    def clone_sources(self) -> None:
-        """
-        Clone the sources defined in the dependencies file, to allow reading of files
-        and creation of diffs.
-        If the source is not a github url, then copy it using rsync
-        """
-
-        for dependency, data in self.dependencies.items():
-            loc = self.temp_directory / dependency
-            if data["source"].endswith(".git"):
-                clone_repo(data["source"], data["ref"], loc)
-            else:
-                sync_repo(data["source"], data["ref"], loc)
 
     def determine_primary_source(self) -> str:
         """
@@ -418,9 +401,3 @@ class SuiteData:
             )
         if rval:
             return result
-
-    def cleanup(self) -> None:
-        """
-        Remove self.temp_directory
-        """
-        shutil.rmtree(self.temp_directory)
