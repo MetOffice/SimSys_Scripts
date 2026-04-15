@@ -1,7 +1,16 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+
 """ This is the storage location for rules based on what's defined as the standard in the UMDP: 003 document. These rules are not necessarily the same as the rules defined in the UMDP: 003 document, but they are based on them. The rules in this file are used by the umdp3_checker script to check for compliance with the UMDP: 003 standard.
 For now, the document has been copied into this file as a placeholder for the rules as they appear."""
 import re
 from typing import List, Dict
+from umdp3_checker_rules import TestResult
+from fortran_keywords import fortran_keywords
+"""ToDo: This lot will need putting back as and when the tests that use them get imported/re-created"""
 # from fortran_keywords import fortran_keywords
 # from search_lists import (
 #     obsolescent_intrinsics,
@@ -11,8 +20,6 @@ from typing import List, Dict
 # )
 # from dataclasses import dataclass, field
 # from script_umdp3_checker import fortran_keywords
-from umdp3_checker_rules import TestResult
-from fortran_keywords import fortran_keywords
 
 comment_line = re.compile(r"!.*$")
 word_splitter = re.compile(r"\b\w+\b")
@@ -48,6 +55,29 @@ TODO: The original version replaced the quoted sections with a
     result = re.sub(r"'[^']*'", "", result)
 
     return result
+
+def remove_comments(line: str) -> str:
+    """Remove comments from the lines :
+    There is a bit of an assumption here that quoted text has already been removed, so that we don't accidentally remove text after an "!" in a string."""
+    return comment_line.sub("", line).rstrip()
+
+def concatenate_lines(lines: List[str], line_no: int) -> str:
+    """Concatenate the continuation lines into a single string"""
+    # Find first line and check for continuation character.
+    line = lines[line_no - 1]
+    line = remove_comments(line)
+    line = remove_quoted(line)
+    while line.rstrip().endswith("&"):
+        line = line.rstrip()[:-1]  # Remove the continuation character
+        line_no += 1
+        if line_no > len(lines):
+            break  # Avoid going out of bounds
+        next_line = lines[line_no - 1]
+        next_line = remove_comments(next_line)
+        next_line = remove_quoted(next_line)
+        line += next_line.lstrip()  # Concatenate with the next line, removing leading whitespace
+    return line
+
 
 """
 3.1 Source files should only contain a single program unit

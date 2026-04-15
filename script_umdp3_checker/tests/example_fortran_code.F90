@@ -55,6 +55,7 @@ INTEGER :: j ! Loop counter
 INTEGER :: icode ! error code for EReport
 LOGICAL :: l_loud ! debug flag (default false unless l_loud_opt is used)
 REAL, ALLOCATABLE :: field(:,:) ! Scaling array to fill.
+REAL, ALLOCATABLE :: field2(:,:) ! Scaling array to fill.
 REAL(KIND=jprb) :: zhook_handle ! DrHook tracing
 CHARACTER(LEN=*), PARAMETER :: RoutineName="EXAMPLE"
 CHARACTER(LEN=errormessagelength) :: Cmessage ! used for EReport
@@ -68,7 +69,7 @@ IF (PRESENT(l_loud_opt)) THEN
 END IF
 my_char                                                                        &
     = "This is a very very very very very very very "                          &
-    // "loud character assignment" ! A pointless long character example.
+    // "long character assignment" ! A pointless long character example.
 icode=0
 ! verbosity choice, output some numbers to aid with debugging
 ! protected by printstatus>=PrNorm and pe=0
@@ -82,14 +83,18 @@ IF (l_loud) CALL umprint(my_char,level=PrNormal,src="example_mod")
 IF ( l_unscale ) THEN
     icode = -100 ! set up WARNING message
     ALLOCATE(field( 1,1 ) )
+    ALLOCATE(field2( 1,1 ) )
     cmessage="Scaling is switched off in run!"
     CALL ereport(RoutineName,icode,cmessage)
 ELSE
     ALLOCATE(field( xlen, ylen ) )
+    ALLOCATE(field2( xlen, ylen ) )
     DO j=1,ylen
         DO i=1,xlen
             field(i, j) = (1.0*i) + (2.0*j)
             input2(i, j) = input2(i, j) * field(i, j)
+            field2(i, j) = (1.0*i) - (2.0*j)                                   &
+                + (3.0*i*j) + (4.0*i**2) + field(i, j)*2
         END DO
     END DO
 END IF

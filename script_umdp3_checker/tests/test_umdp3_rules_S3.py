@@ -1,10 +1,19 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+
+# from pyparsing import remove_quotes
 import pytest
 import sys
 from pathlib import Path
 
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from umdp3_rules_S3 import capitulated_keywords, r3_2_1_check_crown_copyright, r3_4_1_capitalised_keywords
+from umdp3_rules_S3 import remove_comments, remove_quoted, \
+    concatenate_lines, capitulated_keywords, r3_2_1_check_crown_copyright, \
+    r3_4_1_capitalised_keywords
 # from umdp3_checker_rules import TestResult, UMDP3Checker
 
 
@@ -41,6 +50,61 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
         # for count, line in enumerate(lines, 1):
         #      print(f"line [{count}]: {line}")
     return lines
+
+# =================================================================
+"""First : test the helper functions in umdp3_rules_S3.py."""
+def test_modify_fortran_lines(example_fortran_lines):
+    """TODO: Does this need to be more rigorous ?"""
+    changes_list = [
+        ["replace", 10, "This is a replacement line."],
+        ["delete", 20, None],
+        ["add", 30, "This is an added line."]
+    ]
+    modified_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    # Line no.s below have to be carefully calculated. Basic is line no of change -1 but then add one for every line added aobve in the file and -1 for every line deleted above in the file.
+    # for line_no, line in enumerate(modified_lines, 1):
+    #     print(f"line [{line_no:04}]: {line}")
+    assert modified_lines[9] == "This is a replacement line."
+    assert len(modified_lines) == len(example_fortran_lines) # One line deleted, One added
+    # Added @ 30, so 29, but one line deleted above, so 28 - seeemples
+    assert modified_lines[28] == "This is an added line."
+
+def test_remove_quoted(example_fortran_lines):
+    for line in example_fortran_lines.copy():
+        uncommented_line = remove_quoted(line)
+        assert '"' not in uncommented_line
+        assert "'" not in uncommented_line
+
+def test_remove_comments(example_fortran_lines):
+    for line in example_fortran_lines.copy():
+        line = remove_quoted(line)
+        uncommented_line = remove_comments(line)
+        comment_location = line.find("!")
+        if comment_location != -1:
+            assert uncommented_line == line[:comment_location].rstrip()
+        assert "!" not in uncommented_line
+
+def test_concatenate_lines(example_fortran_lines):
+    for line_no, line in enumerate(example_fortran_lines.copy(), 1):
+        if line.find("&") >= 0:
+            concatenated_line = concatenate_lines(example_fortran_lines.copy(), line_no)
+            assert "&" not in concatenated_line
+            # This bit has to be a bit hard-wired and is going to break every time the example Fortran file line numbers are changed. If you can think of a better method - go ahead.
+            if line_no == 31:
+                expected_line = ("SUBROUTINE example (xlen,ylen,l_unscale,input1," +
+                "input2,   output, l_loud_opt)")
+                assert concatenated_line == expected_line
+            elif line_no == 70:
+                # This will look odd as the quoted text has been removed.
+                expected_line = (
+                "my_char                                                          " +
+                "              =                           // ")
+                assert concatenated_line == expected_line
+            elif line_no == 96:
+                expected_line = ("            field2(i, j) = (1.0*i) - (2.0*j)    " +
+                                 "                               + (3.0*i*j) + " +
+                                 "(4.0*i**2) + field(i, j)*2")
+                assert concatenated_line == expected_line
 
 # =================================================================
 
