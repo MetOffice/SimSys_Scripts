@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 from git_bdiff import GitBDiff, GitInfo
 
+
 class SuiteData:
     """
     Class to gather info on a suite
