@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import argparse
 from checker_dispatch_tables import CheckerDispatchTables
 from umdp3_checker_rules import TestResult
+from umdp3_rules_S3 import list_O_tests
 import concurrent.futures
 
 # Add custom modules to Python path if needed
@@ -160,6 +161,14 @@ class StyleChecker:
             all_passed=tests_failed == 0,
             test_results=file_results,
         )
+
+    def report(self, print_volume: int = 3) -> None:
+        """Print summary of results for this checker."""
+        if print_volume >= 3:
+            print(
+                f"Checker \"{self.name}\" checking {len(self.files_to_check)} files "
+                f"with {len(self.check_functions)} checks."
+            )
 
     @classmethod
     def from_full_list(
@@ -536,6 +545,7 @@ def create_style_checkers(
         if print_volume >= 3:
             print("Configuring Fortran checkers:")
         combined_checkers = fortran_diff_table | fortran_file_table | generic_file_table
+        combined_checkers = combined_checkers | list_O_tests
         fortran_file_checker = StyleChecker.from_full_list(
             "Fortran Checker", file_extensions, combined_checkers, changed_files
         )
@@ -593,18 +603,26 @@ def get_files_to_check(
         all_files = [f.relative_to(path) for f in repo_path.rglob("*") if f.is_file()]
         if print_volume >= 1:
             print("Full check override enabled.")
-        if print_volume >= 3:
+        if print_volume >= 4:
             print(
-                f"    Found {len(all_files)} files to "
-                f"check in repository at path: {path}"
+                f"    Found a total of {len(all_files)} files "
+                f"in directory at path: {path}\n"
+                "    These will be filtered by the checkers based on their file"
+                " extension"
             )
-        return all_files
     else:  # Configure CMS, and check we've been passed a branch
         if print_volume >= 1:
             print("Using a CMS to determine changed files.")
         cms = which_cms_is_it(path, print_volume)
-        changed_files = cms.get_changed_files()
-        return changed_files
+        all_files = cms.get_changed_files()
+        if print_volume >= 4:
+            print(
+                f"    CMS indicates {len(all_files)} files "
+                f"changed in repository at path: {path}\n"
+                "    These will be filtered by the checkers based on their file"
+                " extension"
+            )
+    return all_files
 
 
 # Usage when run from command line.
@@ -625,6 +643,8 @@ if __name__ == "__main__":
         checkers to use for each file type."""
 
     active_checkers = create_style_checkers(args.file_types, full_file_paths)
+    for checker in active_checkers:
+        checker.report(log_volume)
 
     # TODO : Could create a conformance checker for each
     #  file type.

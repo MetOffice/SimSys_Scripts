@@ -125,7 +125,7 @@ TODO: This is a very simplistic check and will not detect many cases which break
             error_log, "missing copyright or crown copyright statement", 0
         )
     return TestResult(
-        checker_name="Crown Copyright Statement",
+        checker_name="Test 2.1 Check Copyright",
         failure_count=0 if found_copyright else 1,
         passed=found_copyright,
         output="Checked for crown copyright statement.",
@@ -162,7 +162,7 @@ def r3_3_2line_too_long(lines: List[str]) -> TestResult:
             error_log = add_error_log(error_log, "line too long", count)
 
     return TestResult(
-        checker_name="Line longer than 80 characters",
+        checker_name="Test 3.2 Line Length",
         failure_count=failures,
         passed=(failures == 0),
         output=f"Checked {count + 1} lines, found {failures} failures.",
@@ -198,7 +198,7 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
                 )
 
     return TestResult(
-        checker_name="Capitalised Keywords",
+        checker_name="Test 4.1 Capitalised Keywords",
         failure_count=failures,
         passed=(failures == 0),
         output=f"Checked {count + 1} lines, found {failures} failures.",
@@ -267,3 +267,13 @@ def capitulated_keywords(lines: List[str]) -> TestResult:
         output=f"Checked {line_count} lines, found {failures} failures.",
         errors=error_log,
     )
+
+"""TODO: The following dictionary can be converted to a list of executables, once all
+the tests above are in place. The keys are not referenced anywhere as each callable
+(test) defines it's own name and stores that in the result."""
+list_O_tests = {
+    "Test 2.1 Check Copyright": r3_2_1_check_crown_copyright,
+    "Test 3.2 Line Length": r3_3_2line_too_long,
+    "Test 4.1 Capitalised Keywords": r3_4_1_capitalised_keywords,
+    # "A": None, # TODO: add test
+    }
