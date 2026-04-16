@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from umdp3_rules_S3 import remove_comments, remove_quoted, \
     concatenate_lines, capitulated_keywords, r3_2_1_check_crown_copyright, \
-    r3_4_1_capitalised_keywords
+    r3_3_2line_too_long, r3_4_1_capitalised_keywords
 # from umdp3_checker_rules import TestResult, UMDP3Checker
 
 
@@ -132,7 +132,7 @@ def test_concatenate_lines(example_fortran_lines):
         ),
         ([["add", 10, ""]], 0, []),  # No changes, expect no errors
     ],
-    ids = ["3 Errors", "No lowercase keyword Errors"]
+    ids = ["3 Lowercase Errors", "No Lowercase Errors"]
 )
 def test_r3_4_1_capitalised_keywords(
     example_fortran_lines, changes_list, expected_result, expected_errors
@@ -185,6 +185,44 @@ def test_r3_2_1_check_crown_copyright(
         assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
             assert line_no in expected_errors[error]
+
+# =================================================================
+
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 71,
+                 "    = \"This is a very very very very very very very \"" +
+                 "                                      &"],
+                ["replace",115, "IF (lhook) CALL dr_hook(ModuleName//     " +
+                 "\":\"  //  RoutineName,  zhook_out,  zhook_handle) ! extra comment"],
+                ["replace", 40, "use yomhook, ONLY: lhook, dr_hook"]
+            ],
+            2,
+            {"line too long": [71, 115]},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids = ["3 line too long Errors", "No line too long Errors"]
+)
+def test_r3_3_2line_too_long(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    # checker = UMDP3Checker()
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_3_2line_too_long(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    assert len(errors) == len(expected_errors)
+    for error, lines_list  in errors.items():
+        assert error in expected_errors
+        assert len(lines_list) == len(expected_errors[error])
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+
 
 # =================================================================
 

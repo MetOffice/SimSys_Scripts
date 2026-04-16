@@ -98,7 +98,7 @@ Then check it's the same name as the last thing closed."""
 """
 
 """3.2 Headers
-* All programming units require a suitable copyright header. Met Office derived code should use the stan-dard UM copyright header as depicted in the good example code. Collaborative UM developed codemay require alternative headers as agreed in the collaborative agreements. e.g. UKCA code. The IPR(intelectual property rights) of UM code is important and needs to be protected appropriately."""
+* All programming units require a suitable copyright header."""
 
 def r3_2_1_check_crown_copyright(lines: List[str]) -> TestResult:
     """Check for crown copyright statement"""
@@ -143,6 +143,35 @@ TODO: This is a very simplistic check and will not detect many cases which break
 
 * Example UM templates are provided with the source of this document; subroutine, function and module
 templates"""
+
+"""3.3 Free source form
+* All code should be written using the free source form.
+* Please restrict code to 80 columns, so that your code can be easily viewed on any editor and screen and
+can be printed easily on A4 paper. Note that CreateBC uses a limit of 100 columns, due to the nature of
+the object-orientated code.
+"""
+def r3_3_2line_too_long(lines: List[str]) -> TestResult:
+    """Check for lines longer than 80 characters"""
+    failures = 0
+    error_log = {}
+    count = -1
+    for count, line in enumerate(lines, 1):
+        if len(line.rstrip()) > 80:
+            # self.add_extra_error("line too long")
+            failures += 1
+            error_log = add_error_log(error_log, "line too long", count)
+
+    return TestResult(
+        checker_name="Line longer than 80 characters",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count + 1} lines, found {failures} failures.",
+        errors=error_log,
+    )
+
+"""
+* Never put more than one statement on a line.
+* Write your program in UK English, unless you have a very good reason for not doing so."""
 
 """3.4 Fortran style
 * To improve readability, write your code using the ALL CAPS Fortran keywords approach."""
