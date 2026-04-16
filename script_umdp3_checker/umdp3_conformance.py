@@ -1,7 +1,7 @@
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, List, Dict, Set, Optional
+from typing import Callable, List, Set, Optional
 from dataclasses import dataclass, field
 import argparse
 from checker_dispatch_tables import CheckerDispatchTables
@@ -131,17 +131,17 @@ class StyleChecker:
         a TestResult object directly, which includes the extra error
         info, so that each thread can work independently."""
     name: str
-    check_functions: Dict[str, Callable]
+    check_functions: list[Callable]
     files_to_check: List[Path]
 
     def __init__(
         self,
         name: str,
-        check_functions: Dict[str, Callable],
+        check_functions: list[Callable],
         changed_files: List[Path],
     ):
         self.name = name
-        self.check_functions = check_functions or {}
+        self.check_functions = check_functions or []
         self.files_to_check = changed_files or []
 
     def get_name(self) -> str:
@@ -151,7 +151,7 @@ class StyleChecker:
         """Run UMDP3 check function on file."""
         lines = file_path.read_text().splitlines()
         file_results = []  # list of TestResult objects
-        for check_name, check_function in self.check_functions.items():
+        for check_function in self.check_functions:
             file_results.append(check_function(lines))
 
         tests_failed = sum([0 if result.passed else 1 for result in file_results])
@@ -175,7 +175,7 @@ class StyleChecker:
         cls,
         name: str,
         file_extensions: Set[str],
-        check_functions: Dict[str, Callable],
+        check_functions: list[Callable],
         changed_files: List[Path],
         print_volume: int = 3,
     ):
@@ -211,11 +211,11 @@ class StyleChecker:
     ) -> "StyleChecker":
         """Create a StyleChecker instance filtering files from a full list."""
         filtered_files = cls.filter_files(all_files, file_extensions)
-        check_functions = {}
+        check_functions = []
         for command in commands:
-            external_opname = f"External_operation_{command[0]}"
+            external_opname = f"{command[0]}"
             free_runner = cls.create_free_runner(command, external_opname)
-            check_functions[external_opname] = free_runner
+            check_functions.append(free_runner)
         return cls(name, check_functions, filtered_files)
 
     @staticmethod
@@ -272,7 +272,7 @@ class Check_Runner(StyleChecker):
     def check(self, file_path: Path) -> CheckResult:
         """Run external command on file."""
         file_results = []  # list of TestResult objects
-        for check_name, check_function in self.check_functions.items():
+        for check_function in self.check_functions:
             file_results.append(check_function(file_path))
         tests_failed = sum([0 if result.passed else 1 for result in file_results])
         return CheckResult(
@@ -544,8 +544,11 @@ def create_style_checkers(
         generic_file_table = dispatch_tables.get_file_dispatch_table_all()
         if print_volume >= 3:
             print("Configuring Fortran checkers:")
-        combined_checkers = fortran_diff_table | fortran_file_table | generic_file_table
-        combined_checkers = combined_checkers | list_O_tests
+        combined_checkers = []
+        combined_checkers.extend(fortran_diff_table)
+        combined_checkers.extend(fortran_file_table)
+        combined_checkers.extend(generic_file_table)
+        combined_checkers.extend(list_O_tests)
         fortran_file_checker = StyleChecker.from_full_list(
             "Fortran Checker", file_extensions, combined_checkers, changed_files
         )

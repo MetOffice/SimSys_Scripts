@@ -268,12 +268,8 @@ def capitulated_keywords(lines: List[str]) -> TestResult:
         errors=error_log,
     )
 
-"""TODO: The following dictionary can be converted to a list of executables, once all
-the tests above are in place. The keys are not referenced anywhere as each callable
-(test) defines it's own name and stores that in the result."""
-list_O_tests = {
-    "Test 2.1 Check Copyright": r3_2_1_check_crown_copyright,
-    "Test 3.2 Line Length": r3_3_2line_too_long,
-    "Test 4.1 Capitalised Keywords": r3_4_1_capitalised_keywords,
-    # "A": None, # TODO: add test
-    }
+list_O_tests = [
+    r3_2_1_check_crown_copyright,
+    r3_3_2line_too_long,
+    r3_4_1_capitalised_keywords,
+]
