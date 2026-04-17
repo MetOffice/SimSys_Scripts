@@ -13,17 +13,12 @@ from typing import Callable
 from umdp3_checker_rules import UMDP3Checker
 
 """
-TODO : This list was checked to ensure it had something for each
-       test in the original.
-TODO : This needs to be re-checked.
-TODO : And the tests need to be compared to the original Perl tests
-       to ensure they are equivalent.
+TODO : This module has lost it's way. I uses a class to define methods which just
+       return lists of functions. I don't think a class is required for this.
+       As the functions themselves are shifted, renamed and hopefully improved, this
+       class should eventually get emptied out and the file removed.
+
 """
-
-# Declare version
-VERSION = "13.5.0"
-
-
 class CheckerDispatchTables:
     """Class containing dispatch tables for UMDP3 tests"""
 

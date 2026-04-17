@@ -14,6 +14,8 @@ the UM codebase in order to improve efficiency.
 """
 TODO: Current order may not be perfect, and could possibly be reviewed.
 However, it is probably 'good enough' for now.
+TODO: Document method used to decide on order. I think it was a grep and count for the
+frequency the keywords appear in the source code.
 """
 
 fortran_keywords = (

@@ -27,13 +27,10 @@ word_splitter = re.compile(r"\b\w+\b")
 def add_error_log(
     error_log: Dict, key: str = "no key", value: int = 0
 ) -> Dict:
-    """Add extra error information to the dictionary"""
-    """
-TODO: This is a bodge to get more detailed info about
-        the errors back to the calling program. The info is
-        useful, but is currently presented on a per-test basis
-        rather than a per-file which would be easier to read
-        and make use of."""
+    """Add error information to the dictionary.
+    This adds the error statement, some are more unique than others, along with the
+    line number the error occurs on. Line number(s) are stored in a list in case the
+    same error occurs multiple times in a file."""
     if key not in error_log:
         error_log[key] = []
     error_log[key].append(value)
@@ -55,6 +52,19 @@ TODO: The original version replaced the quoted sections with a
     result = re.sub(r"'[^']*'", "", result)
 
     return result
+
+"""This is in case I return to the idea of replacing the quoted sections from above
+with something unique and storing them in order to put them back at some stage..."""
+def create_unique_random_string(storage_set, length: int = 7) -> str:
+    """Create a unique random string of a given length.
+    Creates a random string of given length and ensures it hasn't been used before."""
+    import random
+    import string
+    new_value = "".join(random.choices(string.ascii_letters + string.digits, k=length))
+    while new_value in storage_set:
+        new_value = "".join(random.choices(string.ascii_letters + string.digits, k=length))
+    storage_set.add(new_value)
+    return new_value
 
 def remove_comments(line: str) -> str:
     """Remove comments from the lines :
@@ -120,7 +130,6 @@ TODO: This is a very simplistic check and will not detect many cases which break
         found_copyright = True
 
     if not found_copyright:
-        # add_extra_error("missing copyright or crown copyright statement")
         error_log = add_error_log(
             error_log, "missing copyright or crown copyright statement", 0
         )
@@ -157,7 +166,6 @@ def r3_3_2line_too_long(lines: List[str]) -> TestResult:
     count = -1
     for count, line in enumerate(lines, 1):
         if len(line.rstrip()) > 80:
-            # self.add_extra_error("line too long")
             failures += 1
             error_log = add_error_log(error_log, "line too long", count)
 
@@ -191,7 +199,6 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
         for word in word_splitter.findall(clean_line):
             upcase = word.upper()
             if upcase in fortran_keywords and word != upcase:
-                # self.add_extra_error(f"lowercase keyword: {word}")
                 failures += 1
                 error_log = add_error_log(
                     error_log, f"lowercase keyword: {word}", count + 1
@@ -254,7 +261,6 @@ def capitulated_keywords(lines: List[str]) -> TestResult:
         for word in word_splitter.findall(clean_line):
             upcase = word.upper()
             if upcase in fortran_keywords and word != upcase:
-                # add_extra_error(f"lowercase keyword: {word}")
                 error_log = add_error_log(
                     error_log, f"capitulated keyword: {word}", line_count
                 )
