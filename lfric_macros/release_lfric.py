@@ -18,12 +18,12 @@ Release a new version of LFRic by:
 
 import argparse
 import getpass
-import os
 import re
 import socket
 import subprocess
 import shutil
 import shlex
+from pathlib import Path
 
 from apply_macros import (
     ApplyMacros,
@@ -47,7 +47,7 @@ class CLASS_NAME(MacroUpgrade):
 """
 
 
-def run_command(command, timelimit=120):
+def run_command(command: str, timelimit: int = 120) -> subprocess.CompletedProcess:
     """
     Run a subprocess command and return the result object
     Inputs:
@@ -69,7 +69,7 @@ def run_command(command, timelimit=120):
     return result
 
 
-def raise_exception(result, command):
+def raise_exception(result: subprocess.CompletedProcess, command: str) -> None:
     """
     Raise an exception if a subprocess command has failed
     """
@@ -77,7 +77,7 @@ def raise_exception(result, command):
     raise Exception(f"[FAIL] Error running command: '{command}'\n{result.stderr}")
 
 
-def set_dependency_path(args):
+def set_dependency_path(apps: Path, core: Path) -> None:
     """
     Edit an LFRic Apps dependencies.sh file so that it points at the provided
     LFRic Core source
@@ -86,7 +86,7 @@ def set_dependency_path(args):
     print("[INFO] Updating dependencies.yaml Core source")
 
     hostname = socket.gethostname()
-    dep_path = os.path.join(args.apps, "dependencies.yaml")
+    dep_path = apps / "dependencies.yaml"
     with open(dep_path) as f:
         lines = f.readlines()
     in_core = False
@@ -95,7 +95,7 @@ def set_dependency_path(args):
             in_core = True
         elif in_core and "source:" in line:
             prefix, _, _ = line.partition("source:")
-            line = f"{prefix}source: {hostname}:{os.path.abspath(args.core)}\n"
+            line = f"{prefix}source: {hostname}:{core}\n"
         elif in_core and "ref:" in line:
             prefix, _, _ = line.partition("ref:")
             line = f"{prefix}ref:"
@@ -106,25 +106,25 @@ def set_dependency_path(args):
         f.write("".join(x for x in lines))
 
 
-def find_meta_dirs(paths, exclude_dirs=()):
+def find_meta_dirs(paths: list[Path], exclude_dirs: tuple[str] = ()) -> set[Path]:
     """
     Return a set of rose-metadata directories that can be found in the apps and
     core sources. Done by seaching for rose-meta.conf files. Records the parent
-    directory of the current one, as rose-meta.conf files end up in HEAD/vnX.Y
+    directory of the current one, as rose-meta.conf files end up in 'HEAD' or 'vnX.Y'
     directories.
     """
 
     dirs = set()
     for path in paths:
         print("[INFO] Finding rose metadata directories in", path)
-        for dirpath, dirnames, filenames in os.walk(path):
+        for dirpath, dirnames, filenames in path.walk():
             dirnames[:] = [d for d in dirnames if d not in exclude_dirs]
             if "rose-meta.conf" in filenames:
-                dirs.add(os.path.dirname(dirpath))
+                dirs.add(dirpath.parent)
     return dirs
 
 
-def update_version_number(args):
+def update_version_number(apps: Path, version: str) -> None:
     """
     Update the "VN" variable number in the lfric_apps rose-suite.conf file, to
     be the new version number
@@ -132,14 +132,14 @@ def update_version_number(args):
 
     print("[INFO] Updating rose-suite.conf version number")
 
-    fpath = os.path.join(args.apps, "rose-stem", "rose-suite.conf")
+    fpath = apps / "rose-stem" / "rose-suite.conf"
     with open(fpath, "r") as f:
         lines = f.readlines()
 
     for i, line in enumerate(lines):
         line = line.strip()
         if line.startswith("VN="):
-            line = f"VN='{args.version.removeprefix('vn')}'"
+            line = f"VN='{version.removeprefix('vn')}'"
             lines[i] = line
             break
 
@@ -148,16 +148,16 @@ def update_version_number(args):
             f.write(line)
 
 
-def update_variables_files(apps):
+def update_variables_files(apps: Path) -> None:
     """
     Edit meto variables_platforms.cylc files to remove any ticket updates
     """
 
-    meto_path = os.path.join(apps, "rose-stem", "site", "meto")
+    meto_path = apps / "rose-stem" / "site" / "meto"
     variables_files = set()
-    for filename in os.listdir(meto_path):
-        if filename.startswith("variables_"):
-            variables_files.add(os.path.join(meto_path, filename))
+    for filename in meto_path.iterdir():
+        if str(filename).startswith("variables_"):
+            variables_files.add(meto_path / filename)
 
     for fpath in variables_files:
         with open(fpath, "r") as f:
@@ -173,14 +173,20 @@ def update_variables_files(apps):
                 f.write(line)
 
 
-def get_user():
+def get_user() -> str:
     """
     Return a str of username with .'s replaced by ' '
     """
     return getpass.getuser().replace(".", " ")
 
 
-def add_new_upgrade_macro(meta_dirs, args, macro_object):
+def add_new_upgrade_macro(
+    meta_dirs: list[Path],
+    old_version: str,
+    version: str,
+    ticket: str,
+    macro_object: ApplyMacros,
+) -> None:
     """
     Write out a new macro, updating to vnX.Y
     Use the template macro in the MACRO_TEMPLATE variable above
@@ -192,14 +198,14 @@ def add_new_upgrade_macro(meta_dirs, args, macro_object):
     template_macro = MACRO_TEMPLATE
 
     # Replace Consistent Variables for all meta directories
-    class_name = f"{args.old_version.replace('.', '')}_t{args.ticket}"
+    class_name = f"{old_version.replace('.', '')}_t{ticket}"
     template_macro = template_macro.replace("CLASS_NAME", class_name)
-    template_macro = template_macro.replace("TICKET", args.ticket)
+    template_macro = template_macro.replace("TICKET", ticket)
     template_macro = template_macro.replace("AUTHOR", get_user())
-    template_macro = template_macro.replace("AFTER_EDIT", args.version)
+    template_macro = template_macro.replace("AFTER_EDIT", version)
 
     for meta_dir in meta_dirs:
-        versions_file = os.path.join(meta_dir, "versions.py")
+        versions_file = meta_dir / "versions.py"
 
         macros = read_versions_file(meta_dir)
         macros = split_macros(macros)
@@ -213,7 +219,7 @@ def add_new_upgrade_macro(meta_dirs, args, macro_object):
             f.write(f"\n{meta_dir_macro}")
 
 
-def copy_head_meta(meta_dirs, args):
+def copy_head_meta(meta_dirs: list[Path], apps: Path, core: Path, version: str) -> None:
     """
     Copy the HEAD metadata to vnX.Y/ for all meta_dirs
     """
@@ -221,21 +227,21 @@ def copy_head_meta(meta_dirs, args):
     print("[INFO] Copying HEAD metadata")
 
     for meta_dir in meta_dirs:
-        head = os.path.join(meta_dir, "HEAD")
-        new = os.path.join(meta_dir, args.version)
+        head = meta_dir / "HEAD"
+        new = meta_dir / version
         shutil.copytree(head, new)
-        if args.core in new:
-            new = new.removeprefix(args.core)
-            new = new.lstrip("/")
-            command = f"git -C {args.core} add {new}"
-        elif args.apps in new:
-            new = new.removeprefix(args.apps)
-            new = new.lstrip("/")
-            command = f"git -C {args.apps} add {new}"
+        if core in new.parents:
+            new = new.relative_to(core)
+            print(new)
+            command = f"git -C {core} add {new}"
+        elif apps in new.parents:
+            new = new.relative_to(apps)
+            print(new)
+            command = f"git -C {apps} add {new}"
         _ = run_command(command)
 
 
-def update_meta_import_path(meta_dirs, args):
+def update_meta_import_path(meta_dirs: list[Path], version: str) -> None:
     """
     Change HEAD to vnX.Y in meta import statements in the newly created
     vnX.Y/rose-meta.conf files
@@ -244,7 +250,7 @@ def update_meta_import_path(meta_dirs, args):
     print("[INFO] Updating metadata import statements")
 
     for meta_dir in meta_dirs:
-        meta_file = os.path.join(meta_dir, args.version, "rose-meta.conf")
+        meta_file = meta_dir / version / "rose-meta.conf"
         with open(meta_file) as f:
             lines = f.readlines()
 
@@ -255,7 +261,7 @@ def update_meta_import_path(meta_dirs, args):
             elif in_imports and not line.strip().startswith("="):
                 break
             if in_imports:
-                line = line.replace("HEAD", args.version)
+                line = line.replace("HEAD", version)
                 lines[i] = line
 
         with open(meta_file, "w") as f:
@@ -263,39 +269,39 @@ def update_meta_import_path(meta_dirs, args):
                 f.write(line)
 
 
-def copy_versions_files(meta_dirs, args):
+def copy_versions_files(
+    meta_dirs: list[Path], old_version: str, version: str, apps: Path, core: Path
+) -> str:
     """
     Copy versions.py files to versionAB_XY.py
     Returns the name of the AB->XY versions files.
     """
 
     upgrade_name = (
-        f"version{args.old_version.replace('.', '').replace('vn', '')}_"
-        f"{args.version.replace('.', '').replace('vn', '')}.py"
+        f"version{old_version.replace('.', '').replace('vn', '')}_"
+        f"{version.replace('.', '').replace('vn', '')}.py"
     )
 
     print("[INFO] Copying versions.py files to versionAB_XY.py files")
 
     for meta_dir in meta_dirs:
-        versions_file = os.path.join(meta_dir, "versions.py")
-        upgrade_file = os.path.join(meta_dir, upgrade_name)
-        if not os.path.exists(versions_file):
+        versions_file = meta_dir / "versions.py"
+        upgrade_file = meta_dir / upgrade_name
+        if not versions_file.exists():
             raise FileNotFoundError(f"The file {versions_file} doesn't exist")
         shutil.copyfile(versions_file, upgrade_file)
-        if args.core in upgrade_file:
-            upgrade_file = upgrade_file.removeprefix(args.core)
-            upgrade_file = upgrade_file.lstrip("/")
-            command = f"git -C {args.core} add {upgrade_file}"
-        elif args.apps in upgrade_file:
-            upgrade_file = upgrade_file.removeprefix(args.apps)
-            upgrade_file = upgrade_file.lstrip("/")
-            command = f"git -C {args.apps} add {upgrade_file}"
+        if core in upgrade_file.parents:
+            upgrade_file = upgrade_file.relative_to(core)
+            command = f"git -C {core} add {upgrade_file}"
+        elif apps in upgrade_file.parents:
+            upgrade_file = upgrade_file.relative_to(apps)
+            command = f"git -C {apps} add {upgrade_file}"
         _ = run_command(command)
 
     return upgrade_name
 
 
-def add_new_import(versions_file, upgrade_name):
+def add_new_import(versions_file: Path, upgrade_name: str) -> None:
     """
     Read through a versions.py file, finding the line that imports MacroUpgrade
     from rose. Add the new `from .versionsAB_XY import *` import after that line
@@ -330,7 +336,7 @@ def add_new_import(versions_file, upgrade_name):
     apply_styling(versions_file)
 
 
-def update_versions_file(meta_dirs, upgrade_name):
+def update_versions_file(meta_dirs: list[Path], upgrade_name: str) -> None:
     """
     - Add import of versionAB_XY.py file to the template_versions.py
     - Replace old versions.py files with that file
@@ -338,19 +344,15 @@ def update_versions_file(meta_dirs, upgrade_name):
 
     print("[INFO] Updating versions.py files")
 
-    template_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "files",
-        "template_versions.py",
-    )
+    template_path = Path(__file__).absolute().parent / "files" / "template_versions.py"
 
     for meta_dir in meta_dirs:
-        versions_file = os.path.join(meta_dir, "versions.py")
+        versions_file = meta_dir / "versions.py"
         shutil.copyfile(template_path, versions_file)
         add_new_import(versions_file, upgrade_name)
 
 
-def ticket_number(opt):
+def ticket_number(opt: str) -> str:
     """
     Check that the command line supplied ticket number is of a suitable format
     """
@@ -362,7 +364,7 @@ def ticket_number(opt):
     return opt
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """
     Read command line args
     """
@@ -392,7 +394,8 @@ def parse_args():
     parser.add_argument(
         "-a",
         "--apps",
-        default=".",
+        default=Path(".").absolute(),
+        type=Path,
         help="The path to the LFRic Apps working copy being used. Defaults to  "
         "the location the script is being run from - this assumes you are in a "
         "working copy.",
@@ -401,20 +404,20 @@ def parse_args():
         "-c",
         "--core",
         required=True,
+        type=Path,
         help="Path to the LFRic Core working copy being used.",
     )
     args = parser.parse_args()
 
-    args.apps = os.path.abspath(args.apps)
     args.apps = get_root_path(args.apps)
-    args.core = os.path.abspath(args.core)
+    args.core = args.core.expanduser().absolute()
     args.version = f"vn{args.version}"
     args.old_version = f"vn{args.old_version}"
 
     return args
 
 
-def main():
+def main() -> None:
     args = parse_args()
 
     macro_object = ApplyMacros(
@@ -423,12 +426,12 @@ def main():
         args.old_version.removeprefix("vn"),
         args.apps,
         args.core,
-        None,
     )
 
-    set_dependency_path(args)
+    set_dependency_path(args.apps, args.core)
 
-    # Find all metadata directories, excluing jules shared and lfric inputs as these have metadata but no macros.
+    # Find all metadata directories, excluing jules shared and lfric inputs as these
+    # have metadata but no macros.
     exclude_dirs = (
         ".svn",
         "rose-stem",
@@ -438,18 +441,25 @@ def main():
     )
     meta_dirs = find_meta_dirs([args.apps, args.core], exclude_dirs)
 
-    # Find JULES shared metadata directories and combine with all other metadirs for where they are handled differently
-    jules_meta_path = os.path.join(
-        args.apps, "interfaces", "jules_interface", "rose-meta", "lfric-jules-shared"
+    # Find JULES shared metadata directories and combine with all other metadirs for
+    # where they are handled differently
+    jules_meta_path = (
+        args.apps
+        / "interfaces"
+        / "jules_interface"
+        / "rose-meta"
+        / "lfric-jules-shared"
     )
     jules_shared_meta_dirs = find_meta_dirs([jules_meta_path])
     meta_dirs_plus_jules = meta_dirs.union(jules_shared_meta_dirs)
 
-    update_version_number(args)
+    update_version_number(args.apps, args.version)
 
     update_variables_files(args.apps)
 
-    add_new_upgrade_macro(meta_dirs, args, macro_object)
+    add_new_upgrade_macro(
+        meta_dirs, args.old_version, args.version, args.ticket, macro_object
+    )
 
     # Run the apply_macros script
     apply_macros_main(
@@ -458,15 +468,16 @@ def main():
         args.old_version,
         args.apps,
         args.core,
-        None,
     )
     print("\n[INFO] Successfully upgraded apps")
 
-    copy_head_meta(meta_dirs_plus_jules, args)
+    copy_head_meta(meta_dirs_plus_jules, args.apps, args.core, args.version)
 
-    update_meta_import_path(meta_dirs, args)
+    update_meta_import_path(meta_dirs, args.version)
 
-    upgrade_file_name = copy_versions_files(meta_dirs, args)
+    upgrade_file_name = copy_versions_files(
+        meta_dirs, args.old_version, args.version, args.apps, args.core
+    )
 
     update_versions_file(meta_dirs, upgrade_file_name)
 
