@@ -12,8 +12,8 @@ from pathlib import Path
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from umdp3_rules_S3 import remove_comments, remove_quoted, \
-    concatenate_lines, capitulated_keywords, r3_2_1_check_crown_copyright, \
-    r3_3_2line_too_long, r3_4_1_capitalised_keywords
+    concatenate_lines, r3_2_1_check_crown_copyright, \
+    r3_3_2line_too_long, r3_4_1_capitalised_keywords, r3_1_1_there_can_be_only_one
 # from umdp3_checker_rules import TestResult, UMDP3Checker
 
 
@@ -29,7 +29,9 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
     Operations are applied in descending line order so that earlier
     line numbers are not shifted by later mutations.
     """
-    # TODO: Currently <new lines> is a string, but should become a list of strings, allowing multiple lines to be used in addition and as replacements.
+    """ TODO: Currently <new lines> is a string, but should become a list of strings,
+    allowing multiple lines to be used in addition and as replacements. Although,
+    this may make keeping track of line numbers more complex."""
     lines = lines_in.copy()
     for change in sorted(changes, key=lambda o: o[1], reverse=True):
         idx = int(change[1]) - 1
@@ -108,7 +110,7 @@ def test_concatenate_lines(example_fortran_lines):
 
 # =================================================================
 
-"""This example hopefully demonstrates some of the complexity available...
+"""These examples hopefully demonstrate some of the complexity available...
     Setting up a test, may involve multiple changes to the demo Fortran file, hence the complex entries in the parametrization.
     Each error found is recorded with the line number(s) it was found on using the Error text as a dict key, and the line no(s) as a list, which means finding 'use' and 'Use' in the code would generate 2 different keys in the dict.
     Then a single value recording the total number of failures is also included in the 'TestResult' object.
@@ -118,33 +120,54 @@ def test_concatenate_lines(example_fortran_lines):
     There has to be a better way.....
     As a side note, might it be better to write a function to compare 2 'TestResult' objects, which would be more robust to changes in the structure of the 'TestResult' object, and also make the test code more readable? If so, would it's place be here in the testing, or as a method in the 'TestResult' class itself?
     """
+
+# =================================================================
+
 @pytest.mark.parametrize(
-    "changes_list, expected_result, expected_errors",
+    "changes_list, expected_passed, expected_failure_count, expected_errors",
     [
+        # Valid: MODULE example_mod ... END MODULE example_mod (no changes)
+        ([], True, 0, {}),
+        # Invalid: No program unit found (delete MODULE line)
         (
-            [
-                ["replace", 10, "Module example_mod"],
-                ["replace", 37, "use parkind1, ONLY: jpim, jprb"],
-                ["replace", 40, "use yomhook, ONLY: lhook, dr_hook"]
-            ],
-            3,
-            {"lowercase keyword: Module": [10], "lowercase keyword: use": [37, 40]},
+            [["replace", 10, "! No module declaration here"]],
+            False,
+            1,
+            {"First executable line doesn't define an accepted programming unit :"
+            " IMPLICIT NONE": [0]},
         ),
-        ([["add", 10, ""]], 0, []),  # No changes, expect no errors
+        # Invalid: Mismatched END statement
+        (
+            [["replace", 118, "END MODULE wrong_mod_name"]],
+            False,
+            1,
+            {"END statement found for a different program unit: should be example_mod got wrong_mod_name.": [0]},
+        ),
+        # Invalid: No END statement found
+        (
+            [["replace", 118, "! Missing END MODULE"]],
+            False,
+            1,
+            {"No matching END statement found for the first program unit.": [0]},
+        ),
     ],
-    ids = ["3 Lowercase Errors", "No Lowercase Errors"]
+    ids=[
+        "Valid module with matching END",
+        "No program unit found",
+        "Mismatched END statement",
+        "No END statement",
+    ],
 )
-def test_r3_4_1_capitalised_keywords(
-    example_fortran_lines, changes_list, expected_result, expected_errors
+def test_r3_1_1_there_can_be_only_one(
+    example_fortran_lines, changes_list, expected_passed, expected_failure_count, expected_errors
 ):
-    # checker = UMDP3Checker()
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
-    result = r3_4_1_capitalised_keywords(modified_fortran_lines)
-    failure_count = result.failure_count
-    assert failure_count == expected_result
+    result = r3_1_1_there_can_be_only_one(modified_fortran_lines)
+    assert result.passed == expected_passed
+    assert result.failure_count == expected_failure_count
     errors = result.errors
     assert len(errors) == len(expected_errors)
-    for error, lines_list  in errors.items():
+    for error, lines_list in errors.items():
         assert error in expected_errors
         assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
@@ -236,17 +259,18 @@ def test_r3_3_2line_too_long(
                 ["replace", 40, "use yomhook, ONLY: lhook, dr_hook"]
             ],
             3,
-            {"capitulated keyword: Module": [10], "capitulated keyword: use": [37, 40]},
+            {"lowercase keyword: Module": [10], "lowercase keyword: use": [37, 40]},
         ),
         ([["add", 10, ""]], 0, []),  # No changes, expect no errors
     ],
+    ids = ["3 Lowercase Errors", "No Lowercase Errors"]
 )
-def test_keywords_II(
+def test_r3_4_1_capitalised_keywords(
     example_fortran_lines, changes_list, expected_result, expected_errors
 ):
-#     checker = UMDP3Checker()
+    # checker = UMDP3Checker()
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
-    result = capitulated_keywords(modified_fortran_lines)
+    result = r3_4_1_capitalised_keywords(modified_fortran_lines)
     failure_count = result.failure_count
     assert failure_count == expected_result
     errors = result.errors

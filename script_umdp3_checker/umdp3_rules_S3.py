@@ -39,7 +39,7 @@ def add_error_log(
 def remove_quoted(line: str) -> str:
     """Remove quoted strings from a line"""
     """
-TODO: The original version replaced the quoted sections with a
+    TODO: The original version replaced the quoted sections with a
     "blessed reference", presumably becuase they were 're-inserted' at some
     stage. No idea if that capability is still required."""
     # Simple implementation - remove single and double quoted strings
@@ -88,32 +88,85 @@ def concatenate_lines(lines: List[str], line_no: int) -> str:
         line += next_line.lstrip()  # Concatenate with the next line, removing leading whitespace
     return line
 
-
 """
 3.1 Source files should only contain a single program unit
 """
-"""TODO: routine to identify the first program unit in the file and store it's name.
-Then check it's the same name as the last thing closed."""
-
+def r3_1_1_there_can_be_only_one(lines: List[str]) -> TestResult: # ..one programming unit in a file, that is.
+    """Check for multiple program units in a file:
+    Given that a MODULE or a PROGRAM can contain multiples of the other program units,
+    just going to confirm the first one decalred is the last one ENDed."""
+    program_unit_keywords = {"PROGRAM", "MODULE", "SUBROUTINE", "FUNCTION"}
+    # unsure if  "TYPE" should be included.
+    def find_first(lines: List[str]) -> tuple[bool, str]:
+        for line in lines:
+            executable_line = remove_comments(line).strip()
+            if not executable_line:
+                continue  # Skip empty lines
+            for keyword in program_unit_keywords:
+                unit_name_search = re.search(rf"{keyword}\s+(\w+)", executable_line)
+                if unit_name_search:
+                    unit_type = keyword
+                    unit_name = unit_name_search.group(1)
+                    return (True, f"{unit_type} {unit_name}")
+            return (False,
+                    "First executable line doesn't define an accepted programming unit"
+                    f" : {line}")
+        return (False, "No program unit found.")
+    def find_last(lines: List[str], unit_type: str, unit_name: str) -> tuple[bool, str]:
+        for line in reversed(lines):
+            executable_line = remove_comments(line).strip()
+            if not executable_line:
+                continue  # Skip empty lines
+            unit_name_search = re.search(rf"END\s+{unit_type}\s+(\w+)", executable_line)
+            if unit_name_search:
+                if unit_name_search.group(1) == unit_name:
+                    return (True, "")
+                else:
+                    return (False, "END statement found for a different program unit: "
+                        f"should be {unit_name} got {unit_name_search.group(1)}.")
+            else:
+                return (False, "No matching END statement found for the first program unit.")
+        return (False, "No matching END statement found for the first program unit.")
+    found_first, first_result = find_first(lines)
+    if not found_first:
+        failure_count = 1
+        found_last = False
+        error_log = add_error_log({}, first_result, 0)
+    else:
+        unit_type, unit_name = first_result.split()
+        found_last, last_result = find_last(lines, unit_type, unit_name)
+        if found_last:
+            failure_count = 0
+            error_log = {}
+        else:
+            failure_count = 1
+            error_log = add_error_log({}, last_result, 0)
+    return TestResult(
+        checker_name="Test 3.1 Only One Program Unit",
+        failure_count=failure_count,
+        passed=found_first and found_last,
+        output="Checked for multiple program units.",
+        errors=error_log,
+    )
 """
-* Modules may be used to group related variables, subroutines and functions.
-* Each separate file within the source tree should be uniquely named.
+* TODO: Modules may be used to group related variables, subroutines and functions.
+        - Really unsure as to how to test that's what they're doing...
+* TODO: Each separate file within the source tree should be uniquely named.
         - Not sure that's possible/easy within the current framework to process one file at a time...
-* The name of the file should reflect the name of the programming unit.
-* Multiple versions of the same file should be named filename-#ver where #ver is the section/version number (e.g. 1a,2a,2b. . . ).
-* You should avoid naming your program units and variables with names that match an intrinsic FUNCTION, SUBROUTINE or MODULE. We recommend the use of unique names within a program unit.
-* You should also avoid naming your program units and variables with names that match a keyword in a Fortran statement.
-* Avoid giving program units names that are likely to be used as variable names elsewhere in the code, e.g. field or string. This makes searching the code difficult and can cause the code browser to make erroneous connections between unrelated routines.
-* Subroutines should be kept reasonably short, where appropriate, say up to about 100 lines of executable code, but don’t forget there are start up overheads involved in calling an external subroutine so they should do a reasonable amount of work
+* TODO: The name of the file should reflect the name of the programming unit.
+* TODO: Multiple versions of the same file should be named filename-#ver where #ver is the section/version number (e.g. 1a,2a,2b. . . ).
+* TODO: You should avoid naming your program units and variables with names that match an intrinsic FUNCTION, SUBROUTINE or MODULE. We recommend the use of unique names within a program unit.
+* TODO: You should also avoid naming your program units and variables with names that match a keyword in a Fortran statement.
+* TODO: Avoid giving program units names that are likely to be used as variable names elsewhere in the code, e.g. field or string. This makes searching the code difficult and can cause the code browser to make erroneous connections between unrelated routines.
+* TODO: Subroutines should be kept reasonably short, where appropriate, say up to about 100 lines of executable code, but don’t forget there are start up overheads involved in calling an external subroutine so they should do a reasonable amount of work
 """
 
 """3.2 Headers
 * All programming units require a suitable copyright header."""
-
 def r3_2_1_check_crown_copyright(lines: List[str]) -> TestResult:
     """Check for crown copyright statement"""
     """
-TODO: This is a very simplistic check and will not detect many cases which break UMDP3.
+    TODO: This is a very simplistic check and will not detect many cases which break UMDP3.
     It will pass if the word copyright appears on a commented out line. This could
     include passing :
     ! I should put a copyright statement here...
@@ -142,22 +195,23 @@ TODO: This is a very simplistic check and will not detect many cases which break
     )
 
 """
-* Headers are an immensely important part of any code as they document what it does, and how it does it.
-* The description of the MODULE and its contained SUBROUTINE may be the same and thus it need not berepeated in the latter. If a MODULE contains more than one subroutine then further descriptions are required.
-* History comments should not be included in the header or routine code. FCM TRAC provides the history of our codes.
-* Code author names should NOT be included explicitly within the code as they quickly become out of date and are sometimes misleading. Instead we reference a single maintainable text file which is included within the UM code repository.
+* TODO: Headers are an immensely important part of any code as they document what it does, and how it does it.
+* TODO: The description of the MODULE and its contained SUBROUTINE may be the same and thus it need not berepeated in the latter. If a MODULE contains more than one subroutine then further descriptions are required.
+* TODO: History comments should not be included in the header or routine code. FCM TRAC provides the history of our codes.
+* TODO: Code author names should NOT be included explicitly within the code as they quickly become out of date and are sometimes misleading. Instead we reference a single maintainable text file which is included within the UM code repository.
 
 ! Code Owner: Please refer to the UM file CodeOwners.txt
 ! This file belongs in section: <section_name_to_be_entered>
 
-* Example UM templates are provided with the source of this document; subroutine, function and module
+* TODO: Example UM templates are provided with the source of this document; subroutine, function and module
 templates"""
 
 """3.3 Free source form
-* All code should be written using the free source form.
-* Please restrict code to 80 columns, so that your code can be easily viewed on any editor and screen and
-can be printed easily on A4 paper. Note that CreateBC uses a limit of 100 columns, due to the nature of
-the object-orientated code.
+* TODO: All code should be written using the free source form.
+        - Could be fun, look for 7 leading spaces regularly. Or only something in col6 and/or only nos in cols 1 to 5
+* Please restrict code to 80 columns
+    Note that CreateBC uses a limit of 100 columns, due to the nature of
+    the object-orientated code.
 """
 def r3_3_2line_too_long(lines: List[str]) -> TestResult:
     """Check for lines longer than 80 characters"""
@@ -178,8 +232,8 @@ def r3_3_2line_too_long(lines: List[str]) -> TestResult:
     )
 
 """
-* Never put more than one statement on a line.
-* Write your program in UK English, unless you have a very good reason for not doing so."""
+* TODO: Never put more than one statement on a line.
+* TODO: Write your program in UK English, unless you have a very good reason for not doing so."""
 
 """3.4 Fortran style
 * To improve readability, write your code using the ALL CAPS Fortran keywords approach."""
@@ -212,69 +266,86 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
         errors=error_log,
     )
 """
-* The rest of the code may be written in either lower-case with underscores or CamelCase.
-• To improve readability, you should always use the optional space to separate the Fortran keywords. The
-full list of Fortran keywords with an optional spaces is:
-ELSE IF END DO END FORALL END FUNCTION
-END IF END INTERFACE END MODULE END PROGRAM
-END SELECT END SUBROUTINE END TYPE END WHERE
-SELECT CASE ELSE WHERE DOUBLE PRECISION END ASSOCIATE
-END BLOCK END BLOCK DATA END ENUM END FILE
-END PROCEDURE GO TO IN OUT SELECT TYPE
-Note that not all of these are approved or appropriate for use in UM code. This rule also applies to OpenMP
-keywords. (See: 3.15)
-• The full version of END should be used at all times, eg END SUBROUTINE <name> and END FUNCTION <name>
-• New code should be written using Fortran 95/2003 features. Avoid non-portable vendor/compiler exten-
-sions.
-• When writing a REAL literal with an integer value, put a 0 after the decimal point (i.e. 1.0 as opposed to 1.)
-to improve readability.
-• Avoid using obsolescent features of the Fortran language, instead make use of F95/2003 alternatives. For
-example, statement functions are among the list of deprecated features in the F95 standard and these can
-be replaced by FUNCTIONs within appropriate MODULEs.
-• Do not use archaic forms of intrinsic functions. For example, LOG() should be used in place of ALOG(),
-MAX() instead of AMAX1(), REAL() instead of FLOAT() etc.
-• Never use the PAUSE statement.
-• Never use the STOP statement, see 3.19
-• The standard delimiter for namelists is /. In particular, note that &END is non-standard and should be
-avoided. For further information on namelists please refer to 4.1
-• Only use the generic names of intrinsic functions, avoid the use of ’hardware’ specific intrinsic functions.
-Use the latter if an only if there is an optimisation benefit and then it must be protected by a platform
-specific CPP flag 3.17"""
+* TODO: The rest of the code may be written in either lower-case with underscores or
+        CamelCase.
+* TODO: To improve readability, you should always use the optional space to separate
+        the Fortran keywords.
+        This rule also applies to OpenMP keywords. (See: 3.15)
+* TODO: The full version of END should be used at all times,
+        eg END SUBROUTINE <name> and END FUNCTION <name>
+* TODO: New code should be written using Fortran 95/2003 features. Avoid non-portable
+        vendor/compiler extensions.
+* TODO: When writing a REAL literal with an integer value, put a 0 after the decimal
+        point (i.e. 1.0 as opposed to 1.) to improve readability.
+* TODO: Avoid using obsolescent features of the Fortran language, instead make use of
+        F95/2003 alternatives. For example, statement functions are among the list of
+        deprecated features in the F95 standard and these can be replaced by FUNCTIONs
+        within appropriate MODULEs.
+* TODO: Do not use archaic forms of intrinsic functions. For example:
+        LOG() should be used in place of ALOG(),
+        MAX() instead of AMAX1(), REAL() instead of FLOAT() etc.
+* TODO: Never use the PAUSE statement.
+* TODO: Never use the STOP statement, see 3.19
+* TODO: The standard delimiter for namelists is /. In particular, note that &END is
+        non-standard and should be avoided. For further information on namelists please
+        refer to 4.1
+* TODO: Only use the generic names of intrinsic functions, avoid the use of ’hardware’
+        specific intrinsic functions.
+        Use the latter if an only if there is an optimisation benefit and then it must
+        be protected by a platform specific CPP flag 3.17
+3.5 Comments and white spacing :
+TODO : Copy in the rules from section 3.5 and add the appropriate tests.
 
+3.6 The use of modules :
+TODO : Copy in the rules from section 3.6 and add the appropriate tests.
 
-def capitulated_keywords(lines: List[str]) -> TestResult:
-    """A fake test, put in for testing purposes.
-    Probably not needed any more, but left in case."""
-    failures = 0
-    line_count = 0
-    error_log = {}
-    # print("Debug: In capitulated_keywords test")
-    for line in lines:
-        line_count += 1
-        # Remove quoted strings and comments
-        if line.lstrip(" ").startswith("!"):
-            continue
-        clean_line = remove_quoted(line)
-        clean_line = comment_line.sub("", clean_line)
+3.7 Argument and variable declaration :
+TODO : Copy in the rules from section 3.7 and add the appropriate tests.
 
-        # Check for lowercase keywords
-        for word in word_splitter.findall(clean_line):
-            upcase = word.upper()
-            if upcase in fortran_keywords and word != upcase:
-                error_log = add_error_log(
-                    error_log, f"capitulated keyword: {word}", line_count
-                )
-                failures += 1
+3.8 Allocatables :
+TODO : Copy in the rules from section 3.8 and add the appropriate tests.
 
-    return TestResult(
-        checker_name="Capitulated Keywords",
-        failure_count=failures,
-        passed=(failures == 0),
-        output=f"Checked {line_count} lines, found {failures} failures.",
-        errors=error_log,
-    )
+3.9 Code IF blocks, DO LOOPs, and other constructs :
+TODO : Copy in the rules from section 3.9 and add the appropriate tests.
 
+3.10 Line continuation :
+TODO : Copy in the rules from section 3.10 and add the appropriate tests.
+
+3.11 Fortran I/O :
+TODO : Copy in the rules from section 3.11 and add the appropriate tests.
+
+3.12 Formatting and output of text :
+TODO : Copy in the rules from section 3.12 and add the appropriate tests.
+
+3.13 PrintStatus :
+TODO : Copy in the rules from section 3.13 and add the appropriate tests.
+
+3.14 DrHook :
+TODO : Copy in the rules from section 3.14 and add the appropriate tests.
+        I /think/ DrHook is being (possibly has been) retired, so this section of the docs needs updating and tests for the new system need to be added.
+
+3.15 OpenMP :
+TODO : Copy in the rules from section 3.15 and add the appropriate tests.
+
+3.16 MPI :
+TODO : Copy in the rules from section 3.16 and add the appropriate tests.
+
+3.17 Preprocessing :
+TODO : Copy in the rules from section 3.17 and add the appropriate tests.
+
+3.18 Code duplication :
+TODO : Copy in the rules from section 3.18 and add the appropriate tests.
+
+3.19 Error reporting :
+TODO : Copy in the rules from section 3.19 and add the appropriate tests.
+
+TODO : Section 4 has guidelines on "specific standards".
+        Unsure as yet if they can be tested for, but it needs looking into.
+"""
+
+# A list, of all the tests defined above, so it can be imported easily.
 list_O_tests = [
+    r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
     r3_3_2line_too_long,
     r3_4_1_capitalised_keywords,
