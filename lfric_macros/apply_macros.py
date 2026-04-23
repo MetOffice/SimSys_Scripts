@@ -21,7 +21,7 @@ import tempfile
 import yaml
 import networkx as nx
 from collections import defaultdict
-from concurrent.futures import wait, as_completed, ThreadPoolExecutor, FIRST_EXCEPTION
+from concurrent.futures import as_completed, ThreadPoolExecutor
 from pathlib import Path
 
 BLACK_COMMAND = "black --line-length=80"
