@@ -148,7 +148,7 @@ def test_concatenate_lines(example_fortran_lines):
             [["replace", 118, "! Missing END MODULE"]],
             False,
             1,
-            {"No matching END statement found for the first program unit.": [0]},
+            {"Last executable line not a matching END statement for the first program unit found.": [0]},
         ),
     ],
     ids=[

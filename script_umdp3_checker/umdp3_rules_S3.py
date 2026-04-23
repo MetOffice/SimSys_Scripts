@@ -125,7 +125,7 @@ def r3_1_1_there_can_be_only_one(lines: List[str]) -> TestResult: # ..one progra
                     return (False, "END statement found for a different program unit: "
                         f"should be {unit_name} got {unit_name_search.group(1)}.")
             else:
-                return (False, "No matching END statement found for the first program unit.")
+                return (False, "Last executable line not a matching END statement for the first program unit found.")
         return (False, "No matching END statement found for the first program unit.")
     found_first, first_result = find_first(lines)
     if not found_first:
