@@ -28,17 +28,14 @@ class CheckerDispatchTables:
     def get_diff_dispatch_table_fortran(self) -> list[Callable]:
         """Get dispatch table for Fortran diff tests"""
         return [
-            self.umdp3_checker.capitalised_keywords,
             self.umdp3_checker.openmp_sentinels_in_column_one,
             self.umdp3_checker.unseparated_keywords,
             self.umdp3_checker.go_to_other_than_9999,
             self.umdp3_checker.write_using_default_format,
-            self.umdp3_checker.lowercase_variable_names,
             self.umdp3_checker.dimension_forbidden,
             self.umdp3_checker.ampersand_continuation,
             self.umdp3_checker.forbidden_keywords,
             self.umdp3_checker.forbidden_operators,
-            self.umdp3_checker.line_over_80chars,
             self.umdp3_checker.tab_detection,
             self.umdp3_checker.printstatus_mod,
             self.umdp3_checker.printstar,
@@ -63,7 +60,6 @@ class CheckerDispatchTables:
             self.umdp3_checker.implicit_none,
             self.umdp3_checker.forbidden_stop,
             self.umdp3_checker.intrinsic_as_variable,
-            self.umdp3_checker.check_crown_copyright,
             self.umdp3_checker.check_code_owner,
             self.umdp3_checker.array_init_form,
         ]
@@ -71,7 +67,6 @@ class CheckerDispatchTables:
     def get_diff_dispatch_table_c(self) -> list[Callable]:
         """Get dispatch table for C diff tests"""
         return [
-            self.umdp3_checker.line_over_80chars,
             self.umdp3_checker.tab_detection,
             self.umdp3_checker.c_integral_format_specifiers,
         ]
@@ -81,7 +76,6 @@ class CheckerDispatchTables:
         return [
             self.umdp3_checker.retire_if_def,
             self.umdp3_checker.c_deprecated,
-            self.umdp3_checker.check_crown_copyright,
             self.umdp3_checker.check_code_owner,
             self.umdp3_checker.c_openmp_define_pair_thread_utils,
             self.umdp3_checker.c_openmp_define_no_combine,

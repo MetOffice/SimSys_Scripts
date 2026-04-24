@@ -33,10 +33,10 @@ def test_basic_functionality():
 
     # Test line length check
     test_lines = [
-        "This is a short line",
-        "This is a very long line that exceeds eighty characters and should trigger a failure in the line length test",
+        "This is a line with no trailing space",
+        "This is line with a trailing space   ",
     ]
-    result = umdp3_checker.line_over_80chars(test_lines)
+    result = umdp3_checker.line_trail_whitespace(test_lines)
     print(
         f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )

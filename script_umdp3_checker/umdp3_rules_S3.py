@@ -213,7 +213,7 @@ templates"""
     Note that CreateBC uses a limit of 100 columns, due to the nature of
     the object-orientated code.
 """
-def r3_3_2line_too_long(lines: List[str]) -> TestResult:
+def r3_3_2_line_too_long(lines: List[str]) -> TestResult:
     """Check for lines longer than 80 characters"""
     failures = 0
     error_log = {}
@@ -386,6 +386,7 @@ TODO : Section 4 has guidelines on "specific standards".
 list_O_tests = [
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
-    r3_3_2line_too_long,
+    r3_3_2_line_too_long,
     r3_4_1_capitalised_keywords,
+    r3_4_2_no_full_uppercase_variable_names,
 ]

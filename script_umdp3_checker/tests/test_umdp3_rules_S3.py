@@ -17,7 +17,7 @@ from umdp3_rules_S3 import (
     concatenate_lines,
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
-    r3_3_2line_too_long,
+    r3_3_2_line_too_long,
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
 )
@@ -71,20 +71,20 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
 def test_modify_fortran_lines(example_fortran_lines):
     """TODO: Does this need to be more rigorous ?"""
     changes_list = [
-        ["replace", 10, ["This is a replacement line."]],
-        ["delete", 20, None],
-        ["add", 30, ["This is an added line."]],
+        ["replace", 12, ["This is a replacement line."]],
+        ["delete", 22, None],
+        ["add", 32, ["This is an added line."]],
     ]
     modified_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     # Line no.s below have to be carefully calculated. Basic is line no of change -1 but then add one for every line added aobve in the file and -1 for every line deleted above in the file.
     # for line_no, line in enumerate(modified_lines, 1):
     #     print(f"line [{line_no:04}]: {line}")
-    assert modified_lines[9] == "This is a replacement line."
+    assert modified_lines[11] == "This is a replacement line."
     assert len(modified_lines) == len(
         example_fortran_lines
     )  # One line deleted, One added
-    # Added @ 30, so 29, but one line deleted above, so 28 - seeemples
-    assert modified_lines[28] == "This is an added line."
+    # Added @ 32, so 31, but one line deleted above, so 30 - seeemples
+    assert modified_lines[30] == "This is an added line."
 
 
 def test_remove_quoted(example_fortran_lines):
@@ -155,7 +155,7 @@ def test_concatenate_lines(example_fortran_lines):
         ([], True, 0, {}),
         # Invalid: No program unit found (delete MODULE line)
         (
-            [["replace", 10, ["! No module declaration here"]]],
+            [["replace", 12, ["! No module declaration here"]]],
             False,
             1,
             {
@@ -165,7 +165,7 @@ def test_concatenate_lines(example_fortran_lines):
         ),
         # Invalid: Mismatched END statement
         (
-            [["replace", 118, ["END MODULE wrong_mod_name"]]],
+            [["replace", 120, ["END MODULE wrong_mod_name"]]],
             False,
             1,
             {
@@ -176,7 +176,7 @@ def test_concatenate_lines(example_fortran_lines):
         ),
         # Invalid: No END statement found
         (
-            [["replace", 118, ["! Missing END MODULE"]]],
+            [["replace", 120, ["! Missing END MODULE"]]],
             False,
             1,
             {
@@ -221,11 +221,11 @@ def test_r3_1_1_there_can_be_only_one(
     [
         (
             [
-                ["delete", 1, None],
-                ["delete", 2, None],
                 ["delete", 3, None],
                 ["delete", 4, None],
                 ["delete", 5, None],
+                ["delete", 6, None],
+                ["delete", 7, None],
             ],
             1,
             {"missing copyright or crown copyright statement": [0]},
@@ -260,7 +260,7 @@ def test_r3_2_1_check_crown_copyright(
             [
                 [
                     "replace",
-                    71,
+                    73,
                     [
                         '    = "This is a very very very very very very very "'
                         + "                                      &"
@@ -268,27 +268,27 @@ def test_r3_2_1_check_crown_copyright(
                 ],
                 [
                     "replace",
-                    115,
+                    117,
                     [
                         "IF (lhook) CALL dr_hook(ModuleName//     "
                         + '":"  //  RoutineName,  zhook_out,  zhook_handle) ! extra comment'
                     ],
                 ],
-                ["replace", 40, ["use yomhook, ONLY: lhook, dr_hook"]],
+                ["replace", 42, ["use yomhook, ONLY: lhook, dr_hook"]],
             ],
             2,
-            {"line too long": [71, 115]},
+            {"line too long": [73, 117]},
         ),
         ([], 0, {}),  # No changes, expect no errors
     ],
     ids=["3 line too long Errors", "No line too long Errors"],
 )
-def test_r3_3_2line_too_long(
+def test_r3_3_2_line_too_long(
     example_fortran_lines, changes_list, expected_result, expected_errors
 ):
     # checker = UMDP3Checker()
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
-    result = r3_3_2line_too_long(modified_fortran_lines)
+    result = r3_3_2_line_too_long(modified_fortran_lines)
     failure_count = result.failure_count
     assert failure_count == expected_result
     errors = result.errors
@@ -308,12 +308,12 @@ def test_r3_3_2line_too_long(
     [
         (
             [
-                ["replace", 10, ["Module example_mod"]],
-                ["replace", 37, ["use parkind1, ONLY: jpim, jprb"]],
-                ["replace", 40, ["use yomhook, ONLY: lhook, dr_hook"]],
+                ["replace", 12, ["Module example_mod"]],
+                ["replace", 39, ["use parkind1, ONLY: jpim, jprb"]],
+                ["replace", 42, ["use yomhook, ONLY: lhook, dr_hook"]],
             ],
             3,
-            {"lowercase keyword: Module": [10], "lowercase keyword: use": [37, 40]},
+            {"lowercase keyword: Module": [12], "lowercase keyword: use": [39, 42]},
         ),
         ([], 0, []),  # No changes, expect no errors
     ],
@@ -345,22 +345,22 @@ def test_r3_4_1_capitalised_keywords(
             [
                 [
                     "replace",
-                    43,
+                    45,
                     ["INTEGER, INTENT(IN) :: XLEN !Length of first dim of the arrays."],
                 ],
-                ["replace", 58, ["REAL :: var1, DAVE_2, HiPPo"]],
+                ["replace", 60, ["REAL :: var1, DAVE_2, HiPPo"]],
             ],
             2,
             {
-                "Found UPPERCASE variable name in declaration at line 43: XLEN": [43],
-                "Found UPPERCASE variable name in declaration at line 58: DAVE_2": [58],
+                "Found UPPERCASE variable name in declaration at line 45: XLEN": [45],
+                "Found UPPERCASE variable name in declaration at line 60: DAVE_2": [60],
             },
         ),
         (
             [
                 [
                     "add",
-                    58,
+                    60,
                     [
                         "REAL      :: VARIaBLE_1, variable_2,          &",
                         "     VARIABLE_3, Hot_Potato, Baked Potato     &",
@@ -370,7 +370,7 @@ def test_r3_4_1_capitalised_keywords(
                 ],
                 [
                     "replace",
-                    54,
+                    56,
                     [
                         "INTEGER :: j ! Loop counter   &",
                         "INTEGER :: k ! Loop counter   &",
@@ -379,7 +379,7 @@ def test_r3_4_1_capitalised_keywords(
                 ],
                 [
                     "replace",
-                    43,
+                    45,
                     [
                         "INTEGER, INTENT(IN) :: XLEN !Length of first dimension of the"
                         + " arrays."
@@ -388,18 +388,18 @@ def test_r3_4_1_capitalised_keywords(
             ],
             5,
             {
-                "Found UPPERCASE variable name in declaration at line 43: XLEN": [
-                    43
+                "Found UPPERCASE variable name in declaration at line 45: XLEN": [
+                    45
                 ],
-                "Found UPPERCASE variable name in declaration at line 56: IJ": [56],
-                "Found UPPERCASE variable name in declaration at line 60: CASPVAR": [
-                    60
+                "Found UPPERCASE variable name in declaration at line 58: IJ": [58],
+                "Found UPPERCASE variable name in declaration at line 62: CASPVAR": [
+                    62
                 ],
-                "Found UPPERCASE variable name in declaration at line 60: VARIABLE_3": [
-                    60
+                "Found UPPERCASE variable name in declaration at line 62: VARIABLE_3": [
+                    62
                 ],
-                "Found UPPERCASE variable name in declaration at line 60: CAPS_VAR": [
-                    60
+                "Found UPPERCASE variable name in declaration at line 62: CAPS_VAR": [
+                    62
                 ],
             },
         ),

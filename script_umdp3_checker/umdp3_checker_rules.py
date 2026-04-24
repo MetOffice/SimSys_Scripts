@@ -11,7 +11,6 @@ Python translation of the original Perl UMDP3.pm module.
 
 import re
 from typing import List, Dict
-from fortran_keywords import fortran_keywords
 from search_lists import (
     obsolescent_intrinsics,
     unseparated_keywords_list,
@@ -103,67 +102,6 @@ class UMDP3Checker:
         The list of lines is often assumed to be the whole file.
     """
 
-    def capitulated_keywords(self, lines: List[str]) -> TestResult:
-        """A fake test, put in for testing purposes.
-        Probably not needed any more, but left in case."""
-        failures = 0
-        line_count = 0
-        error_log = {}
-        # print("Debug: In capitulated_keywords test")
-        for line in lines:
-            line_count += 1
-            # Remove quoted strings and comments
-            if line.lstrip(" ").startswith("!"):
-                continue
-            clean_line = self.remove_quoted(line)
-            clean_line = self.comment_line.sub("", clean_line)
-
-            # Check for lowercase keywords
-            for word in self.word_splitter.findall(clean_line):
-                upcase = word.upper()
-                if upcase in fortran_keywords and word != upcase:
-                    error_log = self.add_error_log(
-                        error_log, f"capitulated keyword: {word}", line_count
-                    )
-                    failures += 1
-
-        return TestResult(
-            checker_name="Capitulated Keywords",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {line_count} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
-    def capitalised_keywords(self, lines: List[str]) -> TestResult:
-        """Check for the presence of lowercase Fortran keywords, which are
-        taken from an imported list 'fortran_keywords'."""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            # Remove quoted strings and comments
-            if line.lstrip(" ").startswith("!"):
-                continue
-            clean_line = self.remove_quoted(line)
-            clean_line = self.comment_line.sub("", clean_line)
-            # Check for lowercase keywords
-            for word in self.word_splitter.findall(clean_line):
-                upcase = word.upper()
-                if upcase in fortran_keywords and word != upcase:
-                    failures += 1
-                    error_log = self.add_error_log(
-                        error_log, f"lowercase keyword: {word}", count + 1
-                    )
-
-        return TestResult(
-            checker_name="Capitalised Keywords",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
     def openmp_sentinels_in_column_one(self, lines: List[str]) -> TestResult:
         """Check OpenMP sentinels are in column one"""
         failures = 0
@@ -250,47 +188,6 @@ class UMDP3Checker:
         output = f"Checked {count + 1} lines, found {failures} failures."
         return TestResult(
             checker_name="WRITE using default format",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=output,
-            errors=error_log,
-        )
-
-    def lowercase_variable_names(self, lines: List[str]) -> TestResult:
-        """Check for lowercase or CamelCase variable names only"""
-        """
-    TODO: This is a very simplistic check and will not detect many
-        cases which break UMDP3. I suspect the Perl Predecessor concatenated
-        continuation lines prior to 'cleaning' and checking. Having identified
-        a declaration, it also then scanned the rest of the file for that
-        variable name in any case."""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines, 1):
-            clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r"!.*$", "", clean_line)
-
-            # Simple check for UPPERCASE variable declarations
-            if re.search(
-                r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*[A-Z_]+",
-                clean_line,
-                re.IGNORECASE,
-            ):
-                clean_line = re.sub(
-                    r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*",
-                    "",
-                    clean_line,
-                )
-                if match := re.search(r"([A-Z]{2,})", clean_line):
-                    failures += 1
-                    error_log = self.add_error_log(
-                        error_log, f"UPPERCASE variable name {match[1]}", count
-                    )
-
-        output = f"Checked {count + 1} lines, found {failures} failures."
-        return TestResult(
-            checker_name="Lowercase or CamelCase variable names only",
             failure_count=failures,
             passed=(failures == 0),
             output=output,
@@ -387,24 +284,6 @@ class UMDP3Checker:
 
         return TestResult(
             checker_name="Use of older form of relational operator " + "(.GT. etc.)",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
-    def line_over_80chars(self, lines: List[str]) -> TestResult:
-        """Check for lines longer than 80 characters"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            if len(line.rstrip()) > 80:
-                failures += 1
-                error_log = self.add_error_log(error_log, "line too long", count + 1)
-
-        return TestResult(
-            checker_name="Line longer than 80 characters",
             failure_count=failures,
             passed=(failures == 0),
             output=f"Checked {count + 1} lines, found {failures} failures.",
@@ -806,33 +685,6 @@ class UMDP3Checker:
             failure_count=failures,
             passed=(failures == 0),
             output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
-    def check_crown_copyright(self, lines: List[str]) -> TestResult:
-        """Check for crown copyright statement"""
-        """
-    TODO: This is a very simplistic check and will not detect many
-        cases which break UMDP3. I suspect the Perl Predeccessor
-        did much more convoluted tests"""
-        comment_lines = [
-            line.upper() for line in lines if line.lstrip(" ").startswith("!")
-        ]
-        file_content = "\n".join(comment_lines)
-        error_log = {}
-        found_copyright = False
-        if "CROWN COPYRIGHT" in file_content or "COPYRIGHT" in file_content:
-            found_copyright = True
-
-        if not found_copyright:
-            error_log = self.add_error_log(
-                error_log, "missing copyright or crown copyright statement", 0
-            )
-        return TestResult(
-            checker_name="Crown Copyright Statement",
-            failure_count=0 if found_copyright else 1,
-            passed=found_copyright,
-            output="Checked for crown copyright statement.",
             errors=error_log,
         )
 
