@@ -266,8 +266,47 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
         errors=error_log,
     )
 """
-* TODO: The rest of the code may be written in either lower-case with underscores or
-        CamelCase.
+* The rest of the code may be written in either lower-case with underscores or
+    CamelCase.
+"""
+def r3_4_2_no_full_uppercase_variable_names(lines: List[str]) -> TestResult:
+    """Check for lowercase or CamelCase variable names only"""
+    """
+TODO: This is a very simplistic check and will not detect many
+    cases which break UMDP3. I suspect the Perl Predecessor concatenated
+    continuation lines prior to 'cleaning' and checking. Having identified
+    a declaration, it also then scanned the rest of the file for that
+    variable name in any case."""
+    failures = 0
+    error_log = {}
+    count = -1
+    declaration_search = re.compile(
+        r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*", re.IGNORECASE
+    )
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        # Simple check for UPPERCASE variable declarations
+        if declaration_search.search(clean_line):
+            full_line = concatenate_lines(lines, count)
+            clean_line = full_line.split("::", 1)[1].strip()
+            clean_line = re.sub(r"\([^)]*\)", "", clean_line)
+            variables = [var.strip() for var in clean_line.split(",")]
+            for var in variables:
+                #var = var.split("(", 1)[0].strip()  # Remove any array dimensions
+                if var.upper() == var:
+                    failures += 1
+                    error_log = add_error_log(
+                        error_log, f"Found UPPERCASE variable name in declaration at line {count}: {var}", count
+                    )
+    return TestResult(
+        checker_name="No Full Uppercase variable names",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} UPPERCASE variables.",
+        errors=error_log,
+    )
+"""
 * TODO: To improve readability, you should always use the optional space to separate
         the Fortran keywords.
         This rule also applies to OpenMP keywords. (See: 3.15)

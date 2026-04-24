@@ -1,3 +1,4 @@
+! fortitude: ignore file
 ! *****************************COPYRIGHT*******************************
 ! (C) Crown copyright Met Office. All rights reserved.
 ! For further details please refer to the file COPYRIGHT.txt
