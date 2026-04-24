@@ -1,3 +1,4 @@
+! fortls: ignore file
 ! fortitude: ignore file
 ! *****************************COPYRIGHT*******************************
 ! (C) Crown copyright Met Office. All rights reserved.
