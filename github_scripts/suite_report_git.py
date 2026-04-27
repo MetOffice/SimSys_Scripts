@@ -16,7 +16,6 @@ import sys
 from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
-from tempfile import mkdtemp
 from typing import Dict, List, Set, Tuple
 
 from suite_data import SuiteData
@@ -79,8 +78,6 @@ class SuiteReport(SuiteData):
         self.rose_data: Dict[str, str] = self.read_rose_conf()
         self.dependencies: Dict[str, Dict] = self.read_dependencies()
         self.primary_source: str = self.determine_primary_source()
-        self.temp_directory = Path(mkdtemp())
-        self.clone_sources()
         self.populate_gitinfo()
         self.populate_gitbdiff()
         self.trac_log = []
@@ -90,7 +87,7 @@ class SuiteReport(SuiteData):
         Find the branch name or hash and remote reference for a given source
         """
 
-        source = self.temp_directory / source
+        source = self.source_root / source
 
         branch_name = self.run_command(
             f"git -C {source} branch --show-current", rval=True
@@ -361,8 +358,11 @@ def parse_args() -> argparse.Namespace:
 
     args, _ = parser.parse_known_args()
 
-    # Check log file is writable, set as None if not (this will output to stdout)
-    if args.log_path and not os.access(args.log_path, os.W_OK):
+    # Default log_path as suite_path if not set, then check log file is writable
+    # set as None if not (this will output to stdout)
+    if not args.log_path:
+        args.log_path = args.suite_path
+    if not os.access(args.log_path, os.W_OK):
         args.log_path = None
 
     return args
@@ -376,11 +376,8 @@ def main() -> None:
     args = parse_args()
 
     suite_report = SuiteReport(args.suite_path)
-    try:
-        suite_report.create_log()
-        suite_report.write_log(args.log_path)
-    finally:
-        suite_report.cleanup()
+    suite_report.create_log()
+    suite_report.write_log(args.log_path)
 
 
 if __name__ == "__main__":
