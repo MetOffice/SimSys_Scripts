@@ -203,9 +203,7 @@ def test_stylechecker_check_aggregates_results(tmp_path: Path):
         seen.append(lines)
         return SimpleNamespace(passed=False)
 
-    checker = StyleChecker(
-        "StyleChecker test", [check_pass, check_fail], []
-    )
+    checker = StyleChecker("StyleChecker test", [check_pass, check_fail], [])
     result = checker.check(file_path)
 
     assert seen == [["a", "b"], ["a", "b"]]
@@ -230,9 +228,7 @@ def test_check_runner_check_passes_path_not_lines(tmp_path: Path):
         seen.append(path)
         return SimpleNamespace(passed=False)
 
-    checker = Check_Runner(
-        "CheckRunner test", [check_pass, check_fail], []
-    )
+    checker = Check_Runner("CheckRunner test", [check_pass, check_fail], [])
     result = checker.check(file_path)
 
     assert seen == [file_path, file_path]
