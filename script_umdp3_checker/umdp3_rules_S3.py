@@ -293,7 +293,7 @@ TODO: This is a very simplistic check and will not detect many
             clean_line = re.sub(r"\([^)]*\)", "", clean_line)
             variables = [var.strip() for var in clean_line.split(",")]
             for var in variables:
-                #var = var.split("(", 1)[0].strip()  # Remove any array dimensions
+                var = var.split(r"=", 1)[0].strip()  # Remove any assignment part
                 if var.upper() == var:
                     failures += 1
                     error_log = add_error_log(

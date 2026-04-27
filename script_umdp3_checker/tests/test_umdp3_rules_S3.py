@@ -31,14 +31,11 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
       - ``[<operation>, <N>, [<new line(s)>]]``
       - where : <operation> = "replace" would replace line N with the new line(s)
       -         <operation> = delete" would remove line N
-      - and     <operation> ="add" would insert the new line(s) before line N.
+      - and     <operation> ="add" would insert the new line(s) after line N.
 
     Operations are applied in descending line order so that earlier
     line numbers are not shifted by later mutations.
     """
-    """ TODO: Currently <new lines> is a string, but should become a list of strings,
-    allowing multiple lines to be used in addition and as replacements. Although,
-    this may make keeping track of line numbers more complex."""
     lines = lines_in.copy()
     for change in sorted(changes, key=lambda o: o[1], reverse=True):
         idx = int(change[1]) - 1
@@ -46,7 +43,7 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
             del lines[idx]
             print(f"Line {idx} :  deleting line.")
             for new_line in change[2]:
-                print(f'Line {idx} :  adding "{new_line}"')
+                print(f'Line {idx} :  replacing with "{new_line}"')
                 lines.insert(idx, new_line)
                 idx += 1
         elif change[0] == "delete":
@@ -230,7 +227,7 @@ def test_r3_1_1_there_can_be_only_one(
             1,
             {"missing copyright or crown copyright statement": [0]},
         ),
-        ([], 0, []),  # No changes, expect no errors
+        ([], 0, {}),  # No changes, expect no errors
     ],
     ids=["Missing copyright statement", "copyright statement present"],
 )
@@ -315,7 +312,7 @@ def test_r3_3_2_line_too_long(
             3,
             {"lowercase keyword: Module": [12], "lowercase keyword: use": [39, 42]},
         ),
-        ([], 0, []),  # No changes, expect no errors
+        ([], 0, {}),  # No changes, expect no errors
     ],
     ids=["3 Lowercase Errors", "No Lowercase Errors"],
 )
@@ -355,6 +352,17 @@ def test_r3_4_1_capitalised_keywords(
                 "Found UPPERCASE variable name in declaration at line 45: XLEN": [45],
                 "Found UPPERCASE variable name in declaration at line 60: DAVE_2": [60],
             },
+        ),
+        (
+            [
+                [
+                    "add",
+                    58,
+                    ["LOGICAL :: l_whizz_bang = .FALSE. ! optimisation flag"],
+                ],
+            ],
+            0,
+            {},
         ),
         (
             [
@@ -403,9 +411,9 @@ def test_r3_4_1_capitalised_keywords(
                 ],
             },
         ),
-        ([], 0, []),  # No changes, expect no errors
+        ([], 0, {}),  # No changes, expect no errors
     ],
-    ids=["2 UpperCase Var Errors", "5 UpperCase Var Errors on extended lines",
+    ids=["2 UpperCase Var Errors", "False FALSE error", "5 UpperCase Var Errors on extended lines",
         "No UpperCase Var Errors"],
 )
 def test_r3_4_2_no_full_uppercase_variable_names(
