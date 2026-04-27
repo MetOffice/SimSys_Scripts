@@ -155,6 +155,7 @@ test_dimension_forbidden_parameters = [
     ),
 ]
 
+
 @pytest.mark.parametrize(
     "lines, expected_result",
     [data[:2] for data in test_dimension_forbidden_parameters],
@@ -237,6 +238,7 @@ def test_forbidden_operators(lines, expected_result):
     checker = UMDP3Checker()
     result = checker.forbidden_operators(lines)
     assert result.failure_count == expected_result
+
 
 test_tab_detection_parameters = [
     (["  PRINT *, 'This line has no tabs'"], 0, "No tabs"),

@@ -19,6 +19,8 @@ TODO : This module has lost it's way. I uses a class to define methods which jus
        class should eventually get emptied out and the file removed.
 
 """
+
+
 class CheckerDispatchTables:
     """Class containing dispatch tables for UMDP3 tests"""
 
@@ -51,9 +53,7 @@ class CheckerDispatchTables:
             self.umdp3_checker.read_unit_args,
         ]
 
-    def get_file_dispatch_table_fortran(
-        self, filename: str = ""
-    ) -> list[Callable]:
+    def get_file_dispatch_table_fortran(self, filename: str = "") -> list[Callable]:
         """Get dispatch table for Fortran file tests"""
         return [
             self.umdp3_checker.retire_if_def,

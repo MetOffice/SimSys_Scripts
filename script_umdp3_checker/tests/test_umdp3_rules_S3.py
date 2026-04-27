@@ -250,6 +250,7 @@ def test_r3_2_1_check_crown_copyright(
 
 # =================================================================
 
+
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -334,6 +335,7 @@ def test_r3_4_1_capitalised_keywords(
 
 # =================================================================
 
+
 # See if you can spot why I hate ruff - it highlights my awful data structures really well.
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
@@ -396,9 +398,7 @@ def test_r3_4_1_capitalised_keywords(
             ],
             5,
             {
-                "Found UPPERCASE variable name in declaration at line 45: XLEN": [
-                    45
-                ],
+                "Found UPPERCASE variable name in declaration at line 45: XLEN": [45],
                 "Found UPPERCASE variable name in declaration at line 58: IJ": [58],
                 "Found UPPERCASE variable name in declaration at line 62: CASPVAR": [
                     62
@@ -413,8 +413,12 @@ def test_r3_4_1_capitalised_keywords(
         ),
         ([], 0, {}),  # No changes, expect no errors
     ],
-    ids=["2 UpperCase Var Errors", "False FALSE error", "5 UpperCase Var Errors on extended lines",
-        "No UpperCase Var Errors"],
+    ids=[
+        "2 UpperCase Var Errors",
+        "False FALSE error",
+        "5 UpperCase Var Errors on extended lines",
+        "No UpperCase Var Errors",
+    ],
 )
 def test_r3_4_2_no_full_uppercase_variable_names(
     example_fortran_lines, changes_list, expected_result, expected_errors

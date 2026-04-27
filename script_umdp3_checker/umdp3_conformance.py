@@ -158,7 +158,7 @@ class StyleChecker:
         """Print summary of results for this checker."""
         if print_volume >= 3:
             print(
-                f"Checker \"{self.name}\" checking {len(self.files_to_check)} files "
+                f'Checker "{self.name}" checking {len(self.files_to_check)} files '
                 f"with {len(self.check_functions)} checks."
             )
 
@@ -277,6 +277,7 @@ class Check_Runner(StyleChecker):
 
 class ConformanceChecker:
     """Main framework for running style checks in parallel."""
+
     checkers: List[StyleChecker]
     max_workers: int
     results: List[CheckResult]
@@ -443,14 +444,18 @@ def line_2(length: int = 80) -> str:
     """Helper function to print a line for separating output sections."""
     return "-" * length
 
+
 def print_in_box_a(text: list[str], width: int = 80) -> None:
     """Helper function to print text in a box."""
     print("+" + "-" * (width - 2) + "+")
     for line in text:
         print("| " + line.ljust(width - 4) + " |")
-    print("+" + "-" * (width - 2) + "+" )
+    print("+" + "-" * (width - 2) + "+")
 
-def print_in_box_b(text: list[str], width: int = 80, justification: str = "left") -> None:
+
+def print_in_box_b(
+    text: list[str], width: int = 80, justification: str = "left"
+) -> None:
     """Another Helper function to print text in a box."""
     print(line_1(width))
     for line in text:
@@ -468,6 +473,7 @@ def print_in_box_b(text: list[str], width: int = 80, justification: str = "left"
             raise ValueError("Invalid justification: " + justification)
         print("## " + " " * left_padding + line + " " * right_padding + " ##")
     print(line_1(width) + "\n")
+
 
 def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
     """Determine which CMS is in use based on the presence of certain files."""
@@ -663,9 +669,9 @@ if __name__ == "__main__":
     output = [
         "Summary :",
         f"        Total files checked: {len(checker.results)}",
-        "        " +
-        f"Total files failed: {sum(1 for r in checker.results if not r.all_passed)}",
-        ]
+        "        "
+        + f"Total files failed: {sum(1 for r in checker.results if not r.all_passed)}",
+    ]
     print_in_box_a(output, width=81)
 
     exit(0 if all_passed else 1)

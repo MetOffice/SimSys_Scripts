@@ -35,9 +35,12 @@ TODO : The functions themselves are being re-named and re-created in umdp3_rules
        The new names starte with r2_x_y, where x and y refer to the subsections of the
        UMDP3 standards document that they are checking conformance to.
 """
+
+
 @dataclass
 class TestResult:
     """Result from running a single style checker test on a file."""
+
     checker_name: str = "Unnamed Checker"
     failure_count: int = 0
     passed: bool = False
@@ -57,13 +60,13 @@ class UMDP3Checker:
 
     def __init__(self):
         """
-    TODO: The Perl version had a dodgy looking subroutine to calculate
-        this, but I can't find where it was called from within the files in
-        'bin'. It used all args as a 'list' - searched them for '#include' and
-        then returned the count as well as adding 1 to this global var if any
-        were found.
-        This is either redundant and needs removing, or needs implementing
-        properly."""
+        TODO: The Perl version had a dodgy looking subroutine to calculate
+            this, but I can't find where it was called from within the files in
+            'bin'. It used all args as a 'list' - searched them for '#include' and
+            then returned the count as well as adding 1 to this global var if any
+            were found.
+            This is either redundant and needs removing, or needs implementing
+            properly."""
         self._number_of_files_with_variable_declarations_in_includes = 0
 
     def add_error_log(
@@ -85,7 +88,7 @@ class UMDP3Checker:
 
     def remove_quoted(self, line: str) -> str:
         """Remove quoted strings from a line"""
-#        # Simple implementation - remove single and double quoted strings
+        #        # Simple implementation - remove single and double quoted strings
         result = line
 
         # Remove double quoted strings
