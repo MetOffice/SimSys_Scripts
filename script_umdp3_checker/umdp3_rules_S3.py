@@ -334,11 +334,12 @@ TODO: This is a very simplistic check and will not detect many
             variables = [var.strip() for var in clean_line.split(",")]
             for var in variables:
                 var = var.split(r"=", 1)[0].strip()  # Remove any assignment part
-                if var.upper() == var:
+                if var and var.upper() == var:
                     failures += 1
                     error_log = add_error_log(
                         error_log,
-                        f"Found UPPERCASE variable name in declaration at line {count}: {var}",
+                        f"Found UPPERCASE variable name in declaration at line {count}:"
+                        + f" \"{var}\"",
                         count,
                     )
     return TestResult(

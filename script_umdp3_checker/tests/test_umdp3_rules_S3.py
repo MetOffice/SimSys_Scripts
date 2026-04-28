@@ -351,8 +351,8 @@ def test_r3_4_1_capitalised_keywords(
             ],
             2,
             {
-                "Found UPPERCASE variable name in declaration at line 45: XLEN": [45],
-                "Found UPPERCASE variable name in declaration at line 60: DAVE_2": [60],
+                "Found UPPERCASE variable name in declaration at line 45: \"XLEN\"": [45],
+                "Found UPPERCASE variable name in declaration at line 60: \"DAVE_2\"": [60],
             },
         ),
         (
@@ -398,18 +398,50 @@ def test_r3_4_1_capitalised_keywords(
             ],
             5,
             {
-                "Found UPPERCASE variable name in declaration at line 45: XLEN": [45],
-                "Found UPPERCASE variable name in declaration at line 58: IJ": [58],
-                "Found UPPERCASE variable name in declaration at line 62: CASPVAR": [
+                "Found UPPERCASE variable name in declaration at line 45: \"XLEN\"": [45],
+                "Found UPPERCASE variable name in declaration at line 58: \"IJ\"": [58],
+                "Found UPPERCASE variable name in declaration at line 62: \"CASPVAR\"": [
                     62
                 ],
-                "Found UPPERCASE variable name in declaration at line 62: VARIABLE_3": [
+                "Found UPPERCASE variable name in declaration at line 62: \"VARIABLE_3\"": [
                     62
                 ],
-                "Found UPPERCASE variable name in declaration at line 62: CAPS_VAR": [
+                "Found UPPERCASE variable name in declaration at line 62: \"CAPS_VAR\"": [
                     62
                 ],
             },
+        ),
+        (
+            [
+                ["delete", 48, None],
+                [
+                    "replace",
+                    49,
+                    [
+                        "REAL, INTENT(IN) :: input1(xlen, ylen),   & !First input array",
+                        "                    input2(XLEN, ylen), !Second input array",
+                    ],
+                ],
+                # [],
+            ],
+            0,
+            {},
+        ),
+        (
+            [
+                ["delete", 48, None],
+                [
+                    "replace",
+                    49,
+                    [
+                        "REAL, INTENT(IN) :: input1(xlen, ylen),   & !First input array",
+                        "                    INPUT2(XLEN, ylen), !Second input array",
+                    ],
+                ],
+                # [],
+            ],
+            1,
+            {"Found UPPERCASE variable name in declaration at line 48: \"INPUT2\"" : [48]},
         ),
         ([], 0, {}),  # No changes, expect no errors
     ],
@@ -417,6 +449,8 @@ def test_r3_4_1_capitalised_keywords(
         "2 UpperCase Var Errors",
         "False FALSE error",
         "5 UpperCase Var Errors on extended lines",
+        "Array dimnensions, twice on an extended line, but no failures",
+        "Array dimnensions, twice on an extended line, with one failure",
         "No UpperCase Var Errors",
     ],
 )
@@ -426,11 +460,11 @@ def test_r3_4_2_no_full_uppercase_variable_names(
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_4_2_no_full_uppercase_variable_names(modified_fortran_lines)
     failure_count = result.failure_count
-    assert failure_count == expected_result
     errors = result.errors
-    assert len(errors) == len(expected_errors)
     for error, lines_list in errors.items():
         assert error in expected_errors
-        assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
             assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
