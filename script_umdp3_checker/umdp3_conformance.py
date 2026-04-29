@@ -1,3 +1,9 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -175,7 +181,7 @@ class StyleChecker:
         )
         if print_volume >= 5:
             print(
-                f"ExternalChecker initialized :\n"
+                f"StyleChecker initialized using filtered full list:\n"
                 f"    Name : {name}\n"
                 f"    Has {len(check_functions)} check commands\n"
                 f"    Using {len(file_extensions)} file extensions\n"
