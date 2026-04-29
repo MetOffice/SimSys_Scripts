@@ -323,6 +323,9 @@ TODO: This is a very simplistic check and will not detect many
     declaration_search = re.compile(
         r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*", re.IGNORECASE
     )
+    digit_search = re.compile(r"([+-]?\d+\.\d+|[+-]?\d+)")
+    array_dimensions_search = re.compile(r"\([^)]*\)") # finds array dimensions in declaration
+    array_assignment_search = re.compile(r"=\s*\[[^\]]*\]\s*") # finds array assignments
     for count, line in enumerate(lines, 1):
         clean_line = remove_quoted(line)
         clean_line = remove_comments(clean_line)
@@ -330,9 +333,12 @@ TODO: This is a very simplistic check and will not detect many
         if declaration_search.search(clean_line):
             full_line = concatenate_lines(lines, count)
             clean_line = full_line.split("::", 1)[1].strip()
-            clean_line = re.sub(r"\([^)]*\)", "", clean_line)
+            clean_line = array_dimensions_search.sub("", clean_line).strip()
+            clean_line = array_assignment_search.sub("", clean_line)
             variables = [var.strip() for var in clean_line.split(",")]
             for var in variables:
+                if digit_search.fullmatch(var):
+                    continue  # Skip if it's just a number
                 var = var.split(r"=", 1)[0].strip()  # Remove any assignment part
                 if var and var.upper() == var:
                     failures += 1

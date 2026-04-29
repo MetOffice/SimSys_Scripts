@@ -84,6 +84,9 @@ unseparated_keywords_parameters = [
     (["i=0", "i=i+1", "PRINT*,i"], 0, "No keywords"),
     (["PROGRAM test", "i=0", "ENDIF"], 1, "One keyword unseparated"),
     (["i=0", "ENDPARALLELDO", "END DO"], 1, "One keyword unseparated in middle"),
+    (["REAL, INTENT(IN OUT) ::   lambda_pole   !INOUT  Longitude of pole",
+      "REAL, INTENT(OUT)  :: Dave", "DO", "nothing", "END DO"], 0,
+      "unseparated keyword in comment"),
 ]
 
 
