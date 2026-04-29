@@ -82,6 +82,7 @@ def remove_comments(line: str) -> str:
     that we don't accidentally remove text after an "!" in a string."""
     return comment_line.sub("", line).rstrip()
 
+
 def remove_cpp_commands(line: str) -> str:
     """Remove cpp commands from the lines :
     There is a bit of an assumption here that quoted text has already been removed, so that we don't accidentally remove text after an "#" in a string.
@@ -335,8 +336,12 @@ TODO: This is a very simplistic check and will not detect many
         r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*", re.IGNORECASE
     )
     digit_search = re.compile(r"([+-]?\d+\.\d+|[+-]?\d+)")
-    array_dimensions_search = re.compile(r"\([^)]*\)") # finds array dimensions in declaration
-    array_assignment_search = re.compile(r"=\s*\[[^\]]*\]\s*") # finds array assignments
+    array_dimensions_search = re.compile(
+        r"\([^)]*\)"
+    )  # finds array dimensions in declaration
+    array_assignment_search = re.compile(
+        r"=\s*\[[^\]]*\]\s*"
+    )  # finds array assignments
     for count, line in enumerate(lines, 1):
         clean_line = remove_quoted(line)
         clean_line = remove_comments(clean_line)
@@ -356,7 +361,7 @@ TODO: This is a very simplistic check and will not detect many
                     error_log = add_error_log(
                         error_log,
                         f"Found UPPERCASE variable name in declaration at line {count}:"
-                        + f" \"{var}\"",
+                        + f' "{var}"',
                         count,
                     )
     return TestResult(

@@ -323,9 +323,17 @@ def test_r3_3_2_line_too_long(
         (
             [
                 ["add", 44, ["#if defined(SOMETHING)"]],
-                ["add", 47, ["#else", "INTEGER, INTENT(INOUT) :: xlen",
-                             "INTEGER, INTENT(OUT) :: ylen",
-                             "LOGICAL, INTENT(IN) :: l_WhoopSies = .FALSE.", "#endif"]],
+                [
+                    "add",
+                    47,
+                    [
+                        "#else",
+                        "INTEGER, INTENT(INOUT) :: xlen",
+                        "INTEGER, INTENT(OUT) :: ylen",
+                        "LOGICAL, INTENT(IN) :: l_WhoopSies = .FALSE.",
+                        "#endif",
+                    ],
+                ],
             ],
             0,
             {},
@@ -368,8 +376,10 @@ def test_r3_4_1_capitalised_keywords(
             ],
             2,
             {
-                "Found UPPERCASE variable name in declaration at line 45: \"XLEN\"": [45],
-                "Found UPPERCASE variable name in declaration at line 61: \"DAVE_2\"": [61],
+                'Found UPPERCASE variable name in declaration at line 45: "XLEN"': [45],
+                'Found UPPERCASE variable name in declaration at line 61: "DAVE_2"': [
+                    61
+                ],
             },
         ),
         (
@@ -415,15 +425,15 @@ def test_r3_4_1_capitalised_keywords(
             ],
             5,
             {
-                "Found UPPERCASE variable name in declaration at line 45: \"XLEN\"": [45],
-                "Found UPPERCASE variable name in declaration at line 59: \"IJ\"": [59],
-                "Found UPPERCASE variable name in declaration at line 63: \"CASPVAR\"": [
+                'Found UPPERCASE variable name in declaration at line 45: "XLEN"': [45],
+                'Found UPPERCASE variable name in declaration at line 59: "IJ"': [59],
+                'Found UPPERCASE variable name in declaration at line 63: "CASPVAR"': [
                     63
                 ],
-                "Found UPPERCASE variable name in declaration at line 63: \"VARIABLE_3\"": [
+                'Found UPPERCASE variable name in declaration at line 63: "VARIABLE_3"': [
                     63
                 ],
-                "Found UPPERCASE variable name in declaration at line 63: \"CAPS_VAR\"": [
+                'Found UPPERCASE variable name in declaration at line 63: "CAPS_VAR"': [
                     63
                 ],
             },
@@ -458,7 +468,7 @@ def test_r3_4_1_capitalised_keywords(
                 # [],
             ],
             1,
-            {"Found UPPERCASE variable name in declaration at line 48: \"INPUT2\"" : [48]},
+            {'Found UPPERCASE variable name in declaration at line 48: "INPUT2"': [48]},
         ),
         ([], 0, {}),  # No changes, expect no errors
     ],
