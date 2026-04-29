@@ -42,7 +42,7 @@ def run_command(command: str, shell: bool = False) -> subprocess.CompletedProces
         command,
         capture_output=True,
         text=True,
-        timeout=120,
+        timeout=300,
         shell=shell,
         check=False,
     )
