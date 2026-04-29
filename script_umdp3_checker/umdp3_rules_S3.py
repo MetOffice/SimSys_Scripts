@@ -24,6 +24,7 @@ from fortran_keywords import fortran_keywords
 # from script_umdp3_checker import fortran_keywords
 
 comment_line = re.compile(r"!.*$")
+cpp_command_line = re.compile(r"^#.*$")
 word_splitter = re.compile(r"\b\w+\b")
 
 
@@ -77,8 +78,15 @@ def create_unique_random_string(storage_set, length: int = 7) -> str:
 
 def remove_comments(line: str) -> str:
     """Remove comments from the lines :
-    There is a bit of an assumption here that quoted text has already been removed, so that we don't accidentally remove text after an "!" in a string."""
+    There is a bit of an assumption here that quoted text has already been removed, so
+    that we don't accidentally remove text after an "!" in a string."""
     return comment_line.sub("", line).rstrip()
+
+def remove_cpp_commands(line: str) -> str:
+    """Remove cpp commands from the lines :
+    There is a bit of an assumption here that quoted text has already been removed, so that we don't accidentally remove text after an "#" in a string.
+    Also that cpp commands have the '#' in col 1 of the line."""
+    return cpp_command_line.sub("", line).rstrip()
 
 
 def concatenate_lines(lines: List[str], line_no: int) -> str:
@@ -118,6 +126,7 @@ def r3_1_1_there_can_be_only_one(
     def find_first(lines: List[str]) -> tuple[bool, str]:
         for line in lines:
             executable_line = remove_comments(line).strip()
+            executable_line = remove_cpp_commands(executable_line).strip()
             if not executable_line:
                 continue  # Skip empty lines
             for keyword in program_unit_keywords:
@@ -136,6 +145,7 @@ def r3_1_1_there_can_be_only_one(
     def find_last(lines: List[str], unit_type: str, unit_name: str) -> tuple[bool, str]:
         for line in reversed(lines):
             executable_line = remove_comments(line).strip()
+            executable_line = remove_cpp_commands(executable_line).strip()
             if not executable_line:
                 continue  # Skip empty lines
             unit_name_search = re.search(rf"END\s+{unit_type}\s+(\w+)", executable_line)
@@ -285,6 +295,7 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
             continue
         clean_line = remove_quoted(line)
         clean_line = comment_line.sub("", clean_line)
+        clean_line = remove_cpp_commands(clean_line)
         # Check for lowercase keywords
         for word in word_splitter.findall(clean_line):
             upcase = word.upper()

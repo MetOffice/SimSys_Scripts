@@ -87,6 +87,7 @@ unseparated_keywords_parameters = [
     (["REAL, INTENT(IN OUT) ::   lambda_pole   !INOUT  Longitude of pole",
       "REAL, INTENT(OUT)  :: Dave", "DO", "nothing", "END DO"], 0,
       "unseparated keyword in comment"),
+    (["#endif", "i=i+1", "PRINT*,i"], 0, "Safely ignore cpp commands"),
 ]
 
 

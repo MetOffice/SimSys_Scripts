@@ -135,7 +135,8 @@ class UMDP3Checker:
                 continue
             clean_line = self.remove_quoted(line)
             clean_line = self.comment_line.sub("", clean_line).strip()
-            for pattern in [f"\\b{kw}\\b" for kw in unseparated_keywords_list]:
+            # The [^#] is to avoid false positives on #endif and similar.
+            for pattern in [f"([^#]|^)\\b{kw}\\b" for kw in unseparated_keywords_list]:
                 if re.search(pattern, clean_line, re.IGNORECASE):
                     failures += 1
                     error_log = self.add_error_log(
