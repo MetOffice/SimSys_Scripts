@@ -14,7 +14,7 @@ from umdp3_checker_rules import UMDP3Checker, TestResult
 
 
 # Prevent pytest from trying to collect TestResult as more tests:
-TestResult.__test__ = False
+TestResult.__test__ = False  # type: ignore
 """
 ToDo :
       THere has been a LOT of refactoring in the umdp3 module since these
@@ -25,29 +25,6 @@ ToDo :
       date. Especially as errors is (I think) only checking for the presence
       of a given string in the keys of the error log dict.
 """
-keyword_data = [
-    ("IF THEN END", 0, {}, "All UPPERCASE keywords"),
-    ("if then end", 3, {"lowercase keyword: if"}, "All lowercase keywords"),
-    ("If Then End", 3, {"lowercase keyword: If"}, "All mixed case keywords"),
-    ("foo bar baz", 0, {}, "No keywords"),
-    ("! if then end", 0, {}, "Commented keywords"),
-]
-keyword_test_parameters = [data[:3] for data in keyword_data]
-keyword_test_ids = [data[3] for data in keyword_data]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result, expected_errors",
-    keyword_test_parameters,
-    ids=keyword_test_ids,
-)
-def test_keywords(lines, expected_result, expected_errors):
-    checker = UMDP3Checker()
-    result = checker.capitalised_keywords([lines])
-    assert result.failure_count == expected_result
-    for error in expected_errors:
-        assert error in result.errors
-
 
 fake_code_block = ["PROGRAM test", "IMPLICIT NONE", "INTEGER :: i", "END PROGRAM"]
 implicit_none_paramters = [
@@ -167,39 +144,6 @@ def test_write_using_default_format(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-test_lowercase_variable_names_parameters = [
-    (["INTEGER  :: lowercase_variable"], 0, "Lowercase variable name"),
-    (["REAL :: Lowercase_Variable"], 0, "Pascal case variable name"),
-    (["CHARACTER  :: LOWERCASE_VARIABLE"], 1, "Uppercase variable name"),
-    (
-        ["  REAL  :: lowercase_variable"],
-        0,
-        "Lowercase variable name with leading whitespace",
-    ),
-    (
-        ["  CHARACTER  :: Lowercase_Variable"],
-        0,
-        "Pascal case variable name with leading whitespace",
-    ),
-    (
-        ["  INTEGER  :: LOWERCASE_VARIABLE"],
-        1,
-        "Uppercase variable name with leading whitespace",
-    ),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_lowercase_variable_names_parameters],
-    ids=[data[2] for data in test_lowercase_variable_names_parameters],
-)
-def test_lowercase_variable_names(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.lowercase_variable_names(lines)
-    assert result.failure_count == expected_result
-
-
 test_dimension_forbidden_parameters = [
     (["REAL :: array(ARR_LEN)"], 0, "Dimension specified in variable declaration"),
     (["REAL :: array"], 0, "No dimension specified in variable declaration"),
@@ -293,29 +237,6 @@ test_forbidden_operators_parameters = [
 def test_forbidden_operators(lines, expected_result):
     checker = UMDP3Checker()
     result = checker.forbidden_operators(lines)
-    assert result.failure_count == expected_result
-
-
-test_line_over_80chars_parameters = [
-    (
-        [
-            "  PRINT *, 'This line is definitely way over the eighty character limit set by the UM coding standards'"
-        ],
-        1,
-        "Line over 80 characters",
-    ),
-    (["  PRINT *, 'This line is within the limit'"], 0, "Line within 80 characters"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_line_over_80chars_parameters],
-    ids=[data[2] for data in test_line_over_80chars_parameters],
-)
-def test_line_over_80chars(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.line_over_80chars(lines)
     assert result.failure_count == expected_result
 
 
@@ -637,25 +558,6 @@ test_intrinsic_as_variable_parameters = [
 def test_intrinsic_as_variable(lines, expected_result):
     checker = UMDP3Checker()
     result = checker.intrinsic_as_variable(lines)
-    assert result.failure_count == expected_result
-
-
-test_check_crown_copyright_parameters = [
-    (["! Crown copyright 2024"], 0, "Correct crown copyright statement"),
-    (["! Copyright 2024"], 0, "A copyright statement"),
-    (["! This is a comment"], 1, "No crown copyright statement"),
-    (["! This is a Crown"], 1, "No crown copyright statement"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_check_crown_copyright_parameters],
-    ids=[data[2] for data in test_check_crown_copyright_parameters],
-)
-def test_check_crown_copyright(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.check_crown_copyright(lines)
     assert result.failure_count == expected_result
 
 

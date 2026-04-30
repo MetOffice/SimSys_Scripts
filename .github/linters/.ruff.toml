@@ -1,6 +1,7 @@
 cache-dir = "/tmp/.ruff_cache"
 line-length = 88
 output-format = "grouped"
+exclude = ["*.F90"]
 
 [lint]
 # Allow unused variables when underscore-prefixed.
