@@ -36,7 +36,7 @@ def test_from_full_list_filters_by_extension():
         Path("src/script.py"),
         Path("README.md"),
     ]
-    check_functions = {"dummy_check": lambda lines: None}
+    check_functions = []
 
     checker = StyleChecker.from_full_list(
         name="Fortran Checker",
@@ -56,7 +56,7 @@ def test_from_full_list_returns_all_files_when_no_extensions():
     checker = StyleChecker.from_full_list(
         name="Any Checker",
         file_extensions=set(),
-        check_functions={},
+        check_functions=[],
         changed_files=changed_files,
     )
 
@@ -67,7 +67,7 @@ def test_from_full_list_with_no_changed_files_returns_empty_list():
     checker = StyleChecker.from_full_list(
         name="Empty Checker",
         file_extensions={".py"},
-        check_functions={},
+        check_functions=[],
         changed_files=[],
     )
 
@@ -168,13 +168,13 @@ def test_detangle_file_types_expands_all_group():
 
 
 def test_detangle_file_types_mixed_group_and_explicit_type():
-    result = detangle_file_types({"CI", "Generic"})
+    result = detangle_file_types({"CI", "AnyFile"})
 
-    assert result == GROUP_FILE_TYPES["CI"].union({"Generic"})
+    assert result == GROUP_FILE_TYPES["CI"].union({"AnyFile"})
 
 
 def test_detangle_file_types_passthrough_without_groups():
-    input_types = {"Fortran", "Generic"}
+    input_types = {"Fortran", "AnyFile"}
 
     result = detangle_file_types(set(input_types))
 
@@ -203,9 +203,7 @@ def test_stylechecker_check_aggregates_results(tmp_path: Path):
         seen.append(lines)
         return SimpleNamespace(passed=False)
 
-    checker = StyleChecker(
-        "StyleChecker test", {"pass test": check_pass, "fail test": check_fail}, []
-    )
+    checker = StyleChecker("StyleChecker test", [check_pass, check_fail], [])
     result = checker.check(file_path)
 
     assert seen == [["a", "b"], ["a", "b"]]
@@ -230,9 +228,7 @@ def test_check_runner_check_passes_path_not_lines(tmp_path: Path):
         seen.append(path)
         return SimpleNamespace(passed=False)
 
-    checker = Check_Runner(
-        "CheckRunner test", {"pass test": check_pass, "fail test": check_fail}, []
-    )
+    checker = Check_Runner("CheckRunner test", [check_pass, check_fail], [])
     result = checker.check(file_path)
 
     assert seen == [file_path, file_path]
@@ -270,14 +266,10 @@ def test_create_external_runners_builds_expected_checkers(
     # All_files got filtered to only those with 'py' extension.
     assert checker.files_to_check == [Path("a.py"), Path("d.py")]
     # The two commands get given generated 'names'.
-    assert set(checker.check_functions.keys()) == {
-        "External_operation_ruff",
-        "External_operation_black",
-    }
     # Check the arguments passed to create_free_runner are as expected.
     assert callables == [
-        (["ruff", "check"], "External_operation_ruff"),
-        (["black", "--check"], "External_operation_black"),
+        (["ruff", "check"], "ruff"),
+        (["black", "--check"], "black"),
     ]
 
 
@@ -556,7 +548,7 @@ def test_stylechecker_check_with_no_check_functions_passes(tmp_path: Path):
     file_path = tmp_path / "sample.txt"
     file_path.write_text("content\n")
 
-    checker = StyleChecker("EmptyChecks", {}, [file_path])
+    checker = StyleChecker("EmptyChecks", [], [file_path])
     result = checker.check(file_path)
 
     assert result.file_path == str(file_path)
@@ -592,7 +584,7 @@ def test_create_external_runners_with_empty_commands():
     )
 
     assert checker.files_to_check == [Path("a.py"), Path("b.py")]
-    assert checker.check_functions == {}
+    assert checker.check_functions == []
 
 
 # Okay, c'mon CoPilot - where's the value in testing a tiny function to write a string
@@ -626,13 +618,13 @@ def test_process_arguments_verbose_and_filetype_group_expansion(
     monkeypatch.setattr(
         sys,
         "argv",
-        ["umdp3_conformance.py", "--file-types", "CI", "Generic", "-vv"],
+        ["umdp3_conformance.py", "--file-types", "CI", "AnyFile", "-vv"],
     )
 
     args = process_arguments()
 
     assert args.volume == 5
-    assert args.file_types == {"Fortran", "Python", "Generic"}
+    assert args.file_types == {"Fortran", "Python", "AnyFile"}
 
 
 def test_process_arguments_rejects_verbose_and_quiet_together(

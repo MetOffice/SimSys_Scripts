@@ -7,11 +7,12 @@
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, List, Dict, Set, Optional
+from typing import Callable, List, Set, Optional
 from dataclasses import dataclass, field
 import argparse
 from checker_dispatch_tables import CheckerDispatchTables
 from umdp3_checker_rules import TestResult
+from umdp3_rules_S3 import list_O_tests
 import concurrent.futures
 
 # Add custom modules to Python path if needed
@@ -25,13 +26,11 @@ Framework and Classes to generate a list of files to check for style
 conformance, and to run relevant style checkers on those files.
 """
 
-
-ALLOWABLE_FILE_TYPES = ["Fortran", "Python", "Generic"]
+ALLOWABLE_FILE_TYPES = ["Fortran", "Python", "AnyFile"]
 GROUP_FILE_TYPES = {
     "CI": {"Fortran", "Python"},
     "ALL": set(ALLOWABLE_FILE_TYPES),
 }
-# TODO: Generic /probably/ needs renaming.
 
 
 @dataclass
@@ -123,30 +122,18 @@ class StyleChecker:
     The checks are a dictionary of named callable routines.
     The files are a list of file paths to check."""
 
-    """
-    TODO: This is where it might be good to set up a threadsafe
-        class instance to hold the 'expanded' check outputs.
-        One for each file being checked in parallel.
-        Curently the UMDP3 class holds "_extra_error_info" which
-        was used to provide more detailed error logging.
-        However, this is not threadsafe, so in a multithreaded
-        environment, the extra error info could get mixed up between
-        different files being checked in parallel.
-        For now, I've modified the UMDP3 class methods to return
-        a TestResult object directly, which includes the extra error
-        info, so that each thread can work independently."""
     name: str
-    check_functions: Dict[str, Callable]
+    check_functions: list[Callable]
     files_to_check: List[Path]
 
     def __init__(
         self,
         name: str,
-        check_functions: Dict[str, Callable],
+        check_functions: list[Callable],
         changed_files: List[Path],
     ):
         self.name = name
-        self.check_functions = check_functions or {}
+        self.check_functions = check_functions or []
         self.files_to_check = changed_files or []
 
     def get_name(self) -> str:
@@ -156,7 +143,7 @@ class StyleChecker:
         """Run UMDP3 check function on file."""
         lines = file_path.read_text().splitlines()
         file_results = []  # list of TestResult objects
-        for check_name, check_function in self.check_functions.items():
+        for check_function in self.check_functions:
             file_results.append(check_function(lines))
 
         tests_failed = sum([0 if result.passed else 1 for result in file_results])
@@ -167,12 +154,20 @@ class StyleChecker:
             test_results=file_results,
         )
 
+    def report(self, print_volume: int = 3) -> None:
+        """Print summary of results for this checker."""
+        if print_volume >= 3:
+            print(
+                f'Checker "{self.name}" checking {len(self.files_to_check)} files '
+                f"with {len(self.check_functions)} checks."
+            )
+
     @classmethod
     def from_full_list(
         cls,
         name: str,
         file_extensions: Set[str],
-        check_functions: Dict[str, Callable],
+        check_functions: list[Callable],
         changed_files: List[Path],
         print_volume: int = 3,
     ):
@@ -208,11 +203,11 @@ class StyleChecker:
     ) -> "StyleChecker":
         """Create a StyleChecker instance filtering files from a full list."""
         filtered_files = cls.filter_files(all_files, file_extensions)
-        check_functions = {}
+        check_functions = []
         for command in commands:
-            external_opname = f"External_operation_{command[0]}"
+            external_opname = f"{command[0]}"
             free_runner = cls.create_free_runner(command, external_opname)
-            check_functions[external_opname] = free_runner
+            check_functions.append(free_runner)
         return cls(name, check_functions, filtered_files)
 
     @staticmethod
@@ -269,7 +264,7 @@ class Check_Runner(StyleChecker):
     def check(self, file_path: Path) -> CheckResult:
         """Run external command on file."""
         file_results = []  # list of TestResult objects
-        for check_name, check_function in self.check_functions.items():
+        for check_function in self.check_functions:
             file_results.append(check_function(file_path))
         tests_failed = sum([0 if result.passed else 1 for result in file_results])
         return CheckResult(
@@ -283,6 +278,10 @@ class Check_Runner(StyleChecker):
 class ConformanceChecker:
     """Main framework for running style checks in parallel."""
 
+    checkers: List[StyleChecker]
+    max_workers: int
+    results: List[CheckResult]
+
     def __init__(
         self,
         checkers: List[StyleChecker],
@@ -290,6 +289,7 @@ class ConformanceChecker:
     ):
         self.checkers = checkers
         self.max_workers = max_workers
+        self.results = []
 
     def check_files(self) -> None:
         """Run all checkers on given files in parallel.
@@ -304,10 +304,6 @@ class ConformanceChecker:
         for now.
         """
         """
-        TODO : Might be good to have a threadsafe object for each file and
-        allow multiple checks to be run at once on that file.
-        """
-        """
         TODO : Poor terminology makes discerning what is actually happening
         here hard work. A 'checker' is an instance of the StyleChecker
         class. Each of which has a list of checks to perform and a list of
@@ -318,13 +314,6 @@ class ConformanceChecker:
         filename will appear multiple times in the output. Not Good!
         """
         results = []
-
-        """TODO : The current implementation creates a thread for each
-        (checker, file), however a chat with Ollie suggests a better approach
-        would be to switch to multiprocessing and create a pool of workers, and
-        then have each worker run all the checks for a given file. This would
-        reduce the overhead of creating threads and allow for better use of
-        resources."""
         with concurrent.futures.ProcessPoolExecutor(
             max_workers=self.max_workers
         ) as executor:
@@ -333,8 +322,9 @@ class ConformanceChecker:
                 for checker in self.checkers
                 for file_path in checker.files_to_check
             }
-            # TODO : This next loop could be used to process the individual results as
-            # they come in, rather than waiting for all to complete.
+            """TODO : This next loop could be used to process the individual results as
+            they come in, rather than waiting for all to complete. For example, sorting
+            the error logs into a dictionary with the file_name as the key."""
             for future in concurrent.futures.as_completed(future_to_task):
                 result = future.result()
                 results.append(result)
@@ -344,11 +334,6 @@ class ConformanceChecker:
     def print_results(self, print_volume: int = 3, quiet_pass: bool = True) -> bool:
         """Print results and return True if all checks passed.
         ========================================================"""
-        """
-        TODO: If an object encapsulating the data for each file is created
-        it should contain the "in depth" printing method for file data.
-        With this method presenting the summary and then looping over
-        each file object to print its details at the desired verbosity."""
         all_passed = True
         for result in self.results:
             file_status = "✓ PASS" if result.all_passed else "✗ FAIL"
@@ -460,6 +445,36 @@ def line_2(length: int = 80) -> str:
     return "-" * length
 
 
+def print_in_box_a(text: list[str], width: int = 80) -> None:
+    """Helper function to print text in a box."""
+    print("+" + "-" * (width - 2) + "+")
+    for line in text:
+        print("| " + line.ljust(width - 4) + " |")
+    print("+" + "-" * (width - 2) + "+")
+
+
+def print_in_box_b(
+    text: list[str], width: int = 80, justification: str = "left"
+) -> None:
+    """Another Helper function to print text in a box."""
+    print(line_1(width))
+    for line in text:
+        total_padding = width - 6 - len(line)
+        if justification == "left":
+            left_padding = 0
+            right_padding = total_padding
+        elif justification == "right":
+            left_padding = total_padding
+            right_padding = 0
+        elif justification == "center":
+            left_padding = total_padding // 2
+            right_padding = total_padding - left_padding
+        else:
+            raise ValueError("Invalid justification: " + justification)
+        print("## " + " " * left_padding + line + " " * right_padding + " ##")
+    print(line_1(width) + "\n")
+
+
 def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
     """Determine which CMS is in use based on the presence of certain files."""
     repo_path = Path(path)
@@ -474,8 +489,6 @@ def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
         raise RuntimeError("Unknown CMS type at path: " + str(path))
     branch_name = cms.get_branch_name()
     if not cms.is_branch():
-        # TODO : This /might/ be better as a raise ValueError to allow
-        # printing the help message, but for now just print and exit.
         print(
             f"The path {path} is not a branch."
             f"\nReported branch name is : {branch_name}"
@@ -484,7 +497,7 @@ def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
             f"Please try switching on the full check option"
         )
         # Soft exit mainly so nightly testing on main doesn't flag failure.
-        exit(0)
+        sys.exit(0)
     else:
         if print_volume >= 2:
             print(f"Found branch, {branch_name}, at path {path}.")
@@ -531,13 +544,18 @@ def create_style_checkers(
         file_extensions = {".f", ".for", ".f90", ".f95", ".f03", ".f08", ".F90"}
         """
         TODO : I /think/ the old version also checked '.h' files as Fortran.
-        Not sure if that is still needed."""
+        Not sure if that is still needed. - Probably, but some of them are C source
+        files"""
         fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
         fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
         generic_file_table = dispatch_tables.get_file_dispatch_table_all()
         if print_volume >= 3:
             print("Configuring Fortran checkers:")
-        combined_checkers = fortran_diff_table | fortran_file_table | generic_file_table
+        combined_checkers = []
+        combined_checkers.extend(fortran_diff_table)
+        combined_checkers.extend(fortran_file_table)
+        combined_checkers.extend(generic_file_table)
+        combined_checkers.extend(list_O_tests)
         fortran_file_checker = StyleChecker.from_full_list(
             "Fortran Checker", file_extensions, combined_checkers, changed_files
         )
@@ -560,12 +578,12 @@ def create_style_checkers(
             file_extensions,
         )
         checkers.append(python_file_checker)
-    if "Generic" in file_types or file_types == []:
+    if "AnyFile" in file_types or file_types == []:
         if print_volume >= 3:
-            print("Configuring Generic File Checkers:")
+            print("Configuring AnyFile File Checkers:")
         all_file_dispatch_table = dispatch_tables.get_file_dispatch_table_all()
         generic_checker = StyleChecker(
-            "Generic File Checker", all_file_dispatch_table, changed_files
+            "AnyFile File Checker", all_file_dispatch_table, changed_files
         )
         checkers.append(generic_checker)
 
@@ -595,18 +613,26 @@ def get_files_to_check(
         all_files = [f.relative_to(path) for f in repo_path.rglob("*") if f.is_file()]
         if print_volume >= 1:
             print("Full check override enabled.")
-        if print_volume >= 3:
+        if print_volume >= 4:
             print(
-                f"    Found {len(all_files)} files to "
-                f"check in repository at path: {path}"
+                f"    Found a total of {len(all_files)} files "
+                f"in directory at path: {path}\n"
+                "    These will be filtered by the checkers based on their file"
+                " extension"
             )
-        return all_files
     else:  # Configure CMS, and check we've been passed a branch
         if print_volume >= 1:
             print("Using a CMS to determine changed files.")
         cms = which_cms_is_it(path, print_volume)
-        changed_files = cms.get_changed_files()
-        return changed_files
+        all_files = cms.get_changed_files()
+        if print_volume >= 4:
+            print(
+                f"    CMS indicates {len(all_files)} files "
+                f"changed in repository at path: {path}\n"
+                "    These will be filtered by the checkers based on their file"
+                " extension"
+            )
+    return all_files
 
 
 # Usage when run from command line.
@@ -620,18 +646,14 @@ if __name__ == "__main__":
     full_file_paths = [Path(args.path) / f for f in file_paths]
 
     # Configure checkers
-    """
-    TODO : Uncertain as to how flexible this needs to be.
-        For now, just configure checkers based on file type requested.
-        Later, could add configuration files to specify which
-        checkers to use for each file type."""
-
     active_checkers = create_style_checkers(args.file_types, full_file_paths)
+    for checker in active_checkers:
+        checker.report(log_volume)
 
-    # TODO : Could create a conformance checker for each
-    #  file type.
-    #  Currently, just create a single conformance checker
-    #  with all active checkers.
+    """TODO : Could create a conformance checker for each
+       file type.
+       Currently, just create a single conformance checker
+       with all active checkers."""
     checker = ConformanceChecker(
         active_checkers,
         max_workers=args.max_workers,
@@ -640,17 +662,16 @@ if __name__ == "__main__":
     checker.check_files()
 
     if log_volume >= 3:
-        print(line_1(81))
-        print("## Results :" + " " * 67 + "##")
-        print(line_1(81) + "\n")
+        print_in_box_b(["Results :"], 81)
     else:
         print("Results  :")
     all_passed = checker.print_results(print_volume=log_volume, quiet_pass=quiet_pass)
-    if log_volume >= 4:
-        print("\n" + line_1(81))
-        print("## Summary :" + " " * 67 + "##")
-        print(line_1(81))
-    print(f"Total files checked: {len(checker.results)}")
-    print(f"Total files failed: {sum(1 for r in checker.results if not r.all_passed)}")
+    output = [
+        "Summary :",
+        f"        Total files checked: {len(checker.results)}",
+        "        "
+        + f"Total files failed: {sum(1 for r in checker.results if not r.all_passed)}",
+    ]
+    print_in_box_a(output, width=81)
 
     exit(0 if all_passed else 1)
