@@ -13,7 +13,7 @@ from typing import Callable
 from umdp3_checker_rules import UMDP3Checker
 
 """
-TODO : This module has lost it's way. I uses a class to define methods which just
+TODO : This module has lost it's way. It uses a class to define methods which just
        return lists of functions. I don't think a class is required for this.
        As the functions themselves are shifted, renamed and hopefully improved, this
        class should eventually get emptied out and the file removed.

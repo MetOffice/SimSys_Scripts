@@ -10,8 +10,7 @@ import sys
 from pathlib import Path
 
 # Add the current directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from umdp3_rules_S3 import (
+from ..umdp3_rules_S3 import (
     remove_comments,
     remove_quoted,
     concatenate_lines,
@@ -73,7 +72,7 @@ def test_modify_fortran_lines(example_fortran_lines):
         ["add", 32, ["This is an added line."]],
     ]
     modified_lines = modify_fortran_lines(example_fortran_lines, changes_list)
-    # Line no.s below have to be carefully calculated. Basic is line no of change -1 but then add one for every line added aobve in the file and -1 for every line deleted above in the file.
+    # Line no.s below have to be carefully calculated. Basic is line no of change -1 but then add one for every line added above in the file and -1 for every line deleted above in the file.
     # for line_no, line in enumerate(modified_lines, 1):
     #     print(f"line [{line_no:04}]: {line}")
     assert modified_lines[11] == "This is a replacement line."
@@ -135,11 +134,11 @@ def test_concatenate_lines(example_fortran_lines):
     Setting up a test, may involve multiple changes to the demo Fortran file, hence the complex entries in the parametrization.
     Each error found is recorded with the line number(s) it was found on using the Error text as a dict key, and the line no(s) as a list, which means finding 'use' and 'Use' in the code would generate 2 different keys in the dict.
     Then a single value recording the total number of failures is also included in the 'TestResult' object.
-    So for the dictionary of errors returned, we have to check they match, which at present involves checking it's 'len' but also that all the keys in one are in the other, i.e. youre not accidentally getting a matching count but different errors.
+    So for the dictionary of errors returned, we have to check they match, which at present involves checking it's 'len' but also that all the keys in one are in the other, i.e. you're not accidentally getting a matching count but different errors.
     Then for each error(key) in the dict, you need to check how many lines it occured on, and that the line numbers match, i.e. the list of lines numbers is a match with the expected list of line numbers.
 
     There has to be a better way.....
-    As a side note, might it be better to write a function to compare 2 'TestResult' objects, which would be more robust to changes in the structure of the 'TestResult' object, and also make the test code more readable? If so, would it's place be here in the testing, or as a method in the 'TestResult' class itself?
+    As a side note, might it be better to write a function to compare 2 'TestResult' objects, which would be more robust to changes in the structure of the 'TestResult' object, and also make the test code more readable? If so, would its place be here in the testing, or as a method in the 'TestResult' class itself?
     """
 
 # =================================================================
