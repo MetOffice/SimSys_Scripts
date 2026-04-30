@@ -6,8 +6,8 @@
 
 # from pyparsing import remove_quotes
 import pytest
-import sys
-from pathlib import Path
+# import sys
+# from pathlib import Path
 
 # Add the current directory to Python path
 from ..umdp3_rules_S3 import (
@@ -20,7 +20,6 @@ from ..umdp3_rules_S3 import (
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
 )
-# from umdp3_checker_rules import TestResult, UMDP3Checker
 
 
 def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
