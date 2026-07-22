@@ -1,4 +1,10 @@
 ---
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+
 # Lint/analyse code with Super-Linter.
 name: Checks
 
@@ -13,7 +19,8 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   check:
@@ -24,7 +31,7 @@ jobs:
       max-parallel: 4
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.12", "3.14"]
+        python-version: ["3.11", "3.12", "3.14"]
 
     permissions:
       contents: read
@@ -32,8 +39,9 @@ jobs:
 
     steps:
       - name: Checkout current
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Super-Lint
