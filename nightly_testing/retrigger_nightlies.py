@@ -179,6 +179,10 @@ if __name__ == "__main__":
     # Parse the valid_suites for ones which are cylc8 and have failed tasks
     failed_suites = check_failed_suites(valid_suites, cylc_run)
 
+    if not failed_suites:
+        print("No failed suites found")
+        raise SystemExit(0)
+
     print("\nFound the following suites with errors:")
     for suite in failed_suites:
         print(f"    * {suite}")

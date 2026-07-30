@@ -40,6 +40,7 @@ INVALID_APPS = [
     "fcm_make_ocean",
     "fcm_make_river",
     "lfric_coupled_rivers",
+    "coupled_rivers",
 ]
 
 
