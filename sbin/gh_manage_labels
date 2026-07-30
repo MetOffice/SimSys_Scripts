@@ -6,65 +6,56 @@
 # under which the code may be used.
 # ----------------------------------------------------------------------------
 
-# Script to create standard labels in multiple GitHub repositories
-# Requires GitHub CLI: https://cli.github.com/ and Admin privileges to the repos
+# Script to create standard labels in multiple GitHub repositories in parallel
+# Requires:
+# - GitHub CLI: https://cli.github.com/
+# - jq: https://stedolan.github.io/jq/ and
+# - Admin privileges to the repositories to create/edit/delete labels
 
 set -euo pipefail
 
-# -- Parse options
-ADD_LABELS=true
-DELETE_LABELS=false
-usage() {
-  echo "Usage: $0 [--add|--delete] [--help|-h]"
-  echo "  --add      Add labels (default)"
-  echo "  --delete   Delete labels"
-  echo "  --help,-h  Show this help message"
-}
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --add)
-        ADD_LABELS=true
-        DELETE_LABELS=false
-        shift ;;
-    --delete)
-        ADD_LABELS=false
-        DELETE_LABELS=true
-        shift ;;
-    --help|-h)
-        usage
-        exit 0 ;;
-    *)
-        echo "Unknown option: $1" >&2
-        usage
-        exit 1 ;;
-  esac
-done
-
 # -- Label Settings
-# Format: "label_name|hex_color|description"
-labels=(
-  "Linked UM|#50bfe6|This PR is linked to a MetOffice/um PR"
-  "Linked JULES|#66ff66|This PR is linked to a MetOffice/jules PR"
-  "Linked Apps|#ff6037|This PR is linked to a MetOffice/lfric_apps PR"
-  "Linked Core|#ffff66|This PR is linked to a MetOffice/lfric_core PR"
-  "Linked UKCA|#ff00cc|This PR is linked to a MetOffice/ukca PR"
-  "Linked CASIM|#fd5b78|This PR is linked to a MetOffice/casim PR"
-  "Linked SOCRATES|#16d0cb|This PR is linked to a MetOffice/socrates PR"
-  "Linked Mule|#00ffff|This PR is linked to a MetOffice/mule PR"
-  "Linked Shumlib|#0080ff|This PR is linked to a MetOffice/shumlib PR"
-  "Linked Jedi|#839e75|This PR is linked to a Jedi PR - this will be managed by the DA team"
-  "KGO|#9c27b0|This PR contains changes to KGO"
-  "macro|#aaf0d1|This PR contains a metadata upgrade macro"
-  "Accessibility|#1c96b9|Problems with the accessibility of the documentation"
-  "Discussion|#FBCA04|Issues that require some formal discussion"
-  "cla-required|#b60205|The CLA has not yet been signed by the author of this PR - added by GA"
-  "cla-signed|#0052cc|The CLA has been signed as part of this PR - added by GA"
-  "optimisation|#DB4DFF|This PR adds optimisations or edits OpenMP code"
+# Format: "label_name|hex_color|description" (# can/should be omitted in color)
+DEFAULT_LABELS=(
+  "Linked UM|#50BFE6|PR is linked to a MetOffice/um PR"
+  "Linked JULES|#66FF66|PR is linked to a MetOffice/jules PR"
+  "Linked Apps|#FF6037|PR is linked to a MetOffice/lfric_apps PR"
+  "Linked Core|#FFFF66|PR is linked to a MetOffice/lfric_core PR"
+  "Linked UKCA|#FF00CC|PR is linked to a MetOffice/ukca PR"
+  "Linked CASIM|#FD5B78|PR is linked to a MetOffice/casim PR"
+  "Linked SOCRATES|#16D0CB|PR is linked to a MetOffice/socrates PR"
+  "Linked Mule|#00FFFF|PR is linked to a MetOffice/mule PR"
+  "Linked Shumlib|#0080FF|PR is linked to a MetOffice/shumlib PR"
+  "Linked Jedi|#839E75|PR is linked to a Jedi PR - this will be managed by the DA team"
+  "KGO|#9C27B0|PR contains changes to KGO"
+  "Macro|#AAF0D1|PR contains a metadata upgrade macro"
+  "code-upload|#FEF2C0|Issue a Code Upload request for academic peer review"
+  "cla-required|#B60205|CLA has not yet been signed by the author of this PR - added by GA"
+  "cla-signed|#0052CC|CLA has been signed as part of this PR - added by GA"
+  "Accessibility|#5319E7|Issue with the accessibility of the documentation"
+  "Discussion|#FBCA04|Issue that require some formal discussion"
+  "breaking-change|#B60205|Critical infrastructure changes or API removals"
+  "bug|#D73A4A|Issue for reporting bugs in the code"
+  "bugfix|#D73A4A|PR fixes a bug in the code"
+  "build|#5319E7|Changes affecting build tools or external compiler toolchains"
+  "chore|#D4C5F9|General housekeeping, license updates, or minor administrative tasks"
+  "ci|#1D76DB|Changes to continuous integration and testing infrastructure"
+  "dependency|#C2E0C6|Updates to third-party dependencies, including security patches"
+  "deprecated|#E99695|Features or APIs that are being phased out, but still functional"
+  "documentation|#0075CA|Changes to documentation, including comments and docstrings"
+  "feature|#A2EEEF|New features and structural additions"
+  "optimisation|#DB4DFF|Runtime improvements, memory, storage, and other performance optimisations"
+  "refactor|#CFD3D7|Code restructuring and refactoring without changing functionality"
+  "science|#0E8A16|Domain-specific mathematical changes or model updates"
+  "technical|#F9D0C4|Technical changes that do not affect the model or its outputs"
+  "ignore-changelog|#EDEDED|Suppress PR from changelogs"
+  "test|#EDEDED|Changes to test cases or testing infrastructure"
+  "wip|#EDEDED|Work in progress - not ready for review or merging"
 )
 
-# -- Add labels in relevant repositories
-repos=(
+# -- Target Repositories
+DEFAULT_REPOS=(
+  "MetOffice/git_playground"
   "MetOffice/um"
   "MetOffice/jules"
   "MetOffice/lfric_apps"
@@ -81,33 +72,251 @@ repos=(
   "MetOffice/moci"
 )
 
-# -- Extract labels and colors
+# -- Parse options default modes
+ADD_LABELS=false
+DELETE_LABELS=false
+LIST_LABELS=false
+TARGET_REPO=""
+LABEL_FILTER_RAW=()
+RED='\033[0;31m'
+AMBER='\033[0;33m'
+CLEAR='\033[0m'
 
-for repo in "${repos[@]}"; do
-  echo "Processing labels in repository: $repo"
-  for label in "${labels[@]}"; do
-    name=$(echo "$label" | cut -d'|' -f1)
-    color=$(echo "$label" | cut -d'|' -f2)
-    description=$(echo "$label" | cut -d'|' -f3)
-    linked_repo=$(echo "$label" | grep -oP 'MetOffice/\w+' || true)
+usage() {
+  echo "Usage: $0 [--add|--delete|--list] [--repo|-R REPO] [--labels LABEL[,LABEL...]] [--help|-h]"
+  echo "  --add      Add labels (default)"
+  echo "  --delete   Delete labels"
+  echo "  --list     List existing labels across target repositories"
+  echo "  --repo,-R  Target a single repository in owner/repo format"
+  echo "  --labels   Restrict to a comma-separated list of label names"
+  echo "  --help,-h  Show this help message"
+  echo ""
+  echo "Examples:"
+  echo "  $0 --list"
+  echo "  $0 --add -R MetOffice/git_playground"
+  echo "  $0 --delete --repo MetOffice/git_playground --labels bug,documentation"
+}
+help_exit() {
+  # Display usage information and exit with the specified status code
+  usage
+  exit "${1:-1}"
+}
+check_command() {
+  # Check if a command is available in the system PATH
+  if ! command -v "$1" &>/dev/null; then
+    echo "Error: ($1) is required but not installed." >&2
+    exit 1
+  fi
+}
 
-    [[ "$repo" == "$linked_repo" ]] && continue
-
-    if [[ "$ADD_LABELS" == true ]]; then
-      gh label create "$name" \
-        --color "$color" \
-        --description "$description" \
-        --force \
-        --repo "$repo"
-    fi
-    if [[ "$DELETE_LABELS" == true ]]; then
-      gh label delete "$name" --yes --repo "$repo" || true
-    fi
-  done
+# -- Process execution parameters
+ACTION_COUNT=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --add)        ADD_LABELS=true; ((++ACTION_COUNT)); shift ;;
+    --delete)     DELETE_LABELS=true; ((++ACTION_COUNT)); shift ;;
+    --list)       LIST_LABELS=true; ((++ACTION_COUNT)); shift ;;
+    --repo|-R)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --repo requires a repository argument." >&2
+        help_exit 1
+      fi
+      TARGET_REPO="$2"; shift 2 ;;
+    --labels)
+      shift
+      if [[ $# -lt 1 ]]; then
+        echo "Error: --labels requires at least one label name." >&2
+        help_exit 1
+      fi
+      while [[ $# -gt 0 && "$1" != --* ]]; do
+        IFS=',' read -r -a _label_parts <<<"$1"
+        for label_part in "${_label_parts[@]}"; do
+          if [[ -n "$label_part" ]]; then
+            LABEL_FILTER_RAW+=("$label_part")
+          fi
+        done
+        shift
+      done
+      ;;
+    --help | -h)  help_exit 0 ;;
+    *)            echo "Unknown option: $1" >&2; help_exit 1 ;;
+  esac
 done
 
-if [[ "$ADD_LABELS" == true ]]; then
-  echo "Labels added."
-elif [[ "$DELETE_LABELS" == true ]]; then
-  echo "Labels deleted."
+# If no option is provided, fall back to --list mode natively
+if [[ $ACTION_COUNT -eq 0 ]]; then LIST_LABELS=true; elif [[ $ACTION_COUNT -gt 1 ]]; then
+  echo "Error: Options --add, --delete, and --list are mutually exclusive." >&2
+  help_exit 1
+fi
+
+declare -a repos=()
+if [[ -n "$TARGET_REPO" ]]; then
+  repos=("$TARGET_REPO")
+else
+  repos=("${DEFAULT_REPOS[@]}")
+fi
+
+declare -a labels=()
+if [[ ${#LABEL_FILTER_RAW[@]} -gt 0 ]]; then
+  declare -A label_filter_map=()
+  for filter_label in "${LABEL_FILTER_RAW[@]}"; do
+    label_filter_map["${filter_label,,}"]=1
+  done
+
+  for label in "${DEFAULT_LABELS[@]}"; do
+    IFS='|' read -r name color description <<<"$label"
+    if [[ -n "${label_filter_map["${name,,}"]+x}" ]]; then
+      labels+=("$label")
+      unset 'label_filter_map[${name,,}]'
+    fi
+  done
+
+  if [[ ${#labels[@]} -eq 0 ]]; then
+    echo -e "${RED}Error: --labels did not match any known built-in labels:${CLEAR}" >&2
+    printf '%s\n' "${DEFAULT_LABELS[@]%%|*}" >&2
+    exit 1
+  fi
+
+  if [[ ${#label_filter_map[@]} -gt 0 ]]; then
+    unmatched=("${!label_filter_map[@]}")
+    echo -e "${AMBER}Following --labels arguments did not match any built-in label and will be ignored:${CLEAR}\n${unmatched[*]}" >&2
+  fi
+else
+  labels=("${DEFAULT_LABELS[@]}")
+fi
+
+# -- Check for required commands before proceeding and exit early if not found
+check_command gh
+check_command jq
+
+# -- Worker function to process a single repository asynchronously
+process_repo() {
+  local repo="$1"
+  local existing_labels_json
+  local mapped_labels
+
+  if [[ "$LIST_LABELS" == true ]]; then
+    echo "=== Existing Labels for $repo ==="
+    if [[ ${#LABEL_FILTER_RAW[@]} -gt 0 ]]; then
+      if ! existing_labels_json=$(gh label list --repo "$repo" --limit 300 --json name,color,description 2>/dev/null); then
+        echo "[-] Error: Could not list labels for $repo." >&2
+        return 1
+      fi
+
+      for label in "${labels[@]}"; do
+        local name color description
+        IFS='|' read -r name color description <<<"$label"
+        jq -r --arg name "$name" '.[] | select(.name == $name) | "\(.name)|\(.color)|\(.description)"' <<<"$existing_labels_json"
+      done
+    else
+      # Simple line readout listing currently deployed configurations
+      if ! gh label list --repo "$repo" --limit 300; then
+        echo "[-] Error: Could not list labels for $repo." >&2
+        return 1
+      fi
+    fi
+    echo ""
+    return 0
+  fi
+
+  echo "[+] Starting $repo"
+
+  # -- One API read call: Downloads the entire repo label metadata
+  if ! existing_labels_json=$(gh label list --repo "$repo" --limit 300 --json name,color,description 2>/dev/null); then
+    echo "[-] Error: Could not fetch labels for $repo. Skipping." >&2
+    return 1
+  fi
+
+  # -- One JQ call: Map remote properties to clean lowercase lookup format "name|color|description"
+  # This eliminates jq evaluation calls inside the loop entirely.
+  mapped_labels=$(jq -r '.[] | "\(.name | ascii_downcase)|\(.color | ascii_downcase)|\(.description)"' <<<"$existing_labels_json")
+
+  for label in "${labels[@]}"; do
+    local name color description linked_repo
+
+    IFS='|' read -r name color description <<<"$label"
+    color="${color#\#}" # Strip any accidental leading '#'
+
+    # Extract repository name using regex capture group 1
+    if [[ "$description" =~ (MetOffice/[a-zA-Z0-9_]+) ]]; then
+      linked_repo="${BASH_REMATCH[1]}"
+      [[ "$repo" == "$linked_repo" ]] && continue
+    fi
+
+    local lower_name="${name,,}"
+    local lower_color="${color,,}"
+
+    if [[ "$ADD_LABELS" == true ]]; then
+      # Query in-memory string map using strict, native Bash line regex matching
+      # Looks for matching name keys at the start of a line
+      local label_exists=false
+      local needs_edit=false
+
+      while IFS='|' read -r ex_name ex_color ex_desc; do
+        if [[ "$ex_name" == "$lower_name" ]]; then
+          label_exists=true
+          if [[ "$ex_color" != "$lower_color" || "$ex_desc" != "$description" ]]; then
+            needs_edit=true
+          fi
+          break
+        fi
+      done <<<"$mapped_labels"
+
+      if [[ "$label_exists" == "true" ]]; then
+        if [[ "$needs_edit" == "true" ]]; then
+          echo -e "$AMBER    [~] Editing existing label: [$name] in $repo$CLEAR"
+          gh label edit "$name" --color "$color" --description "$description" --repo "$repo"
+        else
+          # If label_exists is true but needs_edit is false, SKIP entirely (0 API overhead)
+          echo "    [=] Label [$name] in $repo is up-to-date."
+        fi
+      else
+        echo "    [+] Creating new label: [$name] in $repo"
+        gh label create "$name" --color "$color" --description "$description" --repo "$repo"
+      fi
+
+    elif [[ "$DELETE_LABELS" == true ]]; then
+      # Delete configuration checking the lowercase index mappings cleanly
+      local exact_case_name=""
+
+      while IFS='|' read -r ex_name ex_color ex_desc; do
+        if [[ "$ex_name" == "$lower_name" ]]; then
+          # Get the original case preserved name from the raw JSON file safely
+          exact_case_name=$(jq -r --arg n "$name" '.[] | select(.name | ascii_downcase == ($n | ascii_downcase)) | .name' <<<"$existing_labels_json")
+          break
+        fi
+      done <<<"$mapped_labels"
+
+      if [[ -n "$exact_case_name" ]]; then
+        echo "    [-] Deleting label: [$exact_case_name] from $repo"
+        gh label delete "$exact_case_name" --yes --repo "$repo"
+      fi
+    fi
+  done
+
+  echo "[?] Finished $repo"
+}
+
+pids=()  # array to store process tracking IDs
+
+# -- Concurrent execution block
+for repo in "${repos[@]}"; do
+  process_repo "$repo" &
+  pids+=("$!")
+done
+
+# -- Synchronize parallel subshells and extract termination states
+exit_code=0
+for pid in "${pids[@]}"; do
+  if ! wait "$pid"; then
+    exit_code=1
+  fi
+done
+
+# -- Determine overall exit status based on any failures in the background jobs
+if [[ $exit_code -ne 0 ]]; then
+  echo "Execution completed, but some background sync jobs reported errors." >&2
+  exit 1
+else
+  echo "All multi-repository sync operations processed successfully."
 fi
