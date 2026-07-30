@@ -19,7 +19,6 @@ Release a new version of LFRic by:
 import argparse
 import getpass
 import re
-import socket
 import subprocess
 import shutil
 import shlex
@@ -75,35 +74,6 @@ def raise_exception(result: subprocess.CompletedProcess, command: str) -> None:
     """
 
     raise Exception(f"[FAIL] Error running command: '{command}'\n{result.stderr}")
-
-
-def set_dependency_path(apps: Path, core: Path) -> None:
-    """
-    Edit an LFRic Apps dependencies.sh file so that it points at the provided
-    LFRic Core source
-    """
-
-    print("[INFO] Updating dependencies.yaml Core source")
-
-    hostname = socket.gethostname()
-    dep_path = apps / "dependencies.yaml"
-    with open(dep_path) as f:
-        lines = f.readlines()
-    in_core = False
-    for i, line in enumerate(lines):
-        if line.strip().startswith("lfric_core"):
-            in_core = True
-        elif in_core and "source:" in line:
-            prefix, _, _ = line.partition("source:")
-            line = f"{prefix}source: {hostname}:{core}\n"
-        elif in_core and "ref:" in line:
-            prefix, _, _ = line.partition("ref:")
-            line = f"{prefix}ref:"
-        elif in_core:
-            break
-        lines[i] = line
-    with open(dep_path, "w") as f:
-        f.write("".join(x for x in lines))
 
 
 def find_meta_dirs(paths: list[Path], exclude_dirs: tuple[str] = ()) -> set[Path]:
@@ -232,11 +202,9 @@ def copy_head_meta(meta_dirs: list[Path], apps: Path, core: Path, version: str) 
         shutil.copytree(head, new)
         if core in new.parents:
             new = new.relative_to(core)
-            print(new)
             command = f"git -C {core} add {new}"
         elif apps in new.parents:
             new = new.relative_to(apps)
-            print(new)
             command = f"git -C {apps} add {new}"
         _ = run_command(command)
 
@@ -446,6 +414,9 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Path to the LFRic Core working copy being used.",
     )
+    parser.add_argument(
+        "-p", "--processes", type=int, default=4, help="Number of processes to use"
+    )
     args = parser.parse_args()
 
     args.apps = get_root_path(args.apps)
@@ -467,8 +438,6 @@ def main() -> None:
         args.apps,
         args.core,
     )
-
-    set_dependency_path(args.apps, args.core)
 
     # Find all metadata directories, excluing lfric-inputs as this has metadata but no
     # macros.
@@ -495,6 +464,7 @@ def main() -> None:
         args.old_version,
         args.apps,
         args.core,
+        nproc=args.processes,
     )
     print("\n[INFO] Successfully upgraded apps")
 

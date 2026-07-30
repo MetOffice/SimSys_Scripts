@@ -1,3 +1,9 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+
 name: Python Unit Tests
 
 on:
@@ -9,10 +15,14 @@ on:
     paths:
       - '**.py'
       - '.github/workflows/python_unit_tests.yaml'
-    branches: [main, 'releases/**']
   workflow_dispatch:
 
-permissions: read-all
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read  # Required to evaluate the event trigger metadata safely
 
 jobs:
   python_unit_tests:
@@ -21,22 +31,23 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v5
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up uv with Python
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           python-version: '3.14'
+          enable-cache: true
+
       - name: Install dependencies
-        run: |
-          # We only have 2 external dependencies other than pytest for now, so
-          # list them here
-          # If this changes, we may want to switch to a dependencies file of
-          # some format
-          python -m pip install --upgrade pip
-          pip install pytest networkx PyYAML
+        run: uv sync --extra test
+
       - name: Test with pytest
         run: |
           # Setup git for git_bdiff and get_git_sources testing
           git config --global user.name 'Testing'
           git config --global user.email 'Testing'
-          pytest -vv
+          uv run pytest -vv
