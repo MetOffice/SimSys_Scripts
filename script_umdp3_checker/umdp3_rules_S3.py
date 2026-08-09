@@ -278,6 +278,35 @@ def r3_3_2_line_too_long(lines: List[str]) -> TestResult:
 
 """
 * TODO: Never put more than one statement on a line.
+"""
+
+
+def r3_3_3_one_statement_per_line(lines: List[str]) -> TestResult:
+    """Check for more than one statement on a line, by looking for the presence of a ";" character outside of quoted strings and comments."""
+    failures = 0
+    error_log = {}
+    count = -1
+    for count, line in enumerate(lines, 1):
+        # Remove quoted strings and comments
+        if line.lstrip(" ").startswith("!"):
+            continue
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if ";" in clean_line:
+            failures += 1
+            error_log = add_error_log(
+                error_log, "multiple statements on one line", count
+            )
+    return TestResult(
+        checker_name="Test 3.3 One Statement Per Line",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count + 1} lines, found {failures} failures.",
+        errors=error_log,
+    )
+
+
+"""
 * TODO: Write your program in UK English, unless you have a very good reason for not doing so."""
 
 """3.4 Fortran style
@@ -455,6 +484,7 @@ list_O_tests = [
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
     r3_3_2_line_too_long,
+    r3_3_3_one_statement_per_line,
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
 ]
