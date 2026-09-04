@@ -23,6 +23,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Match hex commit IDs for both SHA-1 and SHA-256 repositories.
+_hash_pattern = re.compile(r"^\s*([0-9a-f]{40}(?:[0-9a-f]{24})?)\s*")
+
 
 class SubprocessRunError(Exception):
     def __init__(self, command, returncode, stdout, stderr):
@@ -351,7 +354,7 @@ def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
 
     # If the ref is a hash then we don't need the fork user as part of the fetch.
     # Equally, if the user is the Upstream User, it's not needed
-    if not user or re.match(r"^\s*([0-9a-f]{40})\s*$", repo_ref):
+    if not user or re.match(_hash_pattern, repo_ref):
         fetch = repo_ref
     else:
         fetch = f"{user}/{repo_ref}"
