@@ -280,10 +280,10 @@ def get_unmerged(loc: Path) -> list[str]:
     return files.stdout.split()
 
 
-def check_existing(loc: Path) -> None:
+def check_existing(loc: Path) -> bool:
     """
-    If the repository exists and isn't a git repo, exit now as we don't want to
-    overwrite it
+    Return whether the repository already exists. If it does but isn't a git
+    repo, exit now as we don't want to overwrite it.
     """
 
     if loc.exists():
@@ -292,6 +292,8 @@ def check_existing(loc: Path) -> None:
                 f"The destination, '{loc}', already exists but isn't a git directory. "
                 "Exiting so as to not overwrite it."
             )
+        return True
+    return False
 
 
 def clone_repo_mirror(
@@ -361,7 +363,7 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     - loc: path to clone the repository to
     """
 
-    if not loc.exists():
+    if not check_existing(loc):
         # Create a clean clone location
         loc.mkdir(parents=True)
 
@@ -377,7 +379,6 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
         for command in commands:
             run_command(command)
     else:
-        check_existing(loc)
         commands = (
             f"git -C {loc} fetch origin {repo_ref}",
             f"git -C {loc} checkout FETCH_HEAD",
