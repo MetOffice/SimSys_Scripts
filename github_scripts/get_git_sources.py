@@ -323,7 +323,14 @@ def clone_repo_mirror(
     else:
         # Clone if the repo doesn't exist. If the mirror is local we don't copy
         # the objects to make it much faster.
-        run_command(f"git clone --shared --branch {fetch} {mirror_loc} {loc}")
+        try:
+            run_command(f"git clone --shared --branch {fetch} {mirror_loc} {loc}")
+        except SubprocessRunError:
+            logger.error(
+                "Cloning from local mirror failed. "
+                "Check your local guidance on how to set up mirror access."
+            )
+            raise
 
 
 def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
