@@ -111,8 +111,8 @@ class GitBDiff(GitBase):
     # Name of primary branch - default is main
     primary_branch = "main"
 
-    # Match hex commit IDs
-    _hash_pattern = re.compile(r"^\s*([0-9a-f]{40})\s*$")
+    # Match hex commit IDs for both SHA-1 and SHA-256 repositories.
+    _hash_pattern = re.compile(r"^\s*([0-9a-f]{40}(?:[0-9a-f]{24})?)\s*")
 
     def __init__(self, parent=None, repo=None):
         self.parent = parent or self.primary_branch

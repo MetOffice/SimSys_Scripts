@@ -20,6 +20,9 @@ from typing import Dict, List, Set, Tuple
 
 from suite_data import SuiteData
 
+# Match hex commit IDs for both SHA-1 and SHA-256 repositories.
+_hash_pattern = re.compile(r"^\s*([0-9a-f]{40}(?:[0-9a-f]{24})?)\s*")
+
 
 def create_markdown_row(*columns: str, header=False) -> List[str]:
     """
@@ -151,7 +154,7 @@ class SuiteReport(SuiteData):
             org_repo = extract_org_repo(reference)
 
             # Check if the ref is a hash and use short form if so
-            if re.match(r"^\s*([0-9a-f]{40})\s*$", ref):
+            if re.match(_hash_pattern, ref):
                 ref = ref[:7]
             url = f"https://github.com/{org_repo}/tree/{ref}"
             reference = f"[{org_repo}@{ref}]({url})"
