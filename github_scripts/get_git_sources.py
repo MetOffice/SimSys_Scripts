@@ -324,7 +324,11 @@ def clone_repo_mirror(
         # Clone if the repo doesn't exist. If the mirror is local we don't copy
         # the objects to make it much faster.
         try:
-            run_command(f"git clone --shared --branch {fetch} {mirror_loc} {loc}")
+            # Adding `--revision {fetch}` to the clone would be more efficient
+            # due to avoiding an unnecessary checkout, however we need to
+            # support versions of git older than v2.49.
+            run_command(f"git clone --shared {mirror_loc} {loc}")
+            run_command(f"git -C {loc} checkout {fetch}")
         except SubprocessRunError:
             logger.error(
                 "Cloning from local mirror failed. "
