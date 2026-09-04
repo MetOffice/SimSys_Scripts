@@ -311,25 +311,19 @@ def clone_repo_mirror(
     - loc: path to clone the repository to
     """
 
-    if loc.exists():
-        check_existing(loc)
-    # Clone if the repo doesn't exist
+    fetch = determine_mirror_fetch(repo_source, repo_ref) if repo_ref else "HEAD"
+    if check_existing(loc):
+        # If not provided a ref, pull the latest version of the current branch.
+        if not repo_ref:
+            run_command(f"git -C {loc} pull")
+            return
+        # Update existing repository.
+        run_command(f"git -C {loc} fetch origin {fetch}")
+        run_command(f"git -C {loc} checkout FETCH_HEAD")
     else:
-        command = f"git clone {mirror_loc} {loc}"
-        run_command(command)
-
-    # If not provided a ref, pull the latest repository and return
-    if not repo_ref:
-        run_command(f"git -C {loc} pull")
-        return
-
-    fetch = determine_mirror_fetch(repo_source, repo_ref)
-    commands = (
-        f"git -C {loc} fetch origin {fetch}",
-        f"git -C {loc} checkout FETCH_HEAD",
-    )
-    for command in commands:
-        run_command(command)
+        # Clone if the repo doesn't exist. If the mirror is local we don't copy
+        # the objects to make it much faster.
+        run_command(f"git clone --shared --branch {fetch} {mirror_loc} {loc}")
 
 
 def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
