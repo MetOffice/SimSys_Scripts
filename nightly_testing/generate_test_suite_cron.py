@@ -82,7 +82,7 @@ def create_git_clone_cron(repo):
     length = len(command)
     command = f"{length * '#'}\n{command}\n{length * '#'}\n30 23 * * * "
     command += f"rm -rf {clone_path} ; "
-    command += f"git clone {repo_mirror} {clone_path}"
+    command += f"git clone --shared {repo_mirror} {clone_path}"
     return command + "\n\n\n"
 
 
