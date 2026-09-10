@@ -83,7 +83,7 @@ def test_create_git_clone_cron():
         "###################################\n"
         "# Clone repo - every day at 23:30 #\n"
         "###################################\n"
-        f"30 23 * * * rm -rf {CLONE_DIR}/clone_repo ; git clone --shared {MIRROR_PATH}MetOffice/repo.git {CLONE_DIR}/clone_repo\n\n\n"
+        f"30 23 * * * rm -rf {CLONE_DIR}/clone_repo ; GIT_TRACE=1 GIT_TRACE_PERFORMANCE=1 git clone --shared {MIRROR_PATH}MetOffice/repo.git {CLONE_DIR}/clone_repo\n\n\n"
     )
     assert create_git_clone_cron("repo") == expected
 
