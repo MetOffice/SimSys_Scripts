@@ -147,7 +147,8 @@ def test_check_exists(setup_sources):
     Test check_existing
     """
 
-    assert check_existing(setup_sources / "SimSys_Scripts") is None
+    assert check_existing(setup_sources / "SimSys_Scripts") is True
+    assert check_existing(setup_sources / "does_not_exist") is False
 
     with pytest.raises(FileExistsError):
         check_existing(setup_sources / "empty_dir")
