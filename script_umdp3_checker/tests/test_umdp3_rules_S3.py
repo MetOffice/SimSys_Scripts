@@ -17,6 +17,7 @@ from ..umdp3_rules_S3 import (
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
     r3_3_2_line_too_long,
+    r3_3_3_one_statement_per_line,
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
 )
@@ -292,6 +293,64 @@ def test_r3_3_2_line_too_long(
     # checker = UMDP3Checker()
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_3_2_line_too_long(modified_fortran_lines)
+    failure_count = result.failure_count
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+
+
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [["add", 74, ["icode=0 ; icode= icode + 1"]]],
+            1,
+            {"multiple statements on one line": [74]},
+        ),
+        (
+            [
+                [
+                    "add",
+                    83,
+                    [
+                        "IF ( l_unscale ) THEN ; icode=-300 ; ALLOCATE(field( 1,1 ) ) ;"
+                        + " END IF"
+                    ],
+                ],
+                [
+                    "replace",
+                    116,
+                    ["IF ( l_unscale ) THEN ; DEALLOCATE(field) ; END IF"],
+                ],
+            ],
+            2,
+            {"multiple statements on one line": [83, 117]},
+        ),
+        (
+            [],
+            0,
+            {},
+        ),  # No changes, expect no errors
+    ],
+    ids=[
+        "single multi-statements failure",
+        "multiple multi-statments failure",
+        "No error check",
+    ],
+)
+def test_3_3_3_one_statement_per_line(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_3_3_one_statement_per_line(modified_fortran_lines)
     failure_count = result.failure_count
     errors = result.errors
     for error, lines_list in errors.items():
