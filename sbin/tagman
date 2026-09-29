@@ -108,6 +108,14 @@ run() {
 
 trap cleanup EXIT ERR SIGINT
 
+verify_repo() {
+  # gh repo view seems to be fastest (vs. gh api call or native git ls-remote command)
+  if ! gh repo view "$REPO" --json id >/dev/null 2>&1; then
+    echo -e "${RED}** Repository '$REPO' not found or inaccessible.${NO_COLOR}"
+    exit 1
+  fi
+}
+
 verify_tag() {
   if gh api "repos/${REPO}/git/refs/tags/${TAG}" >/dev/null 2>&1; then
     echo -e "${YELLOW}Tag '$TAG' exists in repository '$REPO'.${NO_COLOR}"
@@ -328,6 +336,7 @@ parse_args() {
 
 main() {
   parse_args "$@"
+  verify_repo
 
   case "$ACTION" in
     add) add_tag ;;
