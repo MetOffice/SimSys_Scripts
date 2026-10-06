@@ -79,16 +79,16 @@ detect_type() {
   ext="${ext,,}"
 
   case "$ext" in
-    py) echo "python"; return ;;
-    f|f77|f90|f95|f03|f08|for) echo "fortran"; return ;;
+    bash|ksh|sh) echo "shell"; return ;;
     c++|cc|cpp|cxx|h++|hh|hpp|hxx) echo "cpp"; return ;;
     c|h) echo "c"; return ;;
-    bash|ksh|sh) echo "shell"; return ;;
-    rst) echo "rst"; return ;;
+    f|f77|f90|f95|f03|f08|for) echo "fortran"; return ;;
+    json) echo "json"; return ;;
     markdown|md) echo "markdown"; return ;;
     pl|pm) echo "perl"; return ;;
+    py) echo "python"; return ;;
+    rst) echo "rst"; return ;;
     yaml|yml) echo "yaml"; return ;;
-    json) echo "json"; return ;;
   esac
 
   first_line=$(head -n 1 -- "$file" 2>/dev/null || true)
