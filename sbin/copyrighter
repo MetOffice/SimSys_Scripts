@@ -282,7 +282,11 @@ process_file() {
   local symbol="$SYM_ADDED"
   [[ "$action" == "Updated" ]] && symbol="$SYM_UPDATED"
   NEEDS_HEADER_FILES+=("${file} (${action})")
-  [[ "$action" == "Added" ]] && ((++ADDED_COUNT)) || ((++UPDATED_COUNT))
+  if [[ "$action" == "Added" ]]; then
+    ((++ADDED_COUNT))
+  else
+    ((++UPDATED_COUNT))
+  fi
 
   if ((DRY_RUN)); then
     echo "copyrighter: ${symbol} [dry-run] ${action} ${type} header in '${file}'"
