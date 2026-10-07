@@ -250,8 +250,8 @@ class ApplyMacros:
         tag: str,
         cname: str | None,
         version: str | None,
-        apps: Path,
-        core: Path,
+        apps: Path | None,
+        core: Path | None,
         jules: Path | None = None,
         testing: bool = False,
     ) -> None:
@@ -263,13 +263,25 @@ class ApplyMacros:
             #  removed from the version
             self.class_name: str = tag.replace(".", "")
         self.temp_dirs: dict = {}
-        if testing:
-            # Don't search for a git repo if testing
-            self.root_path: Path = apps
+        # If Apps is not None, then we are running with apps, core and jules metadata
+        if apps is not None:
+            if testing:
+                # Don't search for a git repo if testing
+                self.apps_source: Path = apps
+            else:
+                self.apps_source: Path = get_root_path(apps)
+            self.root_path = self.apps_source
+            self.core_source: Path = self.get_dependency_paths(core, "lfric_core")
+            self.jules_source: Path = self.get_dependency_paths(jules, "jules")
         else:
-            self.root_path: Path = get_root_path(apps)
-        self.core_source: Path = self.get_dependency_paths(core, "lfric_core")
-        self.jules_source: Path = self.get_dependency_paths(jules, "jules")
+            self.apps_source = None
+            self.jules_source = None
+            if testing:
+                # Don't search for a git repo if testing
+                self.core_source = core
+            else:
+                self.core_source = get_root_path(core)
+            self.root_path = self.core_source
         self.set_rose_meta_path()
         if version is None:
             self.version: str = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
@@ -293,10 +305,10 @@ class ApplyMacros:
         to be run from anywhere.
         Edit 02/2026 - remove backwards compatibility support for pre central-metadata
         """
-        rose_meta_path: str = (
-            f"{self.root_path / 'rose-meta'}:"
-            f"{self.core_source / 'rose-meta'}:"
-            f"{self.jules_source / 'rose-meta'}"
+        rose_meta_path: str = ":".join(
+            str(x / "rose-meta")
+            for x in (self.apps_source, self.core_source, self.jules_source)
+            if x is not None
         )
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
@@ -312,7 +324,7 @@ class ApplyMacros:
         """
 
         meta_dir = str(meta_dir)
-        meta_dir = meta_dir.removeprefix(str(self.root_path))
+        meta_dir = meta_dir.removeprefix(str(self.apps_source))
         meta_dir = meta_dir.removeprefix(str(self.core_source))
         meta_dir = meta_dir.removeprefix("/")
 
@@ -367,12 +379,12 @@ class ApplyMacros:
     def read_dependencies(self, repo: str) -> tuple[str, str]:
         """
         Read through the dependencies.yaml file for the source of the repo defined
-        by repo. Uses self.root_path to locate the dependencies.yaml file.
+        by repo. Uses self.apps_source to locate the dependencies.yaml file.
         Outputs:
             - The source as defined by the dependencies.yaml file
             - The ref as defined by the dependencies.yaml file
         """
-        dependencies_path = self.root_path / "dependencies.yaml"
+        dependencies_path = self.apps_source / "dependencies.yaml"
         with open(dependencies_path, "r") as f:
             dependencies = yaml.safe_load(f)
 
@@ -594,15 +606,18 @@ class ApplyMacros:
         """
 
         core_imp = self.core_source / "rose-meta" / imp
-        apps_imp = self.root_path / "rose-meta" / imp
+        if self.apps_source:
+            apps_imp = self.apps_source / "rose-meta" / imp
+        else:
+            apps_imp = None
 
         if core_imp.exists():
             return core_imp
-        if apps_imp.exists():
+        if isinstance(apps_imp, Path) and apps_imp.exists():
             return apps_imp
         if core_imp.parent.exists():
             return core_imp
-        if apps_imp.parent.exists():
+        if isinstance(apps_imp, Path) and apps_imp.parent.exists():
             return apps_imp
 
         raise Exception(
@@ -1072,7 +1087,9 @@ class ApplyMacros:
         """
 
         apps_list = []
-        for item in (self.root_path, self.core_source):
+        for item in (self.apps_source, self.core_source):
+            if item is None:
+                continue
             app_dir = item / "rose-stem" / "app"
             if not app_dir.exists():
                 continue
@@ -1261,7 +1278,7 @@ def parse_args() -> argparse.Namespace:
         default=Path(".").absolute(),
         help="The path to the LFRic Apps working copy being used. Defaults to  "
         "the location the script is being run from - this assumes you are in a "
-        "working copy.",
+        "local clone.",
     )
     parser.add_argument(
         "-c",
@@ -1282,7 +1299,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-p", "--processes", type=int, default=4, help="Number of processes to use"
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--core-only",
+        action="store_true",
+        help="Set this if applying core-only macros. In this case only lfric_core will "
+        "be considered. If args.core isn't set, then the current directory is assumed "
+        "to be the core location.",
+    )
+    args = parser.parse_args()
+    args.apps = args.apps.absolute()
+    if args.core_only:
+        if args.core is None:
+            args.core = Path(".").absolute()
+        args.apps = None
+        args.jules = None
+    else:
+        if args.core is not None and ".git" not in args.core:
+            args.core = Path(args.core).absolute()
+        if args.jules is not None and ".git" not in args.jules:
+            args.jules = Path(args.jules).absolute()
+    return args
 
 
 def apply_macros_main(
