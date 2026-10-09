@@ -8,13 +8,14 @@
 # copyrighter - insert or update the Met Office Crown copyright header in a
 # file, or in every file under a directory.
 #
-# Usage: copyrighter [-t TYPE] [-r] [-n] [-h] <file-or-directory> [path...]
+# Usage: copyrighter [-t TYPE] [-i TYPE] [-r] [-n] [-h] <file-or-directory> [path...]
 
 set -euo pipefail
 
 readonly BORDER="-----------------------------------------------------------------------------"
 readonly MARKER="Crown copyright Met Office"
-readonly SUPPORTED_TYPES="python fortran cpp c shell rst markdown perl yaml json"
+readonly SUPPORTED_TYPES="python fortran cpp c shell rst markdown perl yaml json toml rust ruby go js latex awk java powershell r postscript"
+readonly VCS_DIRS=(.git .svn)
 
 # status symbols used to decorate every "copyrighter:" message
 readonly SYM_ADDED="+"
@@ -26,6 +27,7 @@ readonly SYM_ERROR="✗"
 readonly SYM_SUMMARY="»"
 
 FORCED_TYPE=""
+IGNORED_TYPES=()
 RECURSIVE=0
 DRY_RUN=0
 ADDED_COUNT=0
@@ -51,6 +53,9 @@ is already present it is updated in place rather than duplicated.
 Options:
   -t, --type TYPE    Force the file type instead of auto-detecting it.
                      One of: ${SUPPORTED_TYPES}
+  -i, --ignore TYPE  Skip files whose (auto-detected or forced) type matches.
+                     Accepts a comma-separated list and may be given more
+                     than once; repeats and lists accumulate.
   -r, --recursive, --full
                      When a directory is given, descend into every nested
                      subdirectory (no depth limit). Without this, only the
@@ -79,15 +84,26 @@ detect_type() {
   ext="${ext,,}"
 
   case "$ext" in
+    awk) echo "awk"; return ;;
     bash|ksh|sh) echo "shell"; return ;;
     c++|cc|cpp|cxx|h++|hh|hpp|hxx) echo "cpp"; return ;;
     c|h) echo "c"; return ;;
     f|f77|f90|f95|f03|f08|for) echo "fortran"; return ;;
+    go) echo "go"; return ;;
+    java) echo "java"; return ;;
+    js|cjs|mjs) echo "js"; return ;;
     json) echo "json"; return ;;
     markdown|md) echo "markdown"; return ;;
     pl|pm) echo "perl"; return ;;
+    ps1|psm1|psd1) echo "powershell"; return ;;
+    ps|eps) echo "postscript"; return ;;
     py) echo "python"; return ;;
+    r) echo "r"; return ;;
+    rb) echo "ruby"; return ;;
+    rs) echo "rust"; return ;;
     rst) echo "rst"; return ;;
+    tex) echo "latex"; return ;;
+    toml) echo "toml"; return ;;
     yaml|yml) echo "yaml"; return ;;
   esac
 
@@ -95,6 +111,7 @@ detect_type() {
   case "$first_line" in
     '#!'*python*) echo "python"; return ;;
     '#!'*perl*) echo "perl"; return ;;
+    '#!'*ruby*) echo "ruby"; return ;;
     '#!'*bash|'#!'*/sh|'#!'*ksh) echo "shell"; return ;;
   esac
 
@@ -109,9 +126,10 @@ generate_header() {
 
   # Determine the comment character/style based on file type
   case "$type" in
-    python|shell|yaml|perl) local p="#" ;;
+    python|shell|yaml|perl|toml|ruby|awk|powershell|r) local p="#" ;;
     fortran)                local p="!" ;;
-    cpp|json)               local p="//" ;;
+    cpp|json|java|rust|go|js) local p="//" ;;
+    latex|postscript)       local p="%" ;;
     c)                      local p=" *" ; c_style=1 ;;
     rst)                    local p="  " ;; # Left-hand indent for body lines
     markdown)               local p=""   ;; # No prefix inside HTML comments
@@ -150,19 +168,35 @@ is_text_file() {
   grep -Iq '' -- "$1" 2>/dev/null
 }
 
+# is_type_ignored TYPE - true if TYPE was named via -i/--ignore
+is_type_ignored() {
+  local type="$1" ignored
+  for ignored in "${IGNORED_TYPES[@]}"; do
+    [[ "$ignored" == "$type" ]] && return 0
+  done
+  return 1
+}
+
 # collect_files DIR RECURSIVE - print a NUL-separated, sorted list of regular
-# files under DIR, using fd when available and falling back to find
+# files under DIR, using fd when available and falling back to find; version
+# control directories (VCS_DIRS) are always excluded from the walk
 collect_files() {
   local dir="$1" recursive="$2"
 
   if ((HAVE_FD)); then
     local fd_opts=(--type f --hidden --no-ignore --absolute-path --print0)
+    local vcs_dir
+    for vcs_dir in "${VCS_DIRS[@]}"; do fd_opts+=(--exclude "$vcs_dir"); done
     ((recursive == 0)) && fd_opts+=(--max-depth 1)
     fd "${fd_opts[@]}" . "$dir" | sort -z
   else
-    local find_opts=(-type f)
-    ((recursive == 0)) && find_opts=(-maxdepth 1 "${find_opts[@]}")
-    find "$dir" "${find_opts[@]}" -print0 | sort -z
+    local prune_expr=() vcs_dir maxdepth_opts=()
+    for vcs_dir in "${VCS_DIRS[@]}"; do
+      ((${#prune_expr[@]} > 0)) && prune_expr+=(-o)
+      prune_expr+=(-name "$vcs_dir")
+    done
+    ((recursive == 0)) && maxdepth_opts=(-maxdepth 1)
+    find "$dir" "${maxdepth_opts[@]}" \( "${prune_expr[@]}" \) -prune -o -type f -print0 | sort -z
   fi
 }
 
@@ -183,6 +217,12 @@ process_file() {
     return 0
   fi
 
+  if is_type_ignored "$type"; then
+    echo "copyrighter: ${SYM_INFO} skipping '${file}' (ignored type '${type}')" >&2
+    ((++SKIPPED_COUNT))
+    return 0
+  fi
+
   if [[ "$type" == "json" ]]; then
     echo "copyrighter: ${SYM_INFO} JSON has no comment syntax; '${file}' will become JSONC-style" >&2
   fi
@@ -195,7 +235,11 @@ process_file() {
   local nlines=${#lines[@]}
 
   local offset=0
-  [[ "${lines[0]:-}" =~ ^#! ]] && offset=1
+  if [[ "${lines[0]:-}" =~ ^#! ]]; then
+    offset=1
+  elif [[ "$type" == "postscript" && "${lines[0]:-}" =~ ^%! ]]; then
+    offset=1 # preserve the required %!PS-Adobe magic line
+  fi
 
   # find the relative position of the marker line within our own generated
   # template (not file content), used to anchor the regex built below
@@ -348,6 +392,18 @@ main() {
             echo "copyrighter: ${SYM_ERROR} unknown type '${FORCED_TYPE}' (expected one of: ${SUPPORTED_TYPES})" >&2
             exit 1
           fi
+          shift 2 ;;
+      -i|--ignore)
+          [[ $# -ge 2 ]] || { echo "copyrighter: ${SYM_ERROR} --ignore requires an argument" >&2; exit 1; }
+          local ignore_arg ignore_list
+          IFS=',' read -r -a ignore_list <<< "$2"
+          for ignore_arg in "${ignore_list[@]}"; do
+            if [[ ! " ${SUPPORTED_TYPES} " == *" ${ignore_arg} "* ]]; then
+              echo "copyrighter: ${SYM_ERROR} unknown type '${ignore_arg}' (expected one of: ${SUPPORTED_TYPES})" >&2
+              exit 1
+            fi
+            IGNORED_TYPES+=("$ignore_arg")
+          done
           shift 2 ;;
       -r|--recursive|--full)
           RECURSIVE=1
