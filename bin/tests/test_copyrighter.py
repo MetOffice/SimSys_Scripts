@@ -243,7 +243,9 @@ def test_atomic_write_no_stray_tempfile_left_behind(tmp_path):
 def _run(path, forced_type=None, ignored_types=None, dry_run=False):
     counts = Counts()
     needs_header: list[str] = []
-    process_file(path, forced_type, ignored_types or set(), counts, dry_run, needs_header)
+    process_file(
+        path, forced_type, ignored_types or set(), counts, dry_run, needs_header
+    )
     return counts, needs_header
 
 

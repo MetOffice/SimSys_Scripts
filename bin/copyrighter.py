@@ -29,20 +29,41 @@ VCS_DIRS = frozenset({".git", ".svn"})
 
 EXTENSION_TO_TYPE: dict[str, str] = {
     "awk": "awk",
-    "bash": "shell", "ksh": "shell", "sh": "shell",
-    "c++": "cpp", "cc": "cpp", "cpp": "cpp", "cxx": "cpp",
-    "h++": "cpp", "hh": "cpp", "hpp": "cpp", "hxx": "cpp",
-    "c": "c", "h": "c",
-    "f90": "fortran", "f95": "fortran", "f03": "fortran", "f08": "fortran",
-    "f": "fortran77", "f77": "fortran77", "for": "fortran77",
+    "bash": "shell",
+    "ksh": "shell",
+    "sh": "shell",
+    "c++": "cpp",
+    "cc": "cpp",
+    "cpp": "cpp",
+    "cxx": "cpp",
+    "h++": "cpp",
+    "hh": "cpp",
+    "hpp": "cpp",
+    "hxx": "cpp",
+    "c": "c",
+    "h": "c",
+    "f90": "fortran",
+    "f95": "fortran",
+    "f03": "fortran",
+    "f08": "fortran",
+    "f": "fortran77",
+    "f77": "fortran77",
+    "for": "fortran77",
     "go": "go",
     "java": "java",
-    "js": "js", "cjs": "js", "mjs": "js",
+    "js": "js",
+    "cjs": "js",
+    "mjs": "js",
     "json": "json",
-    "markdown": "markdown", "md": "markdown",
-    "pl": "perl", "pm": "perl",
-    "ps1": "powershell", "psm1": "powershell", "psd1": "powershell",
-    "ps": "postscript", "eps": "postscript",
+    "markdown": "markdown",
+    "md": "markdown",
+    "pl": "perl",
+    "pm": "perl",
+    "ps1": "powershell",
+    "psm1": "powershell",
+    "psd1": "powershell",
+    "ps": "postscript",
+    "eps": "postscript",
     "py": "python",
     "r": "r",
     "rb": "ruby",
@@ -50,17 +71,31 @@ EXTENSION_TO_TYPE: dict[str, str] = {
     "rst": "rst",
     "tex": "latex",
     "toml": "toml",
-    "yaml": "yaml", "yml": "yaml",
+    "yaml": "yaml",
+    "yml": "yaml",
 }
 
 # comment-prefix per type; "c", "rst" and "markdown" get extra wrapping below
 COMMENT_PREFIX: dict[str, str] = {
-    "python": "#", "shell": "#", "yaml": "#", "perl": "#", "toml": "#",
-    "ruby": "#", "awk": "#", "powershell": "#", "r": "#",
+    "python": "#",
+    "shell": "#",
+    "yaml": "#",
+    "perl": "#",
+    "toml": "#",
+    "ruby": "#",
+    "awk": "#",
+    "powershell": "#",
+    "r": "#",
     "fortran": "!",
     "fortran77": "C",  # fixed-form F77: marker must be in column 1
-    "cpp": "//", "json": "//", "java": "//", "rust": "//", "go": "//", "js": "//",
-    "latex": "%", "postscript": "%",
+    "cpp": "//",
+    "json": "//",
+    "java": "//",
+    "rust": "//",
+    "go": "//",
+    "js": "//",
+    "latex": "%",
+    "postscript": "%",
     "c": " *",
     "rst": "  ",
     "markdown": "",
@@ -69,8 +104,13 @@ COMMENT_PREFIX: dict[str, str] = {
 SUPPORTED_TYPES = tuple(sorted(set(COMMENT_PREFIX)))
 
 SYM = {
-    "added": "+", "updated": "~", "unchanged": "=",
-    "warn": "!", "info": "i", "error": "\u2717", "summary": "\u00bb",
+    "added": "+",
+    "updated": "~",
+    "unchanged": "=",
+    "warn": "!",
+    "info": "i",
+    "error": "\u2717",
+    "summary": "\u00bb",
 }
 
 
@@ -121,7 +161,7 @@ def _shebang_type(first_line: str) -> str:
         return "perl"
     if "ruby" in first_line:
         return "ruby"
-    if first_line.endswith("bash") or first_line.endswith("/sh") or first_line.endswith("ksh"):
+    if first_line.endswith(("bash", "/sh", "ksh")):
         return "shell"
     return ""
 
@@ -173,7 +213,9 @@ def atomic_write(path: Path, data: bytes) -> None:
     permission bits, using a securely-created (O_EXCL) temp file to avoid a
     symlink race on the temporary path."""
     mode = stat.S_IMODE(path.stat().st_mode)
-    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.copyrighter.")
+    fd, tmp_name = tempfile.mkstemp(
+        dir=path.parent, prefix=f".{path.name}.copyrighter."
+    )
     try:
         with os.fdopen(fd, "wb") as fh:
             fh.write(data)
@@ -198,12 +240,18 @@ def process_file(
     try:
         raw = path.read_bytes()
     except OSError as exc:
-        print(f"copyrighter: {SYM['warn']} skipping '{path}' (cannot read: {exc.strerror})", file=sys.stderr)
+        print(
+            f"copyrighter: {SYM['warn']} skipping '{path}' (cannot read: {exc.strerror})",
+            file=sys.stderr,
+        )
         counts.skipped += 1
         return
 
     if b"\x00" in raw:
-        print(f"copyrighter: {SYM['warn']} skipping '{path}' (binary file)", file=sys.stderr)
+        print(
+            f"copyrighter: {SYM['warn']} skipping '{path}' (binary file)",
+            file=sys.stderr,
+        )
         counts.skipped += 1
         return
 
@@ -213,17 +261,26 @@ def process_file(
 
     file_type = forced_type or detect_type(str(path), first_line)
     if not file_type:
-        print(f"copyrighter: {SYM['warn']} skipping '{path}' (unable to determine file type, use --type)", file=sys.stderr)
+        print(
+            f"copyrighter: {SYM['warn']} skipping '{path}' (unable to determine file type, use --type)",
+            file=sys.stderr,
+        )
         counts.skipped += 1
         return
 
     if file_type in ignored_types:
-        print(f"copyrighter: {SYM['info']} skipping '{path}' (ignored type '{file_type}')", file=sys.stderr)
+        print(
+            f"copyrighter: {SYM['info']} skipping '{path}' (ignored type '{file_type}')",
+            file=sys.stderr,
+        )
         counts.skipped += 1
         return
 
     if file_type == "json":
-        print(f"copyrighter: {SYM['info']} JSON has no comment syntax; '{path}' will become JSONC-style", file=sys.stderr)
+        print(
+            f"copyrighter: {SYM['info']} JSON has no comment syntax; '{path}' will become JSONC-style",
+            file=sys.stderr,
+        )
 
     header_lines = generate_header(file_type)
     header_count = len(header_lines)
@@ -238,7 +295,8 @@ def process_file(
     marker_rel = next((i for i, hl in enumerate(header_lines) if MARKER in hl), -1)
     marker_prefix = header_lines[marker_rel].split("(C) Crown copyright", 1)[0]
     marker_re = re.compile(
-        re.escape(marker_prefix) + r"\(C\) Crown copyright Met Office(?: \d{4})?\. All rights reserved\."
+        re.escape(marker_prefix)
+        + r"\(C\) Crown copyright Met Office(?: \d{4})?\. All rights reserved\."
     )
 
     search_limit = min(offset + 100, nlines)
@@ -262,12 +320,18 @@ def process_file(
     action = "Added"
     if len(block_starts) == 1:
         start = block_starts[0]
-        action = "Unchanged" if lines[start:start + header_count] == header_lines else "Updated"
+        action = (
+            "Unchanged"
+            if lines[start : start + header_count] == header_lines
+            else "Updated"
+        )
     elif len(block_starts) > 1:
         action = "Updated"
 
     if action == "Unchanged":
-        print(f"copyrighter: {SYM['unchanged']} Unchanged {file_type} header in '{path}' (already up to date)")
+        print(
+            f"copyrighter: {SYM['unchanged']} Unchanged {file_type} header in '{path}' (already up to date)"
+        )
         counts.unchanged += 1
         return
 
@@ -295,7 +359,9 @@ def process_file(
         counts.updated += 1
 
     if dry_run:
-        print(f"copyrighter: {symbol} [dry-run] {action} {file_type} header in '{path}'")
+        print(
+            f"copyrighter: {symbol} [dry-run] {action} {file_type} header in '{path}'"
+        )
         return
 
     new_text = "\n".join(new_lines) + "\n"
@@ -349,20 +415,37 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("paths", nargs="+", metavar="file-or-directory")
     parser.add_argument(
-        "-t", "--type", dest="forced_type", choices=SUPPORTED_TYPES, metavar="TYPE",
+        "-t",
+        "--type",
+        dest="forced_type",
+        choices=SUPPORTED_TYPES,
+        metavar="TYPE",
         help="Force the file type instead of auto-detecting it.",
     )
     parser.add_argument(
-        "-i", "--ignore", dest="ignore", action="append", default=[], metavar="TYPE",
+        "-i",
+        "--ignore",
+        dest="ignore",
+        action="append",
+        default=[],
+        metavar="TYPE",
         help="Skip files whose (auto-detected or forced) type matches. Accepts "
         "a comma-separated list and may be given more than once.",
     )
     parser.add_argument(
-        "-r", "--recursive", "--full", dest="recursive", action="store_true",
+        "-r",
+        "--recursive",
+        "--full",
+        dest="recursive",
+        action="store_true",
         help="When a directory is given, descend into every nested subdirectory.",
     )
     parser.add_argument(
-        "-n", "--dry-run", "--check", dest="dry_run", action="store_true",
+        "-n",
+        "--dry-run",
+        "--check",
+        dest="dry_run",
+        action="store_true",
         help="Report what would change without modifying any file.",
     )
     return parser
@@ -379,7 +462,9 @@ def main(argv: list[str] | None = None) -> int:
             if not item:
                 continue
             if item not in SUPPORTED_TYPES:
-                parser.error(f"unknown type '{item}' (expected one of: {' '.join(SUPPORTED_TYPES)})")
+                parser.error(
+                    f"unknown type '{item}' (expected one of: {' '.join(SUPPORTED_TYPES)})"
+                )
             ignored_types.add(item)
 
     counts = Counts()
@@ -387,7 +472,18 @@ def main(argv: list[str] | None = None) -> int:
     rc = 0
 
     for target in args.paths:
-        if process_path(target, args.forced_type, ignored_types, args.recursive, counts, args.dry_run, needs_header) != 0:
+        if (
+            process_path(
+                target,
+                args.forced_type,
+                ignored_types,
+                args.recursive,
+                counts,
+                args.dry_run,
+                needs_header,
+            )
+            != 0
+        ):
             rc = 1
 
     if needs_header:
