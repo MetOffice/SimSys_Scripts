@@ -513,7 +513,9 @@ def test_r3_4_1_capitalised_keywords(
                 [
                     "add",
                     51,
-                    ["CHARACTER(LEN=30)   :: ndg_filename_template(2)= ['unset','unset'"],
+                    [
+                        "CHARACTER(LEN=30)   :: ndg_filename_template(2)= ['unset','unset'"
+                    ],
                 ],
             ],
             0,
@@ -524,15 +526,17 @@ def test_r3_4_1_capitalised_keywords(
                 [
                     "add",
                     51,
-                    ["REAL(KIND=real_umphys), INTENT(IN OUT) ::                                      &",
-                     "!",
-                     " u( udims_s%i_start : udims_s%i_end,                                           &"],
+                    [
+                        "REAL(KIND=real_umphys), INTENT(IN OUT) ::                                      &",
+                        "!",
+                        " u( udims_s%i_start : udims_s%i_end,                                           &",
+                    ],
                 ],
             ],
             0,
             {},
         ),  # Fun failure reported by Erica - comments intersprsed with multi-line declarations
-   ],
+    ],
     ids=[
         "No UpperCase Var Errors",
         "2 UpperCase Var Errors",
@@ -545,7 +549,6 @@ def test_r3_4_1_capitalised_keywords(
         "2nd Curious real world fail from Sam",
         "Failure reported by Erica",
         "Fun failure reported by Erica - comments intersprsed with multi-line declarations",
-
     ],
 )
 def test_r3_4_2_no_full_uppercase_variable_names(
