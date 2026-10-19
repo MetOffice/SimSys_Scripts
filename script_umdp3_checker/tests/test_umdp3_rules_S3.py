@@ -363,6 +363,7 @@ def test_r3_4_1_capitalised_keywords(
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
+        ([], 0, {}),  # No changes, expect no errors
         (
             [
                 [
@@ -485,16 +486,66 @@ def test_r3_4_1_capitalised_keywords(
             0,
             {},
         ),  # Real world false Fail, Thanks Andy M.
-        ([], 0, {}),  # No changes, expect no errors
-    ],
+        (
+            [
+                [
+                    "add",
+                    51,
+                    ["INTEGER, PARAMETER :: defaultsize = BIT_SIZE(0)/8"],
+                ],
+            ],
+            0,
+            {},
+        ),  # Curious real world fail from Sam
+        (
+            [
+                [
+                    "add",
+                    51,
+                    ["INTEGER, POINTER     :: atm_global_points(:,:)=>NULL()"],
+                ],
+            ],
+            0,
+            {},
+        ),  # 2nd Curious real world fail from Sam
+        (
+            [
+                [
+                    "add",
+                    51,
+                    ["CHARACTER(LEN=30)   :: ndg_filename_template(2)= ['unset','unset'"],
+                ],
+            ],
+            0,
+            {},
+        ),  # Failure reported by Erica
+        (
+            [
+                [
+                    "add",
+                    51,
+                    ["REAL(KIND=real_umphys), INTENT(IN OUT) ::                                      &",
+                     "!",
+                     " u( udims_s%i_start : udims_s%i_end,                                           &"],
+                ],
+            ],
+            0,
+            {},
+        ),  # Fun failure reported by Erica - comments intersprsed with multi-line declarations
+   ],
     ids=[
+        "No UpperCase Var Errors",
         "2 UpperCase Var Errors",
         "False FALSE error",
         "5 UpperCase Var Errors on extended lines",
         "Array dimnensions, twice on an extended line, but no failures",
         "Array dimnensions, twice on an extended line, with one failure",
         "Weird real world error from Andy M",
-        "No UpperCase Var Errors",
+        "Curious real world fail from Sam",
+        "2nd Curious real world fail from Sam",
+        "Failure reported by Erica",
+        "Fun failure reported by Erica - comments intersprsed with multi-line declarations",
+
     ],
 )
 def test_r3_4_2_no_full_uppercase_variable_names(
