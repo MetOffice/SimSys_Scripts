@@ -514,7 +514,7 @@ def test_r3_4_1_capitalised_keywords(
                     "add",
                     51,
                     [
-                        "CHARACTER(LEN=30)   :: ndg_filename_template(2)= ['unset','unset'"
+                        "CHARACTER(LEN=30)   :: ndg_filename_template(2)= ['unset','unset']",
                     ],
                 ],
             ],
