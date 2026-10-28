@@ -535,7 +535,7 @@ def test_r3_4_1_capitalised_keywords(
             ],
             0,
             {},
-        ),  # Fun failure reported by Erica - comments intersprsed with multi-line declarations
+        ),  # Fun failure reported by Erica - comments interspersed with multi-line declarations
     ],
     ids=[
         "No UpperCase Var Errors",
