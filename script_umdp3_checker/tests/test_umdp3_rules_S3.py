@@ -548,7 +548,7 @@ def test_r3_4_1_capitalised_keywords(
         "Curious real world fail from Sam",
         "2nd Curious real world fail from Sam",
         "Failure reported by Erica",
-        "Fun failure reported by Erica - comments intersprsed with multi-line declarations",
+        "Fun failure reported by Erica - comments interspersed with multi-line declarations",
     ],
 )
 def test_r3_4_2_no_full_uppercase_variable_names(
