@@ -7,3 +7,4 @@
 | james-bruten-mo   | James Bruten     | Met Office  | 2026-09-10 |
 | ericaneininger    | Erica Neininger  | Met Office  | 2026-10-05 |
 | t00sa             | Sam Clarke-Green | Met Office  | 2026-10-13 |
+| r-sharp           | R Sharp          | Met Office  | 2026-10-19 |
