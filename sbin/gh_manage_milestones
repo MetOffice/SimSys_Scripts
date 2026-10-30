@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # Script to create, update and close milestones in multiple GitHub repositories
 # Requires GitHub CLI: https://cli.github.com/ and Admin privileges to the repos

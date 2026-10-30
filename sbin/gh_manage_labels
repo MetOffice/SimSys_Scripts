@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # Script to create standard labels in multiple GitHub repositories in parallel
 # Requires:
