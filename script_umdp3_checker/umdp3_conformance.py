@@ -620,6 +620,10 @@ def get_files_to_check(
     :return: List of relative file paths to check.
     :rtype: List[Path]
     """
+    # If given a filename, assume that is all that needs checking.
+    if Path(path).is_file():
+        return [Path(path).relative_to(path)]
+
     if full_check:  # Override to check all files present.
         repo_path = Path(path)
         all_files = [f.relative_to(path) for f in repo_path.rglob("*") if f.is_file()]
