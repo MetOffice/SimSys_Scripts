@@ -14,12 +14,12 @@ from fortran_keywords import fortran_keywords
 
 """ToDo: This lot will need putting back as and when the tests that use them get imported/re-created"""
 # from fortran_keywords import fortran_keywords
-# from search_lists import (
+from search_lists import (
 #     obsolescent_intrinsics,
-#     unseparated_keywords_list,
+    unseparated_keywords_list,
 #     retired_ifdefs,
 #     deprecated_c_identifiers,
-# )
+)
 # from dataclasses import dataclass, field
 # from script_umdp3_checker import fortran_keywords
 
@@ -383,6 +383,33 @@ TODO: This is a very simplistic check and will not detect many
 * TODO: To improve readability, you should always use the optional space to separate
         the Fortran keywords.
         This rule also applies to OpenMP keywords. (See: 3.15)
+"""
+def r3_4_3_no_unseparated_keywords(lines: List[str]) -> TestResult:
+    """Check for omitted optional spaces in keywords"""
+    failures = 0
+    error_log = {}
+    count = -1
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        for kw in unseparated_keywords_list:
+            pattern = f"\\b{kw}\\b"
+            if re.search(pattern, clean_line, re.IGNORECASE):
+                failures += 1
+                error_log = add_error_log(
+                    error_log,
+                    f"unseparated keyword at line: {count}: {kw}",
+                    count,
+                )
+    return TestResult(
+        checker_name="No Unseparated Keywords",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} UPPERCASE variables.",
+        errors=error_log,
+    )
+
+"""
 * TODO: The full version of END should be used at all times,
         eg END SUBROUTINE <name> and END FUNCTION <name>
 * TODO: New code should be written using Fortran 95/2003 features. Avoid non-portable
@@ -463,4 +490,5 @@ list_O_tests = [
     r3_3_3_one_statement_per_line,
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
+    r3_4_3_no_unseparated_keywords,
 ]

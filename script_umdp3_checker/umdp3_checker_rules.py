@@ -13,7 +13,6 @@ import re
 from typing import List, Dict
 from search_lists import (
     obsolescent_intrinsics,
-    unseparated_keywords_list,
     retired_ifdefs,
     deprecated_c_identifiers,
 )
@@ -119,32 +118,6 @@ class UMDP3Checker:
         output = f"Checked {count + 1} lines, found {failures} failures."
         return TestResult(
             checker_name="OpenMP sentinels not in column one",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=output,
-            errors=error_log,
-        )
-
-    def unseparated_keywords(self, lines: List[str]) -> TestResult:
-        """Check for omitted optional spaces in keywords"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            if line.lstrip(" ").startswith("!"):
-                continue
-            clean_line = self.remove_quoted(line)
-            for pattern in [f"\\b{kw}\\b" for kw in unseparated_keywords_list]:
-                if re.search(pattern, clean_line, re.IGNORECASE):
-                    failures += 1
-                    error_log = self.add_error_log(
-                        error_log,
-                        f"unseparated keyword in line: {line.strip()}",
-                        count + 1,
-                    )
-        output = f"Checked {count + 1} lines, found {failures} failures."
-        return TestResult(
-            checker_name="Unseparated Keywords",
             failure_count=failures,
             passed=(failures == 0),
             output=output,
