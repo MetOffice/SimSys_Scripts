@@ -622,6 +622,10 @@ def test_r3_4_2_no_full_uppercase_variable_names(
         assert error in expected_errors
         for line_no in lines_list:
             assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
 # =================================================================
 
 
@@ -671,6 +675,8 @@ def test_r3_4_3_no_unseparated_keywords(
     assert len(errors) == len(expected_errors)
     for error, lines_list in errors.items():
         assert error in expected_errors
-        assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
             assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
