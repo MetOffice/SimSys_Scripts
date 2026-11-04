@@ -525,7 +525,7 @@ def test_conformance_checker_print_results_volume4_prints_error_details(
     capsys: pytest.CaptureFixture[str],
 ):
     fail_tr = SimpleNamespace(
-        checker_name="RuleZ", failure_count=2, passed=False, errors={"RuleZ": "detail"}
+        checker_name="RuleZ", failure_count=2, passed=False, errors={"RuleZ": [10, 20]}
     )
 
     cc = ConformanceChecker([])
@@ -539,7 +539,7 @@ def test_conformance_checker_print_results_volume4_prints_error_details(
     conformance checker just to check the detail text from the test was in the output
     written"""
     assert "RuleZ" in out
-    assert "detail" in out
+    assert "10 and 20" in out
 
 
 def test_stylechecker_check_with_no_check_functions_passes(tmp_path: Path):

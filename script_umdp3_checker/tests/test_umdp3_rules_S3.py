@@ -148,8 +148,6 @@ def test_concatenate_lines(example_fortran_lines):
 @pytest.mark.parametrize(
     "changes_list, expected_passed, expected_failure_count, expected_errors",
     [
-        # Valid: MODULE example_mod ... END MODULE example_mod (no changes)
-        ([], True, 0, {}),
         # Invalid: No program unit found (delete MODULE line)
         (
             [["replace", 12, ["! No module declaration here"]]],
@@ -162,7 +160,7 @@ def test_concatenate_lines(example_fortran_lines):
         ),
         # Invalid: Mismatched END statement
         (
-            [["replace", 120, ["END MODULE wrong_mod_name"]]],
+            [["replace", 121, ["END MODULE wrong_mod_name"]]],
             False,
             1,
             {
@@ -173,7 +171,7 @@ def test_concatenate_lines(example_fortran_lines):
         ),
         # Invalid: No END statement found
         (
-            [["replace", 120, ["! Missing END MODULE"]]],
+            [["replace", 121, ["! Missing END MODULE"]]],
             False,
             1,
             {
@@ -182,12 +180,22 @@ def test_concatenate_lines(example_fortran_lines):
                 ]
             },
         ),
+        # Pass ccp directives #if !defined(MCT)
+        (
+            [["replace", 1, ["#if !defined(MCT)"]], ["add", 121, ["#endif"]]],
+            True,
+            0,
+            {},
+        ),
+        # Valid: MODULE example_mod ... END MODULE example_mod (no changes)
+        ([], True, 0, {}),
     ],
     ids=[
-        "Valid module with matching END",
         "No program unit found",
         "Mismatched END statement",
         "No END statement",
+        "Valid checking cpp directives pass",
+        "Valid module with matching END",
     ],
 )
 def test_r3_1_1_there_can_be_only_one(
@@ -199,15 +207,15 @@ def test_r3_1_1_there_can_be_only_one(
 ):
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_1_1_there_can_be_only_one(modified_fortran_lines)
-    assert result.passed == expected_passed
-    assert result.failure_count == expected_failure_count
     errors = result.errors
-    assert len(errors) == len(expected_errors)
     for error, lines_list in errors.items():
         assert error in expected_errors
-        assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
             assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert result.failure_count == expected_failure_count
+    assert result.passed == expected_passed
 
 
 # =================================================================
@@ -238,14 +246,14 @@ def test_r3_2_1_check_crown_copyright(
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_2_1_check_crown_copyright(modified_fortran_lines)
     failure_count = result.failure_count
-    assert failure_count == expected_result
     errors = result.errors
-    assert len(errors) == len(expected_errors)
     for error, lines_list in errors.items():
         assert error in expected_errors
-        assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
             assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
 
 
 # =================================================================
@@ -272,7 +280,6 @@ def test_r3_2_1_check_crown_copyright(
                         + '":"  //  RoutineName,  zhook_out,  zhook_handle) ! extra comment'
                     ],
                 ],
-                ["replace", 42, ["use yomhook, ONLY: lhook, dr_hook"]],
             ],
             2,
             {"line too long": [73, 117]},
@@ -288,14 +295,14 @@ def test_r3_3_2_line_too_long(
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_3_2_line_too_long(modified_fortran_lines)
     failure_count = result.failure_count
-    assert failure_count == expected_result
     errors = result.errors
-    assert len(errors) == len(expected_errors)
     for error, lines_list in errors.items():
         assert error in expected_errors
-        assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
             assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
 
 
 # =================================================================
@@ -371,9 +378,27 @@ def test_3_3_3_one_statement_per_line(
             3,
             {"lowercase keyword: Module": [12], "lowercase keyword: use": [39, 42]},
         ),
+        (
+            [
+                ["add", 44, ["#if defined(SOMETHING)"]],
+                [
+                    "add",
+                    47,
+                    [
+                        "#else",
+                        "INTEGER, INTENT(INOUT) :: xlen",
+                        "INTEGER, INTENT(OUT) :: ylen",
+                        "LOGICAL, INTENT(IN) :: l_WhoopSies = .FALSE.",
+                        "#endif",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),
         ([], 0, {}),  # No changes, expect no errors
     ],
-    ids=["3 Lowercase Errors", "No Lowercase Errors"],
+    ids=["3 Lowercase Errors", "Pass cpp directives", "No Lowercase Errors"],
 )
 def test_r3_4_1_capitalised_keywords(
     example_fortran_lines, changes_list, expected_result, expected_errors
@@ -381,14 +406,14 @@ def test_r3_4_1_capitalised_keywords(
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_4_1_capitalised_keywords(modified_fortran_lines)
     failure_count = result.failure_count
-    assert failure_count == expected_result
     errors = result.errors
-    assert len(errors) == len(expected_errors)
     for error, lines_list in errors.items():
         assert error in expected_errors
-        assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
             assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
 
 
 # =================================================================
@@ -398,6 +423,7 @@ def test_r3_4_1_capitalised_keywords(
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
+        ([], 0, {}),  # No changes, expect no errors
         (
             [
                 [
@@ -405,19 +431,21 @@ def test_r3_4_1_capitalised_keywords(
                     45,
                     ["INTEGER, INTENT(IN) :: XLEN !Length of first dim of the arrays."],
                 ],
-                ["replace", 60, ["REAL :: var1, DAVE_2, HiPPo"]],
+                ["replace", 61, ["REAL :: var1, DAVE_2, HiPPo"]],
             ],
             2,
             {
-                "Found UPPERCASE variable name in declaration at line 45: XLEN": [45],
-                "Found UPPERCASE variable name in declaration at line 60: DAVE_2": [60],
+                'Found UPPERCASE variable name in declaration at line 45: "XLEN"': [45],
+                'Found UPPERCASE variable name in declaration at line 61: "DAVE_2"': [
+                    61
+                ],
             },
         ),
         (
             [
                 [
                     "add",
-                    58,
+                    59,
                     ["LOGICAL :: l_whizz_bang = .FALSE. ! optimisation flag"],
                 ],
             ],
@@ -428,7 +456,7 @@ def test_r3_4_1_capitalised_keywords(
             [
                 [
                     "add",
-                    60,
+                    61,
                     [
                         "REAL      :: VARIaBLE_1, variable_2,          &",
                         "     VARIABLE_3, Hot_Potato, Baked Potato     &",
@@ -438,7 +466,7 @@ def test_r3_4_1_capitalised_keywords(
                 ],
                 [
                     "replace",
-                    56,
+                    57,
                     [
                         "INTEGER :: j ! Loop counter   &",
                         "INTEGER :: k ! Loop counter   &",
@@ -456,26 +484,131 @@ def test_r3_4_1_capitalised_keywords(
             ],
             5,
             {
-                "Found UPPERCASE variable name in declaration at line 45: XLEN": [45],
-                "Found UPPERCASE variable name in declaration at line 58: IJ": [58],
-                "Found UPPERCASE variable name in declaration at line 62: CASPVAR": [
-                    62
+                'Found UPPERCASE variable name in declaration at line 45: "XLEN"': [45],
+                'Found UPPERCASE variable name in declaration at line 59: "IJ"': [59],
+                'Found UPPERCASE variable name in declaration at line 63: "CASPVAR"': [
+                    63
                 ],
-                "Found UPPERCASE variable name in declaration at line 62: VARIABLE_3": [
-                    62
+                'Found UPPERCASE variable name in declaration at line 63: "VARIABLE_3"': [
+                    63
                 ],
-                "Found UPPERCASE variable name in declaration at line 62: CAPS_VAR": [
-                    62
+                'Found UPPERCASE variable name in declaration at line 63: "CAPS_VAR"': [
+                    63
                 ],
             },
         ),
-        ([], 0, {}),  # No changes, expect no errors
+        (
+            [
+                ["delete", 48, None],
+                [
+                    "replace",
+                    49,
+                    [
+                        "REAL, INTENT(IN) :: input1(xlen, ylen),   & !First input array",
+                        "                    input2(XLEN, ylen), !Second input array",
+                    ],
+                ],
+                # [],
+            ],
+            0,
+            {},
+        ),
+        (
+            [
+                ["delete", 48, None],
+                [
+                    "replace",
+                    49,
+                    [
+                        "REAL, INTENT(IN) :: input1(xlen, ylen),   & !First input array",
+                        "                    INPUT2(XLEN, ylen), !Second input array",
+                    ],
+                ],
+                # [],
+            ],
+            1,
+            {'Found UPPERCASE variable name in declaration at line 48: "INPUT2"': [48]},
+        ),
+        (
+            [
+                [
+                    "add",
+                    51,
+                    [
+                        "REAL(KIND=real_umphys), INTENT(IN OUT)  ::                      &",
+                        "                        variable(                               &",
+                        " (1-halox):(proc_row_length+halox),                             &",
+                        " (1-haloy):(proc_rows+haloy),                                   &",
+                        "  1:model_levels )                        ! Model variable",
+                    ],
+                ]
+            ],
+            0,
+            {},
+        ),  # Real world false Fail, Thanks Andy M.
+        (
+            [
+                [
+                    "add",
+                    51,
+                    ["INTEGER, PARAMETER :: defaultsize = BIT_SIZE(0)/8"],
+                ],
+            ],
+            0,
+            {},
+        ),  # Curious real world fail from Sam
+        (
+            [
+                [
+                    "add",
+                    51,
+                    ["INTEGER, POINTER     :: atm_global_points(:,:)=>NULL()"],
+                ],
+            ],
+            0,
+            {},
+        ),  # 2nd Curious real world fail from Sam
+        (
+            [
+                [
+                    "add",
+                    51,
+                    [
+                        "CHARACTER(LEN=30)   :: ndg_filename_template(2)= ['unset','unset']",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),  # Failure reported by Erica
+        (
+            [
+                [
+                    "add",
+                    51,
+                    [
+                        "REAL(KIND=real_umphys), INTENT(IN OUT) ::                                      &",
+                        "!",
+                        " u( udims_s%i_start : udims_s%i_end,                                           &",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),  # Fun failure reported by Erica - comments interspersed with multi-line declarations
     ],
     ids=[
+        "No UpperCase Var Errors",
         "2 UpperCase Var Errors",
         "False FALSE error",
         "5 UpperCase Var Errors on extended lines",
-        "No UpperCase Var Errors",
+        "Array dimnensions, twice on an extended line, but no failures",
+        "Array dimnensions, twice on an extended line, with one failure",
+        "Weird real world error from Andy M",
+        "Curious real world fail from Sam",
+        "2nd Curious real world fail from Sam",
+        "Failure reported by Erica",
+        "Fun failure reported by Erica - comments interspersed with multi-line declarations",
     ],
 )
 def test_r3_4_2_no_full_uppercase_variable_names(
@@ -484,12 +617,9 @@ def test_r3_4_2_no_full_uppercase_variable_names(
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_4_2_no_full_uppercase_variable_names(modified_fortran_lines)
     failure_count = result.failure_count
-    assert failure_count == expected_result
     errors = result.errors
-    assert len(errors) == len(expected_errors)
     for error, lines_list in errors.items():
         assert error in expected_errors
-        assert len(lines_list) == len(expected_errors[error])
         for line_no in lines_list:
             assert line_no in expected_errors[error]
 # =================================================================

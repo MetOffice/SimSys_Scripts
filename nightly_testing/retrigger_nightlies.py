@@ -25,11 +25,16 @@ from datetime import datetime, timedelta
 from time import sleep
 
 
-def run_command(command):
+def run_command(command, environment=None):
     """
     Launch a subprocess command and return the output
     """
-    result = subprocess.run(command.split(), capture_output=True, text=True)
+    if environment:
+        env = os.environ.copy().update(environment)
+    else:
+        env = None
+
+    result = subprocess.run(command.split(), capture_output=True, text=True, env=env)
     return result
 
 
@@ -90,8 +95,10 @@ def restart_suite(suite):
     print(f"Restarting {suite}")
     play_command = f"cylc play -q {suite}"
     if "next-cylc" in suite:
-        play_command = f"export CYLC_VERSION=8-next ; {play_command}"
-    _ = run_command(play_command)
+        environment = {"CYLC_VERSION": "8-next"}
+    else:
+        environment = None
+    _ = run_command(play_command, environment)
 
 
 def retrigger_suite(suite, tasks):
@@ -104,8 +111,10 @@ def retrigger_suite(suite, tasks):
         print(f"\rTask {i + 1}/{ntasks}", end="", flush=True)
         failed_command = f"cylc trigger {suite}//*/{task[0]}"
         if "next-cylc" in suite:
-            failed_command = f"export CYLC_VERSION=8-next ; {failed_command}"
-        _ = run_command(failed_command)
+            environment = {"CYLC_VERSION": "8-next"}
+        else:
+            environment = None
+        _ = run_command(failed_command, environment)
     print()
 
 
@@ -178,6 +187,10 @@ if __name__ == "__main__":
 
     # Parse the valid_suites for ones which are cylc8 and have failed tasks
     failed_suites = check_failed_suites(valid_suites, cylc_run)
+
+    if not failed_suites:
+        print("No failed suites found")
+        raise SystemExit(0)
 
     print("\nFound the following suites with errors:")
     for suite in failed_suites:

@@ -16,12 +16,11 @@ import sys
 from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 
 from suite_data import SuiteData
 
 
-def create_markdown_row(*columns: str, header=False) -> List[str]:
+def create_markdown_row(*columns: str, header=False) -> list[str]:
     """
     Join any number of columns into a markdown formatted table row
     Will attempt to format column entries as str
@@ -73,16 +72,16 @@ class SuiteReport(SuiteData):
         self.suite_starttime: str = self.get_suite_starttime()
         self.workflow_id: str = self.get_workflow_id()
         self.cylc_url: str = self.generate_cylc_url()
-        self.task_states: Dict[str, str] = self.get_task_states()
-        self.groups: List[str] = self.read_groups_run()
-        self.rose_data: Dict[str, str] = self.read_rose_conf()
-        self.dependencies: Dict[str, Dict] = self.read_dependencies()
+        self.task_states: dict[str, str] = self.get_task_states()
+        self.groups: list[str] = self.read_groups_run()
+        self.rose_data: dict[str, str] = self.read_rose_conf()
+        self.dependencies: dict[str, dict] = self.read_dependencies()
         self.primary_source: str = self.determine_primary_source()
         self.populate_gitinfo()
         self.populate_gitbdiff()
         self.trac_log = []
 
-    def parse_local_source(self, source: str) -> Tuple[str, str]:
+    def parse_local_source(self, source: str) -> tuple[str, str]:
         """
         Find the branch name or hash and remote reference for a given source
         """
@@ -162,7 +161,7 @@ class SuiteReport(SuiteData):
 
         self.trac_log.append("")
 
-    def create_task_tables(self, parsed_tasks: Dict[str, List[str]]) -> None:
+    def create_task_tables(self, parsed_tasks: dict[str, list[str]]) -> None:
         """
         Create tables containing summary of task states and number of tasks won
         """
@@ -200,12 +199,12 @@ class SuiteReport(SuiteData):
                 self.trac_log.extend(create_markdown_row(task, state))
             self.trac_log.append(self.close_collapsed)
 
-    def create_um_code_owner_table(self, owners: Dict) -> None:
+    def create_um_code_owner_table(self, owners: dict) -> None:
         """
         Create a table of required UM code owner approvals
         """
 
-        changed_sections: Set[str] = self.get_changed_um_section()
+        changed_sections: set[str] = self.get_changed_um_section()
         if changed_sections:
             self.trac_log.extend(
                 create_markdown_row("Section", "Owner", "Deputy", "State", header=True)
@@ -218,12 +217,12 @@ class SuiteReport(SuiteData):
         else:
             self.trac_log.append("* No UM Code Owners Required")
 
-    def create_um_config_owner_table(self, owners: Dict) -> None:
+    def create_um_config_owner_table(self, owners: dict) -> None:
         """
         Create a table of required UM config owner approvals
         """
 
-        failed_configs: Set[str] = self.get_um_failed_configs()
+        failed_configs: set[str] = self.get_um_failed_configs()
         if not failed_configs:
             self.trac_log.append("No UM Config Owners Required")
             return

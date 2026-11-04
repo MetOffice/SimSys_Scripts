@@ -19,7 +19,6 @@ Release a new version of LFRic by:
 import argparse
 import getpass
 import re
-import socket
 import subprocess
 import shutil
 import shlex
@@ -75,35 +74,6 @@ def raise_exception(result: subprocess.CompletedProcess, command: str) -> None:
     """
 
     raise Exception(f"[FAIL] Error running command: '{command}'\n{result.stderr}")
-
-
-def set_dependency_path(apps: Path, core: Path) -> None:
-    """
-    Edit an LFRic Apps dependencies.sh file so that it points at the provided
-    LFRic Core source
-    """
-
-    print("[INFO] Updating dependencies.yaml Core source")
-
-    hostname = socket.gethostname()
-    dep_path = apps / "dependencies.yaml"
-    with open(dep_path) as f:
-        lines = f.readlines()
-    in_core = False
-    for i, line in enumerate(lines):
-        if line.strip().startswith("lfric_core"):
-            in_core = True
-        elif in_core and "source:" in line:
-            prefix, _, _ = line.partition("source:")
-            line = f"{prefix}source: {hostname}:{core}\n"
-        elif in_core and "ref:" in line:
-            prefix, _, _ = line.partition("ref:")
-            line = f"{prefix}ref:"
-        elif in_core:
-            break
-        lines[i] = line
-    with open(dep_path, "w") as f:
-        f.write("".join(x for x in lines))
 
 
 def find_meta_dirs(paths: list[Path], exclude_dirs: tuple[str] = ()) -> set[Path]:
@@ -232,16 +202,16 @@ def copy_head_meta(meta_dirs: list[Path], apps: Path, core: Path, version: str) 
         shutil.copytree(head, new)
         if core in new.parents:
             new = new.relative_to(core)
-            print(new)
             command = f"git -C {core} add {new}"
         elif apps in new.parents:
             new = new.relative_to(apps)
-            print(new)
             command = f"git -C {apps} add {new}"
         _ = run_command(command)
 
 
-def update_meta_import_path(meta_dirs: list[Path], version: str) -> None:
+def update_meta_import_path(
+    meta_dirs: list[Path], version: str, jules_version: str
+) -> None:
     """
     Change HEAD to vnX.Y in meta import statements in the newly created
     vnX.Y/rose-meta.conf files
@@ -261,7 +231,10 @@ def update_meta_import_path(meta_dirs: list[Path], version: str) -> None:
             elif in_imports and not line.strip().startswith("="):
                 break
             if in_imports:
-                line = line.replace("HEAD", version)
+                if "jules-lfric" in line:
+                    line = line.replace("HEAD", jules_version)
+                else:
+                    line = line.replace("HEAD", version)
                 lines[i] = line
 
         with open(meta_file, "w") as f:
@@ -352,6 +325,34 @@ def update_versions_file(meta_dirs: list[Path], upgrade_name: str) -> None:
         add_new_import(versions_file, upgrade_name)
 
 
+def update_versions_mod(repo: str, filepath: Path, version: str) -> None:
+    """
+    Update the versions numbers in lfric versions mod files
+    """
+
+    print(f"[INFO] Updating lfric_{repo}_versions_mod.F90")
+
+    version = version.removeprefix("vn").split(".")
+    updates = {
+        "major": version[0],
+        "minor": version[1],
+        "patch": "0",
+        "release": ".true.",
+    }
+
+    lines = filepath.read_text().split("\n")
+    for i, line in enumerate(lines):
+        if len(updates) == 0:
+            break
+        for item, val in updates.items():
+            if re.match(rf".*::\s*lfric_{repo}_{item}_version\s*=", line):
+                lines[i] = f"{line.split('=')[0]} = {val}"
+                del updates[item]
+                break
+
+    filepath.write_text("\n".join(lines))
+
+
 def ticket_number(opt: str) -> str:
     """
     Check that the command line supplied ticket number is of a suitable format
@@ -385,6 +386,13 @@ def parse_args() -> argparse.Namespace:
         help="The new version number we are updating to (format X.Y)",
     )
     parser.add_argument(
+        "-j",
+        "--jules_version",
+        required=True,
+        help="The newly released version of Jules for jules-lfric metadata imports "
+        "(format X.Y)",
+    )
+    parser.add_argument(
         "-t",
         "--ticket",
         required=True,
@@ -396,9 +404,8 @@ def parse_args() -> argparse.Namespace:
         "--apps",
         default=Path(".").absolute(),
         type=Path,
-        help="The path to the LFRic Apps working copy being used. Defaults to  "
-        "the location the script is being run from - this assumes you are in a "
-        "working copy.",
+        help="The path to the LFRic Apps working copy being used. Defaults to the "
+        "location the script is being run from - this assumes you are in an Apps clone",
     )
     parser.add_argument(
         "-c",
@@ -407,12 +414,16 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Path to the LFRic Core working copy being used.",
     )
+    parser.add_argument(
+        "-p", "--processes", type=int, default=4, help="Number of processes to use"
+    )
     args = parser.parse_args()
 
     args.apps = get_root_path(args.apps)
     args.core = args.core.expanduser().absolute()
     args.version = f"vn{args.version}"
     args.old_version = f"vn{args.old_version}"
+    args.jules_version = f"vn{args.jules_version}"
 
     return args
 
@@ -428,30 +439,15 @@ def main() -> None:
         args.core,
     )
 
-    set_dependency_path(args.apps, args.core)
-
-    # Find all metadata directories, excluing jules shared and lfric inputs as these
-    # have metadata but no macros.
+    # Find all metadata directories, excluing lfric-inputs as this has metadata but no
+    # macros.
     exclude_dirs = (
-        ".svn",
+        ".git",
         "rose-stem",
         "integration-test",
-        "lfric-jules-shared",
         "lfricinputs",
     )
     meta_dirs = find_meta_dirs([args.apps, args.core], exclude_dirs)
-
-    # Find JULES shared metadata directories and combine with all other metadirs for
-    # where they are handled differently
-    jules_meta_path = (
-        args.apps
-        / "interfaces"
-        / "jules_interface"
-        / "rose-meta"
-        / "lfric-jules-shared"
-    )
-    jules_shared_meta_dirs = find_meta_dirs([jules_meta_path])
-    meta_dirs_plus_jules = meta_dirs.union(jules_shared_meta_dirs)
 
     update_version_number(args.apps, args.version)
 
@@ -468,18 +464,39 @@ def main() -> None:
         args.old_version,
         args.apps,
         args.core,
+        nproc=args.processes,
     )
     print("\n[INFO] Successfully upgraded apps")
 
-    copy_head_meta(meta_dirs_plus_jules, args.apps, args.core, args.version)
+    copy_head_meta(meta_dirs, args.apps, args.core, args.version)
 
-    update_meta_import_path(meta_dirs, args.version)
+    update_meta_import_path(meta_dirs, args.version, args.jules_version)
 
     upgrade_file_name = copy_versions_files(
         meta_dirs, args.old_version, args.version, args.apps, args.core
     )
 
     update_versions_file(meta_dirs, upgrade_file_name)
+
+    update_versions_mod(
+        "apps",
+        args.apps
+        / "science"
+        / "shared"
+        / "source"
+        / "utilities"
+        / "lfric_apps_version_mod.f90",
+        args.version,
+    )
+    update_versions_mod(
+        "core",
+        args.core
+        / "infrastructure"
+        / "source"
+        / "utilities"
+        / "lfric_core_version_mod.f90",
+        args.version,
+    )
 
 
 if __name__ == "__main__":

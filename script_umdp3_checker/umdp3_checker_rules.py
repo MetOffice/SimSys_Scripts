@@ -131,7 +131,7 @@ class UMDP3Checker:
         count = -1
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r"!.*$", "", clean_line)
+            clean_line = self.comment_line.sub("", clean_line).strip()
 
             if match := re.search(r"\bGO\s*TO\s+(\d+)", clean_line, re.IGNORECASE):
                 label = match.group(1)

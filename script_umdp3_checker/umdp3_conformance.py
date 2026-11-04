@@ -360,7 +360,18 @@ class ConformanceChecker:
                         for count, (title, info) in enumerate(
                             test_result.errors.items()
                         ):
-                            print(" " * 8 + f"{count + 1:2} : {title} : {info}")
+                            if len(info) == 1 and info[0] == 0:
+                                print(" " * 8 + f"{count + 1:2} : {title}")
+                            else:
+                                plural = "" if len(info) == 1 else "s"
+                                print(
+                                    " " * 8
+                                    + f"{count + 1:2} : "
+                                    + f"{title} at line{plural} : "
+                                    + f"{', '.join([str(x) for x in info[:-1]])}"
+                                    + f"{' and ' if len(info) > 1 else ''}"
+                                    + f"{info[-1] if info else ''}"
+                                )
                         print(" " * 8 + line_2(82))
                 elif print_volume >= 3:
                     print(f"     {test_result.checker_name:60s} : ✓ PASS")
@@ -478,7 +489,8 @@ def print_in_box_b(
 def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
     """Determine which CMS is in use based on the presence of certain files."""
     repo_path = Path(path)
-    if (repo_path / ".git").is_dir():
+    if (repo_path / ".git").exists():
+        # valid for a repo, worktree, or submodule
         cms = GitBdiffWrapper(repo_path)
     elif (repo_path / ".svn").is_dir():
         """

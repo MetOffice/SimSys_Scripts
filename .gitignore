@@ -7,3 +7,4 @@ __pycache__/
 *.swp
 .conda
 .idea
+uv.lock

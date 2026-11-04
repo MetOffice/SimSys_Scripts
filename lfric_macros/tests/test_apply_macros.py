@@ -70,7 +70,15 @@ expected_split_macros = [desired_macro, existing_macro]
 
 # Create an instance of the apply_macros class
 # Use /tmp for Core and Jules as these are not required for testing
-applymacros = ApplyMacros("vn0.0_t001", None, None, TEST_APPS_DIR, Path("/tmp"), True)
+applymacros = ApplyMacros(
+    tag="vn0.0_t001",
+    cname=None,
+    version=None,
+    apps=TEST_APPS_DIR,
+    core=Path("/tmp"),
+    jules=Path("/tmp"),
+    testing=True,
+)
 
 
 def test_read_versions_file():

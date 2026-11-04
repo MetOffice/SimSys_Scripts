@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 ##############################################################################
 # (c) Crown copyright 2024 Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
@@ -249,9 +249,10 @@ class ApplyMacros:
         self,
         tag: str,
         cname: str | None,
-        version: str,
+        version: str | None,
         apps: Path,
         core: Path,
+        jules: Path | None = None,
         testing: bool = False,
     ) -> None:
         self.tag: str = tag
@@ -267,7 +268,8 @@ class ApplyMacros:
             self.root_path: Path = apps
         else:
             self.root_path: Path = get_root_path(apps)
-        self.core_source: Path = self.get_dependency_paths(core)
+        self.core_source: Path = self.get_dependency_paths(core, "lfric_core")
+        self.jules_source: Path = self.get_dependency_paths(jules, "jules")
         self.set_rose_meta_path()
         if version is None:
             self.version: str = re.search(r".*vn(\d+\.\d+)(_.*)?", tag).group(1)
@@ -286,13 +288,15 @@ class ApplyMacros:
 
     def set_rose_meta_path(self) -> None:
         """
-        Set up the ROSE_META_PATH environment variable in order to use the Core
-        metadata. We also add the clone root path as this should allow the script to be
-        run from anywhere.
+        Set up the ROSE_META_PATH environment variable in order to use the Core and
+        Jules metadata. We also add the clone root path as this should allow the script
+        to be run from anywhere.
         Edit 02/2026 - remove backwards compatibility support for pre central-metadata
         """
         rose_meta_path: str = (
-            f"{self.root_path / 'rose-meta'}:{self.core_source / 'rose-meta'}"
+            f"{self.root_path / 'rose-meta'}:"
+            f"{self.core_source / 'rose-meta'}:"
+            f"{self.jules_source / 'rose-meta'}"
         )
         os.environ["ROSE_META_PATH"] = rose_meta_path
 
@@ -321,24 +325,23 @@ class ApplyMacros:
     # Get Working Copy Functions
     ############################################################################
 
-    def get_dependency_paths(self, source: str | None) -> Path:
+    def get_dependency_paths(self, source: str | None, repo: str) -> Path:
         """
-        Parse the core command line arguments to get the path to a git clone.
+        Parse the core/jules command line arguments to get the path to a git clone.
         If the source isn't defined, first populate the source by reading the
         dependencies.yaml file.
         If the source is a remote GitHub source clone it to a temporary location
         Inputs:
             - source, The command line argument for the source. If not set this will be
               None
+            - repo, The name of the repository to clone
         Outputs:
             - The path to the source working copy to use
         """
 
-        repo = "lfric_core"
-
         # If source is None then read the dependencies.yaml file for the source
         if source is None:
-            source, ref = self.read_dependencies()
+            source, ref = self.read_dependencies(repo)
         if ":" in str(source):
             source_path = Path(source.split(":")[1]).expanduser()
         else:
@@ -361,7 +364,7 @@ class ApplyMacros:
         source = self.git_clone_temp(source, ref, repo)
         return source
 
-    def read_dependencies(self, repo: str = "lfric_core") -> tuple[str, str]:
+    def read_dependencies(self, repo: str) -> tuple[str, str]:
         """
         Read through the dependencies.yaml file for the source of the repo defined
         by repo. Uses self.root_path to locate the dependencies.yaml file.
@@ -1033,14 +1036,10 @@ class ApplyMacros:
                 if exception is not None:
                     executor.shutdown(wait=False, cancel_futures=True)
                     raise exception
-                print(
-                    "[INFO] Processed macro successfully written to "
-                    f"{
-                        self.parse_application_section(
-                            meta_order[write_tasks.index(task)]
-                        )
-                    }"
+                print_val = self.parse_application_section(
+                    meta_order[write_tasks.index(task)]
                 )
+                print(f"[INFO] Processed macro successfully written to {print_val}")
 
     ############################################################################
     # Upgrade Apps Functions
@@ -1093,7 +1092,11 @@ class ApplyMacros:
         for app_path in apps_list:
             # Ignore lfric_coupled_rivers as this is based on Jules-standalone
             # metadata which is not currently available
-            if "fcm_make" in str(app_path) or "lfric_coupled_rivers" in str(app_path):
+            if (
+                "fcm_make" in str(app_path)
+                or "lfric_coupled_rivers" in str(app_path)
+                or "coupled_rivers" in str(app_path)
+            ):
                 continue
             if not app_path.is_dir():
                 continue
@@ -1265,7 +1268,15 @@ def parse_args() -> argparse.Namespace:
         "--core",
         default=None,
         help="The LFRic Core source being used."
-        "Either a path to a working copy or a git source."
+        "Either a path to a local clone or a github source."
+        "If not set, will be read from the dependencies.yaml",
+    )
+    parser.add_argument(
+        "-j",
+        "--jules",
+        default=None,
+        help="The Jules source being used."
+        "Either a path to a local clone or a github source."
         "If not set, will be read from the dependencies.yaml",
     )
     parser.add_argument(
@@ -1280,6 +1291,8 @@ def apply_macros_main(
     version: str | None = None,
     apps: Path = Path(".").absolute(),
     core: str | None = None,
+    jules: str | None = None,
+    nproc: int = 4,
 ) -> None:
     """
     Main function for this program
@@ -1287,14 +1300,14 @@ def apply_macros_main(
 
     check_environment()
 
-    macro_object: ApplyMacros = ApplyMacros(tag, cname, version, apps, core)
+    macro_object: ApplyMacros = ApplyMacros(tag, cname, version, apps, core, jules)
 
     # Pre-process macros
     banner_print("Pre-Processing Macros")
-    macro_object.preprocess_macros(args.processes)
+    macro_object.preprocess_macros(nproc)
 
     # Upgrade Rose Stem Apps
-    macro_object.upgrade_apps(args.processes)
+    macro_object.upgrade_apps(nproc)
 
     # Clean up temporary directories
     for repo, directory in macro_object.temp_dirs.items():
@@ -1316,4 +1329,12 @@ def apply_macros_main(
 
 if __name__ == "__main__":
     args = parse_args()
-    apply_macros_main(args.tag, args.cname, args.version, args.apps, args.core)
+    apply_macros_main(
+        args.tag,
+        args.cname,
+        args.version,
+        args.apps,
+        args.core,
+        args.jules,
+        args.processes,
+    )

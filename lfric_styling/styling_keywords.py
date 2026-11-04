@@ -3,7 +3,7 @@
 # For further details please refer to the file LICENSE
 # which you should have received as part of this distribution.
 # Created date: 10/03/2025
-# Modified date: 14/03/2025
+# Modified date: 30/09/2025
 # *****************************COPYRIGHT*******************************
 
 """
@@ -224,6 +224,7 @@ NEW_KEYWORDS = [
     "ddim",
     "deallocate",
     "decode",
+    "default",
     "deferred",
     "delim",
     "derf",
@@ -258,6 +259,7 @@ NEW_KEYWORDS = [
     "dtan",
     "dtanh",
     "dtime",
+    "dynamic",
     "elemental",
     "else",
     "encode",
@@ -488,12 +490,14 @@ NEW_KEYWORDS = [
     "nextrec",
     "nint",
     "nml",
+    "no wait",
     "none",
     "non_intrinsic",
     "non_overridable",
     "nopass",
     "norm2",
     "not",
+    "nowait",
     "null",
     "nullify",
     "number",
@@ -511,6 +515,7 @@ NEW_KEYWORDS = [
     "pad",
     "parameter",
     "parity",
+    "parallel",
     "pass",
     "perror",
     "pointer",
@@ -587,6 +592,7 @@ NEW_KEYWORDS = [
     "save",
     "scale",
     "scan",
+    "schedule",
     "secnds",
     "second",
     "select",
@@ -597,6 +603,7 @@ NEW_KEYWORDS = [
     "sequential",
     "set_exponent",
     "shape",
+    "shared",
     "shifta",
     "shiftl",
     "shiftr",
@@ -616,6 +623,7 @@ NEW_KEYWORDS = [
     "sqrt",
     "srand",
     "stat",
+    "static",
     "status",
     "stat_failed_image",
     "stat_locked",

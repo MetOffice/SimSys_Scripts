@@ -5,8 +5,13 @@
 # -----------------------------------------------------------------------------
 """
 Helper functions for cloning git sources in command line builds
+
+Reads CONFLICT_IGNORES environment variable to get a list of comma-separated
+files/directories to ignore merge conflicts in. These should be relative to the
+top-level of the repo. If not set, then a default list is defined below.
 """
 
+import os
 import re
 import subprocess
 from datetime import datetime
@@ -231,17 +236,24 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
     If merge conflicts are in `rose-stem/` or `dependencies.yaml` then accept the
     current changes and mark as resolved.
     If others remain then raise an error
+    If CONFLICT_IGNORES environment variable is set, use that as a comma-separated list
+    of files/directories to ignore. If not set, use a default list below.
     """
 
     # For suites, merge conflicts in these files/directories are unimportant so accept
     # the current changes
-    for filepath in ("dependencies.yaml", "rose-stem"):
+    ignores = os.environ.get(
+        "CONFLICT_IGNORES", "dependencies.yaml,rose-stem,CONTRIBUTORS.md"
+    ).split(",")
+    need_commit = False
+    for filepath in ignores:
         full_path = loc / filepath
         if not full_path.exists():
             continue
         logger.warning(f"Ignoring merge conflicts in {filepath}")
         run_command(f"git -C {loc} checkout --ours -- {filepath}")
-        run_command(f"git -C {loc} add {filepath}")
+        run_command(f"git -C {loc} add -f {filepath}")
+        need_commit = True
 
     # Check if there are any remaining merge conflicts
     unmerged = get_unmerged(loc)
@@ -254,6 +266,10 @@ def handle_merge_conflicts(source: str, ref: str, loc: Path, dependency: str) ->
             "\n\nThese will need changing in the source branches to be useable together"
         )
 
+    # Need to commit the ignored conflict fixes
+    if need_commit:
+        run_command(f"git -C {loc} commit -m 'fix conflict'")
+
 
 def get_unmerged(loc: Path) -> list[str]:
     """
@@ -264,10 +280,10 @@ def get_unmerged(loc: Path) -> list[str]:
     return files.stdout.split()
 
 
-def check_existing(loc: Path) -> None:
+def check_existing(loc: Path) -> bool:
     """
-    If the repository exists and isn't a git repo, exit now as we don't want to
-    overwrite it
+    Return whether the repository already exists. If it does but isn't a git
+    repo, exit now as we don't want to overwrite it.
     """
 
     if loc.exists():
@@ -276,6 +292,8 @@ def check_existing(loc: Path) -> None:
                 f"The destination, '{loc}', already exists but isn't a git directory. "
                 "Exiting so as to not overwrite it."
             )
+        return True
+    return False
 
 
 def clone_repo_mirror(
@@ -293,25 +311,27 @@ def clone_repo_mirror(
     - loc: path to clone the repository to
     """
 
-    if loc.exists():
-        check_existing(loc)
-    # Clone if the repo doesn't exist
+    fetch = determine_mirror_fetch(repo_source, repo_ref) if repo_ref else "HEAD"
+    if check_existing(loc):
+        # If not provided a ref, pull the latest version of the current branch.
+        if not repo_ref:
+            run_command(f"git -C {loc} pull")
+            return
+        # Update existing repository.
+        run_command(f"git -C {loc} fetch origin {fetch}")
+        run_command(f"git -C {loc} checkout FETCH_HEAD")
     else:
-        command = f"git clone {mirror_loc} {loc}"
-        run_command(command)
-
-    # If not provided a ref, pull the latest repository and return
-    if not repo_ref:
-        run_command(f"git -C {loc} pull")
-        return
-
-    fetch = determine_mirror_fetch(repo_source, repo_ref)
-    commands = (
-        f"git -C {loc} fetch origin {fetch}",
-        f"git -C {loc} checkout FETCH_HEAD",
-    )
-    for command in commands:
-        run_command(command)
+        # Clone if the repo doesn't exist. If the mirror is local we don't copy
+        # the objects to make it much faster.
+        try:
+            run_command(f"git clone --shared --no-checkout {mirror_loc} {loc}")
+            run_command(f"git -C {loc} checkout {fetch}")
+        except SubprocessRunError:
+            logger.error(
+                "Cloning from local mirror failed. "
+                "Check your local guidance on how to set up mirror access."
+            )
+            raise
 
 
 def determine_mirror_fetch(repo_source: str, repo_ref: str) -> str:
@@ -345,7 +365,7 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
     - loc: path to clone the repository to
     """
 
-    if not loc.exists():
+    if not check_existing(loc):
         # Create a clean clone location
         loc.mkdir(parents=True)
 
@@ -361,7 +381,6 @@ def clone_repo(repo_source: str, repo_ref: str, loc: Path) -> None:
         for command in commands:
             run_command(command)
     else:
-        check_existing(loc)
         commands = (
             f"git -C {loc} fetch origin {repo_ref}",
             f"git -C {loc} checkout FETCH_HEAD",

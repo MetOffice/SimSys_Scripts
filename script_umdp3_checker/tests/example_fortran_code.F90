@@ -45,9 +45,10 @@ IMPLICIT NONE
 INTEGER, INTENT(IN) :: xlen !Length of first dimension of the arrays.
 INTEGER, INTENT(IN) :: ylen !Length of second dimension of the arrays.
 LOGICAL, INTENT(IN) :: l_unscale ! switch scaling off.
-REAL, INTENT(IN) :: input1(xlen, ylen) !First input array
-REAL, INTENT(IN OUT) :: input2(xlen, ylen) !Second input array
-REAL, INTENT(OUT) :: output(xlen, ylen) !Contains the result
+REAL, INTENT(IN)     :: input1(xlen, ylen) !First input array
+REAL, INTENT(IN OUT) :: input2(xlen, ylen) ! INOUT Second input array
+REAL, INTENT(OUT)    :: output(xlen, ylen) !Contains the result
+REAL, PARAMETER :: b_pollonator(4)  = [ 0.0,    11.2,   6.6,    3.6]
 LOGICAL, INTENT(IN), OPTIONAL :: l_loud_opt !optional debug flag
 ! Local variables
 INTEGER(KIND=jpim), PARAMETER :: zhook_in = 0 ! DrHook tracing entry

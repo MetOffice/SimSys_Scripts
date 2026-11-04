@@ -24,6 +24,7 @@ from search_lists import (
 # from script_umdp3_checker import fortran_keywords
 
 comment_line = re.compile(r"!.*$")
+cpp_command_line = re.compile(r"^#.*$")
 word_splitter = re.compile(r"\b\w+\b")
 
 
@@ -77,8 +78,16 @@ def create_unique_random_string(storage_set, length: int = 7) -> str:
 
 def remove_comments(line: str) -> str:
     """Remove comments from the lines :
-    There is a bit of an assumption here that quoted text has already been removed, so that we don't accidentally remove text after an "!" in a string."""
+    There is a bit of an assumption here that quoted text has already been removed, so
+    that we don't accidentally remove text after an "!" in a string."""
     return comment_line.sub("", line).rstrip()
+
+
+def remove_cpp_commands(line: str) -> str:
+    """Remove cpp commands from the lines :
+    There is a bit of an assumption here that quoted text has already been removed, so that we don't accidentally remove text after an "#" in a string.
+    Also that cpp commands have the '#' in col 1 of the line."""
+    return cpp_command_line.sub("", line).rstrip()
 
 
 def concatenate_lines(lines: List[str], line_no: int) -> str:
@@ -118,6 +127,7 @@ def r3_1_1_there_can_be_only_one(
     def find_first(lines: List[str]) -> tuple[bool, str]:
         for line in lines:
             executable_line = remove_comments(line).strip()
+            executable_line = remove_cpp_commands(executable_line).strip()
             if not executable_line:
                 continue  # Skip empty lines
             for keyword in program_unit_keywords:
@@ -136,11 +146,12 @@ def r3_1_1_there_can_be_only_one(
     def find_last(lines: List[str], unit_type: str, unit_name: str) -> tuple[bool, str]:
         for line in reversed(lines):
             executable_line = remove_comments(line).strip()
+            executable_line = remove_cpp_commands(executable_line).strip()
             if not executable_line:
                 continue  # Skip empty lines
             unit_name_search = re.search(rf"END\s+{unit_type}\s+(\w+)", executable_line)
             if unit_name_search:
-                if unit_name_search.group(1) == unit_name:
+                if unit_name_search.group(1).upper() == unit_name.upper():
                     return (True, "")
                 else:
                     return (
@@ -314,6 +325,7 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
             continue
         clean_line = remove_quoted(line)
         clean_line = comment_line.sub("", clean_line)
+        clean_line = remove_cpp_commands(clean_line)
         # Check for lowercase keywords
         for word in word_splitter.findall(clean_line):
             upcase = word.upper()
@@ -352,6 +364,13 @@ TODO: This is a very simplistic check and will not detect many
     declaration_search = re.compile(
         r"^\s*(INTEGER|REAL|LOGICAL|CHARACTER|TYPE)\s*.*::\s*", re.IGNORECASE
     )
+    digit_search = re.compile(r"([+-]?\d+\.\d+|[+-]?\d+)")
+    array_dimensions_search = re.compile(
+        r"\([^()]*\)"
+    )  # finds array dimensions in declaration
+    array_assignment_search = re.compile(
+        r"=\s*\[[^\]]*\]\s*"
+    )  # finds array assignments
     for count, line in enumerate(lines, 1):
         clean_line = remove_quoted(line)
         clean_line = remove_comments(clean_line)
@@ -359,15 +378,20 @@ TODO: This is a very simplistic check and will not detect many
         if declaration_search.search(clean_line):
             full_line = concatenate_lines(lines, count)
             clean_line = full_line.split("::", 1)[1].strip()
-            clean_line = re.sub(r"\([^)]*\)", "", clean_line)
+            while array_dimensions_search.sub("", clean_line).strip() != clean_line:
+                clean_line = array_dimensions_search.sub("", clean_line).strip()
+            clean_line = array_assignment_search.sub("", clean_line)
             variables = [var.strip() for var in clean_line.split(",")]
             for var in variables:
+                if digit_search.fullmatch(var):
+                    continue  # Skip if it's just a number
                 var = var.split(r"=", 1)[0].strip()  # Remove any assignment part
-                if var.upper() == var:
+                if var and var.upper() == var:
                     failures += 1
                     error_log = add_error_log(
                         error_log,
-                        f"Found UPPERCASE variable name in declaration at line {count}: {var}",
+                        f"Found UPPERCASE variable name in declaration at line {count}:"
+                        + f' "{var}"',
                         count,
                     )
     return TestResult(

@@ -1,5 +1,7 @@
 # PR Summary
 
+<!-- One line summary -->
+
 Sci/Tech Reviewer: <!-- SR id, filled by author when ready for review (e.g. @octocat) -->
 Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 
@@ -66,4 +68,3 @@ Code Reviewer: <!-- CR id, filled by SSD/CCD (e.g. @octocat) -->
 - [ ] Tests are adequate and have passed
 - [ ] Security considerations have been addressed
 - [ ] Performance impact is acceptable
-
