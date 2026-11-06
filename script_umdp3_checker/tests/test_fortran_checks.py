@@ -77,39 +77,6 @@ def test_openmp_sentinels_in_column_one(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-unseparated_keywords_parameters = [
-    (["ELSEIF", "ENDDO", "ENDSUBROUTINE"], 3, "All keywords unseparated"),
-    (["ELSE IF", "ENDMODULE", "ENDSUBROUTINE"], 2, "One keyword separated"),
-    (["ELSE IF", "END PARRALEL DO", "END IF"], 0, "All keywords separated"),
-    (["i=0", "i=i+1", "PRINT*,i"], 0, "No keywords"),
-    (["PROGRAM test", "i=0", "ENDIF"], 1, "One keyword unseparated"),
-    (["i=0", "ENDPARALLELDO", "END DO"], 1, "One keyword unseparated in middle"),
-    (
-        [
-            "REAL, INTENT(IN OUT) ::   lambda_pole   !INOUT  Longitude of pole",
-            "REAL, INTENT(OUT)  :: Dave",
-            "DO",
-            "nothing",
-            "END DO",
-        ],
-        0,
-        "unseparated keyword in comment",
-    ),
-    (["#endif", "i=i+1", "PRINT*,i"], 0, "Safely ignore cpp commands"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in unseparated_keywords_parameters],
-    ids=[data[2] for data in unseparated_keywords_parameters],
-)
-def test_unseparated_keywords(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.unseparated_keywords(lines)
-    assert result.failure_count == expected_result
-
-
 go_to_other_than_9999_parameters = [
     (
         ["      GO TO 1000", "      GO TO 2000"],

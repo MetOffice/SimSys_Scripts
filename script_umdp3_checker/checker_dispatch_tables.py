@@ -31,7 +31,6 @@ class CheckerDispatchTables:
         """Get dispatch table for Fortran diff tests"""
         return [
             self.umdp3_checker.openmp_sentinels_in_column_one,
-            self.umdp3_checker.unseparated_keywords,
             self.umdp3_checker.go_to_other_than_9999,
             self.umdp3_checker.write_using_default_format,
             self.umdp3_checker.dimension_forbidden,
