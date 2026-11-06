@@ -15,10 +15,10 @@ from fortran_keywords import fortran_keywords
 """ToDo: This lot will need putting back as and when the tests that use them get imported/re-created"""
 # from fortran_keywords import fortran_keywords
 from search_lists import (
-#     obsolescent_intrinsics,
+    #     obsolescent_intrinsics,
     unseparated_keywords_list,
-#     retired_ifdefs,
-#     deprecated_c_identifiers,
+    #     retired_ifdefs,
+    #     deprecated_c_identifiers,
 )
 # from dataclasses import dataclass, field
 # from script_umdp3_checker import fortran_keywords
@@ -28,11 +28,11 @@ cpp_command_line = re.compile(r"^#.*$")
 word_splitter = re.compile(r"\b\w+\b")
 
 
-def add_error_log(error_log: Dict, key: str = "no key", value: int = 0) -> Dict:
+def add_error_log(error_log: dict, key: str = "no key", value: int = 0) -> dict:
     """Add error information to the dictionary.
-    This adds the error statement, some are more unique than others, along with the
-    line number the error occurs on. Line number(s) are stored in a list in case the
-    same error occurs multiple times in a file."""
+    This adds the error statement, some are more unique than others, along
+    with the line number the error occurs on. Line number(s) are stored in a
+    list in case the same error occurs multiple times in a file."""
     if key not in error_log:
         error_log[key] = []
     error_log[key].append(value)
@@ -57,13 +57,15 @@ def remove_quoted(line: str) -> str:
     return result
 
 
-"""This is in case I return to the idea of replacing the quoted sections from above
-with something unique and storing them in order to put them back at some stage..."""
+"""This is in case I return to the idea of replacing the quoted sections from
+above with something unique and storing them in order to put them back at some
+stage..."""
 
 
 def create_unique_random_string(storage_set, length: int = 7) -> str:
     """Create a unique random string of a given length.
-    Creates a random string of given length and ensures it hasn't been used before."""
+    Creates a random string of given length and ensures it hasn't been used
+    before."""
     import random
     import string
 
@@ -78,8 +80,9 @@ def create_unique_random_string(storage_set, length: int = 7) -> str:
 
 def remove_comments(line: str) -> str:
     """Remove comments from the lines :
-    There is a bit of an assumption here that quoted text has already been removed, so
-    that we don't accidentally remove text after an "!" in a string."""
+    There is a bit of an assumption here that quoted text has already been
+    removed, so that we don't accidentally remove text after an "!" in a
+    string."""
     return comment_line.sub("", line).rstrip()
 
 
@@ -206,12 +209,13 @@ def r3_1_1_there_can_be_only_one(
 * All programming units require a suitable copyright header."""
 
 
-def r3_2_1_check_crown_copyright(lines: List[str]) -> TestResult:
+def r3_2_1_check_crown_copyright(lines: list[str]) -> TestResult:
     """Check for crown copyright statement"""
     """
-    TODO: This is a very simplistic check and will not detect many cases which break UMDP3.
-    It will pass if the word copyright appears on a commented out line. This could
-    include passing :
+    TODO: This is a very simplistic check and will not detect many cases which
+    break UMDP3.
+    It will pass if the word copyright appears on a commented out line. This
+    could include passing :
     ! I should put a copyright statement here...
 
     I suspect the Perl Predeccessor
@@ -277,7 +281,7 @@ def r3_3_2_line_too_long(lines: List[str]) -> TestResult:
 
 
 """
-* TODO: Never put more than one statement on a line.
+* Never put more than one statement on a line.
 """
 
 
@@ -324,7 +328,7 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
         if line.lstrip(" ").startswith("!"):
             continue
         clean_line = remove_quoted(line)
-        clean_line = comment_line.sub("", clean_line)
+        clean_line = remove_comments(clean_line)
         clean_line = remove_cpp_commands(clean_line)
         # Check for lowercase keywords
         for word in word_splitter.findall(clean_line):
@@ -403,11 +407,6 @@ TODO: This is a very simplistic check and will not detect many
     )
 
 
-"""
-* TODO: To improve readability, you should always use the optional space to separate
-        the Fortran keywords.
-        This rule also applies to OpenMP keywords. (See: 3.15)
-"""
 def r3_4_3_no_unseparated_keywords(lines: List[str]) -> TestResult:
     """Check for omitted optional spaces in keywords"""
     failures = 0
@@ -432,6 +431,7 @@ def r3_4_3_no_unseparated_keywords(lines: List[str]) -> TestResult:
         output=f"Checked {count} lines, found {failures} UPPERCASE variables.",
         errors=error_log,
     )
+
 
 """
 * TODO: The full version of END should be used at all times,
