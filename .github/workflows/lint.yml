@@ -5,7 +5,7 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-# Lint/analyse code with Super-Linter.
+# Run the same pre-commit checks used locally.
 name: Checks
 
 on:
@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
@@ -27,42 +27,35 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    strategy:
-      max-parallel: 4
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12", "3.14"]
-
-    permissions:
-      contents: read
-      statuses: write
-
     steps:
       - name: Checkout current
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Super-Lint
-        uses: super-linter/super-linter/slim@d5b0a2ab116623730dd094f15ddc1b6b25bf7b99  # v8.3.2
+      - name: Set up uv with Python
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: '3.14'
+          enable-cache: false
+
+      - name: Install quality tools
+        run: uv sync --frozen --extra dev
+
+      - name: Check changed files
+        if: github.event_name != 'workflow_dispatch'
         env:
-          # Once the codebase is perfectly linted/formatted, switch to validating only changed files
-          # VALIDATE_ALL_CODEBASE: false  # lint and format new or changed files only
-          FILTER_REGEX_EXCLUDE: (.*[.]conf.py|pull_request_template.md)
-          IGNORE_GITIGNORED_FILES: true
-          VALIDATE_BASH: true
-          VALIDATE_CHECKOV: true
-          VALIDATE_GITHUB_ACTIONS: true
-          VALIDATE_GIT_LEAKS: true
-          VALIDATE_GIT_MERGE_CONFLICT_MARKERS: true
-          VALIDATE_JSON: true
-          VALIDATE_MARKDOWN: true
-          VALIDATE_NATURAL_LANGUAGE: true
-          VALIDATE_PERL: true
-          VALIDATE_PYTHON_RUFF_FORMAT: true
-          VALIDATE_PYTHON_RUFF: true
-          VALIDATE_YAML: true
-          # To report GitHub Actions status checks
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FROM_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+          TO_REF: ${{ github.sha }}
+        run: |
+          if [[ "$FROM_REF" =~ ^0+$ ]]; then
+            uv run --frozen --extra dev pre-commit run --hook-stage manual --all-files --show-diff-on-failure
+          else
+            uv run --frozen --extra dev pre-commit run --hook-stage manual --from-ref "$FROM_REF" --to-ref "$TO_REF" --show-diff-on-failure
+          fi
+
+      - name: Audit all files
+        if: github.event_name == 'workflow_dispatch'
+        run: uv run --frozen --extra dev pre-commit run --hook-stage manual --all-files --show-diff-on-failure
 ...

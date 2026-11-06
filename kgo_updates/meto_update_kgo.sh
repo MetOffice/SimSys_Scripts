@@ -1,9 +1,9 @@
 #!/bin/bash
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 
 # This script will ask for kgo update information then moves the directory kgo_update
 # to ~${root_user}. It then calls `run_kgo_script.sh` as ${root_user} which itself calls the update

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-##############################################################################
-# (c) Crown copyright 2024 Met Office. All rights reserved.
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
-##############################################################################
+# -----------------------------------------------------------------------------
 """
 Script for lfric_apps upgrade macros. Pre-processes the macros and then applies
 them to rose-stem apps.
@@ -18,11 +18,12 @@ import shlex
 import shutil
 import subprocess
 import tempfile
-import yaml
-import networkx as nx
 from collections import defaultdict
-from concurrent.futures import as_completed, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+
+import networkx as nx
+import yaml
 
 BLACK_COMMAND = "black --line-length=80"
 CLASS_NAME_REGEX = r"vn\d+(_t\d+\w*)?"
@@ -725,7 +726,7 @@ class ApplyMacros:
         import_order.
         Inputs:
             - import_order, the metadata import order to match the order of
-              marcro commands.
+              macro commands.
         Returns:
             - combined macro commands in a single formatted string
         """

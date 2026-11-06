@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 """
 ## NOTE ##
 
@@ -186,7 +186,7 @@ def _read_file(filename):
 
 
 def _write_file(filename, lines, newline=False):
-    """Takes filemname and list of strings and opt newline boolean.
+    """Takes filename and list of strings and opt newline boolean.
     Writes array to file of given name.
     The optional newline argument adds a newline at the end of each
     element of the list.
@@ -263,8 +263,8 @@ def _dict_merge(main_dict, addon_dict, force=False):
 
 def _select_preferred(option_list):
     """Takes a list of strings, returns the fist one that is not None.
-    If the strings are report text in preffered order it essentially
-    ensures you get the prefered option from a list of choices."""
+    If the strings are report text in preferred order it essentially
+    ensures you get the preferred option from a list of choices."""
     pref_opt = None
     for choice in option_list:
         if choice is not None:
@@ -650,7 +650,7 @@ class SuiteReport:
         # This test is a little problematic when running this script
         # on a JULES rose-stem suite as JULES has no 'need' of the two
         # compare variables and to prevent the warning their absence
-        # would produce from occuring unnecessarily in JULES they have
+        # would produce from occurring unnecessarily in JULES they have
         # been added to rose-suite.conf for now
         compare_output = _parse_string("COMPARE_OUTPUT", lines)
         compare_wallclock = _parse_string("COMPARE_WALLCLOCK", lines)
