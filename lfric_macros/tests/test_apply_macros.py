@@ -8,15 +8,16 @@ Unit tests for apply_macros
 """
 
 from pathlib import Path
+
 import pytest
 
 from ..apply_macros import (
     ApplyMacros,
-    split_macros,
-    match_python_import,
     deduplicate_list,
-    read_versions_file,
+    match_python_import,
     read_python_imports,
+    read_versions_file,
+    split_macros,
 )
 
 # Commonly used paths

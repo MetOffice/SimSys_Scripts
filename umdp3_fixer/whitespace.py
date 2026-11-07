@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 
 ## NOTE ##
 # This module is one of several for which the Master copy is in the UM
@@ -7,19 +12,20 @@
 # is copied over.
 
 # import sys
-import re
 import argparse
+import re
+
 from fstring_parse import (
+    DQUOTE,
+    SQUOTE,
+    ParsingError,
     blank_fcomments,
     blank_fstring,
     clean_str_continuation,
     is_continuation,
     is_pp_continuation,
     is_str_continuation,
-    ParsingError,
     partial_blank_fstring,
-    DQUOTE,
-    SQUOTE,
 )
 
 # These 4 are defined globally for visibility. They are actually only used in

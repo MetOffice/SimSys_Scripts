@@ -11,11 +11,12 @@ Only intended for use with rose-stem suites that have provided appropriate
 environment variables
 """
 
-import os
-from pathlib import Path
-from ast import literal_eval
-from get_git_sources import clone_and_merge, set_https, validate_dependencies
 import logging
+import os
+from ast import literal_eval
+from pathlib import Path
+
+from get_git_sources import clone_and_merge, set_https, validate_dependencies
 
 
 def main() -> None:

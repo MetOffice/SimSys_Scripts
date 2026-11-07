@@ -6,19 +6,19 @@
 
 # from pyparsing import remove_quotes
 import pytest
+
 # import sys
 # from pathlib import Path
-
 # Add the current directory to Python path
 from ..umdp3_rules_S3 import (
-    remove_comments,
-    remove_quoted,
     concatenate_lines,
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
     r3_3_2_line_too_long,
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
+    remove_comments,
+    remove_quoted,
 )
 
 

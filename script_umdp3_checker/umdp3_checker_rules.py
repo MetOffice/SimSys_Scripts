@@ -1,8 +1,8 @@
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file LICENSE
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 
 """
 Package to contain functions which test for UMDP3 compliance.
@@ -10,14 +10,15 @@ Python translation of the original Perl UMDP3.pm module.
 """
 
 import re
-from typing import List, Dict
-from search_lists import (
-    obsolescent_intrinsics,
-    unseparated_keywords_list,
-    retired_ifdefs,
-    deprecated_c_identifiers,
-)
 from dataclasses import dataclass, field
+from typing import Dict, List
+
+from search_lists import (
+    deprecated_c_identifiers,
+    obsolescent_intrinsics,
+    retired_ifdefs,
+    unseparated_keywords_list,
+)
 
 """
 TODO : Several of the test functions are poor shadows of the original

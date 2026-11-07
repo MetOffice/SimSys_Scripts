@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-##############################################################################
-# (c) Crown copyright Met Office. All rights reserved.
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
-##############################################################################
+# -----------------------------------------------------------------------------
 
 """
 Launch fortitude on list of directories. Run on all and print outputs.
 Fail if any style changes required.
 """
 
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 from pathlib import Path
 
 
