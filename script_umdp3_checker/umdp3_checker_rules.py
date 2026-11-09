@@ -44,7 +44,7 @@ class TestResult:
     failure_count: int = 0
     passed: bool = False
     output: str = ""
-    errors: dict = field(default_factory=dict)
+    errors: dict[str, str] = field(default_factory=dict)
 
 
 class UMDP3Checker:
