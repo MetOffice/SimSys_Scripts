@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-##############################################################################
-# (c) Crown copyright 2025 Met Office. All rights reserved.
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
-##############################################################################
+# -----------------------------------------------------------------------------
 
 """
 Release a new version of LFRic by:
@@ -79,7 +79,7 @@ def raise_exception(result: subprocess.CompletedProcess, command: str) -> None:
 def find_meta_dirs(paths: list[Path], exclude_dirs: tuple[str] = ()) -> set[Path]:
     """
     Return a set of rose-metadata directories that can be found in the apps and
-    core sources. Done by seaching for rose-meta.conf files. Records the parent
+    core sources. Done by searching for rose-meta.conf files. Records the parent
     directory of the current one, as rose-meta.conf files end up in 'HEAD' or 'vnX.Y'
     directories.
     """
@@ -439,7 +439,7 @@ def main() -> None:
         args.core,
     )
 
-    # Find all metadata directories, excluing lfric-inputs as this has metadata but no
+    # Find all metadata directories, excluding lfric-inputs as this has metadata but no
     # macros.
     exclude_dirs = (
         ".git",
