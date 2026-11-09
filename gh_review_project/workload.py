@@ -15,9 +15,9 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
-from prettytable import PrettyTable
 
-from review_project import ProjectData, REVIEW_ID
+from prettytable import PrettyTable
+from review_project import REVIEW_ID, ProjectData
 
 lfric_repositories = [
     "lfric_apps",
@@ -232,7 +232,7 @@ def main(total: bool, test: bool, capture_project: bool, file: Path):
         "Other": Team("SimSysCodeReviewers", test),
     }
 
-    # Create tables for each combination of reviewers and reposotories
+    # Create tables for each combination of reviewers and repositories
     tables = {}
 
     ## Table for non-LFRic repositories

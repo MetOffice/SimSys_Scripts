@@ -15,9 +15,10 @@ This script will run the processes needed to close off and finish a milestone
         * Closed PRs against this milestone
 """
 
-from pathlib import Path
 import argparse
-from review_project import ProjectData, REVIEW_ID, ISSUE_ID
+from pathlib import Path
+
+from review_project import ISSUE_ID, REVIEW_ID, ProjectData
 from set_milestone import add_milestone
 
 

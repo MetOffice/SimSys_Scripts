@@ -12,10 +12,10 @@ Project.
 from __future__ import annotations
 
 import json
-import subprocess
-from pathlib import Path
 import shlex
+import subprocess
 from collections import defaultdict
+from pathlib import Path
 
 REVIEW_ID = 376
 ISSUE_ID = 418
@@ -35,10 +35,10 @@ class ProjectData:
     """
     A class to hold GitHub project data
 
-    pull_requsts: list raw_data turned into a list of PullRequest objects.
+    pull_requests: list raw_data turned into a list of PullRequest objects.
     test: bool Run using test data and extra logging.
     milestones: list All milestones currently used in the project
-    repos: list All repositories currectly represented in the project
+    repos: list All repositories correctly represented in the project
     """
 
     def __init__(self, project: int, items: list, test: bool = False):
@@ -275,7 +275,7 @@ class ProjectData:
         milestone: str,
         repository: str = "all",
         status: str = "all",
-        message: str = None,
+        message: str | None = None,
     ) -> int:
         """
         Count items filtered using the provided information. Print details of items found.

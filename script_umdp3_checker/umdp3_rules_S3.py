@@ -8,9 +8,10 @@
 For now, the document has been copied into this file as a placeholder for the rules as they appear."""
 
 import re
-from typing import List, Dict
-from umdp3_checker_rules import TestResult
+from typing import Dict, List
+
 from fortran_keywords import fortran_keywords
+from umdp3_checker_rules import TestResult
 
 """ToDo: This lot will need putting back as and when the tests that use them get imported/re-created"""
 # from fortran_keywords import fortran_keywords

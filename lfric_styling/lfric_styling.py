@@ -15,10 +15,11 @@ Styling currently being applied:
     -lowercasing keywords
 """
 
-import re
 import argparse
 import os
+import re
 from pathlib import Path
+
 from styling_keywords import NEW_KEYWORDS
 
 

@@ -10,10 +10,10 @@ Test suite for git_bdiff module.
 
 import os
 import subprocess
+
 import pytest
 
-from ..git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo, GitBase
-
+from ..git_bdiff import GitBase, GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo
 
 # Disable warnings caused by the use of pytest fixtures
 # pylint: disable=redefined-outer-name

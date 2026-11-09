@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Optional, Union
 
 import yaml
-
 from git_bdiff import GitBDiff, GitInfo
 
 
