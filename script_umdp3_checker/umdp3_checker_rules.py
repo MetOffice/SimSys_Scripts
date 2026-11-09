@@ -564,13 +564,15 @@ class UMDP3Checker:
         for count, line in enumerate(lines):
             clean_line = self.remove_quoted(line)
             clean_line = re.sub(r"!.*$", "", clean_line)
-            if (match := re.search(
-                r"^#(?:(?:ifn?def|"  # ifdef/ifndef
-                r"(?:el)?if\s*\S*?defined\s*\()"  # elif/if defined(
-                r"\s*([^\)\s]*)\)?)",  # SYMBOL
-                line,
-                re.IGNORECASE,
-            )) and match.group(1) in retired_ifdefs:
+            if (
+                match := re.search(
+                    r"^#(?:(?:ifn?def|"  # ifdef/ifndef
+                    r"(?:el)?if\s*\S*?defined\s*\()"  # elif/if defined(
+                    r"\s*([^\)\s]*)\)?)",  # SYMBOL
+                    line,
+                    re.IGNORECASE,
+                )
+            ) and match.group(1) in retired_ifdefs:
                 # # The above match either returns [None, SYMBOL] or
                 # [SYMBOL, None]
                 # SYMBOL = [x for x in match.groups() if x] # reduce to a

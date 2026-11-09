@@ -181,9 +181,7 @@ def test_concatenate_lines(example_fortran_lines):
             1,
             {
                 "END statement found for a different program unit: "
-                "should be example_mod got wrong_mod_name.": [
-                    0
-                ]
+                "should be example_mod got wrong_mod_name.": [0]
             },
         ),
         # Invalid: No END statement found
@@ -512,7 +510,7 @@ def test_r3_4_1_capitalised_keywords(
                     63
                 ],
                 (
-                    'Found UPPERCASE variable name in declaration '
+                    "Found UPPERCASE variable name in declaration "
                     'at line 63: "VARIABLE_3"'
                 ): [63],
                 'Found UPPERCASE variable name in declaration at line 63: "CAPS_VAR"': [
@@ -648,6 +646,7 @@ def test_r3_4_2_no_full_uppercase_variable_names(
         assert len(lines_list) == len(expected_errors[error])
     assert len(errors) == len(expected_errors)
     assert failure_count == expected_result
+
 
 # =================================================================
 
