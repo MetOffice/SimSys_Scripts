@@ -13,8 +13,34 @@ fcm repositories to pull from this repository.
 
 ## Local Development
 
-Use Python 3.12 or newer. Run the following commands from the repository root.
-Choose either `uv` (recommended) or `pip` to create your local environment.
+After cloning, run the helper script from the repository root:
+
+```sh
+./setup-venv
+source .venv/bin/activate
+pytest -vv
+```
+
+The helper prefers `uv` when it is in `PATH`; otherwise it uses Python 3.12 or
+newer with `venv` and `pip`. It creates or reuses `.venv`, installs this project
+in editable mode with development and test dependencies, and installs the
+Git pre-commit hook using [prek](https://prek.j178.dev/). It does not activate
+the environment in your current shell;
+keep it activated while developing and committing. Rerun the helper after
+changing dependencies.
+
+Select a Python executable for either setup path when needed:
+
+```sh
+PYTHON=python3.12 ./setup-venv
+```
+
+With uv, this overrides interpreter selection and can recreate `.venv` if its
+Python version differs. Without uv, `PYTHON` selects the interpreter only when
+creating a new environment; an existing `.venv` is reused.
+
+The equivalent manual setup commands are below. Run them from the repository
+root.
 
 ### With uv
 
@@ -22,7 +48,7 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run:
 
 ```sh
 uv sync --locked --extra dev --extra test
-uv run --frozen --extra dev pre-commit install
+uv run --frozen --extra dev prek install
 uv run --frozen --extra test pytest -vv
 ```
 
@@ -47,37 +73,53 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e '.[dev,test]'
-pre-commit install
+prek install
 pytest -vv
 ```
 
-Keep the environment activated when committing or running quality tools.
+Keep the environment activated when committing or running quality check tools.
 The `-e` option installs the project in editable mode for continuous development.
-The `pip` setup uses the same pinned Ruff, rumdl, and pre-commit versions as
+The `pip` setup uses the same pinned Ruff, rumdl, and prek versions as
 `uv`, but resolves transitive dependencies independently of `uv.lock`.
 
 ### Quality Checks
 
 Ruff handles Python linting, import sorting, and formatting. rumdl handles
 Markdown linting and fixes. Their configuration is in `pyproject.toml`, and
-the shared hooks are defined in `.pre-commit-config.yaml`.
+prek runs the shared hooks defined in `.pre-commit-config.yaml`. The existing
+pre-commit-compatible configuration, hook pins, and file exclusions are retained.
+
+When migrating an existing environment, run `pre-commit uninstall` before
+rerunning `./setup-venv`. Otherwise, prek preserves the previous hook in migration
+mode and may run both runners. Do not use `prek install --force` unless you have
+confirmed that the old hook contains no additional checks you need to keep.
 
 With `uv`, run all hooks explicitly:
 
 ```sh
-uv run --frozen --extra dev pre-commit run --hook-stage manual --all-files
+uv run --frozen --extra dev prek run --hook-stage manual --all-files
 ```
 
 With an activated `pip` environment, use:
 
 ```sh
-pre-commit run --hook-stage manual --all-files
+prek run --hook-stage manual --all-files
 ```
 
 Hooks run automatically on staged files at commit time. If a hook changes a
 file, review and stage its fixes, then commit again. The first run installs
 the hook environments; subsequent runs reuse them. External hooks require
-Git, and the actionlint and gitleaks hooks also require Go on `PATH`.
+Git. prek can provision Go for the actionlint and gitleaks hooks when needed.
+
+To preview hook and file selection without executing checks or applying fixes:
+
+```sh
+prek run --hook-stage manual --all-files --dry-run
+```
+
+This previews selection only; it does not report lint violations. Supported
+standard hooks use prek's native Rust implementations; Ruff linting and formatting
+remain sequential because both can modify Python files.
 
 CI uses `uv.lock` and the same hooks to check changed files on pull requests
 and pushes. Manually dispatching the Checks workflow audits all files;
@@ -105,7 +147,7 @@ Remote pre-commit hooks are pinned to full Git commit SHAs. To update them
 while retaining immutable pins, run:
 
 ```sh
-uv run --frozen --extra dev pre-commit autoupdate --freeze
+uv run --frozen --extra dev prek update --freeze
 ```
 
 Review and commit the updated hook configuration. Python quality tools and

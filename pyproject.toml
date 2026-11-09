@@ -19,7 +19,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = [
-    "pre-commit==4.7.0",
+    "prek==0.5.10",
     "ruff==0.17.4",
     "rumdl==0.3.2"
 ]

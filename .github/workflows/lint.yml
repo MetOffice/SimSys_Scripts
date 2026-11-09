@@ -5,7 +5,7 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-# Run the same pre-commit checks used locally.
+# Run the same prek checks used locally.
 name: Checks
 
 on:
@@ -33,6 +33,8 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          # Check the contributor's files, not GitHub's temporary PR merge result.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up uv with Python
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
@@ -40,22 +42,27 @@ jobs:
           python-version: '3.14'
           enable-cache: false
 
-      - name: Install quality tools
+      - name: Install development tools
         run: uv sync --frozen --extra dev
 
       - name: Check changed files
         if: github.event_name != 'workflow_dispatch'
         env:
           FROM_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
-          TO_REF: ${{ github.sha }}
+          TO_REF: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          if [[ "$FROM_REF" =~ ^0+$ ]]; then
-            uv run --frozen --extra dev pre-commit run --hook-stage manual --all-files --show-diff-on-failure
+          # Audit all files for new branches, missing old commits, or rewritten push history.
+          # Only pushes require ancestry: PR branches may diverge from an advanced base.
+          if [[ "$FROM_REF" =~ ^0+$ ]] ||
+             ! git cat-file -e "$FROM_REF^{commit}" 2>/dev/null ||
+             { [[ "$GITHUB_EVENT_NAME" == push ]] && ! git merge-base --is-ancestor "$FROM_REF" "$TO_REF"; }; then
+            uv run --frozen --extra dev prek run --hook-stage manual --all-files --show-diff-on-failure
           else
-            uv run --frozen --extra dev pre-commit run --hook-stage manual --from-ref "$FROM_REF" --to-ref "$TO_REF" --show-diff-on-failure
+            # prek uses a three-dot diff to select files changed since the merge base.
+            uv run --frozen --extra dev prek run --hook-stage manual --from-ref "$FROM_REF" --to-ref "$TO_REF" --show-diff-on-failure
           fi
 
-      - name: Audit all files
+      - name: Audit all files (Manual Dispatch)
         if: github.event_name == 'workflow_dispatch'
-        run: uv run --frozen --extra dev pre-commit run --hook-stage manual --all-files --show-diff-on-failure
+        run: uv run --frozen --extra dev prek run --hook-stage manual --all-files --show-diff-on-failure
 ...
