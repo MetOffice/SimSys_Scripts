@@ -1,3 +1,7 @@
+# Line length violations are unavoidable in this test file due to Fortran code
+# samples used as test data.
+# ---------
+
 # -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
@@ -5,14 +9,9 @@
 # -----------------------------------------------------------------------------
 
 # from pyparsing import remove_quotes
-import pytest
-# import sys
-# from pathlib import Path
+import pytest  # type: ignore
 
-# Add the current directory to Python path
 from ..umdp3_rules_S3 import (
-    remove_comments,
-    remove_quoted,
     concatenate_lines,
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
@@ -21,6 +20,8 @@ from ..umdp3_rules_S3 import (
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
+    remove_comments,
+    remove_quoted,
 )
 
 
@@ -73,7 +74,9 @@ def test_modify_fortran_lines(example_fortran_lines):
         ["add", 32, ["This is an added line."]],
     ]
     modified_lines = modify_fortran_lines(example_fortran_lines, changes_list)
-    # Line no.s below have to be carefully calculated. Basic is line no of change -1 but then add one for every line added above in the file and -1 for every line deleted above in the file.
+    # Line no.s below have to be carefully calculated. Basic is line no of change -1
+    # but then add one for every line added above in the file and -1 for every line
+    # deleted above in the file.
     # for line_no, line in enumerate(modified_lines, 1):
     #     print(f"line [{line_no:04}]: {line}")
     assert modified_lines[11] == "This is a replacement line."
@@ -106,7 +109,9 @@ def test_concatenate_lines(example_fortran_lines):
         if line.find("&") >= 0:
             concatenated_line = concatenate_lines(example_fortran_lines.copy(), line_no)
             assert "&" not in concatenated_line
-            # This bit has to be a bit hard-wired and is going to break every time the example Fortran file line numbers are changed. If you can think of a better method - go ahead.
+            # This bit has to be a bit hard-wired and is going to break every time the
+            # example Fortran file line numbers are changed. If you can think of a
+            # better method - go ahead.
             if line_no == 31:
                 expected_line = (
                     "SUBROUTINE example (xlen,ylen,l_unscale,input1,"
@@ -132,14 +137,25 @@ def test_concatenate_lines(example_fortran_lines):
 # =================================================================
 
 """These examples hopefully demonstrate some of the complexity available...
-    Setting up a test, may involve multiple changes to the demo Fortran file, hence the complex entries in the parametrization.
-    Each error found is recorded with the line number(s) it was found on using the Error text as a dict key, and the line no(s) as a list, which means finding 'use' and 'Use' in the code would generate 2 different keys in the dict.
-    Then a single value recording the total number of failures is also included in the 'TestResult' object.
-    So for the dictionary of errors returned, we have to check they match, which at present involves checking it's 'len' but also that all the keys in one are in the other, i.e. you're not accidentally getting a matching count but different errors.
-    Then for each error(key) in the dict, you need to check how many lines it occured on, and that the line numbers match, i.e. the list of lines numbers is a match with the expected list of line numbers.
+    Setting up a test, may involve multiple changes to the demo Fortran file, hence the
+    complex entries in the parametrization.
+    Each error found is recorded with the line number(s) it was found on using the
+    Error text as a dict key, and the line no(s) as a list, which means finding 'use'
+    and 'Use' in the code would generate 2 different keys in the dict.
+    Then a single value recording the total number of failures is also included in the
+    'TestResult' object.
+    So for the dictionary of errors returned, we have to check they match, which at
+    present involves checking it's 'len' but also that all the keys in one are in the
+    other, i.e. you're not accidentally getting a matching count but different errors.
+    Then for each error(key) in the dict, you need to check how many lines it occured
+    on, and that the line numbers match, i.e. the list of lines numbers is a match with
+    the expected list of line numbers.
 
     There has to be a better way.....
-    As a side note, might it be better to write a function to compare 2 'TestResult' objects, which would be more robust to changes in the structure of the 'TestResult' object, and also make the test code more readable? If so, would its place be here in the testing, or as a method in the 'TestResult' class itself?
+    As a side note, might it be better to write a function to compare 2 'TestResult'
+    objects, which would be more robust to changes in the structure of the 'TestResult'
+    object, and also make the test code more readable? If so, would its place be here
+    in the testing, or as a method in the 'TestResult' class itself?
     """
 
 # =================================================================
@@ -164,7 +180,8 @@ def test_concatenate_lines(example_fortran_lines):
             False,
             1,
             {
-                "END statement found for a different program unit: should be example_mod got wrong_mod_name.": [
+                "END statement found for a different program unit: "
+                "should be example_mod got wrong_mod_name.": [
                     0
                 ]
             },
@@ -175,9 +192,10 @@ def test_concatenate_lines(example_fortran_lines):
             False,
             1,
             {
-                "Last executable line not a matching END statement for the first program unit found.": [
-                    0
-                ]
+                (
+                    "Last executable line not a matching END statement "
+                    "for the first program unit found."
+                ): [0]
             },
         ),
         # Pass ccp directives #if !defined(MCT)
@@ -276,8 +294,11 @@ def test_r3_2_1_check_crown_copyright(
                     "replace",
                     117,
                     [
-                        "IF (lhook) CALL dr_hook(ModuleName//     "
-                        + '":"  //  RoutineName,  zhook_out,  zhook_handle) ! extra comment'
+                        (
+                            "IF (lhook) CALL dr_hook(ModuleName//     "
+                            '":"  //  RoutineName,  zhook_out,  '
+                            "zhook_handle) ! extra comment"
+                        )
                     ],
                 ],
             ],
@@ -419,7 +440,8 @@ def test_r3_4_1_capitalised_keywords(
 # =================================================================
 
 
-# See if you can spot why I hate ruff - it highlights my awful data structures really well.
+# See if you can spot why I hate ruff - it highlights my awful
+# data structures really well.
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -489,9 +511,10 @@ def test_r3_4_1_capitalised_keywords(
                 'Found UPPERCASE variable name in declaration at line 63: "CASPVAR"': [
                     63
                 ],
-                'Found UPPERCASE variable name in declaration at line 63: "VARIABLE_3"': [
-                    63
-                ],
+                (
+                    'Found UPPERCASE variable name in declaration '
+                    'at line 63: "VARIABLE_3"'
+                ): [63],
                 'Found UPPERCASE variable name in declaration at line 63: "CAPS_VAR"': [
                     63
                 ],
@@ -595,7 +618,7 @@ def test_r3_4_1_capitalised_keywords(
             ],
             0,
             {},
-        ),  # Fun failure reported by Erica - comments interspersed with multi-line declarations
+        ),  # Fun failure - comments interspersed with declarations
     ],
     ids=[
         "No UpperCase Var Errors",
@@ -608,7 +631,7 @@ def test_r3_4_1_capitalised_keywords(
         "Curious real world fail from Sam",
         "2nd Curious real world fail from Sam",
         "Failure reported by Erica",
-        "Fun failure reported by Erica - comments interspersed with multi-line declarations",
+        "Fun failure - comments interspersed with declarations",
     ],
 )
 def test_r3_4_2_no_full_uppercase_variable_names(

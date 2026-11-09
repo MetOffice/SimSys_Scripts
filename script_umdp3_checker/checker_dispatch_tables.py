@@ -9,7 +9,8 @@ Standalone version of the dispatch tables from UMDP3Job
 Python translation of the original Perl module
 """
 
-from typing import Callable
+from collections.abc import Callable
+
 from umdp3_checker_rules import UMDP3Checker
 
 """

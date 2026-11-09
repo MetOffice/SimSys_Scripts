@@ -4,22 +4,27 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-"""This is the storage location for rules based on what's defined as the standard in the UMDP: 003 document. These rules are not necessarily the same as the rules defined in the UMDP: 003 document, but they are based on them. The rules in this file are used by the umdp3_checker script to check for compliance with the UMDP: 003 standard.
-For now, the document has been copied into this file as a placeholder for the rules as they appear."""
+"""This is the storage location for rules based on what's defined as the standard in
+the UMDP: 003 document. These rules are not necessarily the same as the rules defined
+in the UMDP: 003 document, but they are based on them. The rules in this file are used
+by the umdp3_checker script to check for compliance with the UMDP: 003 standard.
+For now, the document has been copied into this file as a placeholder for the rules as
+they appear."""
 
 import re
-from typing import List, Dict
-from umdp3_checker_rules import TestResult
-from fortran_keywords import fortran_keywords
 
-"""ToDo: This lot will need putting back as and when the tests that use them get imported/re-created"""
-# from fortran_keywords import fortran_keywords
+from fortran_keywords import fortran_keywords
 from search_lists import (
     #     obsolescent_intrinsics,
     unseparated_keywords_list,
     #     retired_ifdefs,
     #     deprecated_c_identifiers,
 )
+from umdp3_checker_rules import TestResult
+
+# ToDo: This lot will need putting back as and when the tests that use them get
+# imported/re-created.
+# from fortran_keywords import fortran_keywords
 # from dataclasses import dataclass, field
 # from script_umdp3_checker import fortran_keywords
 
@@ -88,12 +93,13 @@ def remove_comments(line: str) -> str:
 
 def remove_cpp_commands(line: str) -> str:
     """Remove cpp commands from the lines :
-    There is a bit of an assumption here that quoted text has already been removed, so that we don't accidentally remove text after an "#" in a string.
+    There is a bit of an assumption here that quoted text has already been removed, so
+    that we don't accidentally remove text after an "#" in a string.
     Also that cpp commands have the '#' in col 1 of the line."""
     return cpp_command_line.sub("", line).rstrip()
 
 
-def concatenate_lines(lines: List[str], line_no: int) -> str:
+def concatenate_lines(lines: list[str], line_no: int) -> str:
     """Concatenate the continuation lines into a single string"""
     # Find first line and check for continuation character.
     line = lines[line_no - 1]
@@ -119,7 +125,7 @@ def concatenate_lines(lines: List[str], line_no: int) -> str:
 
 
 def r3_1_1_there_can_be_only_one(
-    lines: List[str],
+    lines: list[str],
 ) -> TestResult:  # ..one programming unit in a file, that is.
     """Check for multiple program units in a file:
     Given that a MODULE or a PROGRAM can contain multiples of the other program units,
@@ -127,7 +133,7 @@ def r3_1_1_there_can_be_only_one(
     program_unit_keywords = {"PROGRAM", "MODULE", "SUBROUTINE", "FUNCTION"}
 
     # unsure if  "TYPE" should be included.
-    def find_first(lines: List[str]) -> tuple[bool, str]:
+    def find_first(lines: list[str]) -> tuple[bool, str]:
         for line in lines:
             executable_line = remove_comments(line).strip()
             executable_line = remove_cpp_commands(executable_line).strip()
@@ -141,12 +147,14 @@ def r3_1_1_there_can_be_only_one(
                     return (True, f"{unit_type} {unit_name}")
             return (
                 False,
-                "First executable line doesn't define an accepted programming unit"
-                f" : {line}",
+                (
+                    "First executable line doesn't define an accepted programming unit"
+                    f" : {line}"
+                ),
             )
         return (False, "No program unit found.")
 
-    def find_last(lines: List[str], unit_type: str, unit_name: str) -> tuple[bool, str]:
+    def find_last(lines: list[str], unit_type: str, unit_name: str) -> tuple[bool, str]:
         for line in reversed(lines):
             executable_line = remove_comments(line).strip()
             executable_line = remove_cpp_commands(executable_line).strip()
@@ -159,13 +167,18 @@ def r3_1_1_there_can_be_only_one(
                 else:
                     return (
                         False,
-                        "END statement found for a different program unit: "
-                        f"should be {unit_name} got {unit_name_search.group(1)}.",
+                        (
+                            "END statement found for a different program unit: "
+                            f"should be {unit_name} got {unit_name_search.group(1)}."
+                        ),
                     )
             else:
                 return (
                     False,
-                    "Last executable line not a matching END statement for the first program unit found.",
+                    (
+                        "Last executable line not a matching END statement "
+                        "for the first program unit found."
+                    ),
                 )
         return (False, "No matching END statement found for the first program unit.")
 
@@ -196,13 +209,22 @@ def r3_1_1_there_can_be_only_one(
 * TODO: Modules may be used to group related variables, subroutines and functions.
         - Really unsure as to how to test that's what they're doing...
 * TODO: Each separate file within the source tree should be uniquely named.
-        - Not sure that's possible/easy within the current framework to process one file at a time...
+        - Not sure that's possible/easy within the current framework to process one
+        file at a time...
 * TODO: The name of the file should reflect the name of the programming unit.
-* TODO: Multiple versions of the same file should be named filename-#ver where #ver is the section/version number (e.g. 1a,2a,2b. . . ).
-* TODO: You should avoid naming your program units and variables with names that match an intrinsic FUNCTION, SUBROUTINE or MODULE. We recommend the use of unique names within a program unit.
-* TODO: You should also avoid naming your program units and variables with names that match a keyword in a Fortran statement.
-* TODO: Avoid giving program units names that are likely to be used as variable names elsewhere in the code, e.g. field or string. This makes searching the code difficult and can cause the code browser to make erroneous connections between unrelated routines.
-* TODO: Subroutines should be kept reasonably short, where appropriate, say up to about 100 lines of executable code, but don’t forget there are start up overheads involved in calling an external subroutine so they should do a reasonable amount of work
+* TODO: Multiple versions of the same file should be named filename-#ver where #ver is
+the section/version number (e.g. 1a,2a,2b. . . ).
+* TODO: You should avoid naming your program units and variables with names that match
+an intrinsic FUNCTION, SUBROUTINE or MODULE. We recommend the use of unique names
+within a program unit.
+* TODO: You should also avoid naming your program units and variables with names that
+match a keyword in a Fortran statement.
+* TODO: Avoid giving program units names that are likely to be used as variable names
+elsewhere in the code, e.g. field or string. This makes searching the code difficult
+and can cause the code browser to make erroneous connections between unrelated routines.
+* TODO: Subroutines should be kept reasonably short, where appropriate, say up to about
+100 lines of executable code, but don’t forget there are start up overheads involved in
+calling an external subroutine so they should do a reasonable amount of work
 """
 
 """3.2 Headers
@@ -241,27 +263,35 @@ def r3_2_1_check_crown_copyright(lines: list[str]) -> TestResult:
 
 
 """
-* TODO: Headers are an immensely important part of any code as they document what it does, and how it does it.
-* TODO: The description of the MODULE and its contained SUBROUTINE may be the same and thus it need not berepeated in the latter. If a MODULE contains more than one subroutine then further descriptions are required.
-* TODO: History comments should not be included in the header or routine code. FCM TRAC provides the history of our codes.
-* TODO: Code author names should NOT be included explicitly within the code as they quickly become out of date and are sometimes misleading. Instead we reference a single maintainable text file which is included within the UM code repository.
+* TODO: Headers are an immensely important part of any code as they document what it
+does, and how it does it.
+* TODO: The description of the MODULE and its contained SUBROUTINE may be the same and
+thus it need not berepeated in the latter. If a MODULE contains more than one
+subroutine then further descriptions are required.
+* TODO: History comments should not be included in the header or routine code. FCM TRAC
+provides the history of our codes.
+* TODO: Code author names should NOT be included explicitly within the code as they
+quickly become out of date and are sometimes misleading. Instead we reference a single
+maintainable text file which is included within the UM code repository.
 
 ! Code Owner: Please refer to the UM file CodeOwners.txt
 ! This file belongs in section: <section_name_to_be_entered>
 
-* TODO: Example UM templates are provided with the source of this document; subroutine, function and module
+* TODO: Example UM templates are provided with the source of this document; subroutine,
+function and module
 templates"""
 
 """3.3 Free source form
 * TODO: All code should be written using the free source form.
-        - Could be fun, look for 7 leading spaces regularly. Or only something in col6 and/or only nos in cols 1 to 5
+        - Could be fun, look for 7 leading spaces regularly. Or only something in col6
+        and/or only nos in cols 1 to 5
 * Please restrict code to 80 columns
     Note that CreateBC uses a limit of 100 columns, due to the nature of
     the object-orientated code.
 """
 
 
-def r3_3_2_line_too_long(lines: List[str]) -> TestResult:
+def r3_3_2_line_too_long(lines: list[str]) -> TestResult:
     """Check for lines longer than 80 characters"""
     failures = 0
     error_log = {}
@@ -285,8 +315,9 @@ def r3_3_2_line_too_long(lines: List[str]) -> TestResult:
 """
 
 
-def r3_3_3_one_statement_per_line(lines: List[str]) -> TestResult:
-    """Check for more than one statement on a line, by looking for the presence of a ";" character outside of quoted strings and comments."""
+def r3_3_3_one_statement_per_line(lines: list[str]) -> TestResult:
+    """Check for more than one statement on a line, by looking for the presence of ";"
+    character outside of quoted strings and comments."""
     failures = 0
     error_log = {}
     count = -1
@@ -311,13 +342,15 @@ def r3_3_3_one_statement_per_line(lines: List[str]) -> TestResult:
 
 
 """
-* TODO: Write your program in UK English, unless you have a very good reason for not doing so."""
+* TODO: Write your program in UK English, unless you have a very good reason for not
+doing so."""
 
 """3.4 Fortran style
-* To improve readability, write your code using the ALL CAPS Fortran keywords approach."""
+* To improve readability, write your code using the ALL CAPS Fortran keywords approach.
+"""
 
 
-def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
+def r3_4_1_capitalised_keywords(lines: list[str]) -> TestResult:
     """Check for the presence of lowercase Fortran keywords, which are
     taken from an imported list 'fortran_keywords'."""
     failures = 0
@@ -354,7 +387,7 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
 """
 
 
-def r3_4_2_no_full_uppercase_variable_names(lines: List[str]) -> TestResult:
+def r3_4_2_no_full_uppercase_variable_names(lines: list[str]) -> TestResult:
     """Check for lowercase or CamelCase variable names only"""
     """
 TODO: This is a very simplistic check and will not detect many
@@ -407,7 +440,7 @@ TODO: This is a very simplistic check and will not detect many
     )
 
 
-def r3_4_3_no_unseparated_keywords(lines: List[str]) -> TestResult:
+def r3_4_3_no_unseparated_keywords(lines: list[str]) -> TestResult:
     """Check for omitted optional spaces in keywords"""
     failures = 0
     error_log = {}
@@ -485,7 +518,8 @@ TODO : Copy in the rules from section 3.13 and add the appropriate tests.
 
 3.14 DrHook :
 TODO : Copy in the rules from section 3.14 and add the appropriate tests.
-        I /think/ DrHook is being (possibly has been) retired, so this section of the docs needs updating and tests for the new system need to be added.
+        I /think/ DrHook is being (possibly has been) retired, so this section of the
+        docs needs updating and tests for the new system need to be added.
 
 3.15 OpenMP :
 TODO : Copy in the rules from section 3.15 and add the appropriate tests.
