@@ -8,10 +8,10 @@
 Validate the rose metadata in lfric_apps
 """
 
-import os
-import sys
-import subprocess
 import argparse
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 # A list of invalid metadata sections. Most are invalid as they are imported by

@@ -16,8 +16,8 @@ from pathlib import Path
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from umdp3_checker_rules import UMDP3Checker, TestResult
 from checker_dispatch_tables import CheckerDispatchTables
+from umdp3_checker_rules import TestResult, UMDP3Checker
 
 # Prevent pytest from trying to collect TestResult as more tests:
 TestResult.__test__ = False  # type: ignore

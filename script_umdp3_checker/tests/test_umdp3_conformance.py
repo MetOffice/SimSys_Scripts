@@ -4,28 +4,29 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
+
 import pytest
 
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from umdp3_conformance import (
-    StyleChecker,
-    detangle_file_types,
     ALLOWABLE_FILE_TYPES,
     GROUP_FILE_TYPES,
     Check_Runner,
+    CheckResult,
+    ConformanceChecker,
+    StyleChecker,
+    detangle_file_types,
     get_files_to_check,
     line_1,
     line_2,
-    which_cms_is_it,
-    ConformanceChecker,
-    CheckResult,
     process_arguments,
+    which_cms_is_it,
 )
 
 

@@ -22,12 +22,12 @@ Usage:
 
 """
 
-from argparse import ArgumentParser
-import sys
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
+from argparse import ArgumentParser
 
 
 def copy_working_branch(model_source):

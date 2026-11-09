@@ -10,6 +10,7 @@ Python translation of the original Perl module
 """
 
 from typing import Callable
+
 from umdp3_checker_rules import UMDP3Checker
 
 """

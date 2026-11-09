@@ -19,7 +19,7 @@ Required Command Line Arguments:
 
 Optional Arguments:
 => --new-kgo-dir -N  Give the name of the new kgo dir. If not specified then the
-                     suite will install kgo to the directory kgois currently
+                     suite will install kgo to the directory kgo is currently
                      found in.
 => --non-interactive Run in non-interactive mode. The suite will not ask any
                      questions. This is not a recommended option

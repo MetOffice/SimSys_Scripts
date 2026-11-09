@@ -19,9 +19,9 @@ Release a new version of LFRic by:
 import argparse
 import getpass
 import re
-import subprocess
-import shutil
 import shlex
+import shutil
+import subprocess
 from pathlib import Path
 
 from apply_macros import (
@@ -79,7 +79,7 @@ def raise_exception(result: subprocess.CompletedProcess, command: str) -> None:
 def find_meta_dirs(paths: list[Path], exclude_dirs: tuple[str] = ()) -> set[Path]:
     """
     Return a set of rose-metadata directories that can be found in the apps and
-    core sources. Done by seaching for rose-meta.conf files. Records the parent
+    core sources. Done by searching for rose-meta.conf files. Records the parent
     directory of the current one, as rose-meta.conf files end up in 'HEAD' or 'vnX.Y'
     directories.
     """
@@ -439,7 +439,7 @@ def main() -> None:
         args.core,
     )
 
-    # Find all metadata directories, excluing lfric-inputs as this has metadata but no
+    # Find all metadata directories, excluding lfric-inputs as this has metadata but no
     # macros.
     exclude_dirs = (
         ".git",

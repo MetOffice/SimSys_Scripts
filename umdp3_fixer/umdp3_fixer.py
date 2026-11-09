@@ -34,13 +34,14 @@ Usage:
 
 import os
 import re
-import sys
 import subprocess
+import sys
 from argparse import ArgumentParser
 from shutil import which
+
+from ampersands import apply_ampersand_shift
 from indentation import apply_indentation
 from styling import apply_styling
-from ampersands import apply_ampersand_shift
 from whitespace import apply_whitespace_fixes
 
 

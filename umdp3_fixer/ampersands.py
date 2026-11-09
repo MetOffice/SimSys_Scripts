@@ -32,16 +32,17 @@ import re
 
 # import traceback
 from optparse import OptionParser
+
 from fstring_parse import (
+    DQUOTE,
+    SQUOTE,
+    ParsingError,
     find_commented_char,
     find_quoted_char,
     is_continuation,
     is_pp_continuation,
     is_str_continuation,
-    ParsingError,
     replace_characters,
-    DQUOTE,
-    SQUOTE,
 )
 
 # Default column in which to place ampersands.

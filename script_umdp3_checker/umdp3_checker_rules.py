@@ -10,14 +10,15 @@ Python translation of the original Perl UMDP3.pm module.
 """
 
 import re
-from typing import List, Dict
-from search_lists import (
-    obsolescent_intrinsics,
-    unseparated_keywords_list,
-    retired_ifdefs,
-    deprecated_c_identifiers,
-)
 from dataclasses import dataclass, field
+from typing import Dict, List
+
+from search_lists import (
+    deprecated_c_identifiers,
+    obsolescent_intrinsics,
+    retired_ifdefs,
+    unseparated_keywords_list,
+)
 
 """
 TODO : Several of the test functions are poor shadows of the original
