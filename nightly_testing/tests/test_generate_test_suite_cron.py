@@ -1,3 +1,8 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 import pytest
 from ..generate_test_suite_cron import (
     MIRROR_PATH,

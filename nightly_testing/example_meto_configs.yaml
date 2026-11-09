@@ -1,3 +1,8 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 base:
   cylc_run_path: /path/to/nightly/user/cylc-run
   rose_bush_base_url: https://cylchub/services/cylc-review/taskjobs/umtest/?suite=

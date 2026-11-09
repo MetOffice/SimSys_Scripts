@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-##############################################################################
-# (c) Crown copyright 2024 Met Office. All rights reserved.
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
-##############################################################################
+# -----------------------------------------------------------------------------
 """
 Script for lfric_apps upgrade macros. Pre-processes the macros and then applies
 them to rose-stem apps.
@@ -725,7 +725,7 @@ class ApplyMacros:
         import_order.
         Inputs:
             - import_order, the metadata import order to match the order of
-              marcro commands.
+              macro commands.
         Returns:
             - combined macro commands in a single formatted string
         """
