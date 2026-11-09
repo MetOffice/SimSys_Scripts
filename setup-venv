@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+
+# Prepare an editable development environment and install the Git commit hook.
+set -euo pipefail
+
+# Resolve project paths from the helper, regardless of the caller's directory.
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+
+# Prefer the locked uv install; failures must not silently switch to pip.
+if command -v uv >/dev/null 2>&1; then
+    printf 'Setting up .venv with uv...\n'
+    uv_python_args=()
+    if [[ -n "${PYTHON:-}" ]]; then
+        uv_python_args=(--python "$PYTHON")
+    fi
+    uv sync --locked --extra dev --extra test "${uv_python_args[@]}"
+else
+    printf 'uv not found; setting up .venv with pip...\n'
+    # Reuse an existing environment; PYTHON selects the interpreter for a new one.
+    if [[ ! -x .venv/bin/python ]]; then
+        python_exe="${PYTHON:-python3}"
+        "$python_exe" -c 'import sys; sys.exit("Python 3.12 or newer is required.") if sys.version_info < (3, 12) else None'
+        "$python_exe" -m venv .venv
+    fi
+    # Validate reused environments too. pip resolves independently of uv.lock.
+    .venv/bin/python -c 'import sys; sys.exit("Python 3.12 or newer is required.") if sys.version_info < (3, 12) else None'
+    .venv/bin/python -m pip install --upgrade pip
+    .venv/bin/python -m pip install -e '.[dev,test]'
+fi
+
+.venv/bin/prek install
+
+# An executed script cannot activate the environment in its parent shell.
+printf '\nEnvironment ready. From the repository root, run:\n'
+printf '  source .venv/bin/activate\n'
+printf '  pytest -vv\n'

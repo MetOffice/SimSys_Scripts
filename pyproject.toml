@@ -1,6 +1,15 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "simsys_scripts"
-version = "2026.07.1"
+version = "2026.11.1"
 description = "Development support scripts for Simulation Systems deployment"
 readme = "README.md"
 license = { file = "LICENCE" }
@@ -9,15 +18,36 @@ requires-python = ">=3.12"
 dependencies = []
 
 [project.optional-dependencies]
+dev = [
+    "prek==0.5.10",
+    "ruff==0.17.4",
+    "rumdl==0.3.2"
+]
 test = [
-    "pytest",
-    "networkx",
-    "PyYAML"
+    "pytest==9.2.0",
+    "networkx==3.7",
+    "PyYAML==6.0.3"
 ]
 
 [project.urls]
 repository = "https://github.com/MetOffice/SimSys_Scripts"
-discussion = "https://github.com/MetOffice/simulation-systems/discussions/categories/lfric"
+discussion = "https://github.com/MetOffice/simulation-systems/discussions"
 
 [tool.setuptools]
 packages = []
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+extend-exclude = ["*.conf.py", ".svn"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+ignore = ["F405"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.rumdl]
+respect-gitignore = true

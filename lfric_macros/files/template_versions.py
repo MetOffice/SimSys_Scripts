@@ -1,5 +1,9 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 import sys
-
 
 from metomi.rose.upgrade import MacroUpgrade  # noqa: F401
 
