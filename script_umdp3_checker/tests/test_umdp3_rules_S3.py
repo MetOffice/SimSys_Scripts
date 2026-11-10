@@ -20,6 +20,7 @@ from ..umdp3_rules_S3 import (
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
+    r3_9_11_no_gotos,
     remove_comments,
     remove_quoted,
 )
@@ -525,7 +526,10 @@ def test_r3_4_1_capitalised_keywords(
                     "replace",
                     49,
                     [
-                        "REAL, INTENT(IN) :: input1(xlen, ylen),   & !First input array",
+                        (
+                            "REAL, INTENT(IN) :: input1(xlen, ylen),   & "
+                            "!First input array"
+                        ),
                         "                    input2(XLEN, ylen), !Second input array",
                     ],
                 ],
@@ -541,14 +545,21 @@ def test_r3_4_1_capitalised_keywords(
                     "replace",
                     49,
                     [
-                        "REAL, INTENT(IN) :: input1(xlen, ylen),   & !First input array",
+                        (
+                            "REAL, INTENT(IN) :: input1(xlen, ylen),   & "
+                            "!First input array"
+                        ),
                         "                    INPUT2(XLEN, ylen), !Second input array",
                     ],
                 ],
                 # [],
             ],
             1,
-            {'Found UPPERCASE variable name in declaration at line 48: "INPUT2"': [48]},
+            {
+                'Found UPPERCASE variable name in declaration at line 48: "INPUT2"': [
+                    48
+                ]
+            },
         ),
         (
             [
@@ -556,10 +567,22 @@ def test_r3_4_1_capitalised_keywords(
                     "add",
                     51,
                     [
-                        "REAL(KIND=real_umphys), INTENT(IN OUT)  ::                      &",
-                        "                        variable(                               &",
-                        " (1-halox):(proc_row_length+halox),                             &",
-                        " (1-haloy):(proc_rows+haloy),                                   &",
+                        (
+                            "REAL(KIND=real_umphys), INTENT(IN OUT)  :: "
+                            "                     &"
+                        ),
+                        (
+                            "                        variable( "
+                            "                              &"
+                        ),
+                        (
+                            " (1-halox):(proc_row_length+halox), "
+                            "                            &"
+                        ),
+                        (
+                            " (1-haloy):(proc_rows+haloy), "
+                            "                                  &"
+                        ),
                         "  1:model_levels )                        ! Model variable",
                     ],
                 ]
@@ -595,7 +618,10 @@ def test_r3_4_1_capitalised_keywords(
                     "add",
                     51,
                     [
-                        "CHARACTER(LEN=30)   :: ndg_filename_template(2)= ['unset','unset']",
+                        (
+                            "CHARACTER(LEN=30)   :: "
+                            "ndg_filename_template(2)= ['unset','unset']"
+                        ),
                     ],
                 ],
             ],
@@ -608,9 +634,15 @@ def test_r3_4_1_capitalised_keywords(
                     "add",
                     51,
                     [
-                        "REAL(KIND=real_umphys), INTENT(IN OUT) ::                                      &",
+                        (
+                            "REAL(KIND=real_umphys), INTENT(IN OUT) :: "
+                            "                                     &"
+                        ),
                         "!",
-                        " u( udims_s%i_start : udims_s%i_end,                                           &",
+                        (
+                            " u( udims_s%i_start : udims_s%i_end, "
+                            "                                          &"
+                        ),
                     ],
                 ],
             ],
@@ -694,7 +726,52 @@ def test_r3_4_3_no_unseparated_keywords(
     failure_count = result.failure_count
     assert failure_count == expected_result
     errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
     assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+# =================================================================
+
+
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["add", 71, ["GO TO 1234"]],
+            ],
+            1,
+            {
+                "Found bad GOTO statement : GO TO 1234": [71],
+            },
+        ),
+        (
+            [
+                ["add", 91, ["GO TO 9999"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad GOTO Statement",
+        "1 Acceptable GOTO Statement",
+        "No Bad GOTO Statements",
+    ],
+)
+def test_r3_9_11_no_gotos(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_9_11_no_gotos(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
     for error, lines_list in errors.items():
         assert error in expected_errors
         for line_no in lines_list:

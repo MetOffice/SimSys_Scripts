@@ -503,7 +503,34 @@ TODO : Copy in the rules from section 3.8 and add the appropriate tests.
 
 3.9 Code IF blocks, DO LOOPs, and other constructs :
 TODO : Copy in the rules from section 3.9 and add the appropriate tests.
+"""
 
+
+def r3_9_11_no_gotos(lines: list[str]) -> TestResult:
+    """Check for GoTO Statements accepting those which GOTO 9999"""
+    failures = 0
+    error_log = {}
+    count = -1
+    goto_statement = re.compile(r"\bGO\s*TO\s+(\d+)", re.IGNORECASE)
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if match := goto_statement.search(clean_line):
+            label = match.group(1)
+            if label != "9999":
+                failures += 1
+                error_log = add_error_log(
+                    error_log, f"Found bad GOTO statement : GO TO {label}", count
+                )
+    return TestResult(
+        checker_name="No GOTO Statements",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} bad GOTO statements.",
+        errors=error_log,
+    )
+
+"""
 3.10 Line continuation :
 TODO : Copy in the rules from section 3.10 and add the appropriate tests.
 

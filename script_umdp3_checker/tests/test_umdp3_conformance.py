@@ -518,8 +518,10 @@ def test_conformance_checker_print_results_quiet_pass_suppresses_passed(
 
     cc = ConformanceChecker([])
     cc.results = [
-        CheckResult("ok.py", tests_failed=0, all_passed=True, test_results=[pass_tr]),  # type: ignore
-        CheckResult("bad.py", tests_failed=1, all_passed=False, test_results=[fail_tr]),  # type: ignore
+        CheckResult("ok.py", tests_failed=0, all_passed=True,
+                    test_results=[pass_tr]),  # type: ignore
+        CheckResult("bad.py", tests_failed=1, all_passed=False,
+                    test_results=[fail_tr]),  # type: ignore
     ]
 
     all_passed = cc.print_results(print_volume=3, quiet_pass=True)
@@ -540,7 +542,8 @@ def test_conformance_checker_print_results_volume4_prints_error_details(
 
     cc = ConformanceChecker([])
     cc.results = [
-        CheckResult("bad.py", tests_failed=1, all_passed=False, test_results=[fail_tr])  # type: ignore
+        CheckResult("bad.py", tests_failed=1, all_passed=False,
+                    test_results=[fail_tr])  # type: ignore
     ]
 
     cc.print_results(print_volume=4, quiet_pass=True)
