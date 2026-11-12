@@ -530,6 +530,7 @@ def r3_9_11_no_gotos(lines: list[str]) -> TestResult:
         errors=error_log,
     )
 
+
 """
 3.10 Line continuation :
 TODO : Copy in the rules from section 3.10 and add the appropriate tests.
@@ -568,8 +569,7 @@ def r3_12_3_no_write_using_default_format(lines: list[str]) -> TestResult:
     """Check for WRITE statement without format"""
     failures = 0
     error_log = {}
-    write_statement = re.compile(r"\bWRITE\s*\(\s*\w+\s*,\s*\*\s*\)",
-                                 re.IGNORECASE)
+    write_statement = re.compile(r"\bWRITE\s*\(\s*\w+\s*,\s*\*\s*\)", re.IGNORECASE)
     count = -1
     for count, line in enumerate(lines, 1):
         clean_line = remove_quoted(line)

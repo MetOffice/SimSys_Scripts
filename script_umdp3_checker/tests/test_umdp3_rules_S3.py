@@ -557,11 +557,7 @@ def test_r3_4_1_capitalised_keywords(
                 # [],
             ],
             1,
-            {
-                'Found UPPERCASE variable name in declaration at line 48: "INPUT2"': [
-                    48
-                ]
-            },
+            {'Found UPPERCASE variable name in declaration at line 48: "INPUT2"': [48]},
         ),
         (
             [
@@ -736,6 +732,7 @@ def test_r3_4_3_no_unseparated_keywords(
     assert len(errors) == len(expected_errors)
     assert failure_count == expected_result
 
+
 # =================================================================
 
 
@@ -781,6 +778,7 @@ def test_r3_9_11_no_gotos(
         assert len(lines_list) == len(expected_errors[error])
     assert len(errors) == len(expected_errors)
     assert failure_count == expected_result
+
 
 # =================================================================
 
@@ -828,6 +826,7 @@ def test_r3_12_0_write_using_defaults(
     assert len(errors) == len(expected_errors)
     assert failure_count == expected_result
 
+
 # =================================================================
 
 
@@ -836,8 +835,14 @@ def test_r3_12_0_write_using_defaults(
     [
         (
             [
-                ["replace", 91, ["    WRITE(ummessage,*) cmessage",
-                                 "    CALL umprint(ummessage,src=RoutineName)"]],
+                [
+                    "replace",
+                    91,
+                    [
+                        "    WRITE(ummessage,*) cmessage",
+                        "    CALL umprint(ummessage,src=RoutineName)",
+                    ],
+                ],
             ],
             1,
             {
@@ -846,8 +851,14 @@ def test_r3_12_0_write_using_defaults(
         ),
         (
             [
-                ["replace", 91, ["    WRITE(ummessage,'(A)') cmessage",
-                                 "    CALL umprint(ummessage,src=RoutineName)"]],
+                [
+                    "replace",
+                    91,
+                    [
+                        "    WRITE(ummessage,'(A)') cmessage",
+                        "    CALL umprint(ummessage,src=RoutineName)",
+                    ],
+                ],
             ],
             0,
             {},
@@ -875,4 +886,3 @@ def test_r3_12_3_no_write_using_default_format(
         assert len(lines_list) == len(expected_errors[error])
     assert len(errors) == len(expected_errors)
     assert failure_count == expected_result
-
