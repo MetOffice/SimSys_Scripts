@@ -127,31 +127,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def go_to_other_than_9999(self, lines: list[str]) -> TestResult:
-        """Check for GO TO statements other than 9999"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            clean_line = self.remove_quoted(line)
-            clean_line = self.comment_line.sub("", clean_line).strip()
-
-            if match := re.search(r"\bGO\s*TO\s+(\d+)", clean_line, re.IGNORECASE):
-                label = match.group(1)
-                if label != "9999":
-                    failures += 1
-                    error_log = self.add_error_log(
-                        error_log, f"GO TO {label}", count + 1
-                    )
-        output = f"Checked {count + 1} lines, found {failures} failures."
-        return TestResult(
-            checker_name="GO TO other than 9999",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=output,
-            errors=error_log,
-        )
-
     def write_using_default_format(self, lines: list[str]) -> TestResult:
         """Check for WRITE without format"""
         failures = 0

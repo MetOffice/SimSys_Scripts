@@ -77,33 +77,6 @@ def test_openmp_sentinels_in_column_one(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-go_to_other_than_9999_parameters = [
-    (
-        ["      GO TO 1000", "      GO TO 2000"],
-        2,
-        "All GO TO statements to labels other than 9999",
-    ),
-    (
-        ["      GO TO 9999", "      GO TO 2000"],
-        1,
-        "One GO TO statement to label other than 9999",
-    ),
-    (["      GO TO 9999", "      GO TO 9999"], 0, "All GO TO statements to label 9999"),
-    (["      PRINT *, 'Hello, World!'", "      i = i + 1"], 0, "No GO TO statements"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in go_to_other_than_9999_parameters],
-    ids=[data[2] for data in go_to_other_than_9999_parameters],
-)
-def test_go_to_other_than_9999(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.go_to_other_than_9999(lines)
-    assert result.failure_count == expected_result
-
-
 write_using_default_format_parameters = [
     (["      WRITE(*,*) 'Hello, World!'"], 1, "WRITE using default format"),
     (["      WRITE(6,*) 'Hello, World!'"], 0, "WRITE using correct format"),

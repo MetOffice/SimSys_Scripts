@@ -576,4 +576,5 @@ list_O_tests = [
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
+    r3_9_11_no_gotos,
 ]
