@@ -539,7 +539,55 @@ TODO : Copy in the rules from section 3.11 and add the appropriate tests.
 
 3.12 Formatting and output of text :
 TODO : Copy in the rules from section 3.12 and add the appropriate tests.
+"""
 
+
+def r3_12_0_write_using_defaults(lines: list[str]) -> TestResult:
+    """Check for WRITE statement without format"""
+    failures = 0
+    error_log = {}
+    write_statement = re.compile(r"\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)", re.IGNORECASE)
+    count = -1
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if write_statement.search(clean_line):
+            failures += 1
+            error_log = add_error_log(error_log, "WRITE(*,*) found", count)
+    output = f"Checked {count} lines, found {failures} failures."
+    return TestResult(
+        checker_name="WRITE using default format",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=output,
+        errors=error_log,
+    )
+
+
+def r3_12_3_no_write_using_default_format(lines: list[str]) -> TestResult:
+    """Check for WRITE statement without format"""
+    failures = 0
+    error_log = {}
+    write_statement = re.compile(r"\bWRITE\s*\(\s*\w+\s*,\s*\*\s*\)",
+                                 re.IGNORECASE)
+    count = -1
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if write_statement.search(clean_line):
+            failures += 1
+            error_log = add_error_log(error_log, "WRITE(<variable>,*) found", count)
+    output = f"Checked {count} lines, found {failures} failures."
+    return TestResult(
+        checker_name="WRITE using default format",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=output,
+        errors=error_log,
+    )
+
+
+"""
 3.13 PrintStatus :
 TODO : Copy in the rules from section 3.13 and add the appropriate tests.
 
@@ -577,4 +625,6 @@ list_O_tests = [
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
     r3_9_11_no_gotos,
+    r3_12_0_write_using_defaults,
+    r3_12_3_no_write_using_default_format,
 ]

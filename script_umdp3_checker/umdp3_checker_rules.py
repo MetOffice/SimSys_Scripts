@@ -127,27 +127,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    def write_using_default_format(self, lines: list[str]) -> TestResult:
-        """Check for WRITE without format"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r"!.*$", "", clean_line)
-
-            if re.search(r"\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)", clean_line, re.IGNORECASE):
-                failures += 1
-                error_log = self.add_error_log(error_log, "WRITE(*,*) found", count + 1)
-        output = f"Checked {count + 1} lines, found {failures} failures."
-        return TestResult(
-            checker_name="WRITE using default format",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=output,
-            errors=error_log,
-        )
-
     def dimension_forbidden(self, lines: list[str]) -> TestResult:
         """Check for use of dimension attribute"""
         failures = 0

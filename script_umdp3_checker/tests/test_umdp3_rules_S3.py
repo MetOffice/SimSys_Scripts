@@ -13,6 +13,8 @@ import pytest  # type: ignore
 
 from ..umdp3_rules_S3 import (
     concatenate_lines,
+    r3_12_0_write_using_defaults,
+    r3_12_3_no_write_using_default_format,
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
     r3_3_2_line_too_long,
@@ -779,3 +781,98 @@ def test_r3_9_11_no_gotos(
         assert len(lines_list) == len(expected_errors[error])
     assert len(errors) == len(expected_errors)
     assert failure_count == expected_result
+
+# =================================================================
+
+
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 91, ["    WRITE(*,*) cmessage"]],
+            ],
+            1,
+            {
+                "WRITE(*,*) found": [91],
+            },
+        ),
+        (
+            [
+                ["replace", 91, ["    CALL umprint(cmessage,src=RoutineName)"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad Write Statement",
+        "1 Acceptable Write Statement",
+        "No Bad Write Statements",
+    ],
+)
+def test_r3_12_0_write_using_defaults(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_12_0_write_using_defaults(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+# =================================================================
+
+
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 91, ["    WRITE(ummessage,*) cmessage",
+                                 "    CALL umprint(ummessage,src=RoutineName)"]],
+            ],
+            1,
+            {
+                "WRITE(<variable>,*) found": [91],
+            },
+        ),
+        (
+            [
+                ["replace", 91, ["    WRITE(ummessage,'(A)') cmessage",
+                                 "    CALL umprint(ummessage,src=RoutineName)"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad Write Statement",
+        "1 Acceptable Write Statement",
+        "No Bad Write Statements",
+    ],
+)
+def test_r3_12_3_no_write_using_default_format(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_12_3_no_write_using_default_format(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+

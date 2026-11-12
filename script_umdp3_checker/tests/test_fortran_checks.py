@@ -77,25 +77,6 @@ def test_openmp_sentinels_in_column_one(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-write_using_default_format_parameters = [
-    (["      WRITE(*,*) 'Hello, World!'"], 1, "WRITE using default format"),
-    (["      WRITE(6,*) 'Hello, World!'"], 0, "WRITE using correct format"),
-    (["      PRINT *, 'Hello, World!'"], 0, "PRINT statement"),
-    (["      i = i + 1"], 0, "No WRITE statements"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in write_using_default_format_parameters],
-    ids=[data[2] for data in write_using_default_format_parameters],
-)
-def test_write_using_default_format(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.write_using_default_format(lines)
-    assert result.failure_count == expected_result
-
-
 test_dimension_forbidden_parameters = [
     (["REAL :: array(ARR_LEN)"], 0, "Dimension specified in variable declaration"),
     (["REAL :: array"], 0, "No dimension specified in variable declaration"),
