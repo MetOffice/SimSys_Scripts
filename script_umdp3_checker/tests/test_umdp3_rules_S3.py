@@ -787,6 +787,7 @@ def test_r3_4_4_no_naked_ends(
 
 # =================================================================
 
+
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [

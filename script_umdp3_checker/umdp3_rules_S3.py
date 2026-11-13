@@ -481,9 +481,7 @@ def r3_4_4_no_naked_ends(lines: list[str]) -> TestResult:
         if end_statement.search(clean_line):
             if not end_label.search(clean_line):
                 failures += 1
-                error_log = add_error_log(
-                    error_log, "Found naked END statement", count
-                )
+                error_log = add_error_log(error_log, "Found naked END statement", count)
     return TestResult(
         checker_name="Test 4.4 No Naked END Statements",
         failure_count=failures,
