@@ -4,20 +4,21 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-import subprocess
-from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Callable, List, Set, Optional
-from dataclasses import dataclass, field
 import argparse
+import concurrent.futures
+import subprocess
+import sys
+from abc import ABC, abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from pathlib import Path
+
 from checker_dispatch_tables import CheckerDispatchTables
 from umdp3_checker_rules import TestResult
 from umdp3_rules_S3 import list_O_tests
-import concurrent.futures
 
 # Add custom modules to Python path if needed
 # Add the repository root to access fcm_bdiff and git_bdiff packages
-import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -48,26 +49,23 @@ class CheckResult:
     file_path: str = "No file provided"
     tests_failed: int = 0
     all_passed: bool = False
-    test_results: List[TestResult] = field(default_factory=list)
+    test_results: list[TestResult] = field(default_factory=list)
 
 
 class CMSSystem(ABC):
     """Abstract base class for CMS systems like git or FCM."""
 
     @abstractmethod
-    def get_changed_files(self) -> List[Path]:
+    def get_changed_files(self) -> list[Path]:
         """Get list of files changed between base_branch and branch."""
-        pass
 
     @abstractmethod
     def is_branch(self) -> bool:
         """Check if we're looking at a branch"""
-        pass
 
     @abstractmethod
     def get_branch_name(self) -> str:
         """Get the current branch name."""
-        pass
 
 
 class GitBdiffWrapper(CMSSystem):
@@ -80,7 +78,7 @@ class GitBdiffWrapper(CMSSystem):
         self.bdiff_obj = git_bdiff.GitBDiff(repo=self.repo_path)
         self.info_obj = git_bdiff.GitInfo(repo=self.repo_path)
 
-    def get_changed_files(self) -> List[Path]:
+    def get_changed_files(self) -> list[Path]:
         """Get list of files changed between base_branch and branch."""
         return [Path(f) for f in self.bdiff_obj.files()]
 
@@ -103,7 +101,7 @@ class FCMBdiffWrapper(CMSSystem):
         self.repo_path = repo_path
         self.bdiff_obj = fcm_bdiff.FCMBDiff(repo=self.repo_path)
 
-    def get_changed_files(self) -> List[Path]:
+    def get_changed_files(self) -> list[Path]:
         """Get list of files changed between base_branch and branch."""
         return [Path(f) for f in self.bdiff_obj.files()]
 
@@ -124,13 +122,13 @@ class StyleChecker:
 
     name: str
     check_functions: list[Callable]
-    files_to_check: List[Path]
+    files_to_check: list[Path]
 
     def __init__(
         self,
         name: str,
         check_functions: list[Callable],
-        changed_files: List[Path],
+        changed_files: list[Path],
     ):
         self.name = name
         self.check_functions = check_functions or []
@@ -166,9 +164,9 @@ class StyleChecker:
     def from_full_list(
         cls,
         name: str,
-        file_extensions: Set[str],
+        file_extensions: set[str],
         check_functions: list[Callable],
-        changed_files: List[Path],
+        changed_files: list[Path],
         print_volume: int = 3,
     ):
         files_to_check = (
@@ -186,8 +184,8 @@ class StyleChecker:
 
     @staticmethod
     def filter_files(
-        files: List[Path], file_extensions: Optional[Set[str]] = None
-    ) -> List[Path]:
+        files: list[Path], file_extensions: set[str] | None = None
+    ) -> list[Path]:
         """Filter files based on the checker's file extensions."""
         if not file_extensions:
             return files
@@ -197,9 +195,9 @@ class StyleChecker:
     def create_external_runners(
         cls,
         name: str,
-        commands: List[List[str]],
-        all_files: List[Path],
-        file_extensions: Set[str],
+        commands: list[list[str]],
+        all_files: list[Path],
+        file_extensions: set[str],
     ) -> "StyleChecker":
         """Create a StyleChecker instance filtering files from a full list."""
         filtered_files = cls.filter_files(all_files, file_extensions)
@@ -212,7 +210,7 @@ class StyleChecker:
 
     @staticmethod
     def create_free_runner(
-        command: List[str], external_opname: str
+        command: list[str], external_opname: str
     ) -> Callable[[Path], TestResult]:
         """Method to create a free runner function for a given external
         command with  it's checker name for output."""
@@ -221,14 +219,16 @@ class StyleChecker:
             cmd = command + [str(file_name)]
             tests_failed = 0
             try:
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, timeout=60, check=False
+                )
             except subprocess.TimeoutExpired:
                 failure_count = 1
                 passed = False
                 output = f"Checker {external_opname} timed out"
                 errors = {external_opname: "TimeoutExpired"}
                 tests_failed += 1
-            except Exception as e:
+            except (OSError, ValueError) as e:
                 failure_count = 1
                 passed = False
                 output = str(e)
@@ -278,13 +278,13 @@ class Check_Runner(StyleChecker):
 class ConformanceChecker:
     """Main framework for running style checks in parallel."""
 
-    checkers: List[StyleChecker]
+    checkers: list[StyleChecker]
     max_workers: int
-    results: List[CheckResult]
+    results: list[CheckResult]
 
     def __init__(
         self,
-        checkers: List[StyleChecker],
+        checkers: list[StyleChecker],
         max_workers: int = 2,
     ):
         self.checkers = checkers
@@ -329,7 +329,6 @@ class ConformanceChecker:
                 result = future.result()
                 results.append(result)
         self.results = results
-        return
 
     def print_results(self, print_volume: int = 3, quiet_pass: bool = True) -> bool:
         """Print results and return True if all checks passed.
@@ -527,7 +526,7 @@ def which_cms_is_it(path: str, print_volume: int = 3) -> CMSSystem:
     return cms
 
 
-def detangle_file_types(file_types: Set[str]) -> Set[str]:
+def detangle_file_types(file_types: set[str]) -> set[str]:
     """Process file type arguments to handle 'group' types."""
     the_whole_world = set(ALLOWABLE_FILE_TYPES)
     the_whole_world.update(list(GROUP_FILE_TYPES.keys()))
@@ -547,8 +546,8 @@ def detangle_file_types(file_types: Set[str]) -> Set[str]:
 
 
 def create_style_checkers(
-    file_types: List[str], changed_files: List[Path], print_volume: int = 3
-) -> List[StyleChecker]:
+    file_types: list[str], changed_files: list[Path], print_volume: int = 3
+) -> list[StyleChecker]:
     """Create style checkers based on requested file types."""
     dispatch_tables = CheckerDispatchTables()
     checkers = []
@@ -604,7 +603,7 @@ def create_style_checkers(
 
 def get_files_to_check(
     path: str, full_check: bool, print_volume: int = 3
-) -> List[Path]:
+) -> list[Path]:
     """
     Docstring for get_files_to_check : A routine to get the list of files to
     check based on the CMS or the full check override.
@@ -618,7 +617,7 @@ def get_files_to_check(
     :param print_volume: Verbosity level for printing. Default is 3.
     :type print_volume: int
     :return: List of relative file paths to check.
-    :rtype: List[Path]
+    :rtype: list[Path]
     """
     # If given a filename, assume that is all that needs checking.
     if Path(path).is_file():
@@ -690,4 +689,5 @@ if __name__ == "__main__":
     ]
     print_in_box_a(output, width=81)
 
-    exit(0 if all_passed else 1)
+    exit_code = 0 if all_passed else 1
+    sys.exit(exit_code)

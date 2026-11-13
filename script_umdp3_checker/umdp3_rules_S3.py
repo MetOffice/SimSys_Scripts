@@ -4,22 +4,27 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-"""This is the storage location for rules based on what's defined as the standard in the UMDP: 003 document. These rules are not necessarily the same as the rules defined in the UMDP: 003 document, but they are based on them. The rules in this file are used by the umdp3_checker script to check for compliance with the UMDP: 003 standard.
-For now, the document has been copied into this file as a placeholder for the rules as they appear."""
+"""This is the storage location for rules based on what's defined as the standard in
+the UMDP: 003 document. These rules are not necessarily the same as the rules defined
+in the UMDP: 003 document, but they are based on them. The rules in this file are used
+by the umdp3_checker script to check for compliance with the UMDP: 003 standard.
+For now, the document has been copied into this file as a placeholder for the rules as
+they appear."""
 
 import re
-from typing import List, Dict
-from umdp3_checker_rules import TestResult
-from fortran_keywords import fortran_keywords
 
-"""ToDo: This lot will need putting back as and when the tests that use them get imported/re-created"""
+from fortran_keywords import fortran_keywords
+from search_lists import (
+    #     obsolescent_intrinsics,
+    unseparated_keywords_list,
+    #     retired_ifdefs,
+    #     deprecated_c_identifiers,
+)
+from umdp3_checker_rules import TestResult
+
+# ToDo: This lot will need putting back as and when the tests that use them get
+# imported/re-created.
 # from fortran_keywords import fortran_keywords
-# from search_lists import (
-#     obsolescent_intrinsics,
-#     unseparated_keywords_list,
-#     retired_ifdefs,
-#     deprecated_c_identifiers,
-# )
 # from dataclasses import dataclass, field
 # from script_umdp3_checker import fortran_keywords
 
@@ -28,11 +33,11 @@ cpp_command_line = re.compile(r"^#.*$")
 word_splitter = re.compile(r"\b\w+\b")
 
 
-def add_error_log(error_log: Dict, key: str = "no key", value: int = 0) -> Dict:
+def add_error_log(error_log: dict, key: str = "no key", value: int = 0) -> dict:
     """Add error information to the dictionary.
-    This adds the error statement, some are more unique than others, along with the
-    line number the error occurs on. Line number(s) are stored in a list in case the
-    same error occurs multiple times in a file."""
+    This adds the error statement, some are more unique than others, along
+    with the line number the error occurs on. Line number(s) are stored in a
+    list in case the same error occurs multiple times in a file."""
     if key not in error_log:
         error_log[key] = []
     error_log[key].append(value)
@@ -57,13 +62,15 @@ def remove_quoted(line: str) -> str:
     return result
 
 
-"""This is in case I return to the idea of replacing the quoted sections from above
-with something unique and storing them in order to put them back at some stage..."""
+"""This is in case I return to the idea of replacing the quoted sections from
+above with something unique and storing them in order to put them back at some
+stage..."""
 
 
 def create_unique_random_string(storage_set, length: int = 7) -> str:
     """Create a unique random string of a given length.
-    Creates a random string of given length and ensures it hasn't been used before."""
+    Creates a random string of given length and ensures it hasn't been used
+    before."""
     import random
     import string
 
@@ -78,19 +85,21 @@ def create_unique_random_string(storage_set, length: int = 7) -> str:
 
 def remove_comments(line: str) -> str:
     """Remove comments from the lines :
-    There is a bit of an assumption here that quoted text has already been removed, so
-    that we don't accidentally remove text after an "!" in a string."""
+    There is a bit of an assumption here that quoted text has already been
+    removed, so that we don't accidentally remove text after an "!" in a
+    string."""
     return comment_line.sub("", line).rstrip()
 
 
 def remove_cpp_commands(line: str) -> str:
     """Remove cpp commands from the lines :
-    There is a bit of an assumption here that quoted text has already been removed, so that we don't accidentally remove text after an "#" in a string.
+    There is a bit of an assumption here that quoted text has already been removed, so
+    that we don't accidentally remove text after an "#" in a string.
     Also that cpp commands have the '#' in col 1 of the line."""
     return cpp_command_line.sub("", line).rstrip()
 
 
-def concatenate_lines(lines: List[str], line_no: int) -> str:
+def concatenate_lines(lines: list[str], line_no: int) -> str:
     """Concatenate the continuation lines into a single string"""
     # Find first line and check for continuation character.
     line = lines[line_no - 1]
@@ -116,7 +125,7 @@ def concatenate_lines(lines: List[str], line_no: int) -> str:
 
 
 def r3_1_1_there_can_be_only_one(
-    lines: List[str],
+    lines: list[str],
 ) -> TestResult:  # ..one programming unit in a file, that is.
     """Check for multiple program units in a file:
     Given that a MODULE or a PROGRAM can contain multiples of the other program units,
@@ -124,7 +133,7 @@ def r3_1_1_there_can_be_only_one(
     program_unit_keywords = {"PROGRAM", "MODULE", "SUBROUTINE", "FUNCTION"}
 
     # unsure if  "TYPE" should be included.
-    def find_first(lines: List[str]) -> tuple[bool, str]:
+    def find_first(lines: list[str]) -> tuple[bool, str]:
         for line in lines:
             executable_line = remove_comments(line).strip()
             executable_line = remove_cpp_commands(executable_line).strip()
@@ -138,12 +147,14 @@ def r3_1_1_there_can_be_only_one(
                     return (True, f"{unit_type} {unit_name}")
             return (
                 False,
-                "First executable line doesn't define an accepted programming unit"
-                f" : {line}",
+                (
+                    "First executable line doesn't define an accepted programming unit"
+                    f" : {line}"
+                ),
             )
         return (False, "No program unit found.")
 
-    def find_last(lines: List[str], unit_type: str, unit_name: str) -> tuple[bool, str]:
+    def find_last(lines: list[str], unit_type: str, unit_name: str) -> tuple[bool, str]:
         for line in reversed(lines):
             executable_line = remove_comments(line).strip()
             executable_line = remove_cpp_commands(executable_line).strip()
@@ -156,13 +167,18 @@ def r3_1_1_there_can_be_only_one(
                 else:
                     return (
                         False,
-                        "END statement found for a different program unit: "
-                        f"should be {unit_name} got {unit_name_search.group(1)}.",
+                        (
+                            "END statement found for a different program unit: "
+                            f"should be {unit_name} got {unit_name_search.group(1)}."
+                        ),
                     )
             else:
                 return (
                     False,
-                    "Last executable line not a matching END statement for the first program unit found.",
+                    (
+                        "Last executable line not a matching END statement "
+                        "for the first program unit found."
+                    ),
                 )
         return (False, "No matching END statement found for the first program unit.")
 
@@ -181,7 +197,7 @@ def r3_1_1_there_can_be_only_one(
             failure_count = 1
             error_log = add_error_log({}, last_result, 0)
     return TestResult(
-        checker_name="Test 3.1 Only One Program Unit",
+        checker_name="Test 1.1 Only One Program Unit",
         failure_count=failure_count,
         passed=found_first and found_last,
         output="Checked for multiple program units.",
@@ -193,25 +209,35 @@ def r3_1_1_there_can_be_only_one(
 * TODO: Modules may be used to group related variables, subroutines and functions.
         - Really unsure as to how to test that's what they're doing...
 * TODO: Each separate file within the source tree should be uniquely named.
-        - Not sure that's possible/easy within the current framework to process one file at a time...
+        - Not sure that's possible/easy within the current framework to process one
+        file at a time...
 * TODO: The name of the file should reflect the name of the programming unit.
-* TODO: Multiple versions of the same file should be named filename-#ver where #ver is the section/version number (e.g. 1a,2a,2b. . . ).
-* TODO: You should avoid naming your program units and variables with names that match an intrinsic FUNCTION, SUBROUTINE or MODULE. We recommend the use of unique names within a program unit.
-* TODO: You should also avoid naming your program units and variables with names that match a keyword in a Fortran statement.
-* TODO: Avoid giving program units names that are likely to be used as variable names elsewhere in the code, e.g. field or string. This makes searching the code difficult and can cause the code browser to make erroneous connections between unrelated routines.
-* TODO: Subroutines should be kept reasonably short, where appropriate, say up to about 100 lines of executable code, but don’t forget there are start up overheads involved in calling an external subroutine so they should do a reasonable amount of work
+* TODO: Multiple versions of the same file should be named filename-#ver where #ver is
+the section/version number (e.g. 1a,2a,2b. . . ).
+* TODO: You should avoid naming your program units and variables with names that match
+an intrinsic FUNCTION, SUBROUTINE or MODULE. We recommend the use of unique names
+within a program unit.
+* TODO: You should also avoid naming your program units and variables with names that
+match a keyword in a Fortran statement.
+* TODO: Avoid giving program units names that are likely to be used as variable names
+elsewhere in the code, e.g. field or string. This makes searching the code difficult
+and can cause the code browser to make erroneous connections between unrelated routines.
+* TODO: Subroutines should be kept reasonably short, where appropriate, say up to about
+100 lines of executable code, but don’t forget there are start up overheads involved in
+calling an external subroutine so they should do a reasonable amount of work
 """
 
 """3.2 Headers
 * All programming units require a suitable copyright header."""
 
 
-def r3_2_1_check_crown_copyright(lines: List[str]) -> TestResult:
+def r3_2_1_check_crown_copyright(lines: list[str]) -> TestResult:
     """Check for crown copyright statement"""
     """
-    TODO: This is a very simplistic check and will not detect many cases which break UMDP3.
-    It will pass if the word copyright appears on a commented out line. This could
-    include passing :
+    TODO: This is a very simplistic check and will not detect many cases which
+    break UMDP3.
+    It will pass if the word copyright appears on a commented out line. This
+    could include passing :
     ! I should put a copyright statement here...
 
     I suspect the Perl Predeccessor
@@ -237,27 +263,35 @@ def r3_2_1_check_crown_copyright(lines: List[str]) -> TestResult:
 
 
 """
-* TODO: Headers are an immensely important part of any code as they document what it does, and how it does it.
-* TODO: The description of the MODULE and its contained SUBROUTINE may be the same and thus it need not berepeated in the latter. If a MODULE contains more than one subroutine then further descriptions are required.
-* TODO: History comments should not be included in the header or routine code. FCM TRAC provides the history of our codes.
-* TODO: Code author names should NOT be included explicitly within the code as they quickly become out of date and are sometimes misleading. Instead we reference a single maintainable text file which is included within the UM code repository.
+* TODO: Headers are an immensely important part of any code as they document what it
+does, and how it does it.
+* TODO: The description of the MODULE and its contained SUBROUTINE may be the same and
+thus it need not berepeated in the latter. If a MODULE contains more than one
+subroutine then further descriptions are required.
+* TODO: History comments should not be included in the header or routine code. FCM TRAC
+provides the history of our codes.
+* TODO: Code author names should NOT be included explicitly within the code as they
+quickly become out of date and are sometimes misleading. Instead we reference a single
+maintainable text file which is included within the UM code repository.
 
 ! Code Owner: Please refer to the UM file CodeOwners.txt
 ! This file belongs in section: <section_name_to_be_entered>
 
-* TODO: Example UM templates are provided with the source of this document; subroutine, function and module
+* TODO: Example UM templates are provided with the source of this document; subroutine,
+function and module
 templates"""
 
 """3.3 Free source form
 * TODO: All code should be written using the free source form.
-        - Could be fun, look for 7 leading spaces regularly. Or only something in col6 and/or only nos in cols 1 to 5
+        - Could be fun, look for 7 leading spaces regularly. Or only something in col6
+        and/or only nos in cols 1 to 5
 * Please restrict code to 80 columns
     Note that CreateBC uses a limit of 100 columns, due to the nature of
     the object-orientated code.
 """
 
 
-def r3_3_2_line_too_long(lines: List[str]) -> TestResult:
+def r3_3_2_line_too_long(lines: list[str]) -> TestResult:
     """Check for lines longer than 80 characters"""
     failures = 0
     error_log = {}
@@ -277,14 +311,46 @@ def r3_3_2_line_too_long(lines: List[str]) -> TestResult:
 
 
 """
-* TODO: Never put more than one statement on a line.
-* TODO: Write your program in UK English, unless you have a very good reason for not doing so."""
+* Never put more than one statement on a line.
+"""
+
+
+def r3_3_3_one_statement_per_line(lines: list[str]) -> TestResult:
+    """Check for more than one statement on a line, by looking for the presence of ";"
+    character outside of quoted strings and comments."""
+    failures = 0
+    error_log = {}
+    count = -1
+    for count, line in enumerate(lines, 1):
+        # Remove quoted strings and comments
+        if line.lstrip(" ").startswith("!"):
+            continue
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if ";" in clean_line:
+            failures += 1
+            error_log = add_error_log(
+                error_log, "multiple statements on one line", count
+            )
+    return TestResult(
+        checker_name="Test 3.3 One Statement Per Line",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count + 1} lines, found {failures} failures.",
+        errors=error_log,
+    )
+
+
+"""
+* TODO: Write your program in UK English, unless you have a very good reason for not
+doing so."""
 
 """3.4 Fortran style
-* To improve readability, write your code using the ALL CAPS Fortran keywords approach."""
+* To improve readability, write your code using the ALL CAPS Fortran keywords approach.
+"""
 
 
-def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
+def r3_4_1_capitalised_keywords(lines: list[str]) -> TestResult:
     """Check for the presence of lowercase Fortran keywords, which are
     taken from an imported list 'fortran_keywords'."""
     failures = 0
@@ -295,7 +361,7 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
         if line.lstrip(" ").startswith("!"):
             continue
         clean_line = remove_quoted(line)
-        clean_line = comment_line.sub("", clean_line)
+        clean_line = remove_comments(clean_line)
         clean_line = remove_cpp_commands(clean_line)
         # Check for lowercase keywords
         for word in word_splitter.findall(clean_line):
@@ -321,7 +387,7 @@ def r3_4_1_capitalised_keywords(lines: List[str]) -> TestResult:
 """
 
 
-def r3_4_2_no_full_uppercase_variable_names(lines: List[str]) -> TestResult:
+def r3_4_2_no_full_uppercase_variable_names(lines: list[str]) -> TestResult:
     """Check for lowercase or CamelCase variable names only"""
     """
 TODO: This is a very simplistic check and will not detect many
@@ -366,7 +432,7 @@ TODO: This is a very simplistic check and will not detect many
                         count,
                     )
     return TestResult(
-        checker_name="No Full Uppercase variable names",
+        checker_name="Test 4.2 No Full Uppercase variable names",
         failure_count=failures,
         passed=(failures == 0),
         output=f"Checked {count} lines, found {failures} UPPERCASE variables.",
@@ -374,12 +440,58 @@ TODO: This is a very simplistic check and will not detect many
     )
 
 
+def r3_4_3_no_unseparated_keywords(lines: list[str]) -> TestResult:
+    """Check for omitted optional spaces in keywords"""
+    failures = 0
+    error_log = {}
+    count = -1
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        for kw in unseparated_keywords_list:
+            pattern = f"\\b{kw}\\b"
+            if re.search(pattern, clean_line, re.IGNORECASE):
+                failures += 1
+                error_log = add_error_log(
+                    error_log,
+                    f"unseparated keyword at line: {count}: {kw}",
+                    count,
+                )
+    return TestResult(
+        checker_name="Test 4.3 No Unseparated Keywords",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} unseparated keywords.",
+        errors=error_log,
+    )
+
+
+# * The full version of END should be used at all times,
+#   eg END SUBROUTINE <name> and END FUNCTION <name>
+def r3_4_4_no_naked_ends(lines: list[str]) -> TestResult:
+    """Check for an END which doesn't specify what it's the END of"""
+    failures = 0
+    error_log = {}
+    count = -1
+    end_statement = re.compile(r"\s*\bEND\b", re.IGNORECASE)
+    end_label = re.compile(r"\s*END\s+(\w+)", re.IGNORECASE)
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if end_statement.search(clean_line):
+            if not end_label.search(clean_line):
+                failures += 1
+                error_log = add_error_log(error_log, "Found naked END statement", count)
+    return TestResult(
+        checker_name="Test 4.4 No Naked END Statements",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} naked END statements.",
+        errors=error_log,
+    )
+
+
 """
-* TODO: To improve readability, you should always use the optional space to separate
-        the Fortran keywords.
-        This rule also applies to OpenMP keywords. (See: 3.15)
-* TODO: The full version of END should be used at all times,
-        eg END SUBROUTINE <name> and END FUNCTION <name>
 * TODO: New code should be written using Fortran 95/2003 features. Avoid non-portable
         vendor/compiler extensions.
 * TODO: When writing a REAL literal with an integer value, put a 0 after the decimal
@@ -414,7 +526,35 @@ TODO : Copy in the rules from section 3.8 and add the appropriate tests.
 
 3.9 Code IF blocks, DO LOOPs, and other constructs :
 TODO : Copy in the rules from section 3.9 and add the appropriate tests.
+"""
 
+
+def r3_9_11_no_gotos(lines: list[str]) -> TestResult:
+    """Check for GoTO Statements accepting those which GOTO 9999"""
+    failures = 0
+    error_log = {}
+    count = -1
+    goto_statement = re.compile(r"\bGO\s*TO\s+(\d+)", re.IGNORECASE)
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if match := goto_statement.search(clean_line):
+            label = match.group(1)
+            if label != "9999":
+                failures += 1
+                error_log = add_error_log(
+                    error_log, f"Found bad GOTO statement : GO TO {label}", count
+                )
+    return TestResult(
+        checker_name="Test 9.11 No GOTO Statements",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} bad GOTO statements.",
+        errors=error_log,
+    )
+
+
+"""
 3.10 Line continuation :
 TODO : Copy in the rules from section 3.10 and add the appropriate tests.
 
@@ -422,14 +562,146 @@ TODO : Copy in the rules from section 3.10 and add the appropriate tests.
 TODO : Copy in the rules from section 3.11 and add the appropriate tests.
 
 3.12 Formatting and output of text :
+Writing output to the “stdout” stream, commonly unit 6 in fortran must use the provided
+API, which is accesible
+by including USE umPrintMgr in the calling code.
+• Single string output should be written as
+CALL umprint(’Hello’,src=’routine_name’)
+where ‘routine name’ is the name of the current subroutine or function. Routines which
+implement DrHook
+(section 3.14) will already have a PARAMETER ‘RoutineName’ which can be used for this
+purpose.
+• Multi-component output must first be written to an internal file via WRITE statement.
+The umPrintMgr
+module provides a convenient string for this purpose; umMessage, though you may use
+your own.
+WRITE (ummessage,’(A,I0,A)’) ’I am ’, age, ’ years old’
+CALL umprint(ummessage,src=’routine_name’)
+• Avoid the use of WRITE (ummessage,*)
+• Always add formatting information to your write statements. It is important to ensure
+that the output
+message fits within the space given. Some compilers will pad unformatted values with
+leading blanks,
+which can greatly increase the width of any output. Writes to internal files may cause
+the program to abort
+if the message is longer than the string provided.
+• Use dynamic-width edit descriptors where possible, to avoid truncating strings or
+failing to print integer or
+real values correctly:
+– Use A for character input and output, rather than e.g. A7.
+– Use I0 for integer output, rather than e.g. I3.
+– Use F0.n for real output, rather than e.g. F14.n. Other real edit descriptors such as
+E, EN and ES can
+also be used but do not accept a 0 field width.
+This is particularly important in any routine where missing data indicators may be
+present, which will
+typically require a much larger width than other data.
+• The character variable newline (from the umPrintmgr module) is recognised as a
+newline if embedded in
+the string passed to umPrint.
+• The total line length should not exceed 80 characters. Use newline or separate calls
+to umprint to keep
+long messages easily readable.
+• CHARACTER values should not contain vertical space, nor should edit descriptors be
+used for carriage
+control. Use newline to control vertical space:
+WRITE(ummessage, ’(A)’) newline // ’This should stand out.’ // newline
+CALL umprint(ummessage,src=’routine_name’)
+• Calls to umPrint should be protected by a suitable setting of the PrintStatus
+variable, see 3.13 either with
+conditional logic or an additional level argument,
+CALL umprint(ummessage,src=’routine_name’,level=PrOper)
+• If your output is not required from each processor protect the umPrint either with
+logic, or an additional pe
+argument, for example,
+! We’ll only output at diagnostic level on pe0
+CALL umprint(ummessage,src=’routine_name’,level=PrDiag,pe=0)
+• Never use a FORMAT statement: they require the use of labels, and obscure the meaning
+of the I/O state-
+ment. The formatting information can be placed explicitly within the READ, WRITE or
+PRINT statement, or
+be assigned to a CHARACTER variable in a PARAMETER statement in the header of the
+routine for later use
+in I/O statements. Never place output text within the format specifier: i.e. only
+format information may be
+placed within the FMT= part of an I/O statement, all variables and literals, including
+any character literals,
+must be ’arguments’ of the I/O routine itself. This improves readability by clearly
+separating what is to be
+read/written from how to read/write it.
+Common practice
+WRITE(Cmessage, &
+& ‘("Cannot run with decomposition ",I3," x ",I3, &
+& " (",I3,") processors. ", &
+& "Maxproc is ",I3," processors.")’) &
+& nproc_EW,nproc_NS,nproc_EW*nproc_NS,Maxproc
+Better approach
+WRITE(cmessage,’(4(A,I0),A)’) &
+‘Cannot run with decomposition ’,nproc_ew,‘x’,nproc_ns, &
+‘(’,nproc_ew*nproc_ns,’) processors. Maxproc is ‘,maxproc, &
+‘ processors.’
+• In order to flush output buffers, the routine umprintflush should be used for
+“stdout” written via umprint
+and UM_FORT_FLUSH for data writtent to any other fortran unit. These routines abstract
+flush operations
+providing a portable interface. These are the only method of flushing that should be
+used.
 TODO : Copy in the rules from section 3.12 and add the appropriate tests.
+"""
 
+
+def r3_12_0_write_using_defaults(lines: list[str]) -> TestResult:
+    """Check for WRITE statement without format"""
+    failures = 0
+    error_log = {}
+    write_statement = re.compile(r"\bWRITE\s*\(\s*\*\s*,\s*\*\s*\)", re.IGNORECASE)
+    count = -1
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if write_statement.search(clean_line):
+            failures += 1
+            error_log = add_error_log(error_log, "WRITE(*,*) found", count)
+    output = f"Checked {count} lines, found {failures} failures."
+    return TestResult(
+        checker_name="Test 12.0 WRITE using default format",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=output,
+        errors=error_log,
+    )
+
+
+def r3_12_3_no_write_using_default_format(lines: list[str]) -> TestResult:
+    """Check for WRITE statement without format"""
+    failures = 0
+    error_log = {}
+    write_statement = re.compile(r"\bWRITE\s*\(\s*\w+\s*,\s*\*\s*\)", re.IGNORECASE)
+    count = -1
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if write_statement.search(clean_line):
+            failures += 1
+            error_log = add_error_log(error_log, "WRITE(<variable>,*) found", count)
+    output = f"Checked {count} lines, found {failures} failures."
+    return TestResult(
+        checker_name="Test 12.3 WRITE using default format",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=output,
+        errors=error_log,
+    )
+
+
+"""
 3.13 PrintStatus :
 TODO : Copy in the rules from section 3.13 and add the appropriate tests.
 
 3.14 DrHook :
 TODO : Copy in the rules from section 3.14 and add the appropriate tests.
-        I /think/ DrHook is being (possibly has been) retired, so this section of the docs needs updating and tests for the new system need to be added.
+        I /think/ DrHook is being (possibly has been) retired, so this section of the
+        docs needs updating and tests for the new system need to be added.
 
 3.15 OpenMP :
 TODO : Copy in the rules from section 3.15 and add the appropriate tests.
@@ -455,6 +727,12 @@ list_O_tests = [
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
     r3_3_2_line_too_long,
+    r3_3_3_one_statement_per_line,
+    r3_4_4_no_naked_ends,
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
+    r3_4_3_no_unseparated_keywords,
+    r3_9_11_no_gotos,
+    r3_12_0_write_using_defaults,
+    r3_12_3_no_write_using_default_format,
 ]
