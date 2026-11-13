@@ -67,9 +67,7 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
 
 
 # =================================================================
-"""First : test the helper functions in umdp3_rules_S3.py."""
-
-
+# First : test the helper functions in umdp3_rules_S3.py."""
 def test_modify_fortran_lines(example_fortran_lines):
     """TODO: Does this need to be more rigorous ?"""
     changes_list = [
@@ -139,7 +137,6 @@ def test_concatenate_lines(example_fortran_lines):
 
 
 # =================================================================
-
 """These examples hopefully demonstrate some of the complexity available...
     Setting up a test, may involve multiple changes to the demo Fortran file, hence the
     complex entries in the parametrization.
@@ -162,9 +159,8 @@ def test_concatenate_lines(example_fortran_lines):
     in the testing, or as a method in the 'TestResult' class itself?
     """
 
+
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_passed, expected_failure_count, expected_errors",
     [
@@ -239,8 +235,6 @@ def test_r3_1_1_there_can_be_only_one(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -277,8 +271,6 @@ def test_r3_2_1_check_crown_copyright(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -329,8 +321,6 @@ def test_r3_3_2_line_too_long(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -387,8 +377,6 @@ def test_3_3_3_one_statement_per_line(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -440,8 +428,6 @@ def test_r3_4_1_capitalised_keywords(
 
 
 # =================================================================
-
-
 # See if you can spot why I hate ruff - it highlights my awful
 # data structures really well.
 @pytest.mark.parametrize(
@@ -680,8 +666,6 @@ def test_r3_4_2_no_full_uppercase_variable_names(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -735,8 +719,6 @@ def test_r3_4_3_no_unseparated_keywords(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -786,8 +768,6 @@ def test_r3_4_4_no_naked_ends(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -833,8 +813,6 @@ def test_r3_9_11_no_gotos(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -880,8 +858,6 @@ def test_r3_12_0_write_using_defaults(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
