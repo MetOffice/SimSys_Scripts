@@ -197,7 +197,7 @@ def r3_1_1_there_can_be_only_one(
             failure_count = 1
             error_log = add_error_log({}, last_result, 0)
     return TestResult(
-        checker_name="Test 3.1 Only One Program Unit",
+        checker_name="Test 1.1 Only One Program Unit",
         failure_count=failure_count,
         passed=found_first and found_last,
         output="Checked for multiple program units.",
@@ -432,7 +432,7 @@ TODO: This is a very simplistic check and will not detect many
                         count,
                     )
     return TestResult(
-        checker_name="No Full Uppercase variable names",
+        checker_name="Test 4.2 No Full Uppercase variable names",
         failure_count=failures,
         passed=(failures == 0),
         output=f"Checked {count} lines, found {failures} UPPERCASE variables.",
@@ -458,17 +458,42 @@ def r3_4_3_no_unseparated_keywords(lines: list[str]) -> TestResult:
                     count,
                 )
     return TestResult(
-        checker_name="No Unseparated Keywords",
+        checker_name="Test 4.3 No Unseparated Keywords",
         failure_count=failures,
         passed=(failures == 0),
-        output=f"Checked {count} lines, found {failures} UPPERCASE variables.",
+        output=f"Checked {count} lines, found {failures} unseparated keywords.",
+        errors=error_log,
+    )
+
+
+# * The full version of END should be used at all times,
+#   eg END SUBROUTINE <name> and END FUNCTION <name>
+def r3_4_4_no_naked_ends(lines: list[str]) -> TestResult:
+    """Check for an END which doesn't specify what it's the END of"""
+    failures = 0
+    error_log = {}
+    count = -1
+    end_statement = re.compile(r"\s*\bEND\b", re.IGNORECASE)
+    end_label = re.compile(r"\s*END\s+(\w+)", re.IGNORECASE)
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if end_statement.search(clean_line):
+            if not end_label.search(clean_line):
+                failures += 1
+                error_log = add_error_log(
+                    error_log, "Found naked END statement", count
+                )
+    return TestResult(
+        checker_name="Test 4.4 No Naked END Statements",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} naked END statements.",
         errors=error_log,
     )
 
 
 """
-* TODO: The full version of END should be used at all times,
-        eg END SUBROUTINE <name> and END FUNCTION <name>
 * TODO: New code should be written using Fortran 95/2003 features. Avoid non-portable
         vendor/compiler extensions.
 * TODO: When writing a REAL literal with an integer value, put a 0 after the decimal
@@ -523,7 +548,7 @@ def r3_9_11_no_gotos(lines: list[str]) -> TestResult:
                     error_log, f"Found bad GOTO statement : GO TO {label}", count
                 )
     return TestResult(
-        checker_name="No GOTO Statements",
+        checker_name="Test 9.11 No GOTO Statements",
         failure_count=failures,
         passed=(failures == 0),
         output=f"Checked {count} lines, found {failures} bad GOTO statements.",
@@ -539,6 +564,90 @@ TODO : Copy in the rules from section 3.10 and add the appropriate tests.
 TODO : Copy in the rules from section 3.11 and add the appropriate tests.
 
 3.12 Formatting and output of text :
+Writing output to the “stdout” stream, commonly unit 6 in fortran must use the provided
+API, which is accesible
+by including USE umPrintMgr in the calling code.
+• Single string output should be written as
+CALL umprint(’Hello’,src=’routine_name’)
+where ‘routine name’ is the name of the current subroutine or function. Routines which
+implement DrHook
+(section 3.14) will already have a PARAMETER ‘RoutineName’ which can be used for this
+purpose.
+• Multi-component output must first be written to an internal file via WRITE statement.
+The umPrintMgr
+module provides a convenient string for this purpose; umMessage, though you may use
+your own.
+WRITE (ummessage,’(A,I0,A)’) ’I am ’, age, ’ years old’
+CALL umprint(ummessage,src=’routine_name’)
+• Avoid the use of WRITE (ummessage,*)
+• Always add formatting information to your write statements. It is important to ensure
+that the output
+message fits within the space given. Some compilers will pad unformatted values with
+leading blanks,
+which can greatly increase the width of any output. Writes to internal files may cause
+the program to abort
+if the message is longer than the string provided.
+• Use dynamic-width edit descriptors where possible, to avoid truncating strings or
+failing to print integer or
+real values correctly:
+– Use A for character input and output, rather than e.g. A7.
+– Use I0 for integer output, rather than e.g. I3.
+– Use F0.n for real output, rather than e.g. F14.n. Other real edit descriptors such as
+E, EN and ES can
+also be used but do not accept a 0 field width.
+This is particularly important in any routine where missing data indicators may be
+present, which will
+typically require a much larger width than other data.
+• The character variable newline (from the umPrintmgr module) is recognised as a
+newline if embedded in
+the string passed to umPrint.
+• The total line length should not exceed 80 characters. Use newline or separate calls
+to umprint to keep
+long messages easily readable.
+• CHARACTER values should not contain vertical space, nor should edit descriptors be
+used for carriage
+control. Use newline to control vertical space:
+WRITE(ummessage, ’(A)’) newline // ’This should stand out.’ // newline
+CALL umprint(ummessage,src=’routine_name’)
+• Calls to umPrint should be protected by a suitable setting of the PrintStatus
+variable, see 3.13 either with
+conditional logic or an additional level argument,
+CALL umprint(ummessage,src=’routine_name’,level=PrOper)
+• If your output is not required from each processor protect the umPrint either with
+logic, or an additional pe
+argument, for example,
+! We’ll only output at diagnostic level on pe0
+CALL umprint(ummessage,src=’routine_name’,level=PrDiag,pe=0)
+• Never use a FORMAT statement: they require the use of labels, and obscure the meaning
+of the I/O state-
+ment. The formatting information can be placed explicitly within the READ, WRITE or
+PRINT statement, or
+be assigned to a CHARACTER variable in a PARAMETER statement in the header of the
+routine for later use
+in I/O statements. Never place output text within the format specifier: i.e. only
+format information may be
+placed within the FMT= part of an I/O statement, all variables and literals, including
+any character literals,
+must be ’arguments’ of the I/O routine itself. This improves readability by clearly
+separating what is to be
+read/written from how to read/write it.
+Common practice
+WRITE(Cmessage, &
+& ‘("Cannot run with decomposition ",I3," x ",I3, &
+& " (",I3,") processors. ", &
+& "Maxproc is ",I3," processors.")’) &
+& nproc_EW,nproc_NS,nproc_EW*nproc_NS,Maxproc
+Better approach
+WRITE(cmessage,’(4(A,I0),A)’) &
+‘Cannot run with decomposition ’,nproc_ew,‘x’,nproc_ns, &
+‘(’,nproc_ew*nproc_ns,’) processors. Maxproc is ‘,maxproc, &
+‘ processors.’
+• In order to flush output buffers, the routine umprintflush should be used for
+“stdout” written via umprint
+and UM_FORT_FLUSH for data writtent to any other fortran unit. These routines abstract
+flush operations
+providing a portable interface. These are the only method of flushing that should be
+used.
 TODO : Copy in the rules from section 3.12 and add the appropriate tests.
 """
 
@@ -557,7 +666,7 @@ def r3_12_0_write_using_defaults(lines: list[str]) -> TestResult:
             error_log = add_error_log(error_log, "WRITE(*,*) found", count)
     output = f"Checked {count} lines, found {failures} failures."
     return TestResult(
-        checker_name="WRITE using default format",
+        checker_name="Test 12.0 WRITE using default format",
         failure_count=failures,
         passed=(failures == 0),
         output=output,
@@ -579,7 +688,7 @@ def r3_12_3_no_write_using_default_format(lines: list[str]) -> TestResult:
             error_log = add_error_log(error_log, "WRITE(<variable>,*) found", count)
     output = f"Checked {count} lines, found {failures} failures."
     return TestResult(
-        checker_name="WRITE using default format",
+        checker_name="Test 12.3 WRITE using default format",
         failure_count=failures,
         passed=(failures == 0),
         output=output,
@@ -621,6 +730,7 @@ list_O_tests = [
     r3_2_1_check_crown_copyright,
     r3_3_2_line_too_long,
     r3_3_3_one_statement_per_line,
+    r3_4_4_no_naked_ends,
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
