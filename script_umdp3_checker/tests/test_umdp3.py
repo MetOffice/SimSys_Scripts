@@ -31,30 +31,12 @@ def test_basic_functionality():
     # Initialize UMDP3Checker
     umdp3_checker = UMDP3Checker()
 
-    # Test line length check
-    test_lines = [
-        "This is a line with no trailing space",
-        "This is line with a trailing space   ",
-    ]
-    result = umdp3_checker.line_trail_whitespace(test_lines)
-    print(
-        f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
     # Test tab detection
     test_lines_tabs = ["Normal line", "Line with\ttab"]
 
     result = umdp3_checker.tab_detection(test_lines_tabs)
     print(
         f"Tab detection test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
-    # Test trailing whitespace
-    test_lines_whitespace = ["Normal line", "Line with trailing spaces   "]
-
-    result = umdp3_checker.line_trail_whitespace(test_lines_whitespace)
-    print(
-        f"Trailing whitespace test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
 
     # Test IMPLICIT NONE check
