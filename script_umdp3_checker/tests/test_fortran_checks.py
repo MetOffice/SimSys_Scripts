@@ -533,4 +533,3 @@ def test_array_init_form(lines, expected_result):
     checker = UMDP3Checker()
     result = checker.array_init_form(lines)
     assert result.failure_count == expected_result
-
