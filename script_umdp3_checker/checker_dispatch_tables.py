@@ -36,7 +36,6 @@ class CheckerDispatchTables:
             self.umdp3_checker.ampersand_continuation,
             self.umdp3_checker.forbidden_keywords,
             self.umdp3_checker.forbidden_operators,
-            self.umdp3_checker.tab_detection,
             self.umdp3_checker.printstatus_mod,
             self.umdp3_checker.printstar,
             self.umdp3_checker.write6,
@@ -65,7 +64,6 @@ class CheckerDispatchTables:
     def get_diff_dispatch_table_c(self) -> list[Callable]:
         """Get dispatch table for C diff tests"""
         return [
-            self.umdp3_checker.tab_detection,
             self.umdp3_checker.c_integral_format_specifiers,
         ]
 

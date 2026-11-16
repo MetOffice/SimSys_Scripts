@@ -173,23 +173,6 @@ def test_forbidden_operators(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-test_tab_detection_parameters = [
-    (["  PRINT *, 'This line has no tabs'"], 0, "No tabs"),
-    (["  PRINT *, 'This line has a tab\tcharacter'"], 1, "Line with tab character"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_tab_detection_parameters],
-    ids=[data[2] for data in test_tab_detection_parameters],
-)
-def test_tab_detection(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.tab_detection(lines)
-    assert result.failure_count == expected_result
-
-
 test_printstatus_mod_parameters = [
     (["  USE PrintStatus_mod"], 1, "Use of PRINTSTATUS_Mod"),
     (["  USE umPrintMgr_mod"], 0, "Use of umPrintMgr_Mod"),

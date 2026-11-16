@@ -532,7 +532,30 @@ def r3_4_4_no_naked_ends(lines: list[str]) -> TestResult:
         be protected by a platform specific CPP flag 3.17
 3.5 Comments and white spacing :
 TODO : Copy in the rules from section 3.5 and add the appropriate tests.
+"""
 
+
+# Tab detection
+def r3_5_4_no_tab_characters(lines: list[str]) -> TestResult:
+    """Check for tab characters"""
+    failures = 0
+    error_log = {}
+    count = -1
+    for count, line in enumerate(lines):
+        if "\t" in line:
+            failures += 1
+            error_log = add_error_log(error_log, "tab character found", count)
+
+    return TestResult(
+        checker_name="Test 9.11 No tab characters",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines for Tabs, found {failures} failures.",
+        errors=error_log,
+    )
+
+
+"""
 3.6 The use of modules :
 TODO : Copy in the rules from section 3.6 and add the appropriate tests.
 
@@ -751,6 +774,7 @@ list_O_tests = [
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
+    r3_5_4_no_tab_characters,
     r3_9_11_no_gotos,
     r3_12_0_write_using_defaults,
     r3_12_3_no_write_using_default_format,

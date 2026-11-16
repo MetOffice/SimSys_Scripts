@@ -24,6 +24,7 @@ from ..umdp3_rules_S3 import (
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
     r3_4_4_no_naked_ends,
+    r3_5_4_no_tab_characters,
     r3_9_11_no_gotos,
     remove_comments,
     remove_quoted,
@@ -797,6 +798,39 @@ def test_r3_4_4_no_naked_ends(
     result = r3_4_4_no_naked_ends(modified_fortran_lines)
     failure_count = result.failure_count
     assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 57, ["INTEGER :: j \t! Loop counter "]],
+                ["replace", 87, ["\ticode = -100 ! set up WARNING message"]],
+                ["replace", 112, ["\t\toutput(i, j) = (input1(i, j) * input2(i, j))"]],
+            ],
+            3,
+            {"tab character found": [56, 86, 111]},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=["3 Tab Characters", "No Tab Characters"],
+)
+def test_r3_5_4_no_tab_characters(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_5_4_no_tab_characters(modified_fortran_lines)
+    failure_count = result.failure_count
     errors = result.errors
     for error, lines_list in errors.items():
         assert error in expected_errors

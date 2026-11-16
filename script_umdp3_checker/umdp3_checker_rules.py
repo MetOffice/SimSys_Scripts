@@ -228,27 +228,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    # 5.4
-    def tab_detection(self, lines: list[str]) -> TestResult:
-        """Check for tab characters"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            if "\t" in line:
-                failures += 1
-                error_log = self.add_error_log(
-                    error_log, "tab character found", count + 1
-                )
-
-        return TestResult(
-            checker_name="Line includes tab character",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
     # 12.x seems to contradict this....
     def printstatus_mod(self, lines: list[str]) -> TestResult:
         """Check for use of printstatus_mod instead of umPrintMgr"""

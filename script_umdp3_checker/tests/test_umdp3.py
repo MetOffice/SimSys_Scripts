@@ -31,14 +31,6 @@ def test_basic_functionality():
     # Initialize UMDP3Checker
     umdp3_checker = UMDP3Checker()
 
-    # Test tab detection
-    test_lines_tabs = ["Normal line", "Line with\ttab"]
-
-    result = umdp3_checker.tab_detection(test_lines_tabs)
-    print(
-        f"Tab detection test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
     # Test IMPLICIT NONE check
     fortran_without_implicit = ["PROGRAM test", "INTEGER :: i", "END PROGRAM"]
 
