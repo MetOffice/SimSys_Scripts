@@ -128,7 +128,7 @@ def r3_0_0_no_trailing_whitespace(lines: list[str]) -> TestResult:
     """Check for trailing whitespace"""
     failures = 0
     error_log = {}
-    for count, line in enumerate(lines):
+    for count, line in enumerate(lines, 1):
         if re.search(r"\s+$", line):
             failures += 1
             error_log = add_error_log(error_log, "trailing whitespace", count)
@@ -374,7 +374,7 @@ def r3_4_1_capitalised_keywords(lines: list[str]) -> TestResult:
     failures = 0
     error_log = {}
     count = -1
-    for count, line in enumerate(lines):
+    for count, line in enumerate(lines, 1):
         # Remove quoted strings and comments
         if line.lstrip(" ").startswith("!"):
             continue
@@ -387,7 +387,7 @@ def r3_4_1_capitalised_keywords(lines: list[str]) -> TestResult:
             if upcase in fortran_keywords and word != upcase:
                 failures += 1
                 error_log = add_error_log(
-                    error_log, f"lowercase keyword: {word}", count + 1
+                    error_log, f"lowercase keyword: {word}", count
                 )
 
     return TestResult(
@@ -541,7 +541,7 @@ def r3_5_4_no_tab_characters(lines: list[str]) -> TestResult:
     failures = 0
     error_log = {}
     count = -1
-    for count, line in enumerate(lines):
+    for count, line in enumerate(lines, 1):
         if "\t" in line:
             failures += 1
             error_log = add_error_log(error_log, "tab character found", count)
@@ -568,6 +568,29 @@ TODO : Copy in the rules from section 3.8 and add the appropriate tests.
 3.9 Code IF blocks, DO LOOPs, and other constructs :
 TODO : Copy in the rules from section 3.9 and add the appropriate tests.
 """
+
+
+# 9.10
+def r3_9_10_no_unlabelled_exit_statement(lines: list[str]) -> TestResult:
+    """Check that EXIT statements are labelled"""
+    failures = 0
+    error_log = {}
+    count = -1
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = re.sub(r"!.*$", "", clean_line)
+
+        if re.search(r"\bEXIT\s*$", clean_line, re.IGNORECASE):
+            failures += 1
+            error_log = add_error_log(error_log, "unlabelled EXIT statement", count)
+
+    return TestResult(
+        checker_name="Test 9.10 unlabelled EXIT statement",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count + 1} lines, found {failures} failures.",
+        errors=error_log,
+    )
 
 
 def r3_9_11_no_gotos(lines: list[str]) -> TestResult:
@@ -775,6 +798,7 @@ list_O_tests = [
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
     r3_5_4_no_tab_characters,
+    r3_9_10_no_unlabelled_exit_statement,
     r3_9_11_no_gotos,
     r3_12_0_write_using_defaults,
     r3_12_3_no_write_using_default_format,

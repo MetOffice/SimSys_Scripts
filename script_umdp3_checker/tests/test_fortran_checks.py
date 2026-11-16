@@ -343,24 +343,6 @@ def test_obsolescent_fortran_intrinsic(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-test_exit_stmt_label_parameters = [
-    (["      EXIT 10"], 0, "EXIT statement with label"),
-    (["      EXIT"], 1, "EXIT statement without label"),
-    (["      i = i + 1"], 0, "No EXIT statement"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_exit_stmt_label_parameters],
-    ids=[data[2] for data in test_exit_stmt_label_parameters],
-)
-def test_exit_stmt_label(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.exit_stmt_label(lines)
-    assert result.failure_count == expected_result
-
-
 test_intrinsic_modules_parameters = [
     (["  USE ISO_C_BINDING"], 1, "Incorrect Use of ISO_C_BINDING module"),
     (

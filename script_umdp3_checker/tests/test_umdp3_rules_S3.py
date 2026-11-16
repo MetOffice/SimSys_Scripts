@@ -25,6 +25,7 @@ from ..umdp3_rules_S3 import (
     r3_4_3_no_unseparated_keywords,
     r3_4_4_no_naked_ends,
     r3_5_4_no_tab_characters,
+    r3_9_10_no_unlabelled_exit_statement,
     r3_9_11_no_gotos,
     remove_comments,
     remove_quoted,
@@ -64,7 +65,7 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
         else:
             raise ValueError(f"Unknown operation: {change[0]}")
         # for count, line in enumerate(lines, 1):
-        #      print(f"line [{count}]: {line}")
+        #     print(f"line [{count}]: {line}")
     return lines
 
 
@@ -179,7 +180,7 @@ def test_concatenate_lines(example_fortran_lines):
                 ["replace", 92, ["ELSE "]],
             ],
             3,
-            {"trailing whitespace": [56, 73, 91]},
+            {"trailing whitespace": [57, 74, 92]},
         ),
         ([], 0, {}),  # No changes, expect no errors
     ],
@@ -819,7 +820,7 @@ def test_r3_4_4_no_naked_ends(
                 ["replace", 112, ["\t\toutput(i, j) = (input1(i, j) * input2(i, j))"]],
             ],
             3,
-            {"tab character found": [56, 86, 111]},
+            {"tab character found": [57, 87, 112]},
         ),
         ([], 0, {}),  # No changes, expect no errors
     ],
@@ -831,6 +832,69 @@ def test_r3_5_4_no_tab_characters(
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_5_4_no_tab_characters(modified_fortran_lines)
     failure_count = result.failure_count
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 95, ["    y_len_loop DO j=1,ylen"]],
+                [
+                    "add",
+                    98,
+                    [
+                        "             IF (field(i, j) == 0) THEN",
+                        "                 EXIT",
+                        "             END IF",
+                    ],
+                ],
+            ],
+            1,
+            {
+                "unlabelled EXIT statement": [99],
+            },
+        ),
+        (
+            [
+                ["replace", 95, ["    y_len_loop DO j=1,ylen"]],
+                [
+                    "add",
+                    98,
+                    [
+                        "             IF (field(i, j) == 0) THEN",
+                        "                 EXIT y_len_loop",
+                        "             END IF",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad GOTO Statement",
+        "1 Acceptable GOTO Statement",
+        "No Bad GOTO Statements",
+    ],
+)
+def test_r3_9_10_no_unlabelled_exit_statement(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_9_10_no_unlabelled_exit_statement(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
     errors = result.errors
     for error, lines_list in errors.items():
         assert error in expected_errors

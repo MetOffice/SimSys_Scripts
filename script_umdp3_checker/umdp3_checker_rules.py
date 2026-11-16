@@ -425,30 +425,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    # 9.10
-    def exit_stmt_label(self, lines: list[str]) -> TestResult:
-        """Check that EXIT statements are labelled"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r"!.*$", "", clean_line)
-
-            if re.search(r"\bEXIT\s*$", clean_line, re.IGNORECASE):
-                failures += 1
-                error_log = self.add_error_log(
-                    error_log, "unlabelled EXIT statement", count + 1
-                )
-
-        return TestResult(
-            checker_name="unlabelled EXIT statement",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
     # Unknown
     def intrinsic_modules(self, lines: list[str]) -> TestResult:
         """Check intrinsic modules are USEd with INTRINSIC keyword"""
