@@ -624,7 +624,40 @@ TODO : Copy in the rules from section 3.10 and add the appropriate tests.
 
 3.11 Fortran I/O :
 TODO : Copy in the rules from section 3.11 and add the appropriate tests.
+"""
 
+
+# 11.x somewhere - related to READ statements?
+def r3_11_0_read_explicitly_states_unit(lines: list[str]) -> TestResult:
+    """Check READ statements have explicit UNIT= as first argument"""
+    failures = 0
+    error_log = {}
+    count = -1
+    find_read = re.compile(r"\bREAD\s*\(\s*([^,)]+)", re.IGNORECASE)
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+
+        if match := find_read.search(clean_line):
+            first_arg = match.group(1).strip()
+            if not first_arg.upper().startswith("UNIT="):
+                failures += 1
+                error_log = add_error_log(
+                    error_log, "READ without explicit UNIT=", count
+                )
+    return TestResult(
+        checker_name="Test 3.11.0 READ must explicitly state unit",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=(
+            f"Checked {count} lines for READ statements without explicit UNIT=, "
+            f"found {failures} failures."
+        ),
+        errors=error_log,
+    )
+
+
+"""
 3.12 Formatting and output of text :
 Writing output to the “stdout” stream, commonly unit 6 in fortran must use the provided
 API, which is accesible
@@ -800,6 +833,7 @@ list_O_tests = [
     r3_5_4_no_tab_characters,
     r3_9_10_no_unlabelled_exit_statement,
     r3_9_11_no_gotos,
+    r3_11_0_read_explicitly_states_unit,
     r3_12_0_write_using_defaults,
     r3_12_3_no_write_using_default_format,
 ]

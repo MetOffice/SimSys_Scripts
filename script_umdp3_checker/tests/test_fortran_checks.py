@@ -371,30 +371,6 @@ def test_intrinsic_modules(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-test_read_unit_args_parameters = [
-    (["  READ(5,*) var"], 1, "READ without explicit UNIT="),
-    (["  READ(UNIT=10) var"], 0, "READ with explicit UNIT="),
-    (
-        ["  READ(UNIT=unit_in, NML=lustre_control_custom_files) var"],
-        0,
-        "READ with UNIT=variable",
-    ),
-    (["  READ(unit_in,*) var"], 1, "READ unit as variable, no UNIT="),
-    (["  READ(*,*) var"], 1, "READ from default unit"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_read_unit_args_parameters],
-    ids=[data[2] for data in test_read_unit_args_parameters],
-)
-def test_read_unit_args(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.read_unit_args(lines)
-    assert result.failure_count == expected_result
-
-
 test_retire_if_def_parameters = [
     (["#ifdef DEBUG"], 0, "Correct Use of #ifdef"),
     (["#ifndef DEBUG"], 0, "Correct Use of #ifndef"),

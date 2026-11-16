@@ -455,32 +455,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    # 12.x somewhere - related to READ statements?
-    def read_unit_args(self, lines: list[str]) -> TestResult:
-        """Check READ statements have explicit UNIT= as first argument"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r"!.*$", "", clean_line)
-
-            if match := re.search(r"\bREAD\s*\(\s*([^,)]+)", clean_line, re.IGNORECASE):
-                first_arg = match.group(1).strip()
-                if not first_arg.upper().startswith("UNIT="):
-                    failures += 1
-                    error_log = self.add_error_log(
-                        error_log, "READ without explicit UNIT=", count + 1
-                    )
-
-        return TestResult(
-            checker_name="read unit args",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
     # Not a specific rule number, just a general check for retired if-defs
     def retire_if_def(self, lines: list[str]) -> TestResult:
         """Check for if-defs due for retirement"""
