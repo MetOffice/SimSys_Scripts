@@ -119,11 +119,29 @@ def concatenate_lines(lines: list[str], line_no: int) -> str:
     return line
 
 
-"""
-3.1 Source files should only contain a single program unit
-"""
+# -------------------------------------------------------------------------------------
+# =====================================================================================
 
 
+# 3.0 Those unwritten rules drilled into from day one...
+def r3_0_0_no_trailing_whitespace(lines: list[str]) -> TestResult:
+    """Check for trailing whitespace"""
+    failures = 0
+    error_log = {}
+    for count, line in enumerate(lines):
+        if re.search(r"\s+$", line):
+            failures += 1
+            error_log = add_error_log(error_log, "trailing whitespace", count)
+    return TestResult(
+        checker_name="Test 0.0 Trailing Whitespace",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked for trailing whitespace. Found {failures} instances",
+        errors=error_log,
+    )
+
+
+# 3.1 Source files should only contain a single program unit
 def r3_1_1_there_can_be_only_one(
     lines: list[str],
 ) -> TestResult:  # ..one programming unit in a file, that is.
@@ -724,6 +742,7 @@ TODO : Section 4 has guidelines on "specific standards".
 
 # A list, of all the tests defined above, so it can be imported easily.
 list_O_tests = [
+    r3_0_0_no_trailing_whitespace,
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
     r3_3_2_line_too_long,

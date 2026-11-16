@@ -534,26 +534,3 @@ def test_array_init_form(lines, expected_result):
     result = checker.array_init_form(lines)
     assert result.failure_count == expected_result
 
-
-test_line_trail_whitespace_parameters = [
-    (["  PRINT *, 'Hello, World!  '"], 0, "Line 1 without trailing whitespace"),
-    (["  PRINT *, 'Hello, World!'"], 0, "Line 2 without trailing whitespace"),
-    (["  PRINT *, 'Hello, World!   '  "], 1, "Line 1 with trailing whitespace"),
-    (
-        ["  something = sin(coeff /2.0_rdef) +    & "],
-        1,
-        "Line 2 with trailing whitespace",
-    ),
-    (["MODULE some_mod "], 1, "Line 3 with trailing whitespace"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_line_trail_whitespace_parameters],
-    ids=[data[2] for data in test_line_trail_whitespace_parameters],
-)
-def test_line_trail_whitespace(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.line_trail_whitespace(lines)
-    assert result.failure_count == expected_result

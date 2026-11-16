@@ -107,6 +107,7 @@ class UMDP3Checker:
         The list of lines is often assumed to be the whole file.
     """
 
+    # 15.10
     def openmp_sentinels_in_column_one(self, lines: list[str]) -> TestResult:
         """Check OpenMP sentinels are in column one"""
         failures = 0
@@ -127,6 +128,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 7.14
     def dimension_forbidden(self, lines: list[str]) -> TestResult:
         """Check for use of dimension attribute"""
         failures = 0
@@ -151,6 +153,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 10.1
     def ampersand_continuation(self, lines: list[str]) -> TestResult:
         """Check continuation lines shouldn't start with &"""
         failures = 0
@@ -171,6 +174,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 4.6,7
     def forbidden_keywords(self, lines: list[str]) -> TestResult:
         """Check for use of EQUIVALENCE or PAUSE"""
         """
@@ -197,6 +201,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 4.6,7
     def forbidden_operators(self, lines: list[str]) -> TestResult:
         """Check for older form of relational operators"""
         failures = 0
@@ -223,6 +228,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 5.4
     def tab_detection(self, lines: list[str]) -> TestResult:
         """Check for tab characters"""
         failures = 0
@@ -243,6 +249,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 12.x seems to contradict this....
     def printstatus_mod(self, lines: list[str]) -> TestResult:
         """Check for use of printstatus_mod instead of umPrintMgr"""
         failures = 0
@@ -263,6 +270,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # might be a hallucination ? mentioned in rules regarding WRITE statements
     def printstar(self, lines: list[str]) -> TestResult:
         """Check for PRINT rather than umMessage and umPrint"""
         failures = 0
@@ -284,6 +292,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 12.x somewhere - not clear...
     def write6(self, lines: list[str]) -> TestResult:
         """Check for WRITE(6) rather than umMessage and umPrint"""
         failures = 0
@@ -305,6 +314,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 12.12ish - Not explicitly this, but similar.
     def um_fort_flush(self, lines: list[str]) -> TestResult:
         """Check for um_fort_flush rather than umPrintFlush"""
         failures = 0
@@ -324,6 +334,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # Hallucination ? Are SVN keyword substitutions actually relevant to our rules?
     def svn_keyword_subst(self, lines: list[str]) -> TestResult:
         """Check for Subversion keyword substitution"""
         failures = 0
@@ -343,6 +354,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 15.2
     def omp_missing_dollar(self, lines: list[str]) -> TestResult:
         """Check for !OMP instead of !$OMP"""
         failures = 0
@@ -361,6 +373,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 6.1.3 (for 'C')
     def cpp_ifdef(self, lines: list[str]) -> TestResult:
         """Check for #ifdef/#ifndef rather than #if defined()"""
         failures = 0
@@ -381,6 +394,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 6.1.x somewhere ?
     def cpp_comment(self, lines: list[str]) -> TestResult:
         """Check for Fortran comments in CPP directives"""
         """
@@ -407,6 +421,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # Isn't this the same as further up ?
     def obsolescent_fortran_intrinsic(self, lines: list[str]) -> TestResult:
         """Check for archaic Fortran intrinsic functions"""
         failures = 0
@@ -431,6 +446,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 9.10
     def exit_stmt_label(self, lines: list[str]) -> TestResult:
         """Check that EXIT statements are labelled"""
         failures = 0
@@ -454,6 +470,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # Unknown
     def intrinsic_modules(self, lines: list[str]) -> TestResult:
         """Check intrinsic modules are USEd with INTRINSIC keyword"""
         failures = 0
@@ -483,6 +500,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 12.x somewhere - related to READ statements?
     def read_unit_args(self, lines: list[str]) -> TestResult:
         """Check READ statements have explicit UNIT= as first argument"""
         failures = 0
@@ -508,6 +526,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # Not a specific rule number, just a general check for retired if-defs
     def retire_if_def(self, lines: list[str]) -> TestResult:
         """Check for if-defs due for retirement"""
         # retired_ifdefs = ['VATPOLES', 'A12_4A', 'A12_3A', 'UM_JULES',
@@ -543,6 +562,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 7.1
     def implicit_none(self, lines: list[str]) -> TestResult:
         """Check file has at least one IMPLICIT NONE"""
         error_log = {}
@@ -565,6 +585,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 19.0
     def forbidden_stop(self, lines: list[str]) -> TestResult:
         """Check for STOP or CALL abort"""
         failures = 0
@@ -588,6 +609,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 1.3
     def intrinsic_as_variable(self, lines: list[str]) -> TestResult:
         """Check for Fortran function used as variable name"""
         failures = 0
@@ -621,6 +643,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 4.6.3 - 0 Code owner - refer to code owneres, belongs in section: Humpty's house
     def check_code_owner(self, lines: list[str]) -> TestResult:
         """Check for correct code owner comment"""
         """
@@ -649,6 +672,7 @@ class UMDP3Checker:
             errors=error_log,
         )
 
+    # 9.15
     def array_init_form(self, lines: list[str]) -> TestResult:
         """Check for old array initialization form"""
         """
@@ -671,24 +695,6 @@ class UMDP3Checker:
             failure_count=failures,
             passed=(failures == 0),
             output="Checked for old array initialization form (/ /).",
-            errors=error_log,
-        )
-
-    def line_trail_whitespace(self, lines: list[str]) -> TestResult:
-        """Check for trailing whitespace"""
-        failures = 0
-        error_log = {}
-        for count, line in enumerate(lines):
-            if re.search(r"\s+$", line):
-                failures += 1
-                error_log = self.add_error_log(
-                    error_log, "trailing whitespace", count + 1
-                )
-        return TestResult(
-            checker_name="Trailing Whitespace",
-            failure_count=failures,
-            passed=(failures == 0),
-            output="Checked for trailing whitespace.",
             errors=error_log,
         )
 

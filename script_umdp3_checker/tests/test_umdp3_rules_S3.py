@@ -13,6 +13,7 @@ import pytest  # type: ignore
 
 from ..umdp3_rules_S3 import (
     concatenate_lines,
+    r3_0_0_no_trailing_whitespace,
     r3_12_0_write_using_defaults,
     r3_12_3_no_write_using_default_format,
     r3_1_1_there_can_be_only_one,
@@ -158,6 +159,45 @@ def test_concatenate_lines(example_fortran_lines):
     object, and also make the test code more readable? If so, would its place be here
     in the testing, or as a method in the 'TestResult' class itself?
     """
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 57, ["INTEGER :: j ! Loop counter "]],
+                [
+                    "replace",
+                    74,
+                    [
+                        '    = "This is a very very very very very very very "                          & '
+                    ],
+                ],
+                ["replace", 92, ["ELSE "]],
+            ],
+            3,
+            {"trailing whitespace": [56, 73, 91]},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=["3 Trailing Spaces", "No Trailing Spaces"],
+)
+def test_r0_0_no_trailing_whitespace(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_0_0_no_trailing_whitespace(modified_fortran_lines)
+    failure_count = result.failure_count
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
 
 
 # =================================================================

@@ -86,5 +86,4 @@ class CheckerDispatchTables:
     def get_file_dispatch_table_all(self) -> list[Callable]:
         """Get dispatch table for universal file tests"""
         return [
-            self.umdp3_checker.line_trail_whitespace,
         ]
