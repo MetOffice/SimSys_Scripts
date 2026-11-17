@@ -25,6 +25,7 @@ from ..umdp3_rules_S3 import (
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
+    r3_4_7_no_obsolescent_intrinsics,
     r3_4_4_no_naked_ends,
     r3_5_4_no_tab_characters,
     r3_9_10_no_unlabelled_exit_statement,
@@ -750,6 +751,57 @@ def test_r3_4_3_no_unseparated_keywords(
 ):
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_4_3_no_unseparated_keywords(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 97, ["            field(i, j) = IDINT((1.0*i) + (2.0*j))"]],
+                ["add", 101, ["            field(i, j) = FLOAT(i) + (2.0*j)"]],
+                ["add", 112, ["        input2(i, j) = ALOG10(input2(i, j))"]],
+            ],
+            3,
+            {
+                "obsolescent intrinsic: IDINT": [97],
+                "obsolescent intrinsic: FLOAT": [101],
+                "obsolescent intrinsic: ALOG10": [113],
+            },
+        ),
+        (
+            [
+                ["replace", 97, ["            field(i, j) = INT((1.0*i) + (2.0*j))"]],
+                ["add", 101, ["            field(i, j) = REAL(i) + (2.0*j)"]],
+                ["add", 112, ["        input2(i, j) = LOG10(input2(i, j))"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "3 Unseparated Keywords Errors, ENDIF & ENDDO",
+        "2 Unseparated Keywords Errors, ENDSUBROUTINE & ENDMODULE",
+        "No Unseparated Keywords Errors",
+    ],
+)
+def test_r3_4_7_no_obsolescent_intrinsics(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_4_7_no_obsolescent_intrinsics(modified_fortran_lines)
     failure_count = result.failure_count
     assert failure_count == expected_result
     errors = result.errors

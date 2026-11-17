@@ -43,7 +43,6 @@ class CheckerDispatchTables:
             self.umdp3_checker.omp_missing_dollar,
             self.umdp3_checker.cpp_ifdef,
             self.umdp3_checker.cpp_comment,
-            self.umdp3_checker.obsolescent_fortran_intrinsic,
             self.umdp3_checker.intrinsic_modules,
         ]
 

@@ -15,7 +15,7 @@ import re
 
 from fortran_keywords import fortran_keywords
 from search_lists import (
-    #     obsolescent_intrinsics,
+    obsolescent_intrinsics,
     unseparated_keywords_list,
     #     retired_ifdefs,
     #     deprecated_c_identifiers,
@@ -514,10 +514,39 @@ def r3_4_4_no_naked_ends(lines: list[str]) -> TestResult:
         vendor/compiler extensions.
 * TODO: When writing a REAL literal with an integer value, put a 0 after the decimal
         point (i.e. 1.0 as opposed to 1.) to improve readability.
-* TODO: Avoid using obsolescent features of the Fortran language, instead make use of
-        F95/2003 alternatives. For example, statement functions are among the list of
-        deprecated features in the F95 standard and these can be replaced by FUNCTIONs
-        within appropriate MODULEs.
+"""
+
+
+# 3.4.7 Avoid using obsolescent features of the Fortran language, instead make use of
+#       F95/2003 alternatives.
+def r3_4_7_no_obsolescent_intrinsics(lines: list[str]) -> TestResult:
+    """Check for archaic Fortran intrinsic functions"""
+    failures = 0
+    error_log = {}
+    count = -1
+
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        clean_line = remove_cpp_commands(clean_line)
+        for intrinsic in obsolescent_intrinsics:
+            intrinsic_search = re.compile(rf"\b{intrinsic}\b", re.IGNORECASE)
+            if intrinsic_search.search(clean_line):
+                failures += 1
+                error_log = add_error_log(
+                    error_log, f"obsolescent intrinsic: {intrinsic}", count
+                )
+
+    return TestResult(
+        checker_name="Test 4.7 No obsolescent Fortran intrinsics allowed",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} failures.",
+        errors=error_log,
+    )
+
+
+"""
 * TODO: Do not use archaic forms of intrinsic functions. For example:
         LOG() should be used in place of ALOG(),
         MAX() instead of AMAX1(), REAL() instead of FLOAT() etc.
@@ -860,6 +889,7 @@ list_O_tests = [
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
     r3_4_3_no_unseparated_keywords,
+    r3_4_7_no_obsolescent_intrinsics,
     r3_5_4_no_tab_characters,
     r3_9_10_no_unlabelled_exit_statement,
     r3_9_11_no_gotos,

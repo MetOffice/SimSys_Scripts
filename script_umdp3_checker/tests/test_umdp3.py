@@ -83,14 +83,6 @@ def test_fortran_specific():
 
     umdp3_checker = UMDP3Checker()
 
-    # Test obsolescent intrinsics
-    fortran_old_intrinsics = ["REAL :: x", "x = ALOG(2.0)", "y = DBLE(x)"]
-
-    result = umdp3_checker.obsolescent_fortran_intrinsic(fortran_old_intrinsics)
-    print(
-        f"Obsolescent intrinsics test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
     # Test forbidden operators
     fortran_old_operators = ["IF (x .GT. y) THEN", "  PRINT *, 'x is greater'"]
 
