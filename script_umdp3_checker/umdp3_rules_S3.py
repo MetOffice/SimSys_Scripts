@@ -769,18 +769,48 @@ def r3_12_0_write_using_defaults(lines: list[str]) -> TestResult:
     )
 
 
+# 12.1 & 12.2 Single string output should use umprint, multi-component output should
+# write to an internal file and call the UM API.
+def r3_12_1_no_write_to_unit_no(lines: list[str]) -> TestResult:
+    """Check for WRITE(6), or other 'magic' unit number, rather than umMessage
+    and umPrint"""
+    failures = 0
+    error_log = {}
+    count = -1
+    write_unit_no_search = re.compile(r"\bWRITE\s*\(\s*(\d+)\s*,", re.IGNORECASE)
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+
+        if unit_no := write_unit_no_search.search(clean_line):
+            failures += 1
+            error_log = add_error_log(
+                error_log, f"unwanted WRITE({unit_no.group(1)}, ... used", count
+            )
+
+    return TestResult(
+        checker_name="Test 12.1 Use of WRITE('\\d+') rather than print API",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} failures.",
+        errors=error_log,
+    )
+
+
 def r3_12_3_no_write_using_default_format(lines: list[str]) -> TestResult:
     """Check for WRITE statement without format"""
     failures = 0
     error_log = {}
-    write_statement = re.compile(r"\bWRITE\s*\(\s*\w+\s*,\s*\*\s*\)", re.IGNORECASE)
+    write_statement = re.compile(r"\bWRITE\s*\(\s*(\w+)\s*,\s*\*\s*\)", re.IGNORECASE)
     count = -1
     for count, line in enumerate(lines, 1):
         clean_line = remove_quoted(line)
         clean_line = remove_comments(clean_line)
-        if write_statement.search(clean_line):
+        if variable := write_statement.search(clean_line):
             failures += 1
-            error_log = add_error_log(error_log, "WRITE(<variable>,*) found", count)
+            error_log = add_error_log(
+                error_log, f"WRITE({variable.group(1)},*) found", count
+            )
     output = f"Checked {count} lines, found {failures} failures."
     return TestResult(
         checker_name="Test 12.3 WRITE using default format",
@@ -835,5 +865,6 @@ list_O_tests = [
     r3_9_11_no_gotos,
     r3_11_0_read_explicitly_states_unit,
     r3_12_0_write_using_defaults,
+    r3_12_1_no_write_to_unit_no,
     r3_12_3_no_write_using_default_format,
 ]

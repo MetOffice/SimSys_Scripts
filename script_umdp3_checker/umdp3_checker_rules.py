@@ -271,28 +271,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    # 12.x somewhere - not clear...
-    def write6(self, lines: list[str]) -> TestResult:
-        """Check for WRITE(6) rather than umMessage and umPrint"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r"!.*$", "", clean_line)
-
-            if re.search(r"\bWRITE\s*\(\s*6\s*,", clean_line, re.IGNORECASE):
-                failures += 1
-                error_log = self.add_error_log(error_log, "WRITE(6) used", count + 1)
-
-        return TestResult(
-            checker_name="Use of WRITE(6) rather than umMessage and umPrint",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
     # 12.12ish - Not explicitly this, but similar.
     def um_fort_flush(self, lines: list[str]) -> TestResult:
         """Check for um_fort_flush rather than umPrintFlush"""
