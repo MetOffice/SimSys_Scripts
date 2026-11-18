@@ -53,7 +53,6 @@ class CheckerDispatchTables:
             self.umdp3_checker.forbidden_stop,
             self.umdp3_checker.intrinsic_as_variable,
             self.umdp3_checker.check_code_owner,
-            self.umdp3_checker.array_init_form,
         ]
 
     def get_diff_dispatch_table_c(self) -> list[Callable]:

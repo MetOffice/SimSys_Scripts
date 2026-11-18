@@ -531,32 +531,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    # 9.15
-    def array_init_form(self, lines: list[str]) -> TestResult:
-        """Check for old array initialization form"""
-        """
-    TODO: Another instance that assumes continuation lines are
-        concatenated prior to executing the actual test to ensure both forward
-        slashes are on the same line."""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            clean_line = self.remove_quoted(line)
-            if re.search(r"\(/.*?\/\)", clean_line):
-                failures += 1
-                error_log = self.add_error_log(
-                    error_log, "old array initialization form (/ /)", count + 1
-                )
-
-        return TestResult(
-            checker_name="Old Array Initialization Form",
-            failure_count=failures,
-            passed=(failures == 0),
-            output="Checked for old array initialization form (/ /).",
-            errors=error_log,
-        )
-
     # C-specific tests
 
     def c_integral_format_specifiers(self, lines: list[str]) -> int:

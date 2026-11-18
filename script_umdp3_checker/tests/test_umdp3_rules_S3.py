@@ -31,6 +31,7 @@ from ..umdp3_rules_S3 import (
     r3_5_4_no_tab_characters,
     r3_9_10_no_unlabelled_exit_statement,
     r3_9_11_no_gotos,
+    r3_9_15_old_array_init_form,
     remove_comments,
     remove_quoted,
 )
@@ -993,6 +994,77 @@ def test_r3_9_11_no_gotos(
 ):
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_9_11_no_gotos(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                [
+                    "add",
+                    60,
+                    [
+                        "REAL ::  conrad_deg(nconradp)   = (/0.009, 0.018, 0.027,"
+                        + " 0.036, 0.045/)  & ! degrees",
+                        "    ,conrad_val(nconradp)   = [1000.0, 2000.0, 3000.0, "
+                        + "4000.0, 5000.0]  & ! m",
+                        "    ,conrad_thres(nconradp) = (/1.2,   2.5,   5.0,   10.0,  "
+                        + "1.0e5/)    ! mm/hr",
+                        "!  conrad_val(nconradp)   = (/1000., 2000., 3000., 4000., "
+                        + "5000./)",
+                    ],
+                ],
+            ],
+            3,
+            {
+                "Found old array initialization form (/ /)": [61, 62, 63],
+            },
+        ),
+        (
+            [
+                [
+                    "add",
+                    60,
+                    [
+                        "REAL ::  conrad_deg(nconradp)   = [0.009, 0.018, 0.027, "
+                        + "0.036, 0.045]  & ! degrees",
+                        "    ,conrad_val(nconradp)   = [1000.0, 2000.0, 3000.0, "
+                        + "4000.0, 5000.0]  & ! m",
+                        "    ,conrad_thres(nconradp) = [1.2,   2.5,   5.0,   10.0,  "
+                        + "1.0e5]    ! mm/hr",
+                        "!  conrad_val(nconradp)   = (/1000., 2000., 3000., 4000., "
+                        + "5000./)",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Old Array Init Form",
+        "1 Old Array Init Form in a comment",
+        "No Old Array Init Forms",
+    ],
+)
+def test_r3_9_15_old_array_init_form(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_9_15_old_array_init_form(modified_fortran_lines)
     failure_count = result.failure_count
     assert failure_count == expected_result
     errors = result.errors

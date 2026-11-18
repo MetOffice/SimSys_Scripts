@@ -390,25 +390,3 @@ def test_check_code_owner(lines, expected_result):
     checker = UMDP3Checker()
     result = checker.check_code_owner(lines)
     assert result.failure_count == expected_result
-
-
-test_array_init_form_parameters = [
-    (["  INTEGER, DIMENSION(10) :: array = 0"], 0, "Array initialized using '='"),
-    (["  INTEGER, DIMENSION(10) :: array"], 0, "Array declared without initialization"),
-    (
-        ["  INTEGER, DIMENSION(10) :: array = (/ (i, i=1,10) /)"],
-        1,
-        "Array initialized using array constructor",
-    ),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_array_init_form_parameters],
-    ids=[data[2] for data in test_array_init_form_parameters],
-)
-def test_array_init_form(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.array_init_form(lines)
-    assert result.failure_count == expected_result

@@ -643,6 +643,33 @@ def r3_9_11_no_gotos(lines: list[str]) -> TestResult:
     )
 
 
+# 9.15
+def r3_9_15_old_array_init_form(lines: list[str]) -> TestResult:
+    """Check for old array initialization form"""
+    """
+TODO: Another instance that assumes continuation lines are
+    concatenated prior to executing the actual test to ensure both forward
+    slashes are on the same line."""
+    failures = 0
+    error_log = {}
+    count = -1
+    forward_slash_array_init_search = re.compile(r"\(/.*?/\)")
+    for count, line in enumerate(lines):
+        clean_line = concatenate_lines(lines, count)
+        if forward_slash_array_init_search.search(clean_line):
+            failures += 1
+            error_log = add_error_log(
+                error_log, "Found old array initialization form (/ /)", count + 1
+            )
+    return TestResult(
+        checker_name="Test 9.15 Old Array Initialization Form (/ /)",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines for old array initialization form (/ /). Found {failures} instances.",
+        errors=error_log,
+    )
+
+
 """
 3.10 Line continuation :
 TODO : Copy in the rules from section 3.10 and add the appropriate tests.
@@ -915,6 +942,7 @@ list_O_tests = [
     r3_5_4_no_tab_characters,
     r3_9_10_no_unlabelled_exit_statement,
     r3_9_11_no_gotos,
+    r3_9_15_old_array_init_form,
     r3_11_0_read_explicitly_states_unit,
     r3_12_0_write_using_defaults,
     r3_12_1a_no_write_to_unit_no,
