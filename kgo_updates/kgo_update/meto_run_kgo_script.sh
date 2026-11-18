@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 
-# This script is intended to be run by frum having been called by
+# This script is intended to be run by umadmin having been called by
 # `../meto_update_kgo.sh` . It runs the `kgo_update.py` script which it
 # assumes is in the same directory. It takes suite name, suite user, version
 # number, ticket number and required platforms as inputs. It runs the script on
@@ -85,7 +85,7 @@ if [[ $platforms == *"ex1a"* ]]; then
 
     # SSH to the ex1a with the run command
     if ssh -Y "$host_ex" "$command"; then
-        # rsync the generated variables file and script back to frum on linux
+        # rsync the generated variables file and script back to umadmin on linux
         # This cleans up the original files
         printf "${GREEN}\n\nSuccessfully installed on ex1a.\n${NC}"
         printf "${GREEN}Rsyncing the generated files into azspice ${variables_dir}.\n${NC}"

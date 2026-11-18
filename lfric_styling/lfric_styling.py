@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file LICENCE
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 
 """
 Python script to apply LFRic styling to .F90/.f90 files, given a path/directory.
@@ -15,10 +15,11 @@ Styling currently being applied:
     -lowercasing keywords
 """
 
-import re
 import argparse
 import os
+import re
 from pathlib import Path
+
 from styling_keywords import NEW_KEYWORDS
 
 

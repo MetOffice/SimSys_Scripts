@@ -9,11 +9,12 @@ Script to clone and merge git sources
 """
 
 import argparse
-import os
-import yaml
-from pathlib import Path
-from get_git_sources import clone_and_merge, set_https, validate_dependencies
 import logging
+import os
+from pathlib import Path
+
+import yaml
+from get_git_sources import clone_and_merge, set_https, validate_dependencies
 
 
 def parse_args():

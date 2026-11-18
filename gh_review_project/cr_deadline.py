@@ -12,12 +12,13 @@ Projects as required at the code review deadline.
 
 import argparse
 from pathlib import Path
-from review_project import ProjectData, ISSUE_ID
+
+from review_project import ISSUE_ID, ProjectData
 
 
 def remove_milestone(
     issue_data: ProjectData, milestone: str, dry_run: bool = False
-) -> int:
+) -> None:
     """
     Remove the milestone from all open issues that do not have any linked PRs
     attached to them. Leave a comment explaining why.

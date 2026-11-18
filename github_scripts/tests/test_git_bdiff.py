@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# *********************************COPYRIGHT************************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *********************************COPYRIGHT************************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 """
 Test suite for git_bdiff module.
 """
 
 import os
 import subprocess
+
 import pytest
 
-from ..git_bdiff import GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo, GitBase
-
+from ..git_bdiff import GitBase, GitBDiff, GitBDiffError, GitBDiffNotGit, GitInfo
 
 # Disable warnings caused by the use of pytest fixtures
 # pylint: disable=redefined-outer-name
@@ -244,25 +244,28 @@ def test_is_main(git_repo):
             assert info.is_main()
 
 
-def find_previous_hash():
-    """
-    Loop over a git log output and extract a hash that isn't the current head
-    """
-
-    result = subprocess.run(["git", "log"], check=True, capture_output=True, text=True)
-    for line in result.stdout.split("\n"):
-        if line.startswith("commit") and "HEAD" not in line:
-            return line.split()[1]
-
-
-def test_detached_head(git_repo):
+@pytest.mark.parametrize("log_format", ["medium", "format:%h %s"])
+def test_detached_head(git_repo, monkeypatch, log_format):
     """Test Detached Head State"""
+
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
+    monkeypatch.setenv("GIT_CONFIG_KEY_0", "format.pretty")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_0", log_format)
 
     os.chdir(git_repo)
     subprocess.run(["git", "checkout", "main"], check=True)
 
-    commit_hash = find_previous_hash()
-    subprocess.run(["git", "checkout", commit_hash], check=True)
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    commit_hash = result.stdout.strip()
+    subprocess.run(["git", "checkout", "--detach", commit_hash], check=True)
 
-    git_base = GitBase()
-    assert git_base.get_branch_name() == git_base.detached_head_reference
+    try:
+        git_base = GitBase()
+        assert git_base.get_branch_name() == git_base.detached_head_reference
+    finally:
+        subprocess.run(["git", "checkout", "main"], check=True)

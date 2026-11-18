@@ -9,19 +9,20 @@ Unit tests for get_git_sources
 
 import os
 import subprocess
-from shlex import split
 from pathlib import Path
+from shlex import split
+
 import pytest
 
 from ..get_git_sources import (
-    validate_dependencies,
-    determine_mirror_fetch,
-    set_https,
+    check_existing,
     clone_repo,
     clone_repo_mirror,
-    sync_repo,
-    check_existing,
+    determine_mirror_fetch,
     merge_source,
+    set_https,
+    sync_repo,
+    validate_dependencies,
 )
 
 

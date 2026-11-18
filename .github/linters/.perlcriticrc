@@ -1,5 +1,0 @@
-# Report slightly less severe violations (severity >= 4)
-severity = 4
-# Verbosity format
-# filename:line:column [severity policy] message near 'string of source code that caused the violation'
-verbose  = %f:%l:%c [%s %p] %m near '%r'\n

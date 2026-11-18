@@ -12,7 +12,8 @@ have one.
 
 import argparse
 from pathlib import Path
-from review_project import ProjectData, REVIEW_ID
+
+from review_project import REVIEW_ID, ProjectData
 
 
 def print_banner(message: str) -> None:

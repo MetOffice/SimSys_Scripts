@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-##############################################################################
-# (c) Crown copyright 2025 Met Office. All rights reserved.
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
-##############################################################################
+# -----------------------------------------------------------------------------
 """
 Script to check that all version.py macro chains appear valid and that the final
 after tag of the chain matches metadata import statement for each rose app.

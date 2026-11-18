@@ -4,20 +4,21 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-import subprocess
-from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Callable, List, Set, Optional
-from dataclasses import dataclass, field
 import argparse
-from checker_dispatch_tables import CheckerDispatchTables
-from umdp3_checker_rules import TestResult
-from umdp3_rules_S3 import list_O_tests
 import concurrent.futures
+import subprocess
 
 # Add custom modules to Python path if needed
 # Add the repository root to access fcm_bdiff and git_bdiff packages
 import sys
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable, List, Optional, Set
+
+from checker_dispatch_tables import CheckerDispatchTables
+from umdp3_checker_rules import TestResult
+from umdp3_rules_S3 import list_O_tests
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

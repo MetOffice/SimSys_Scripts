@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 """
 ## NOTE ##
 This module is one of several for which the Master copy is in the
@@ -32,16 +32,17 @@ import re
 
 # import traceback
 from optparse import OptionParser
+
 from fstring_parse import (
+    DQUOTE,
+    SQUOTE,
+    ParsingError,
     find_commented_char,
     find_quoted_char,
     is_continuation,
     is_pp_continuation,
     is_str_continuation,
-    ParsingError,
     replace_characters,
-    DQUOTE,
-    SQUOTE,
 )
 
 # Default column in which to place ampersands.

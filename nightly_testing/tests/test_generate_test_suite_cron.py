@@ -1,14 +1,19 @@
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 import pytest
-from ..generate_test_suite_cron import (
-    MIRROR_PATH,
-    CLONE_DIR,
-    generate_cron_timing_str,
-    generate_clean_commands,
-    populate_cl_variables,
-    create_git_clone_cron,
-    generate_cylc_command,
-)
 
+from ..generate_test_suite_cron import (
+    CLONE_DIR,
+    MIRROR_PATH,
+    create_git_clone_cron,
+    generate_clean_commands,
+    generate_cron_timing_str,
+    generate_cylc_command,
+    populate_cl_variables,
+)
 
 # Test generate_cron_timing_str
 data_generate_cron_timing_str = [

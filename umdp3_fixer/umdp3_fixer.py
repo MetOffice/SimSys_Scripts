@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 #
-# *****************************COPYRIGHT*******************************
+# -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
-# For further details please refer to the file COPYRIGHT.txt
-# which you should have received as part of this distribution.
-# *****************************COPYRIGHT*******************************
+# The file LICENCE, distributed with this code, contains details of the terms
+# under which the code may be used.
+# -----------------------------------------------------------------------------
 """
 ## NOTE ##
 This module is one of several for which the Master copy is in the
@@ -34,13 +34,14 @@ Usage:
 
 import os
 import re
-import sys
 import subprocess
+import sys
 from argparse import ArgumentParser
 from shutil import which
+
+from ampersands import apply_ampersand_shift
 from indentation import apply_indentation
 from styling import apply_styling
-from ampersands import apply_ampersand_shift
 from whitespace import apply_whitespace_fixes
 
 

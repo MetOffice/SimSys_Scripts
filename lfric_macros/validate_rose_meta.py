@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-##############################################################################
-# (c) Crown copyright 2024 Met Office. All rights reserved.
+# -----------------------------------------------------------------------------
+# (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
-##############################################################################
+# -----------------------------------------------------------------------------
 """
 Validate the rose metadata in lfric_apps
 """
 
-import os
-import sys
-import subprocess
 import argparse
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 # A list of invalid metadata sections. Most are invalid as they are imported by

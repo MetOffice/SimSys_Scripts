@@ -11,15 +11,15 @@ files/directories to ignore merge conflicts in. These should be relative to the
 top-level of the repo. If not set, then a default list is defined below.
 """
 
+import logging
 import os
 import re
+import shlex
 import subprocess
 from datetime import datetime
-from typing import Optional, Union
 from pathlib import Path
 from shutil import rmtree
-import shlex
-import logging
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
