@@ -47,7 +47,7 @@ root.
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run:
 
 ```sh
-uv sync --locked --extra dev --extra test
+uv sync --locked --extra dev --extra test # or --extra-all
 uv run --frozen --extra dev prek install
 uv run --frozen --extra test pytest -vv
 ```

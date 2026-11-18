@@ -4,6 +4,12 @@
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
 # -----------------------------------------------------------------------------
+# Helper script to sets up a Python virtual environment with development and
+#  test dependencies.
+#
+# Usage:
+# Execute the setup-venv script with the optionally specified Python interpreter.
+#  PYTHON=$(type -p python3.12) setup-venv
 
 # Prepare an editable development environment and install the Git commit hook.
 set -euo pipefail
@@ -13,14 +19,14 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 # Prefer the locked uv install; failures must not silently switch to pip.
 if command -v uv >/dev/null 2>&1; then
-    printf 'Setting up .venv with uv...\n'
+    echo 'Setting up .venv with uv...'
     uv_python_args=()
     if [[ -n "${PYTHON:-}" ]]; then
         uv_python_args=(--python "$PYTHON")
     fi
-    uv sync --locked --extra dev --extra test "${uv_python_args[@]}"
+    uv sync --locked --link-mode=copy --extra dev --extra test "${uv_python_args[@]}"
 else
-    printf 'uv not found; setting up .venv with pip...\n'
+    echo 'uv not found; setting up .venv with pip...'
     # Reuse an existing environment; PYTHON selects the interpreter for a new one.
     if [[ ! -x .venv/bin/python ]]; then
         python_exe="${PYTHON:-python3}"
@@ -33,9 +39,10 @@ else
     .venv/bin/python -m pip install -e '.[dev,test]'
 fi
 
+echo 'Installing pre-commit hooks with prek...'
 .venv/bin/prek install
 
 # An executed script cannot activate the environment in its parent shell.
-printf '\nEnvironment ready. From the repository root, run:\n'
-printf '  source .venv/bin/activate\n'
-printf '  pytest -vv\n'
+echo 'Environment ready. From the repository root, run:'
+echo '  source .venv/bin/activate'
+echo '  pytest -vv'
