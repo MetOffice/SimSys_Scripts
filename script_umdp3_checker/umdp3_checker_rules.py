@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 
 from search_lists import (
     deprecated_c_identifiers,
-    obsolescent_intrinsics,
     retired_ifdefs,
 )
 
