@@ -190,25 +190,6 @@ def test_printstatus_mod(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-test_printstar_parameters = [
-    (["  PRINT *, 'Hello, World!'"], 1, "Use of PRINT *"),
-    (["  PRINT '(A)', 'Hello, World!'"], 0, "Use of PRINT with format"),
-    (["  umMessage = 'Hello, World!'"], 0, "Use of umMessage"),
-    (["  umPrint(umMessage)"], 0, "Use of umPrint"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_printstar_parameters],
-    ids=[data[2] for data in test_printstar_parameters],
-)
-def test_printstar(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.printstar(lines)
-    assert result.failure_count == expected_result
-
-
 test_um_fort_flush_parameters = [
     (["  CALL um_fort_flush()"], 1, "Use of um_fort_flush"),
     (["  CALL umPrintFlush()"], 0, "No use of um_fort_flush"),

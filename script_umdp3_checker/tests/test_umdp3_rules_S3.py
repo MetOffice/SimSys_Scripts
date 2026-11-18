@@ -16,7 +16,8 @@ from ..umdp3_rules_S3 import (
     r3_0_0_no_trailing_whitespace,
     r3_11_0_read_explicitly_states_unit,
     r3_12_0_write_using_defaults,
-    r3_12_1_no_write_to_unit_no,
+    r3_12_1a_no_write_to_unit_no,
+    r3_12_1b_print_not_allowed,
     r3_12_3_no_write_using_default_format,
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
@@ -1160,11 +1161,62 @@ def test_r3_12_0_write_using_defaults(
         "No Bad Write Statements",
     ],
 )
-def test_r3_12_1_no_write_to_unit_no(
+def test_r3_12_1a_no_write_to_unit_no(
     example_fortran_lines, changes_list, expected_result, expected_errors
 ):
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
-    result = r3_12_1_no_write_to_unit_no(modified_fortran_lines)
+    result = r3_12_1a_no_write_to_unit_no(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                [
+                    "add",
+                    82,
+                    [
+                        "PRINT *, ummessage",
+                    ],
+                ],
+                [
+                    "replace",
+                    91,
+                    [
+                        "    PRINT *, cmessage",
+                        "    CALL umprint(ummessage,src=RoutineName)",
+                    ],
+                ],
+            ],
+            2,
+            {
+                "undesirable PRINT statement used": [82, 92],
+            },
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "2 Bad, really BAD, Print Statements",
+        "No Naughty PRINT Statements",
+    ],
+)
+def test_r3_12_1b_print_not_allowed(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_12_1b_print_not_allowed(modified_fortran_lines)
     failure_count = result.failure_count
     assert failure_count == expected_result
     errors = result.errors

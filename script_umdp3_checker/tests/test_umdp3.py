@@ -91,14 +91,6 @@ def test_fortran_specific():
         f"Forbidden operators test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
 
-    # Test PRINT statement
-    fortran_print = ["PRINT *, 'Hello world'"]
-
-    result = umdp3_checker.printstar(fortran_print)
-    print(
-        f"PRINT statement test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
 
 def test_c_specific():
     """Test C-specific checks"""

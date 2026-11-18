@@ -249,28 +249,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    # might be a hallucination ? mentioned in rules regarding WRITE statements
-    def printstar(self, lines: list[str]) -> TestResult:
-        """Check for PRINT rather than umMessage and umPrint"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            clean_line = self.remove_quoted(line)
-            clean_line = re.sub(r"!.*$", "", clean_line)
-
-            if re.search(r"\bPRINT\s*\*", clean_line, re.IGNORECASE):
-                failures += 1
-                error_log = self.add_error_log(error_log, "PRINT * used", count + 1)
-
-        return TestResult(
-            checker_name="Use of PRINT rather than umMessage and umPrint",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
     # 12.12ish - Not explicitly this, but similar.
     def um_fort_flush(self, lines: list[str]) -> TestResult:
         """Check for um_fort_flush rather than umPrintFlush"""

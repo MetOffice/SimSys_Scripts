@@ -794,9 +794,9 @@ def r3_12_0_write_using_defaults(lines: list[str]) -> TestResult:
     )
 
 
-# 12.1 & 12.2 Single string output should use umprint, multi-component output should
+# 12.1 & 12.2 (a) Single string output should use umprint, multi-component output should
 # write to an internal file and call the UM API.
-def r3_12_1_no_write_to_unit_no(lines: list[str]) -> TestResult:
+def r3_12_1a_no_write_to_unit_no(lines: list[str]) -> TestResult:
     """Check for WRITE(6), or other 'magic' unit number, rather than umMessage
     and umPrint"""
     failures = 0
@@ -814,7 +814,33 @@ def r3_12_1_no_write_to_unit_no(lines: list[str]) -> TestResult:
             )
 
     return TestResult(
-        checker_name="Test 12.1 Use of WRITE('\\d+') rather than print API",
+        checker_name="Test 12.1a Use of WRITE('\\d+') rather than print API",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} failures.",
+        errors=error_log,
+    )
+
+
+# 12.1 & 12.2 (b) Single string output should use umprint, multi-component output should
+# write to an internal file and call the UM API.
+def r3_12_1b_print_not_allowed(lines: list[str]) -> TestResult:
+    """Check for PRINT rather than umMessage and umPrint"""
+    failures = 0
+    error_log = {}
+    count = -1
+    print_search = re.compile(r"\bPRINT\b", re.IGNORECASE)
+    # print_search = re.compile(r"\bPRINT\s*\*", re.IGNORECASE)
+    for count, line in enumerate(lines, 1):
+        clean_line = remove_quoted(line)
+        clean_line = remove_comments(clean_line)
+        if print_search.search(clean_line):
+            failures += 1
+            error_log = add_error_log(
+                error_log, "undesirable PRINT statement used", count
+            )
+    return TestResult(
+        checker_name="Test 12.1b Use of PRINT rather than umMessage and umPrint",
         failure_count=failures,
         passed=(failures == 0),
         output=f"Checked {count} lines, found {failures} failures.",
@@ -891,6 +917,7 @@ list_O_tests = [
     r3_9_11_no_gotos,
     r3_11_0_read_explicitly_states_unit,
     r3_12_0_write_using_defaults,
-    r3_12_1_no_write_to_unit_no,
+    r3_12_1a_no_write_to_unit_no,
+    r3_12_1b_print_not_allowed,
     r3_12_3_no_write_using_default_format,
 ]

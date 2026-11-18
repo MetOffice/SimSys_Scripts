@@ -37,7 +37,6 @@ class CheckerDispatchTables:
             self.umdp3_checker.forbidden_keywords,
             self.umdp3_checker.forbidden_operators,
             self.umdp3_checker.printstatus_mod,
-            self.umdp3_checker.printstar,
             self.umdp3_checker.um_fort_flush,
             self.umdp3_checker.svn_keyword_subst,
             self.umdp3_checker.omp_missing_dollar,
