@@ -509,14 +509,10 @@ def r3_4_4_no_naked_ends(lines: list[str]) -> TestResult:
     )
 
 
-"""
-* TODO: New code should be written using Fortran 95/2003 features. Avoid non-portable
-        vendor/compiler extensions.
-* TODO: When writing a REAL literal with an integer value, put a 0 after the decimal
-        point (i.e. 1.0 as opposed to 1.) to improve readability.
-"""
-
-
+# * TODO: 3.4.5 New code should be written using Fortran 95/2003 features. Avoid
+# non-portable vendor/compiler extensions.
+# * TODO: 3.4.6 When writing a REAL literal with an integer value, put a 0 after the
+# decimal point (i.e. 1.0 as opposed to 1.) to improve readability.
 # 3.4.7 Avoid using obsolescent features of the Fortran language, instead make use of
 #       F95/2003 alternatives.
 def r3_4_7_no_obsolescent_intrinsics(lines: list[str]) -> TestResult:
