@@ -908,14 +908,19 @@ def test_r3_5_4_no_tab_characters(
                 ["replace", 1, ["#if ! defined (RECON) ! Not needed by Recon"]],
                 ["add", 79, ["#if defined(SILENT) ! Turn off output"]],
                 ["add", 84, ["#endif"]],
-                ["replace", 121, ["END MODULE example_mod", "#endif ! Not needed by Recon"]],
+                [
+                    "replace",
+                    121,
+                    ["END MODULE example_mod", "#endif ! Not needed by Recon"],
+                ],
             ],
             3,
             {
-                "Fortran comment found in CPP directive : ! Not needed by Recon":
-                [1, 124],
-                "Fortran comment found in CPP directive : ! Turn off output":
-                [79],
+                "Fortran comment found in CPP directive : ! Not needed by Recon": [
+                    1,
+                    124,
+                ],
+                "Fortran comment found in CPP directive : ! Turn off output": [79],
             },
         ),
         (
@@ -938,8 +943,12 @@ def test_r3_5_4_no_tab_characters(
         ),
         ([], 0, {}),  # No changes, expect no errors
     ],
-    ids=["Fortran comments in cpp directive", "No comments in cpp directives",
-         "Previous false positive example", "default code - no errors"],
+    ids=[
+        "Fortran comments in cpp directive",
+        "No comments in cpp directives",
+        "Previous false positive example",
+        "default code - no errors",
+    ],
 )
 def test_r3_6_1_fortran_comments_in_cpp(
     example_fortran_lines, changes_list, expected_result, expected_errors

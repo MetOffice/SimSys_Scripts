@@ -597,13 +597,14 @@ def r3_6_1_fortran_comments_in_cpp(lines: list[str]) -> TestResult:
                 if part.strip() == "":
                     # output = None
                     continue
-                new_part = re.sub(r'\s*!?\s*defined\s*\(\s*\w+\s*\)\s*', "", part)
+                new_part = re.sub(r"\s*!?\s*defined\s*\(\s*\w+\s*\)\s*", "", part)
                 if re.search(r"!", new_part):
                     failures += 1
                     error_log = add_error_log(
-                        error_log, "Fortran comment found in CPP directive : " +
-                        f"{new_part}", count
-                        )
+                        error_log,
+                        "Fortran comment found in CPP directive : " + f"{new_part}",
+                        count,
+                    )
     return TestResult(
         checker_name="Test 6.1 No Fortran comments in CPP directives",
         failure_count=failures,
