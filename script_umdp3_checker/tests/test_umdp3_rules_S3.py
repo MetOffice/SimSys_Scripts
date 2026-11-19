@@ -29,6 +29,7 @@ from ..umdp3_rules_S3 import (
     r3_4_7_no_obsolescent_intrinsics,
     r3_4_4_no_naked_ends,
     r3_5_4_no_tab_characters,
+    r3_6_1_fortran_comments_in_cpp,
     r3_9_10_no_unlabelled_exit_statement,
     r3_9_11_no_gotos,
     r3_9_15_old_array_init_form,
@@ -887,6 +888,64 @@ def test_r3_5_4_no_tab_characters(
 ):
     modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
     result = r3_5_4_no_tab_characters(modified_fortran_lines)
+    failure_count = result.failure_count
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 1, ["#if ! defined (RECON) ! Not needed by Recon"]],
+                ["add", 79, ["#if defined(SILENT) ! Turn off output"]],
+                ["add", 84, ["#endif"]],
+                ["replace", 121, ["END MODULE example_mod", "#endif ! Not needed by Recon"]],
+            ],
+            3,
+            {
+                "Fortran comment found in CPP directive : ! Not needed by Recon":
+                [1, 124],
+                "Fortran comment found in CPP directive : ! Turn off output":
+                [79],
+            },
+        ),
+        (
+            [
+                ["replace", 1, ["#if ! defined (RECON)"]],
+                ["add", 79, ["#if defined(SILENT)"]],
+                ["add", 84, ["#endif"]],
+                ["replace", 121, ["END MODULE example_mod", "#endif"]],
+            ],
+            0,
+            {},
+        ),
+        (
+            [
+                ["add", 86, ["#if !defined(UTILIO) && !defined(UTILHIST)"]],
+                ["add", 104, ["#endif"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=["Fortran comments in cpp directive", "No comments in cpp directives",
+         "Previous false positive example", "default code - no errors"],
+)
+def test_r3_6_1_fortran_comments_in_cpp(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_6_1_fortran_comments_in_cpp(modified_fortran_lines)
     failure_count = result.failure_count
     errors = result.errors
     for error, lines_list in errors.items():

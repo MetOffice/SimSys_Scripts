@@ -572,7 +572,7 @@ def r3_5_4_no_tab_characters(lines: list[str]) -> TestResult:
             error_log = add_error_log(error_log, "tab character found", count)
 
     return TestResult(
-        checker_name="Test 9.11 No tab characters",
+        checker_name="Test 5.4 No tab characters",
         failure_count=failures,
         passed=(failures == 0),
         output=f"Checked {count} lines for Tabs, found {failures} failures.",
@@ -580,10 +580,40 @@ def r3_5_4_no_tab_characters(lines: list[str]) -> TestResult:
     )
 
 
-"""
-3.6 The use of modules :
-TODO : Copy in the rules from section 3.6 and add the appropriate tests.
+# 3.6 The use of modules :
+# TODO : Copy in the rules from section 3.6 and add the appropriate tests.
+# 6.1.x somewhere ?
+def r3_6_1_fortran_comments_in_cpp(lines: list[str]) -> TestResult:
+    """Check for Fortran comments in CPP directives"""
+    failures = 0
+    error_log = {}
+    count = -1
+    cpp_directive_search = re.compile(r"^\s*#(if|elif|else|endif|include)\s*(.*)")
+    for count, line in enumerate(lines, 1):
+        if match := cpp_directive_search.match(line):
+            test_parts = re.split(r" *&&| *\|\|", match.group(2))
+            # output = "Next bit: "
+            for part in test_parts:
+                if part.strip() == "":
+                    # output = None
+                    continue
+                new_part = re.sub(r'\s*!?\s*defined\s*\(\s*\w+\s*\)\s*', "", part)
+                if re.search(r"!", new_part):
+                    failures += 1
+                    error_log = add_error_log(
+                        error_log, "Fortran comment found in CPP directive : " +
+                        f"{new_part}", count
+                        )
+    return TestResult(
+        checker_name="Test 6.1 No Fortran comments in CPP directives",
+        failure_count=failures,
+        passed=(failures == 0),
+        output=f"Checked {count} lines, found {failures} failures.",
+        errors=error_log,
+    )
 
+
+"""
 3.7 Argument and variable declaration :
 TODO : Copy in the rules from section 3.7 and add the appropriate tests.
 
@@ -940,6 +970,7 @@ list_O_tests = [
     r3_4_3_no_unseparated_keywords,
     r3_4_7_no_obsolescent_intrinsics,
     r3_5_4_no_tab_characters,
+    r3_6_1_fortran_comments_in_cpp,
     r3_9_10_no_unlabelled_exit_statement,
     r3_9_11_no_gotos,
     r3_9_15_old_array_init_form,

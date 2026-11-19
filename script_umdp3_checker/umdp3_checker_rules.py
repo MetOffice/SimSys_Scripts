@@ -328,33 +328,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    # 6.1.x somewhere ?
-    def cpp_comment(self, lines: list[str]) -> TestResult:
-        """Check for Fortran comments in CPP directives"""
-        """
-    TODO: This looks like it will incorrectly fail # if !defined(X)
-        How did the original do this test?"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            match = re.search(
-                r"^\s*#if *(!)?defined\s*\(\s*\w+\s*\)(.*)", line
-            ) or re.search(r"^\s*#(else) *(.*)", line)
-            if match and re.search(r".*!", match.group(2)):
-                failures += 1
-                error_log = self.add_error_log(
-                    error_log, "Fortran comment in CPP directive", count + 1
-                )
-
-        return TestResult(
-            checker_name="Fortran comment in CPP directive",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
     # Unknown
     def intrinsic_modules(self, lines: list[str]) -> TestResult:
         """Check intrinsic modules are USEd with INTRINSIC keyword"""

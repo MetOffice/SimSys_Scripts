@@ -260,27 +260,6 @@ def test_cpp_ifdef(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-test_cpp_comment_parameters = [
-    # This test fails because the test is wrong - it needs fixing
-    (["#if !defined(cpp)"], 0, "cpp directive without comment"),
-    (["! This is a comment"], 0, "Fortran style comment"),
-    (["#if defined(cpp) ! some comment"], 1, "Fortran comment after cpp directive"),
-    (["#else ! another comment"], 1, "Fortran comment after #else directive"),
-    (["#else"], 0, "#else directive without comment"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_cpp_comment_parameters],
-    ids=[data[2] for data in test_cpp_comment_parameters],
-)
-def test_cpp_comment(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.cpp_comment(lines)
-    assert result.failure_count == expected_result
-
-
 test_intrinsic_modules_parameters = [
     (["  USE ISO_C_BINDING"], 1, "Incorrect Use of ISO_C_BINDING module"),
     (
