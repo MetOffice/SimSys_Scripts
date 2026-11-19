@@ -39,7 +39,6 @@ class CheckerDispatchTables:
             self.umdp3_checker.printstatus_mod,
             self.umdp3_checker.um_fort_flush,
             self.umdp3_checker.svn_keyword_subst,
-            self.umdp3_checker.omp_missing_dollar,
             self.umdp3_checker.cpp_ifdef,
             self.umdp3_checker.intrinsic_modules,
         ]

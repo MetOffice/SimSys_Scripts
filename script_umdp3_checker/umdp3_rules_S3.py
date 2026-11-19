@@ -938,10 +938,34 @@ TODO : Copy in the rules from section 3.13 and add the appropriate tests.
 TODO : Copy in the rules from section 3.14 and add the appropriate tests.
         I /think/ DrHook is being (possibly has been) retired, so this section of the
         docs needs updating and tests for the new system need to be added.
+"""
+# 3.15 OpenMP :
+# TODO : Copy in the rules from section 3.15 and add the appropriate tests.
+# 15.2 ? This was a test for OMP sentinels that lacked a '$' - or as they're known in
+# Fortran :
+# A comment with the letters 'OMP' first on the line...
+# def r3_15_2_omp_missing_dollar(lines: list[str]) -> TestResult:
+#     """Check for !OMP instead of !$OMP"""
+#     failures = 0
+#     error_log = {}
+#     count = -1
+#     omp_sentinal_search = re.compile(r"!.*OMP\b")
+#     for count, line in enumerate(lines, 1):
+#         # clean_line = remove_quoted(line)
+#         # clean_line = remove_comments(clean_line)
+#         if omp_sentinal_search.search(line):
+#         # if re.search(r"!\s*OMP\b", line) and not re.search(r"!\$OMP", line):
+#             failures += 1
+#             error_log = add_error_log(error_log, "!OMP directive without $", count)
+#     return TestResult(
+#         checker_name="Test 15.2 !OMP directive without '$'",
+#         failure_count=failures,
+#         passed=(failures == 0),
+#         output=f"Checked {count} lines, found {failures} failures.",
+#         errors=error_log,
+#     )
 
-3.15 OpenMP :
-TODO : Copy in the rules from section 3.15 and add the appropriate tests.
-
+"""
 3.16 MPI :
 TODO : Copy in the rules from section 3.16 and add the appropriate tests.
 
@@ -980,4 +1004,5 @@ list_O_tests = [
     r3_12_1a_no_write_to_unit_no,
     r3_12_1b_print_not_allowed,
     r3_12_3_no_write_using_default_format,
+    # r3_15_2_omp_missing_dollar,
 ]

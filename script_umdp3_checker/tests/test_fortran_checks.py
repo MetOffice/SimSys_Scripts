@@ -224,23 +224,6 @@ def test_svn_keyword_subst(lines, expected_result):
     assert result.failure_count == expected_result
 
 
-test_omp_missing_dollar_parameters = [
-    (["!$OMP PARALLEL"], 0, "Correct OpenMP sentinel"),
-    (["!OMP PARALLEL"], 1, "Missing $ in OpenMP sentinel"),
-]
-
-
-@pytest.mark.parametrize(
-    "lines, expected_result",
-    [data[:2] for data in test_omp_missing_dollar_parameters],
-    ids=[data[2] for data in test_omp_missing_dollar_parameters],
-)
-def test_omp_missing_dollar(lines, expected_result):
-    checker = UMDP3Checker()
-    result = checker.omp_missing_dollar(lines)
-    assert result.failure_count == expected_result
-
-
 test_cpp_ifdef_parameters = [
     (["#ifndef DEBUG"], 1, "Incorrect #ifndef"),
     (["#if defined(DEBUG)"], 0, "Correct #if defined"),

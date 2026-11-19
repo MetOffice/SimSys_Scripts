@@ -288,25 +288,6 @@ class UMDP3Checker:
             errors=error_log,
         )
 
-    # 15.2
-    def omp_missing_dollar(self, lines: list[str]) -> TestResult:
-        """Check for !OMP instead of !$OMP"""
-        failures = 0
-        error_log = {}
-        count = -1
-        for count, line in enumerate(lines):
-            if re.search(r"!\s*OMP\b", line) and not re.search(r"!\$OMP", line):
-                failures += 1
-                error_log = self.add_error_log(error_log, "!OMP without $", count + 1)
-
-        return TestResult(
-            checker_name="!OMP without $",
-            failure_count=failures,
-            passed=(failures == 0),
-            output=f"Checked {count + 1} lines, found {failures} failures.",
-            errors=error_log,
-        )
-
     # 6.1.3 (for 'C')
     def cpp_ifdef(self, lines: list[str]) -> TestResult:
         """Check for #ifdef/#ifndef rather than #if defined()"""
