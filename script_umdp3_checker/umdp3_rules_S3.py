@@ -4,6 +4,10 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
+# Some content in this file was generated or refactored with assistance from
+# - Met Office GitHub Copilot Business (Claude Haiku 4.5); PR #231.
+
+
 """This is the storage location for rules based on what's defined as the standard in
 the UMDP: 003 document. These rules are not necessarily the same as the rules defined
 in the UMDP: 003 document, but they are based on them. The rules in this file are used

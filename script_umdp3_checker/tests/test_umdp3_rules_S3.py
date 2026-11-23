@@ -1,12 +1,15 @@
-# Line length violations are unavoidable in this test file due to Fortran code
-# samples used as test data.
-# ---------
-
 # -----------------------------------------------------------------------------
 # (C) Crown copyright Met Office. All rights reserved.
 # The file LICENCE, distributed with this code, contains details of the terms
 # under which the code may be used.
 # -----------------------------------------------------------------------------
+
+# Line length violations are unavoidable in this test file due to Fortran code
+# samples used as test data.
+# ---------
+
+# Some content in this file was generated or refactored with assistance from
+# - Met Office GitHub Copilot Business (Claude Haiku 4.5); PR #231.
 
 # from pyparsing import remove_quotes
 import pytest  # type: ignore

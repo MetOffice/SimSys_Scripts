@@ -4,6 +4,9 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
+# Some content in this file was generated or refactored with assistance from
+# - Met Office GitHub Copilot Business (Claude Haiku 4.5); PR #231.
+
 import subprocess
 import sys
 from pathlib import Path
