@@ -171,20 +171,6 @@ def test_detangle_file_types_expands_all_group():
     assert result == set(ALLOWABLE_FILE_TYPES)
 
 
-def test_detangle_file_types_mixed_group_and_explicit_type():
-    result = detangle_file_types({"CI", "AnyFile"})
-
-    assert result == GROUP_FILE_TYPES["CI"].union({"AnyFile"})
-
-
-def test_detangle_file_types_passthrough_without_groups():
-    input_types = {"Fortran", "AnyFile"}
-
-    result = detangle_file_types(set(input_types))
-
-    assert result == input_types
-
-
 def test_detangle_file_types_raises_for_invalid_type():
     with pytest.raises(ValueError, match="Invalid file types specified"):
         detangle_file_types({"Fortran", "Java"})
@@ -631,13 +617,13 @@ def test_process_arguments_verbose_and_filetype_group_expansion(
     monkeypatch.setattr(
         sys,
         "argv",
-        ["umdp3_conformance.py", "--file-types", "CI", "AnyFile", "-vv"],
+        ["umdp3_conformance.py", "--file-types", "CI", "-vv"],
     )
 
     args = process_arguments()
 
     assert args.volume == 5
-    assert args.file_types == {"Fortran", "Python", "AnyFile"}
+    assert args.file_types == {"Fortran", "Python"}
 
 
 def test_process_arguments_rejects_verbose_and_quiet_together(

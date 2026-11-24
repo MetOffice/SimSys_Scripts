@@ -72,9 +72,6 @@ def test_dispatch_tables():
     c_file = dispatch.get_file_dispatch_table_c()
     print(f"C file tests available: {len(c_file)}")
 
-    all_tests = dispatch.get_file_dispatch_table_all()
-    print(f"Universal tests available: {len(all_tests)}")
-
 
 def test_fortran_specific():
     """Test Fortran-specific checks"""
