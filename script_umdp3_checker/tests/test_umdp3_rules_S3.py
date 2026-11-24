@@ -479,8 +479,6 @@ def test_r3_4_1_capitalised_keywords(
 
 
 # =================================================================
-# See if you can spot why I hate ruff - it highlights my awful
-# data structures really well.
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
