@@ -4,21 +4,40 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-# from pyparsing import remove_quotes
-import pytest
-# import sys
-# from pathlib import Path
+# Line length violations are unavoidable in this test file due to Fortran code
+# samples used as test data.
+# ---------
 
-# Add the current directory to Python path
+# Some content in this file was generated or refactored with assistance from
+# - Met Office GitHub Copilot Business (Claude Haiku 4.5); PR #231.
+
+# from pyparsing import remove_quotes
+import pytest  # type: ignore
+
 from ..umdp3_rules_S3 import (
-    remove_comments,
-    remove_quoted,
     concatenate_lines,
+    r3_0_0_no_trailing_whitespace,
+    r3_11_0_read_explicitly_states_unit,
+    r3_12_0_write_using_defaults,
+    r3_12_1a_no_write_to_unit_no,
+    r3_12_1b_print_not_allowed,
+    r3_12_3_no_write_using_default_format,
     r3_1_1_there_can_be_only_one,
     r3_2_1_check_crown_copyright,
     r3_3_2_line_too_long,
+    r3_3_3_one_statement_per_line,
     r3_4_1_capitalised_keywords,
     r3_4_2_no_full_uppercase_variable_names,
+    r3_4_3_no_unseparated_keywords,
+    r3_4_7_no_obsolescent_intrinsics,
+    r3_4_4_no_naked_ends,
+    r3_5_4_no_tab_characters,
+    r3_6_1_fortran_comments_in_cpp,
+    r3_9_10_no_unlabelled_exit_statement,
+    r3_9_11_no_gotos,
+    r3_9_15_old_array_init_form,
+    remove_comments,
+    remove_quoted,
 )
 
 
@@ -55,14 +74,12 @@ def modify_fortran_lines(lines_in: list[str], changes: list[list]) -> list[str]:
         else:
             raise ValueError(f"Unknown operation: {change[0]}")
         # for count, line in enumerate(lines, 1):
-        #      print(f"line [{count}]: {line}")
+        #     print(f"line [{count}]: {line}")
     return lines
 
 
 # =================================================================
-"""First : test the helper functions in umdp3_rules_S3.py."""
-
-
+# First : test the helper functions in umdp3_rules_S3.py."""
 def test_modify_fortran_lines(example_fortran_lines):
     """TODO: Does this need to be more rigorous ?"""
     changes_list = [
@@ -71,7 +88,9 @@ def test_modify_fortran_lines(example_fortran_lines):
         ["add", 32, ["This is an added line."]],
     ]
     modified_lines = modify_fortran_lines(example_fortran_lines, changes_list)
-    # Line no.s below have to be carefully calculated. Basic is line no of change -1 but then add one for every line added above in the file and -1 for every line deleted above in the file.
+    # Line no.s below have to be carefully calculated. Basic is line no of change -1
+    # but then add one for every line added above in the file and -1 for every line
+    # deleted above in the file.
     # for line_no, line in enumerate(modified_lines, 1):
     #     print(f"line [{line_no:04}]: {line}")
     assert modified_lines[11] == "This is a replacement line."
@@ -104,7 +123,9 @@ def test_concatenate_lines(example_fortran_lines):
         if line.find("&") >= 0:
             concatenated_line = concatenate_lines(example_fortran_lines.copy(), line_no)
             assert "&" not in concatenated_line
-            # This bit has to be a bit hard-wired and is going to break every time the example Fortran file line numbers are changed. If you can think of a better method - go ahead.
+            # This bit has to be a bit hard-wired and is going to break every time the
+            # example Fortran file line numbers are changed. If you can think of a
+            # better method - go ahead.
             if line_no == 31:
                 expected_line = (
                     "SUBROUTINE example (xlen,ylen,l_unscale,input1,"
@@ -128,21 +149,69 @@ def test_concatenate_lines(example_fortran_lines):
 
 
 # =================================================================
-
 """These examples hopefully demonstrate some of the complexity available...
-    Setting up a test, may involve multiple changes to the demo Fortran file, hence the complex entries in the parametrization.
-    Each error found is recorded with the line number(s) it was found on using the Error text as a dict key, and the line no(s) as a list, which means finding 'use' and 'Use' in the code would generate 2 different keys in the dict.
-    Then a single value recording the total number of failures is also included in the 'TestResult' object.
-    So for the dictionary of errors returned, we have to check they match, which at present involves checking it's 'len' but also that all the keys in one are in the other, i.e. you're not accidentally getting a matching count but different errors.
-    Then for each error(key) in the dict, you need to check how many lines it occured on, and that the line numbers match, i.e. the list of lines numbers is a match with the expected list of line numbers.
+    Setting up a test, may involve multiple changes to the demo Fortran file, hence the
+    complex entries in the parametrization.
+    Each error found is recorded with the line number(s) it was found on using the
+    Error text as a dict key, and the line no(s) as a list, which means finding 'use'
+    and 'Use' in the code would generate 2 different keys in the dict.
+    Then a single value recording the total number of failures is also included in the
+    'TestResult' object.
+    So for the dictionary of errors returned, we have to check they match, which at
+    present involves checking it's 'len' but also that all the keys in one are in the
+    other, i.e. you're not accidentally getting a matching count but different errors.
+    Then for each error(key) in the dict, you need to check how many lines it occured
+    on, and that the line numbers match, i.e. the list of lines numbers is a match with
+    the expected list of line numbers.
 
     There has to be a better way.....
-    As a side note, might it be better to write a function to compare 2 'TestResult' objects, which would be more robust to changes in the structure of the 'TestResult' object, and also make the test code more readable? If so, would its place be here in the testing, or as a method in the 'TestResult' class itself?
+    As a side note, might it be better to write a function to compare 2 'TestResult'
+    objects, which would be more robust to changes in the structure of the 'TestResult'
+    object, and also make the test code more readable? If so, would its place be here
+    in the testing, or as a method in the 'TestResult' class itself?
     """
 
+
 # =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 57, ["INTEGER :: j ! Loop counter "]],
+                [
+                    "replace",
+                    74,
+                    [
+                        '    = "This is a very very very very very very very "                          & '
+                    ],
+                ],
+                ["replace", 92, ["ELSE "]],
+            ],
+            3,
+            {"trailing whitespace": [57, 74, 92]},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=["3 Trailing Spaces", "No Trailing Spaces"],
+)
+def test_r0_0_no_trailing_whitespace(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_0_0_no_trailing_whitespace(modified_fortran_lines)
+    failure_count = result.failure_count
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
 
 
+# =================================================================
 @pytest.mark.parametrize(
     "changes_list, expected_passed, expected_failure_count, expected_errors",
     [
@@ -162,9 +231,8 @@ def test_concatenate_lines(example_fortran_lines):
             False,
             1,
             {
-                "END statement found for a different program unit: should be example_mod got wrong_mod_name.": [
-                    0
-                ]
+                "END statement found for a different program unit: "
+                "should be example_mod got wrong_mod_name.": [0]
             },
         ),
         # Invalid: No END statement found
@@ -173,9 +241,10 @@ def test_concatenate_lines(example_fortran_lines):
             False,
             1,
             {
-                "Last executable line not a matching END statement for the first program unit found.": [
-                    0
-                ]
+                (
+                    "Last executable line not a matching END statement "
+                    "for the first program unit found."
+                ): [0]
             },
         ),
         # Pass ccp directives #if !defined(MCT)
@@ -217,8 +286,6 @@ def test_r3_1_1_there_can_be_only_one(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -255,8 +322,6 @@ def test_r3_2_1_check_crown_copyright(
 
 
 # =================================================================
-
-
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -274,8 +339,11 @@ def test_r3_2_1_check_crown_copyright(
                     "replace",
                     117,
                     [
-                        "IF (lhook) CALL dr_hook(ModuleName//     "
-                        + '":"  //  RoutineName,  zhook_out,  zhook_handle) ! extra comment'
+                        (
+                            "IF (lhook) CALL dr_hook(ModuleName//     "
+                            '":"  //  RoutineName,  zhook_out,  '
+                            "zhook_handle) ! extra comment"
+                        )
                     ],
                 ],
             ],
@@ -304,8 +372,62 @@ def test_r3_3_2_line_too_long(
 
 
 # =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [["add", 74, ["icode=0 ; icode= icode + 1"]]],
+            1,
+            {"multiple statements on one line": [74]},
+        ),
+        (
+            [
+                [
+                    "add",
+                    83,
+                    [
+                        "IF ( l_unscale ) THEN ; icode=-300 ; ALLOCATE(field( 1,1 ) ) ;"
+                        + " END IF"
+                    ],
+                ],
+                [
+                    "replace",
+                    116,
+                    ["IF ( l_unscale ) THEN ; DEALLOCATE(field) ; END IF"],
+                ],
+            ],
+            2,
+            {"multiple statements on one line": [83, 117]},
+        ),
+        (
+            [],
+            0,
+            {},
+        ),  # No changes, expect no errors
+    ],
+    ids=[
+        "single multi-statements failure",
+        "multiple multi-statments failure",
+        "No error check",
+    ],
+)
+def test_3_3_3_one_statement_per_line(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_3_3_one_statement_per_line(modified_fortran_lines)
+    failure_count = result.failure_count
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
 
 
+# =================================================================
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -357,9 +479,6 @@ def test_r3_4_1_capitalised_keywords(
 
 
 # =================================================================
-
-
-# See if you can spot why I hate ruff - it highlights my awful data structures really well.
 @pytest.mark.parametrize(
     "changes_list, expected_result, expected_errors",
     [
@@ -429,9 +548,10 @@ def test_r3_4_1_capitalised_keywords(
                 'Found UPPERCASE variable name in declaration at line 63: "CASPVAR"': [
                     63
                 ],
-                'Found UPPERCASE variable name in declaration at line 63: "VARIABLE_3"': [
-                    63
-                ],
+                (
+                    "Found UPPERCASE variable name in declaration "
+                    'at line 63: "VARIABLE_3"'
+                ): [63],
                 'Found UPPERCASE variable name in declaration at line 63: "CAPS_VAR"': [
                     63
                 ],
@@ -444,7 +564,10 @@ def test_r3_4_1_capitalised_keywords(
                     "replace",
                     49,
                     [
-                        "REAL, INTENT(IN) :: input1(xlen, ylen),   & !First input array",
+                        (
+                            "REAL, INTENT(IN) :: input1(xlen, ylen),   & "
+                            "!First input array"
+                        ),
                         "                    input2(XLEN, ylen), !Second input array",
                     ],
                 ],
@@ -460,7 +583,10 @@ def test_r3_4_1_capitalised_keywords(
                     "replace",
                     49,
                     [
-                        "REAL, INTENT(IN) :: input1(xlen, ylen),   & !First input array",
+                        (
+                            "REAL, INTENT(IN) :: input1(xlen, ylen),   & "
+                            "!First input array"
+                        ),
                         "                    INPUT2(XLEN, ylen), !Second input array",
                     ],
                 ],
@@ -475,10 +601,22 @@ def test_r3_4_1_capitalised_keywords(
                     "add",
                     51,
                     [
-                        "REAL(KIND=real_umphys), INTENT(IN OUT)  ::                      &",
-                        "                        variable(                               &",
-                        " (1-halox):(proc_row_length+halox),                             &",
-                        " (1-haloy):(proc_rows+haloy),                                   &",
+                        (
+                            "REAL(KIND=real_umphys), INTENT(IN OUT)  :: "
+                            "                     &"
+                        ),
+                        (
+                            "                        variable( "
+                            "                              &"
+                        ),
+                        (
+                            " (1-halox):(proc_row_length+halox), "
+                            "                            &"
+                        ),
+                        (
+                            " (1-haloy):(proc_rows+haloy), "
+                            "                                  &"
+                        ),
                         "  1:model_levels )                        ! Model variable",
                     ],
                 ]
@@ -514,7 +652,10 @@ def test_r3_4_1_capitalised_keywords(
                     "add",
                     51,
                     [
-                        "CHARACTER(LEN=30)   :: ndg_filename_template(2)= ['unset','unset']",
+                        (
+                            "CHARACTER(LEN=30)   :: "
+                            "ndg_filename_template(2)= ['unset','unset']"
+                        ),
                     ],
                 ],
             ],
@@ -527,15 +668,21 @@ def test_r3_4_1_capitalised_keywords(
                     "add",
                     51,
                     [
-                        "REAL(KIND=real_umphys), INTENT(IN OUT) ::                                      &",
+                        (
+                            "REAL(KIND=real_umphys), INTENT(IN OUT) :: "
+                            "                                     &"
+                        ),
                         "!",
-                        " u( udims_s%i_start : udims_s%i_end,                                           &",
+                        (
+                            " u( udims_s%i_start : udims_s%i_end, "
+                            "                                          &"
+                        ),
                     ],
                 ],
             ],
             0,
             {},
-        ),  # Fun failure reported by Erica - comments interspersed with multi-line declarations
+        ),  # Fun failure - comments interspersed with declarations
     ],
     ids=[
         "No UpperCase Var Errors",
@@ -548,7 +695,7 @@ def test_r3_4_1_capitalised_keywords(
         "Curious real world fail from Sam",
         "2nd Curious real world fail from Sam",
         "Failure reported by Erica",
-        "Fun failure reported by Erica - comments interspersed with multi-line declarations",
+        "Fun failure - comments interspersed with declarations",
     ],
 )
 def test_r3_4_2_no_full_uppercase_variable_names(
@@ -567,6 +714,716 @@ def test_r3_4_2_no_full_uppercase_variable_names(
     assert failure_count == expected_result
 
 
-"""TODO: When testing for 'unseparated keywords' remember to test/discard false +ves on
-"#endif" or similar. Current (old) test flags these in the wild, but the example file
-has no  cpp directives..."""
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 71, ["ENDIF"]],
+                ["replace", 101, ["    ENDDO"]],
+                ["replace", 102, ["ENDIF"]],
+            ],
+            3,
+            {
+                "unseparated keyword at line: 71: ENDIF": [71],
+                "unseparated keyword at line: 101: ENDDO": [101],
+                "unseparated keyword at line: 102: ENDIF": [102],
+            },
+        ),
+        (
+            [
+                ["replace", 119, ["ENDSUBROUTINE"]],
+                ["replace", 120, ["ENDMODULE"]],
+            ],
+            2,
+            {
+                "unseparated keyword at line: 119: ENDSUBROUTINE": [119],
+                "unseparated keyword at line: 120: ENDMODULE": [120],
+            },
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "3 Unseparated Keywords Errors, ENDIF & ENDDO",
+        "2 Unseparated Keywords Errors, ENDSUBROUTINE & ENDMODULE",
+        "No Unseparated Keywords Errors",
+    ],
+)
+def test_r3_4_3_no_unseparated_keywords(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_4_3_no_unseparated_keywords(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 97, ["            field(i, j) = IDINT((1.0*i) + (2.0*j))"]],
+                ["add", 101, ["            field(i, j) = FLOAT(i) + (2.0*j)"]],
+                ["add", 112, ["        input2(i, j) = ALOG10(input2(i, j))"]],
+            ],
+            3,
+            {
+                "obsolescent intrinsic: IDINT": [97],
+                "obsolescent intrinsic: FLOAT": [101],
+                "obsolescent intrinsic: ALOG10": [113],
+            },
+        ),
+        (
+            [
+                ["replace", 97, ["            field(i, j) = INT((1.0*i) + (2.0*j))"]],
+                ["add", 101, ["            field(i, j) = REAL(i) + (2.0*j)"]],
+                ["add", 112, ["        input2(i, j) = LOG10(input2(i, j))"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "3 Unseparated Keywords Errors, ENDIF & ENDDO",
+        "2 Unseparated Keywords Errors, ENDSUBROUTINE & ENDMODULE",
+        "No Unseparated Keywords Errors",
+    ],
+)
+def test_r3_4_7_no_obsolescent_intrinsics(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_4_7_no_obsolescent_intrinsics(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["add", 57, ["INTEGER :: div,jend,pe,ij,bl"]],
+                ["replace", 101, ["    END"]],
+            ],
+            1,
+            {
+                "Found naked END statement": [102],
+            },
+        ),
+        (
+            [
+                ["replace", 119, ["END"]],
+                ["replace", 120, ["END"]],
+            ],
+            2,
+            {
+                "Found naked END statement": [119, 120],
+            },
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 naked end and 1 false alarm",
+        "2 naked ENDS",
+        "No naked ENDS",
+    ],
+)
+def test_r3_4_4_no_naked_ends(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_4_4_no_naked_ends(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 57, ["INTEGER :: j \t! Loop counter "]],
+                ["replace", 87, ["\ticode = -100 ! set up WARNING message"]],
+                ["replace", 112, ["\t\toutput(i, j) = (input1(i, j) * input2(i, j))"]],
+            ],
+            3,
+            {"tab character found": [57, 87, 112]},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=["3 Tab Characters", "No Tab Characters"],
+)
+def test_r3_5_4_no_tab_characters(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_5_4_no_tab_characters(modified_fortran_lines)
+    failure_count = result.failure_count
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 1, ["#if ! defined (RECON) ! Not needed by Recon"]],
+                ["add", 79, ["#if defined(SILENT) ! Turn off output"]],
+                ["add", 84, ["#endif"]],
+                [
+                    "replace",
+                    121,
+                    ["END MODULE example_mod", "#endif ! Not needed by Recon"],
+                ],
+            ],
+            3,
+            {
+                "Fortran comment found in CPP directive : ! Not needed by Recon": [
+                    1,
+                    124,
+                ],
+                "Fortran comment found in CPP directive : ! Turn off output": [79],
+            },
+        ),
+        (
+            [
+                ["replace", 1, ["#if ! defined (RECON)"]],
+                ["add", 79, ["#if defined(SILENT)"]],
+                ["add", 84, ["#endif"]],
+                ["replace", 121, ["END MODULE example_mod", "#endif"]],
+            ],
+            0,
+            {},
+        ),
+        (
+            [
+                ["add", 86, ["#if !defined(UTILIO) && !defined(UTILHIST)"]],
+                ["add", 104, ["#endif"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "Fortran comments in cpp directive",
+        "No comments in cpp directives",
+        "Previous false positive example",
+        "default code - no errors",
+    ],
+)
+def test_r3_6_1_fortran_comments_in_cpp(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_6_1_fortran_comments_in_cpp(modified_fortran_lines)
+    failure_count = result.failure_count
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 95, ["    y_len_loop DO j=1,ylen"]],
+                [
+                    "add",
+                    98,
+                    [
+                        "             IF (field(i, j) == 0) THEN",
+                        "                 EXIT",
+                        "             END IF",
+                    ],
+                ],
+            ],
+            1,
+            {
+                "unlabelled EXIT statement": [99],
+            },
+        ),
+        (
+            [
+                ["replace", 95, ["    y_len_loop DO j=1,ylen"]],
+                [
+                    "add",
+                    98,
+                    [
+                        "             IF (field(i, j) == 0) THEN",
+                        "                 EXIT y_len_loop",
+                        "             END IF",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad GOTO Statement",
+        "1 Acceptable GOTO Statement",
+        "No Bad GOTO Statements",
+    ],
+)
+def test_r3_9_10_no_unlabelled_exit_statement(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_9_10_no_unlabelled_exit_statement(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["add", 71, ["GO TO 1234"]],
+            ],
+            1,
+            {
+                "Found bad GOTO statement : GO TO 1234": [71],
+            },
+        ),
+        (
+            [
+                ["add", 91, ["GO TO 9999"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad GOTO Statement",
+        "1 Acceptable GOTO Statement",
+        "No Bad GOTO Statements",
+    ],
+)
+def test_r3_9_11_no_gotos(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_9_11_no_gotos(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                [
+                    "add",
+                    60,
+                    [
+                        "REAL ::  conrad_deg(nconradp)   = (/0.009, 0.018, 0.027,"
+                        + " 0.036, 0.045/)  & ! degrees",
+                        "    ,conrad_val(nconradp)   = [1000.0, 2000.0, 3000.0, "
+                        + "4000.0, 5000.0]  & ! m",
+                        "    ,conrad_thres(nconradp) = (/1.2,   2.5,   5.0,   10.0,  "
+                        + "1.0e5/)    ! mm/hr",
+                        "!  conrad_val(nconradp)   = (/1000., 2000., 3000., 4000., "
+                        + "5000./)",
+                    ],
+                ],
+            ],
+            3,
+            {
+                "Found old array initialization form (/ /)": [61, 62, 63],
+            },
+        ),
+        (
+            [
+                [
+                    "add",
+                    60,
+                    [
+                        "REAL ::  conrad_deg(nconradp)   = [0.009, 0.018, 0.027, "
+                        + "0.036, 0.045]  & ! degrees",
+                        "    ,conrad_val(nconradp)   = [1000.0, 2000.0, 3000.0, "
+                        + "4000.0, 5000.0]  & ! m",
+                        "    ,conrad_thres(nconradp) = [1.2,   2.5,   5.0,   10.0,  "
+                        + "1.0e5]    ! mm/hr",
+                        "!  conrad_val(nconradp)   = (/1000., 2000., 3000., 4000., "
+                        + "5000./)",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Old Array Init Form",
+        "1 Old Array Init Form in a comment",
+        "No Old Array Init Forms",
+    ],
+)
+def test_r3_9_15_old_array_init_form(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_9_15_old_array_init_form(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                [
+                    "add",
+                    67,
+                    [
+                        "READ(10,tuning_segments)",
+                        "IF (l_print_namelist) CALL print_nlist_tuning_segments()",
+                        "CALL check_tuning_segments()",
+                        "",
+                        "READ(10,gen_phys_inputs)",
+                        "IF (l_print_namelist) CALL print_nlist_gen_phys_inputs()",
+                    ],
+                ],
+            ],
+            2,
+            {
+                "READ without explicit UNIT=": [67, 71],
+            },
+        ),
+        (
+            [
+                [
+                    "add",
+                    67,
+                    [
+                        "READ(UNIT=10,tuning_segments)",
+                        "IF (l_print_namelist) CALL print_nlist_tuning_segments()",
+                        "CALL check_tuning_segments()",
+                        "",
+                        "READ(UNIT=10,gen_phys_inputs)",
+                        "IF (l_print_namelist) CALL print_nlist_gen_phys_inputs()",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad Write Statement",
+        "1 Acceptable Write Statement",
+        "No Bad Write Statements",
+    ],
+)
+def test_r3_11_0_read_explicitly_states_unit(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_11_0_read_explicitly_states_unit(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                ["replace", 91, ["    WRITE(*,*) cmessage"]],
+            ],
+            1,
+            {
+                "WRITE(*,*) found": [91],
+            },
+        ),
+        (
+            [
+                ["replace", 91, ["    CALL umprint(cmessage,src=RoutineName)"]],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad Write Statement",
+        "1 Acceptable Write Statement",
+        "No Bad Write Statements",
+    ],
+)
+def test_r3_12_0_write_using_defaults(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_12_0_write_using_defaults(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                [
+                    "replace",
+                    91,
+                    [
+                        "    WRITE(6,*) cmessage",
+                        "    CALL umprint(ummessage,src=RoutineName)",
+                    ],
+                ],
+            ],
+            1,
+            {
+                "unwanted WRITE(6, ... used": [91],
+            },
+        ),
+        (
+            [
+                [
+                    "replace",
+                    91,
+                    [
+                        "    WRITE(16,'(A)') cmessage",
+                        "    CALL umprint(ummessage,src=RoutineName)",
+                    ],
+                ],
+            ],
+            1,
+            {
+                "unwanted WRITE(16, ... used": [91],
+            },
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad Write Statement",
+        "Another Bad Write Statement",
+        "No Bad Write Statements",
+    ],
+)
+def test_r3_12_1a_no_write_to_unit_no(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_12_1a_no_write_to_unit_no(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                [
+                    "add",
+                    82,
+                    [
+                        "PRINT *, ummessage",
+                    ],
+                ],
+                [
+                    "replace",
+                    91,
+                    [
+                        "    PRINT *, cmessage",
+                        "    CALL umprint(ummessage,src=RoutineName)",
+                    ],
+                ],
+            ],
+            2,
+            {
+                "undesirable PRINT statement used": [82, 92],
+            },
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "2 Bad, really BAD, Print Statements",
+        "No Naughty PRINT Statements",
+    ],
+)
+def test_r3_12_1b_print_not_allowed(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_12_1b_print_not_allowed(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result
+
+
+# =================================================================
+@pytest.mark.parametrize(
+    "changes_list, expected_result, expected_errors",
+    [
+        (
+            [
+                [
+                    "replace",
+                    91,
+                    [
+                        "    WRITE(ummessage,*) cmessage",
+                        "    CALL umprint(ummessage,src=RoutineName)",
+                    ],
+                ],
+            ],
+            1,
+            {
+                "WRITE(ummessage,*) found": [91],
+            },
+        ),
+        (
+            [
+                [
+                    "replace",
+                    91,
+                    [
+                        "    WRITE(ummessage,'(A)') cmessage",
+                        "    CALL umprint(ummessage,src=RoutineName)",
+                    ],
+                ],
+            ],
+            0,
+            {},
+        ),
+        ([], 0, {}),  # No changes, expect no errors
+    ],
+    ids=[
+        "1 Bad Write Statement",
+        "1 Acceptable Write Statement",
+        "No Bad Write Statements",
+    ],
+)
+def test_r3_12_3_no_write_using_default_format(
+    example_fortran_lines, changes_list, expected_result, expected_errors
+):
+    modified_fortran_lines = modify_fortran_lines(example_fortran_lines, changes_list)
+    result = r3_12_3_no_write_using_default_format(modified_fortran_lines)
+    failure_count = result.failure_count
+    assert failure_count == expected_result
+    errors = result.errors
+    for error, lines_list in errors.items():
+        assert error in expected_errors
+        for line_no in lines_list:
+            assert line_no in expected_errors[error]
+        assert len(lines_list) == len(expected_errors[error])
+    assert len(errors) == len(expected_errors)
+    assert failure_count == expected_result

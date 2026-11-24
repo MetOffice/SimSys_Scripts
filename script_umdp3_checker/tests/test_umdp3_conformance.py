@@ -4,29 +4,33 @@
 # under which the code may be used.
 # -----------------------------------------------------------------------------
 
-import sys
+# Some content in this file was generated or refactored with assistance from
+# - Met Office GitHub Copilot Business (Claude Haiku 4.5); PR #231.
+
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
-import pytest
+
+import pytest  # type: ignore[import-not-found]
 
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from umdp3_conformance import (
+    ALLOWABLE_FILE_TYPES,
+    Check_Runner,
+    CheckResult,
+    ConformanceChecker,
+    GROUP_FILE_TYPES,
     StyleChecker,
     detangle_file_types,
-    ALLOWABLE_FILE_TYPES,
-    GROUP_FILE_TYPES,
-    Check_Runner,
     get_files_to_check,
     line_1,
     line_2,
-    which_cms_is_it,
-    ConformanceChecker,
-    CheckResult,
     process_arguments,
-)
+    which_cms_is_it,
+)  # noqa: E402
 
 
 def test_from_full_list_filters_by_extension():
@@ -103,7 +107,7 @@ def test_create_free_runner_success(monkeypatch: pytest.MonkeyPatch):
     output of a successful command. We use monkeypatch to replace subprocess.run with
     a fake function that simulates a successful command execution."""
 
-    def fake_run(cmd, capture_output, text, timeout):
+    def fake_run(cmd, capture_output, text, timeout, check):
         return SimpleNamespace(returncode=0, stdout="all good", stderr="")
 
     monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
@@ -121,7 +125,7 @@ def test_create_free_runner_success(monkeypatch: pytest.MonkeyPatch):
 def test_create_free_runner_checker_failure(monkeypatch: pytest.MonkeyPatch):
     """As above, but returning an error code"""
 
-    def fake_run(cmd, capture_output, text, timeout):
+    def fake_run(cmd, capture_output, text, timeout, check):
         return SimpleNamespace(returncode=2, stdout="", stderr="some stderr")
 
     monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
@@ -139,7 +143,7 @@ def test_create_free_runner_timeout(monkeypatch: pytest.MonkeyPatch):
     """As above, but simulating a timeout by having the fake subprocess.run raise a
     TimeoutExpired exception."""
 
-    def fake_run(cmd, capture_output, text, timeout):
+    def fake_run(cmd, capture_output, text, timeout, check):
         raise subprocess.TimeoutExpired(cmd=cmd, timeout=timeout)
 
     monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
@@ -167,27 +171,14 @@ def test_detangle_file_types_expands_all_group():
     assert result == set(ALLOWABLE_FILE_TYPES)
 
 
-def test_detangle_file_types_mixed_group_and_explicit_type():
-    result = detangle_file_types({"CI", "AnyFile"})
-
-    assert result == GROUP_FILE_TYPES["CI"].union({"AnyFile"})
-
-
-def test_detangle_file_types_passthrough_without_groups():
-    input_types = {"Fortran", "AnyFile"}
-
-    result = detangle_file_types(set(input_types))
-
-    assert result == input_types
-
-
 def test_detangle_file_types_raises_for_invalid_type():
     with pytest.raises(ValueError, match="Invalid file types specified"):
         detangle_file_types({"Fortran", "Java"})
 
 
 def test_stylechecker_check_aggregates_results(tmp_path: Path):
-    """Test that StyleChecker.check() correctly aggregates results from multiple check functions.
+    """Test that StyleChecker.check() correctly aggregates results from multiple check
+    functions.
     Here, seen is checking the lines passed to the checks are the ones written by this
     test."""
     file_path = tmp_path / "sample.txt"
@@ -214,7 +205,8 @@ def test_stylechecker_check_aggregates_results(tmp_path: Path):
 
 
 def test_check_runner_check_passes_path_not_lines(tmp_path: Path):
-    """Test that Check_Runner.check() passes the file path to the check function, not the file lines. This being it's sole difference from StyleChecker."""
+    """Test that Check_Runner.check() passes the file path to the check function, not
+    the file lines. This being it's sole difference from StyleChecker."""
     file_path = tmp_path / "sample.py"
     file_path.write_text("print('x')\n")
 
@@ -239,8 +231,13 @@ def test_check_runner_check_passes_path_not_lines(tmp_path: Path):
 def test_create_external_runners_builds_expected_checkers(
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """Warning! when using monkeypatch, make sure you're testing your own code on not basic Python intrinsics.
-    In this case, in order to test the class method, StyleChecker.create_external_runners, we're patching StyleChecker.create_free_runner, which is another static method. In reality StyleChecker.create_free_runner does most of the heavy lifting and StyleChecker.create_external_runners is just a thin wrapper to turn a list (of lists) which form commands into a dictionary of callables."""
+    """Warning! when using monkeypatch, make sure you're testing your own code on not
+    basic Python intrinsics.
+    In this case, in order to test the class method, StyleChecker.
+    create_external_runners, we're patching StyleChecker.create_free_runner, which is
+    another static method. In reality StyleChecker.create_free_runner does most of the
+    heavy lifting and StyleChecker.create_external_runners is just a thin wrapper to
+    turn a list (of lists) which form commands into a dictionary of callables."""
     callables = []
 
     # (fake_)create_free_runner will be called once for each
@@ -431,7 +428,7 @@ class _FakeProcessPoolExecutor:
     def submit(self, fn, *args, **kwargs):
         try:
             return _FakeFuture(value=fn(*args, **kwargs))
-        except Exception as e:
+        except RuntimeError as e:
             return _FakeFuture(exc=e)
 
 
@@ -466,7 +463,9 @@ def test_conformance_checker_check_files_collects_all_results(
     cc = ConformanceChecker(checkers, max_workers=2)  # type: ignore
 
     cc.check_files()
-    # These asserts are basically just checking that the results from the two "dummy" checkers,one of which checked 2 files, are collected into a single list of three results objects.
+    # These asserts are basically just checking that the results from the two "dummy"
+    # checkers,one of which checked 2 files, are collected into a single list of three
+    # results objects.
     assert len(cc.results) == 3
     assert {r.file_path for r in cc.results} == {"a.py", "b.py", "c.py"}
 
@@ -558,7 +557,7 @@ def test_stylechecker_check_with_no_check_functions_passes(tmp_path: Path):
 
 
 def test_create_free_runner_generic_exception(monkeypatch: pytest.MonkeyPatch):
-    def fake_run(cmd, capture_output, text, timeout):
+    def fake_run(cmd, capture_output, text, timeout, check):
         raise OSError("cannot execute")
 
     monkeypatch.setattr("umdp3_conformance.subprocess.run", fake_run)
@@ -618,13 +617,13 @@ def test_process_arguments_verbose_and_filetype_group_expansion(
     monkeypatch.setattr(
         sys,
         "argv",
-        ["umdp3_conformance.py", "--file-types", "CI", "AnyFile", "-vv"],
+        ["umdp3_conformance.py", "--file-types", "CI", "-vv"],
     )
 
     args = process_arguments()
 
     assert args.volume == 5
-    assert args.file_types == {"Fortran", "Python", "AnyFile"}
+    assert args.file_types == {"Fortran", "Python"}
 
 
 def test_process_arguments_rejects_verbose_and_quiet_together(

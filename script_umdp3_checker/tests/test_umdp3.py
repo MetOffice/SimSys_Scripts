@@ -31,32 +31,6 @@ def test_basic_functionality():
     # Initialize UMDP3Checker
     umdp3_checker = UMDP3Checker()
 
-    # Test line length check
-    test_lines = [
-        "This is a line with no trailing space",
-        "This is line with a trailing space   ",
-    ]
-    result = umdp3_checker.line_trail_whitespace(test_lines)
-    print(
-        f"Line length test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
-    # Test tab detection
-    test_lines_tabs = ["Normal line", "Line with\ttab"]
-
-    result = umdp3_checker.tab_detection(test_lines_tabs)
-    print(
-        f"Tab detection test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
-    # Test trailing whitespace
-    test_lines_whitespace = ["Normal line", "Line with trailing spaces   "]
-
-    result = umdp3_checker.line_trail_whitespace(test_lines_whitespace)
-    print(
-        f"Trailing whitespace test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
     # Test IMPLICIT NONE check
     fortran_without_implicit = ["PROGRAM test", "INTEGER :: i", "END PROGRAM"]
 
@@ -98,9 +72,6 @@ def test_dispatch_tables():
     c_file = dispatch.get_file_dispatch_table_c()
     print(f"C file tests available: {len(c_file)}")
 
-    all_tests = dispatch.get_file_dispatch_table_all()
-    print(f"Universal tests available: {len(all_tests)}")
-
 
 def test_fortran_specific():
     """Test Fortran-specific checks"""
@@ -109,28 +80,12 @@ def test_fortran_specific():
 
     umdp3_checker = UMDP3Checker()
 
-    # Test obsolescent intrinsics
-    fortran_old_intrinsics = ["REAL :: x", "x = ALOG(2.0)", "y = DBLE(x)"]
-
-    result = umdp3_checker.obsolescent_fortran_intrinsic(fortran_old_intrinsics)
-    print(
-        f"Obsolescent intrinsics test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
     # Test forbidden operators
     fortran_old_operators = ["IF (x .GT. y) THEN", "  PRINT *, 'x is greater'"]
 
     result = umdp3_checker.forbidden_operators(fortran_old_operators)
     print(
         f"Forbidden operators test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
-    )
-
-    # Test PRINT statement
-    fortran_print = ["PRINT *, 'Hello world'"]
-
-    result = umdp3_checker.printstar(fortran_print)
-    print(
-        f"PRINT statement test: {'PASS' if result.failure_count > 0 else 'FAIL'} (expected failure)"
     )
 
 

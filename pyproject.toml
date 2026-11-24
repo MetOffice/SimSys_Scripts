@@ -19,5 +19,14 @@ test = [
 repository = "https://github.com/MetOffice/SimSys_Scripts"
 discussion = "https://github.com/MetOffice/simulation-systems/discussions/categories/lfric"
 
+[tool.ruff]
+line-length = 88
+
+[tool.pylint]
+max-line-length = 88
+
+[tool.pycodestyle]
+max-line-length = 88
+
 [tool.setuptools]
 packages = []
