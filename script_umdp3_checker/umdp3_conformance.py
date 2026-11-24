@@ -27,7 +27,7 @@ Framework and Classes to generate a list of files to check for style
 conformance, and to run relevant style checkers on those files.
 """
 
-ALLOWABLE_FILE_TYPES = ["Fortran", "Python", "AnyFile"]
+ALLOWABLE_FILE_TYPES = ["Fortran", "Python"]
 GROUP_FILE_TYPES = {
     "CI": {"Fortran", "Python"},
     "ALL": set(ALLOWABLE_FILE_TYPES),
@@ -559,13 +559,11 @@ def create_style_checkers(
         files"""
         fortran_diff_table = dispatch_tables.get_diff_dispatch_table_fortran()
         fortran_file_table = dispatch_tables.get_file_dispatch_table_fortran()
-        generic_file_table = dispatch_tables.get_file_dispatch_table_all()
         if print_volume >= 3:
             print("Configuring Fortran checkers:")
         combined_checkers = []
         combined_checkers.extend(fortran_diff_table)
         combined_checkers.extend(fortran_file_table)
-        combined_checkers.extend(generic_file_table)
         combined_checkers.extend(list_O_tests)
         fortran_file_checker = StyleChecker.from_full_list(
             "Fortran Checker", file_extensions, combined_checkers, changed_files
@@ -589,15 +587,6 @@ def create_style_checkers(
             file_extensions,
         )
         checkers.append(python_file_checker)
-    if "AnyFile" in file_types or file_types == []:
-        if print_volume >= 3:
-            print("Configuring AnyFile File Checkers:")
-        all_file_dispatch_table = dispatch_tables.get_file_dispatch_table_all()
-        generic_checker = StyleChecker(
-            "AnyFile File Checker", all_file_dispatch_table, changed_files
-        )
-        checkers.append(generic_checker)
-
     return checkers
 
 
