@@ -115,8 +115,14 @@ class GitBDiff(GitBase):
     # Match hex commit IDs
     _hash_pattern = re.compile(r"^\s*([0-9a-f]{40})\s*$")
 
-    def __init__(self, parent=None, working_directory=None,
-                 first_hash=None, second_hash=None, branch_name=None):
+    def __init__(
+        self,
+        parent=None,
+        working_directory=None,
+        first_hash=None,
+        second_hash=None,
+        branch_name=None,
+    ):
         self.parent = parent or self.primary_branch
 
         super().__init__(working_directory)
@@ -125,8 +131,9 @@ class GitBDiff(GitBase):
         self.second_hash = second_hash
         self.branch = self.get_branch_name()
         if self.branch == self.detached_head_reference:
-            raise GitBDiffError("Can't get a diff for a working_directory in " +
-                                "detached head state")
+            raise GitBDiffError(
+                "Can't get a diff for a working_directory in detached head state"
+            )
 
     @classmethod
     def get_branch_point(cls, parent, working_directory=None):
@@ -151,7 +158,9 @@ class GitBDiff(GitBase):
         """Get the last commit ID on the branch."""
 
         result = None
-        for line in cls.run_git(working_directory, ["show", "--pretty=%H", "--no-patch"]):
+        for line in cls.run_git(
+            working_directory, ["show", "--pretty=%H", "--no-patch"]
+        ):
             if m := cls._hash_pattern.match(line):
                 result = m.group(1)
                 break
@@ -165,8 +174,12 @@ class GitBDiff(GitBase):
         parent = parent or cls.primary_branch
         ancestor = cls.get_branch_point(parent, working_directory=working_directory)
         current = cls.get_latest_commit(working_directory=working_directory)
-        return cls(working_directory=working_directory, first_hash=ancestor,
-                       second_hash=current, branch_name=None)
+        return cls(
+            working_directory=working_directory,
+            first_hash=ancestor,
+            second_hash=current,
+            branch_name=None,
+        )
 
     @property
     def is_branch(self):
