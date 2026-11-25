@@ -77,8 +77,10 @@ class GitBdiffWrapper(CMSSystem):
         from github_scripts import git_bdiff
 
         self.repo_path = repo_path
-        self.bdiff_obj = git_bdiff.GitBDiff(repo=self.repo_path)
-        self.info_obj = git_bdiff.GitInfo(repo=self.repo_path)
+        self.bdiff_obj = git_bdiff.GitBDiff.branch_difference(
+            working_directory=self.repo_path
+            )
+        self.info_obj = git_bdiff.GitInfo(working_directory=self.repo_path)
 
     def get_changed_files(self) -> List[Path]:
         """Get list of files changed between base_branch and branch."""
