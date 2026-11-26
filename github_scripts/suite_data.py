@@ -179,7 +179,7 @@ class SuiteData:
         for dependency, data in self.dependencies.items():
             if not data["gitinfo"].is_main():
                 parent = "main"
-                self.dependencies[dependency]["gitbdiff"] = GitBDiff(
+                self.dependencies[dependency]["gitbdiff"] = GitBDiff.branch_difference(
                     repo=self.source_root / dependency, parent=parent
                 ).files()
             else:

@@ -94,7 +94,7 @@ def test_repo_selection(git_repo):
     """Test selection of repository directory."""
 
     os.chdir("/")
-    bdiff = GitBDiff(repo=git_repo)
+    bdiff = GitBDiff.branch_difference(working_directory=git_repo)
 
     assert bdiff.branch is not None
     assert bdiff.branch == "main"
@@ -106,10 +106,10 @@ def test_invalid_repo_selection(git_repo):
     """Test non-existent repo or plain file raises an error"""
 
     with pytest.raises(GitBDiffError):
-        GitBDiff(repo="/nosuch")
+        GitBDiff(working_directory="/nosuch")
 
     with pytest.raises(GitBDiffError):
-        GitBDiff(repo="/etc/hosts")
+        GitBDiff(working_directory="/etc/hosts")
 
 
 def test_branch_diff(git_repo):
@@ -119,7 +119,7 @@ def test_branch_diff(git_repo):
     subprocess.run(["git", "checkout", "mybranch"], check=True)
 
     try:
-        bdiff = GitBDiff()
+        bdiff = GitBDiff.branch_difference()
         changes = list(bdiff.files())
     finally:
         subprocess.run(["git", "checkout", "main"], check=True)
@@ -142,7 +142,7 @@ def test_branch_of_branch_diff(git_repo):
     subprocess.run(["git", "checkout", "subbranch"], check=True)
 
     try:
-        bdiff = GitBDiff()
+        bdiff = GitBDiff.branch_difference()
         changes = list(bdiff.files())
     finally:
         subprocess.run(["git", "checkout", "main"], check=True)
@@ -161,7 +161,7 @@ def test_overwritten_branch(git_repo):
     os.chdir(git_repo)
     subprocess.run(["git", "checkout", "overwrite"], check=True)
     try:
-        bdiff = GitBDiff()
+        bdiff = GitBDiff.branch_difference()
         changes = list(bdiff.files())
     finally:
         subprocess.run(["git", "checkout", "main"], check=True)
@@ -179,7 +179,7 @@ def test_unchanged_branch(git_repo):
     subprocess.run(["git", "checkout", "unchanged"], check=True)
 
     try:
-        bdiff = GitBDiff()
+        bdiff = GitBDiff.branch_difference()
         changes = list(bdiff.files())
     finally:
         subprocess.run(["git", "checkout", "main"], check=True)
@@ -196,7 +196,7 @@ def test_non_repo(tmpdir):
     os.chdir(tmpdir)
 
     with pytest.raises(GitBDiffNotGit) as exc:
-        GitBDiff()
+        GitBDiff.branch_difference()
     assert "not a repository" in str(exc.value)
 
 
@@ -210,7 +210,7 @@ def test_nonexistent_parent(git_repo):
     os.chdir(git_repo)
 
     with pytest.raises(GitBDiffError) as exc:
-        GitBDiff(parent="nosuch")
+        GitBDiff.branch_difference(parent="nosuch")
     assert "Not a valid object name nosuch" in str(exc.value)
 
 
@@ -221,12 +221,12 @@ def test_git_run(git_repo):
 
     with pytest.raises(TypeError) as exc:
         # Use a string in place of a list
-        list(i for i in bdiff.run_git("commit -m ''"))
+        list(i for i in bdiff.run_git(git_repo, "commit -m ''"))
     assert "args must be a list" in str(exc.value)
 
     with pytest.raises(GitBDiffError) as exc:
         # Run a command that should return non-zero
-        list(i for i in bdiff.run_git(["commit", "-m", "''"]))
+        list(i for i in bdiff.run_git(git_repo, ["commit", "-m", "''"]))
     assert "command returned 1" in str(exc.value)
 
 
